@@ -1,0 +1,110 @@
+#!/usr/bin/env sh
+
+set -e
+
+git_dir="$(git rev-parse --git-dir)"
+
+rebase_failed=0
+
+if [ "$1" = '--help' ]
+then
+	
+	printf 'This command is similar to `git stash pop --index` but it can handle conflicts.\n'
+	printf '\n'
+	printf 'Usage:\t%s [ENTRY]\n' "$0"
+	printf '\t%s --continue\n' "$0"
+	exit 0
+	
+elif [ "$1" = '--continue' ]
+then
+	
+	shift
+	
+	if [ $# -gt 0 ]
+	then
+		printf 'Too many arguments!\n' 1>&2
+		exit 1
+	fi
+	
+	if ! [ -f "$git_dir/unstash" ]
+	then
+		printf 'There is no "unstash" operation in progress!\n' 1>&2
+		exit 1
+	fi
+	{
+		read -r stash
+		read -r current_branch
+		read -r detached
+	} <"$git_dir/unstash"
+	rm -f "$git_dir/unstash"
+	
+	if ! git -c 'core.editor=true' rebase --continue
+	then
+		rebase_failed=1
+	fi
+	
+else
+	
+	if [ $# -eq 0 ]
+	then
+		stash='stash@{0}'
+	elif [ $# -eq 1 ]
+	then
+		if [ "$1" -eq "$1" ] 2>/dev/null
+		then
+			stash="stash@{$1}"
+		else
+			stash="$1"
+		fi
+	else
+		printf 'Too many arguments!\n' 1>&2
+		exit 1
+	fi
+	
+	if ! git diff --quiet HEAD
+	then
+		# There are still are some limitations.
+		printf 'There are uncommitted changes in the working directory!\n' 1>&2
+		printf 'Commit or stash them before attempting unstashing with index.\n' 1>&2
+		exit 1
+	fi
+	
+	detached=0
+	current_branch="$(git rev-parse --abbrev-ref HEAD)"
+	if [ "$current_branch" = 'HEAD' ]
+	then
+		detached=1
+		current_branch="$(git rev-parse HEAD)"
+	fi
+	
+	git switch --detach "$stash^2"
+	git merge --ff-only --squash "$stash"
+	if git rev-parse "$stash^3" 1>/dev/null 2>&1
+	then
+		git ls-tree -r --name-only "$stash^3" -z \
+		| xargs -0 -- git restore --source="$stash^3" --
+		git add .
+	fi
+	git commit --no-edit --no-verify --allow-empty
+	if ! git rebase --onto "$current_branch" "HEAD~2" "HEAD"
+	then
+		rebase_failed=1
+	fi
+	
+fi
+
+if [ "$rebase_failed" -ne 0 ]
+then
+	printf 'USE `%s --continue` INSTEAD OF `git rebase --continue`!\n' "$0"
+	printf '%s\n%s\n%s\n' "$stash" "$current_branch" "$detached" >"$git_dir/unstash"
+	exit 0
+fi
+
+git reset --mixed HEAD~
+git reset --soft HEAD~
+if [ "$detached" -eq 0 ]
+then
+	git switch "$current_branch"
+fi
+
+git stash drop "$stash"
