@@ -15,8 +15,15 @@ then
 	printf '\t%s --continue\n' "$0"
 	exit 0
 	
-elif [ "$1" = '--continue' ]
+elif [ "$1" = '--continue' ] || [ "$1" = '--abort' ]
 then
+	
+	if [ "$1" = '--continue' ]
+	then
+		isContinuing=1
+	else
+		isContinuing=0
+	fi
 	
 	shift
 	
@@ -38,9 +45,16 @@ then
 	} <"$git_dir/unstash"
 	rm -f "$git_dir/unstash"
 	
-	if ! git -c 'core.editor=true' rebase --continue
+	if [ $isContinuing -ne 0 ]
 	then
-		rebase_failed=1
+		if ! git -c 'core.editor=true' rebase --continue
+		then
+			rebase_failed=1
+		fi
+	else
+		git rebase --abort
+		git switch --quiet "$current_branch"
+		return 0
 	fi
 	
 else
