@@ -6,7 +6,7 @@ git_dir="$(git rev-parse --git-dir)"
 
 rebase_failed=0
 
-if [ "$1" = '--help' ]
+if [ "$1" = '--help' ] || [ "$1" = '-h' ]
 then
 	
 	printf 'This command is similar to `git stash pop --index` but it can handle conflicts.\n'
@@ -15,10 +15,10 @@ then
 	printf '\t%s --continue\n' "$0"
 	exit 0
 	
-elif [ "$1" = '--continue' ] || [ "$1" = '--abort' ]
+elif [ "$1" = '--continue' ] || [ "$1" = '-c' ] || [ "$1" = '--abort' ]
 then
 	
-	if [ "$1" = '--continue' ]
+	if [ "$1" = '--continue' ] || [ "$1" = '-c' ]
 	then
 		isContinuing=1
 	else
@@ -58,6 +58,12 @@ then
 	fi
 	
 else
+	
+	if [ "$1" != "${1#-}" ]
+	then
+		printf 'Unknown option "%s"!\n' "$1" 1>&2
+		exit 1
+	fi
 	
 	if [ $# -eq 0 ]
 	then
