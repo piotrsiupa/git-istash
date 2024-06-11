@@ -3,6 +3,7 @@
 set -e
 
 show_help() {
+	#shellcheck disable=SC2016
 	printf 'This command is similar to `git stash pop --index` but it can handle conflicts.\n'
 	printf '\n'
 	printf 'Usage:\t%s [ENTRY]\n' "$0"
@@ -50,6 +51,7 @@ check_args() { # max_free_args args...
 }
 
 end_with_rebase_problem() {
+	#shellcheck disable=SC2016
 	printf 'USE `%s --continue` INSTEAD OF `git rebase --continue`!\n' "$0"
 	save_data
 }
