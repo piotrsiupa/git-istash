@@ -103,7 +103,7 @@ untangle_git_stash() {
 	if git rev-parse "$stash^3" 1>/dev/null 2>&1
 	then
 		git ls-tree -r --name-only "$stash^3" -z \
-		| xargs -0 -- git restore --source="$stash^3" --
+		| xargs -r0 -- git restore --source="$stash^3" --
 		git add .
 	fi
 	git commit --no-edit --no-verify --allow-empty
