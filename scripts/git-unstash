@@ -56,11 +56,7 @@ load_data() {
 check_args() { # max_free_args args...
 	max_free_args="$1"
 	shift
-	if [ "$1" != "${1#-}" ]
-	then
-		printf 'Unknown option "%s"!\n' "$1" 1>&2
-		exit 1
-	elif [ $# -gt "$max_free_args" ]
+	if [ $# -gt "$max_free_args" ]
 	then
 		printf 'Too many arguments!\n' 1>&2
 		exit 1
@@ -239,10 +235,21 @@ do_unstash() { # args...
 	fi
 }
 
-if [ "$1" = '--help' ] || [ "$1" = '-h' ]
-then
-	show_help
-else
-	find_data_file
-	do_unstash "$@"
-fi
+getopt_result="$(getopt -o h --long help -n "$(basename "$0")" -- "$@")"
+eval set -- "$getopt_result"
+while true
+do
+	case "$1" in
+	-h|--help)
+		show_help
+		exit 0
+		;;
+	--)
+		shift
+		break
+		;;
+	esac
+done
+
+find_data_file
+do_unstash "$@"
