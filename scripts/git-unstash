@@ -4,10 +4,10 @@ set -e
 
 show_help() {
 	#shellcheck disable=SC2016
-	printf 'This command is similar to `git stash pop --index` but it can handle conflicts.\n'
+	printf 'git-unstash - Improved version of `git stash pop` the can handle conflicts.\n'
 	printf '\n'
-	printf 'Usage:\t%s [ENTRY]\n' "$0"
-	printf '\t%s --continue\n' "$0"
+	printf 'usage: git unstash [<stash>]\n'
+	printf '   or: git unstash (-c | --continue | --abort)\n'
 }
 
 yes_no() { # question
@@ -21,7 +21,7 @@ yes_no() { # question
 		then
 			return 1
 		else
-			printf 'Answer "yes" or "no".\n' 1>&2
+			printf 'error: Please answer "yes" or "no".\n' 1>&2
 		fi
 	done
 	return 2
@@ -37,11 +37,11 @@ save_data() {
 load_data() {
 	if ! [ -f "$data_file" ]
 	then
-		printf 'There is no "unstash" operation in progress!\n' 1>&2
+		printf 'fatal: No unstash in progress?\n' 1>&2
 		exit 1
 	elif [ "$(wc -l "$data_file")" -ne 3 ]
 	then
-		printf 'The file "%s" is broken! (It should have 3 lines.)\n' "$data_file" 1>&2
+		printf 'fatal: "%s" is should contain 3 lines.\n' "$data_file" 1>&2
 		exit 1
 	else
 		{
@@ -58,14 +58,16 @@ check_args() { # max_free_args args...
 	shift
 	if [ $# -gt "$max_free_args" ]
 	then
-		printf 'Too many arguments!\n' 1>&2
+		printf 'error: Too many arguments.\n' 1>&2
+		#shellcheck disable=SC2016
+		printf 'error: Type `git unstash --help` for more information.\n' 1>&2
 		exit 1
 	fi
 }
 
 end_with_rebase_problem() {
 	#shellcheck disable=SC2016
-	printf 'USE `%s --continue` INSTEAD OF `git rebase --continue`!\n' "$0"
+	printf '\nwarning: Do NOT use `git rebase --continue`! Instead use `git unstash --continue`.\n' 1>&2
 	save_data
 }
 end_with_success() {
@@ -82,8 +84,8 @@ check_repository_state() {
 	if ! git diff --quiet HEAD
 	then
 		# There are still are some limitations.
-		printf 'There are uncommitted changes in the working directory!\n' 1>&2
-		printf 'Commit or stash them before attempting unstashing with index.\n' 1>&2
+		printf 'error: There are uncommitted changes in the working directory.\n' 1>&2
+		printf 'error: Please commit or stash them.\n' 1>&2
 		exit 1
 	fi
 }
@@ -101,28 +103,28 @@ find_stash() { # [arg]
 	
 	if ! git rev-parse --quiet --verify "$stash^{commit}" 1>/dev/null
 	then
-		printf 'There is no commit "%s"!\n' "$stash" 1>&2
+		printf 'fatal: There is no commit "%s".\n' "$stash" 1>&2
 		exit 1
 	fi
 	parents_num="$(git rev-list --no-walk --count "$stash^@")"
 	if [ "$parents_num" -lt 2 ] || [ "$parents_num" -gt 3 ]
 	then
-		printf 'The commit "%s" should have 2 or 3 parents! (it has %i)\n' "$stash" "$parents_num" 1>&2
+		printf 'fatal: "%s" should have 2 or 3 parents.\n' "$stash" 1>&2
 		exit 1
 	fi
 	if [ "$parents_num" -eq 3 ] && [ "$(git rev-list --no-walk --count "$stash^3^@")" -ne 0 ]
 	then
-		printf 'The commit "%s^3" should have no parents!\n' "$stash" 1>&2
+		printf 'fatal: "%s^3" should have no parents.\n' "$stash" 1>&2
 		exit 1
 	fi
 	if [ "$(git rev-list --no-walk --count "$stash^2^@")" -ne 1 ]
 	then
-		printf 'The commit "%s^2" should have one parent!\n' "$stash" 1>&2
+		printf 'fatal: The commit "%s^2" should have one parent.\n' "$stash" 1>&2
 		exit 1
 	fi
 	if [ "$(git rev-parse "$stash^1")" != "$(git rev-parse "$stash^2^")" ]
 	then
-		printf 'The commit "%s^1" should be the parent of "%s^2"!\n' "$stash" "$stash" 1>&2
+		printf 'fatal: The commit "%s^1" should be the parent of "%s^2".\n' "$stash" "$stash" 1>&2
 		exit 1
 	fi
 	correct_commit_msgs=0
@@ -142,12 +144,12 @@ find_stash() { # [arg]
 	then
 		if [ $correct_commit_msgs -eq 0 ]
 		then
-			printf 'Commits from the tree of "%s" don'\''t have correct messages for stash!\n' "$stash" 1>&2
+			printf 'warning: "%s"'\''s commits don'\''t have correct messages for stash.\n' "$stash" 1>&2
 		else
-			printf 'Some of the commits from the tree of "%s" don'\''t have correct messages for stash!\n' "$stash" 1>&2
+			printf 'warning: some of "%s"'\'' commits don'\''t have correct messages for stash.\n' "$stash" 1>&2
 		fi
-		printf 'It may not be a stash entry or it may be damaged.\n'
-		if ! yes_no 'Do you want to continue?'
+		printf 'warning: It may not be a stash entry or it may be damaged.\n'
+		if ! yes_no 'warning: Do you want to continue regardless?'
 		then
 			exit 2
 		fi
@@ -167,8 +169,8 @@ find_current_branch() {
 check_sanity() {
 	if [ "$(git rev-parse "$current_branch")" = "$(git rev-parse "$stash")" ] || [ "$(git rev-parse "$current_branch")" = "$(git rev-parse "$stash^2")" ] || [ "$(git rev-parse "$current_branch")" = "$(git rev-parse "$stash^3" 2>/dev/null)" ]
 	then
-		printf 'The current "HEAD" is part of the stash entry!\n' 1>&2
-		printf 'This is insane; I refuse.\n' 1>&2
+		printf 'error: HEAD is part of the stash.\n' 1>&2
+		printf 'error: This is insane; I refuse.\n' 1>&2
 		exit 1
 	fi
 }
