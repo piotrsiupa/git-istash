@@ -10,23 +10,6 @@ show_help() {
 	printf '   or: git unstash (-c | --continue | --abort)\n'
 }
 
-yes_no() { # question
-	printf '%s [yes/no]\n' "$1" 1>&2
-	while read -r answer
-	do
-		if printf '%s' "$answer" | grep -iq '^y\(es\)\?$'
-		then
-			return 0
-		elif printf '%s' "$answer" | grep -iq '^no\?$'
-		then
-			return 1
-		else
-			printf 'error: Please answer "yes" or "no".\n' 1>&2
-		fi
-	done
-	return 2
-}
-
 find_data_file() {
 	git_dir="$(git rev-parse --git-dir)"
 	data_file="$git_dir/unstash"
@@ -144,15 +127,12 @@ find_stash() { # [arg]
 	then
 		if [ $correct_commit_msgs -eq 0 ]
 		then
-			printf 'warning: "%s"'\''s commits don'\''t have correct messages for stash.\n' "$stash" 1>&2
+			printf 'error: "%s"'\''s commits don'\''t have correct messages for stash.\n' "$stash" 1>&2
 		else
-			printf 'warning: some of "%s"'\'' commits don'\''t have correct messages for stash.\n' "$stash" 1>&2
+			printf 'error: some of "%s"'\'' commits don'\''t have correct messages for stash.\n' "$stash" 1>&2
 		fi
-		printf 'warning: It may not be a stash entry or it may be damaged.\n'
-		if ! yes_no 'warning: Do you want to continue regardless?'
-		then
-			exit 2
-		fi
+		printf 'error: It may not be a stash entry or it may be damaged.\n'
+		exit 1
 	fi
 }
 
