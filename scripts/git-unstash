@@ -149,7 +149,7 @@ find_stash() { # [arg]
 		printf 'It may not be a stash entry or it may be damaged.\n'
 		if ! yes_no 'Do you want to continue?'
 		then
-			exit 0
+			exit 2
 		fi
 	fi
 }
