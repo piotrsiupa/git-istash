@@ -22,7 +22,7 @@ load_data() {
 	then
 		printf 'fatal: No unstash in progress?\n' 1>&2
 		exit 1
-	elif [ "$(wc -l "$data_file")" -ne 3 ]
+	elif [ "$(wc -l <"$data_file")" -ne 3 ]
 	then
 		printf 'fatal: "%s" is should contain 3 lines.\n' "$data_file" 1>&2
 		exit 1
@@ -204,21 +204,21 @@ do_abort() { # args...
 }
 
 do_unstash() { # args...
-	if [ "$1" = '--continue' ] || [ "$1" = '-c' ]
+	if [ "$continue_set" -ne 0 ]
 	then
-		shift
 		do_continue "$@"
-	elif [ "$1" = '--abort' ]
+	elif [ "$abort_set" -ne 0 ]
 	then
-		shift
 		do_abort "$@"
 	else
 		do_start "$@"
 	fi
 }
 
-getopt_result="$(getopt -o h --long help -n "$(basename "$0")" -- "$@")"
+getopt_result="$(getopt -o h --long help -o c --long continue --long abort -n "$(basename "$0")" -- "$@")"
 eval set -- "$getopt_result"
+continue_set=0
+abort_set=0
 while true
 do
 	case "$1" in
@@ -226,12 +226,24 @@ do
 		show_help
 		exit 0
 		;;
+	-c|--continue)
+		continue_set=1
+		;;
+	--abort)
+		abort_set=1
+		;;
 	--)
 		shift
 		break
 		;;
 	esac
+	shift
 done
+if [ $continue_set -ne 0 ] && [ $abort_set -ne 0 ]
+then
+	printf 'error: Unclear whether to continue aborting or to abort continuing./n' 1>&2
+	exit 1
+fi
 
 find_data_file
 do_unstash "$@"
