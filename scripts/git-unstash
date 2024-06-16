@@ -4,6 +4,14 @@
 
 set -e
 
+is_color_allowed() { # stream_num
+	case "$(git config --get color.ui)" in
+		always|true|1) return 0 ;;
+		never|false|0) return 1 ;;
+		*)             test -t "$1" ;;
+	esac
+}
+
 show_help() {
 	printf 'git-unstash - Improved version of `git stash pop` the can handle conflicts.\n'
 	printf '\n'
@@ -54,7 +62,16 @@ check_args() { # max_free_args args...
 }
 
 end_with_rebase_problem() {
-	printf '\nwarning: Do NOT use `git rebase --continue`! Instead use `git unstash --continue`.\n' 1>&2
+	printf '\n' 1>&2
+	if is_color_allowed 2
+	then
+		printf '\e[33m'
+	fi
+	printf 'hint: Use `git unstash --continue` after fixing conflicts.\n' 1>&2
+	if is_color_allowed 2
+	then
+		printf '\e[39m'
+	fi
 }
 end_with_success() {
 	git reset --mixed HEAD~
@@ -176,8 +193,17 @@ do_start() { # args...
 	check_args 1 "$@"
 	if does_data_exits
 	then
+		printf '\n' 1>&2
+		if is_color_allowed 2
+		then
+			printf '\e[33m'
+		fi
 		printf 'fatal: Unstash already in progress?\n' 1>&2
 		printf 'hint: Use `git unstash --continue` or `git unstash --abort`.\n' 1>&2
+		if is_color_allowed 2
+		then
+			printf '\e[39m'
+		fi
 		exit 1
 	fi
 	check_repository_state
@@ -217,9 +243,18 @@ do_abort() { # args...
 		delete_data
 		printf 'Aborted `git unstash`\n' 1>&2
 	else
+		printf '\n' 1>&2
 		printf 'fatal: Failed to restore `HEAD`.\n' 1>&2
+		if is_color_allowed 2
+		then
+			printf '\e[33m'
+		fi
 		printf 'hint: Fix problems and rerun `git unstash --abort`\n' 1>&2
 		printf 'hint: or delete file "%s" to cancel manually.\n' "$data_file" 1>&2
+		if is_color_allowed 2
+		then
+			printf '\e[39m'
+		fi
 		exit 1
 	fi
 }
