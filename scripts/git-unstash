@@ -1,9 +1,10 @@
 #!/usr/bin/env sh
 
+#shellcheck disable=SC2016
+
 set -e
 
 show_help() {
-	#shellcheck disable=SC2016
 	printf 'git-unstash - Improved version of `git stash pop` the can handle conflicts.\n'
 	printf '\n'
 	printf 'usage: git unstash [<stash>]\n'
@@ -47,14 +48,12 @@ check_args() { # max_free_args args...
 	if [ $# -gt "$max_free_args" ]
 	then
 		printf 'error: Too many arguments.\n' 1>&2
-		#shellcheck disable=SC2016
 		printf 'error: Type `git unstash --help` for more information.\n' 1>&2
 		exit 1
 	fi
 }
 
 end_with_rebase_problem() {
-	#shellcheck disable=SC2016
 	printf '\nwarning: Do NOT use `git rebase --continue`! Instead use `git unstash --continue`.\n' 1>&2
 }
 end_with_success() {
@@ -211,9 +210,16 @@ do_abort() { # args...
 	check_args 0 "$@"
 	load_data
 	
-	git rebase --abort
-	git switch --quiet "$current_branch"
-	delete_data
+	git rebase --abort || true  # Errors are ignored because if rebase is not in progress, we still want to try to restore `HEAD`.
+	if git switch --quiet "$current_branch"
+	then
+		delete_data
+	else
+		printf 'fatal: Failed to restore `HEAD`.\n' 1>&2
+		printf 'hint: Fix problems and rerun `git unstash --abort`\n' 1>&2
+		printf 'hint: or delete file "%s" to cancel manually.\n' "$data_file" 1>&2
+		exit 1
+	fi
 }
 
 do_unstash() { # args...
