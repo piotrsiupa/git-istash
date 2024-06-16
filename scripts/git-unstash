@@ -65,6 +65,7 @@ end_with_success() {
 	fi
 	delete_data
 	git stash drop "$stash"
+	printf 'Successfully unstahed the stash\n' 1>&2
 }
 
 check_repository_state() {
@@ -214,6 +215,7 @@ do_abort() { # args...
 	if git switch --quiet "$current_branch"
 	then
 		delete_data
+		printf 'Aborted `git unstash`\n' 1>&2
 	else
 		printf 'fatal: Failed to restore `HEAD`.\n' 1>&2
 		printf 'hint: Fix problems and rerun `git unstash --abort`\n' 1>&2
