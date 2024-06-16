@@ -1,7 +1,5 @@
 #!/usr/bin/env sh
 
-#shellcheck disable=SC2016
-
 set -e
 
 is_color_allowed() { # stream_num
@@ -13,7 +11,7 @@ is_color_allowed() { # stream_num
 }
 
 show_help() {
-	printf 'git-unstash - Improved version of `git stash pop` the can handle conflicts.\n'
+	printf 'git-unstash - Improved version of "git stash pop" the can handle conflicts.\n'
 	printf '\n'
 	printf 'usage: git unstash [<stash>]\n'
 	printf '   or: git unstash (-c | --continue | --abort)\n'
@@ -56,7 +54,7 @@ check_args() { # max_free_args args...
 	if [ $# -gt "$max_free_args" ]
 	then
 		printf 'error: Too many arguments.\n' 1>&2
-		printf 'error: Type `git unstash --help` for more information.\n' 1>&2
+		printf 'error: Type "git unstash --help" for more information.\n' 1>&2
 		exit 1
 	fi
 }
@@ -67,7 +65,9 @@ end_with_rebase_problem() {
 	then
 		printf '\e[33m'
 	fi
-	printf 'hint: Use `git unstash --continue` after fixing conflicts.\n' 1>&2
+	printf 'hint: Disregard all hints above about using "git rebase".\n' 1>&2
+	printf 'hint: Use "git unstash --continue" after fixing conflicts.\n' 1>&2
+	printf 'hint: To abort and get back to the state before "git unstash", run "git unstash --abort".\n' 1>&2
 	if is_color_allowed 2
 	then
 		printf '\e[39m'
@@ -82,7 +82,7 @@ end_with_success() {
 	fi
 	delete_data
 	git stash drop "$stash"
-	printf 'Successfully unstahed the stash\n' 1>&2
+	printf '\nSuccessfully unstashed the stash\n' 1>&2
 }
 
 check_repository_state() {
@@ -199,7 +199,7 @@ do_start() { # args...
 			printf '\e[33m'
 		fi
 		printf 'fatal: Unstash already in progress?\n' 1>&2
-		printf 'hint: Use `git unstash --continue` or `git unstash --abort`.\n' 1>&2
+		printf 'hint: Use "git unstash --continue" or "git unstash --abort".\n' 1>&2
 		if is_color_allowed 2
 		then
 			printf '\e[39m'
@@ -237,19 +237,19 @@ do_abort() { # args...
 	check_args 0 "$@"
 	load_data
 	
-	git rebase --abort || true  # Errors are ignored because if rebase is not in progress, we still want to try to restore `HEAD`.
+	git rebase --abort || true  # Errors are ignored because if rebase is not in progress, we still want to try to restore HEAD.
 	if git switch --quiet "$current_branch"
 	then
 		delete_data
-		printf 'Aborted `git unstash`\n' 1>&2
+		printf 'Aborted "git unstash"\n' 1>&2
 	else
 		printf '\n' 1>&2
-		printf 'fatal: Failed to restore `HEAD`.\n' 1>&2
+		printf 'fatal: Failed to restore HEAD.\n' 1>&2
 		if is_color_allowed 2
 		then
 			printf '\e[33m'
 		fi
-		printf 'hint: Fix problems and rerun `git unstash --abort`\n' 1>&2
+		printf 'hint: Fix problems and rerun "git unstash --abort"\n' 1>&2
 		printf 'hint: or delete file "%s" to cancel manually.\n' "$data_file" 1>&2
 		if is_color_allowed 2
 		then
@@ -297,7 +297,7 @@ do
 done
 if [ $continue_set -ne 0 ] && [ $abort_set -ne 0 ]
 then
-	printf 'error: Unclear whether to continue aborting or to abort continuing./n' 1>&2
+	printf 'error: Unclear whether to continue aborting or to abort continuing.\n' 1>&2
 	exit 1
 fi
 
