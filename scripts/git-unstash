@@ -17,8 +17,11 @@ find_data_file() {
 save_data() {
 	printf '%s\n%s\n%s\n' "$stash" "$current_branch" "$detached" >"$data_file"
 }
+does_data_exits() {
+	test -f "$data_file"
+}
 load_data() {
-	if ! [ -f "$data_file" ]
+	if ! does_data_exits
 	then
 		printf 'fatal: No unstash in progress?\n' 1>&2
 		exit 1
@@ -32,8 +35,10 @@ load_data() {
 			read -r current_branch
 			read -r detached
 		} <"$data_file"
-		rm -f "$data_file"
 	fi
+}
+delete_data() {
+	rm -f "$data_file"
 }
 
 check_args() { # max_free_args args...
@@ -51,7 +56,6 @@ check_args() { # max_free_args args...
 end_with_rebase_problem() {
 	#shellcheck disable=SC2016
 	printf '\nwarning: Do NOT use `git rebase --continue`! Instead use `git unstash --continue`.\n' 1>&2
-	save_data
 }
 end_with_success() {
 	git reset --mixed HEAD~
@@ -60,6 +64,7 @@ end_with_success() {
 	then
 		git switch "$current_branch"
 	fi
+	delete_data
 	git stash drop "$stash"
 }
 
@@ -169,10 +174,17 @@ untangle_git_stash() {
 
 do_start() { # args...
 	check_args 1 "$@"
+	if does_data_exits
+	then
+		printf 'fatal: Unstash already in progress?\n' 1>&2
+		printf 'hint: Use `git unstash --continue` or `git unstash --abort`.\n' 1>&2
+		exit 1
+	fi
 	check_repository_state
 	find_stash "$@"
 	find_current_branch
 	check_sanity
+	save_data
 	
 	untangle_git_stash
 	if git rebase --onto "$current_branch" "HEAD~2" "HEAD"
@@ -201,6 +213,7 @@ do_abort() { # args...
 	
 	git rebase --abort
 	git switch --quiet "$current_branch"
+	delete_data
 }
 
 do_unstash() { # args...
