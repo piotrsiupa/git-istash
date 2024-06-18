@@ -35,31 +35,50 @@ run_test() { # test_name
 		printf '\e[31mFAILED - "%s"\e[0m (the result is kept)\n' "$(printf '%s' "$1" | tr '_' ' ')"
 	fi
 }
-run_tests() {
+run_tests() { # pattern
 	find . -maxdepth 1 -type f -name 'test_*.sh' \
 	| xargs -rn1 -- basename | rev | cut -c4- | rev | cut -c6- \
+	| grep -P "$1" \
 	| sort \
 	| while read -r test_name
 	do
 		run_test "$test_name"
-	done | tee "$results_file"
+	done
 }
 
-print_summary() {
-	total_tests="$(wc -l <"$results_file")"
-	passed_tests="$(grep -c 'PASSED' <"$results_file")"
-	printf -- '----------------\n'
-	if [ "$passed_tests" -eq "$total_tests" ]
+print_summary() { # results_file
+	total_tests="$(wc -l <"$1")"
+	passed_tests="$(grep -c 'PASSED' <"$1" || true)"
+	if [ "$total_tests" -ne 0 ]
 	then
-		printf '\e[32m'
+		printf -- '----------------\n'
+		if [ "$passed_tests" -eq "$total_tests" ]
+		then
+			printf '\e[32m'
+		else
+			printf '\e[31m'
+		fi
+		printf 'Passed %i out of %i tests.\e[0m\n' "$passed_tests" "$total_tests"
 	else
-		printf '\e[31m'
+		printf '\e[33mNo matching tests were found!\e[0m\n'
 	fi
-	printf 'Passed %i out of %i tests.\e[0m\n' "$passed_tests" "$total_tests"
 }
+
+if [ $# -eq 0 ]
+then
+	filter=''
+else
+	filter="($1)"
+	shift
+	while [ $# -ne 0 ]
+	do
+		filter="$filter|($1)"
+		shift
+	done
+fi
 
 test -d "$scripts_dir"
 export PATH="$(realpath "$scripts_dir"):$PATH"
-run_tests
-print_summary
+run_tests "$filter" | tee "$results_file"
+print_summary "$results_file"
 rm -f "$results_file"
