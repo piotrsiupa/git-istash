@@ -14,8 +14,6 @@ printf 'ccc\n' >aaa
 git stash push
 
 git unstash
-test "$(git diff --name-only --staged)" = 'aaa'
-test "$(git diff --name-only)" = 'aaa'
-test "$(git ls-files --others --exclude-standard)" = ''
+test "$(git status --porcelain)" = 'MM aaa'
 test "$(git show :aaa)" = 'bbb'
 test "$(cat aaa)" = 'ccc'

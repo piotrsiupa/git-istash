@@ -15,9 +15,9 @@ printf 'ddd\n' >ddd
 git stash push -u
 
 git unstash
-test "$(git diff --name-only --staged)" = 'aaa'
-test "$(git diff --name-only)" = 'aaa'
-test "$(git ls-files --others --exclude-standard)" = 'ddd'
+test "$(git status --porcelain)" = \
+'MM aaa
+?? ddd'
 test "$(git show :aaa)" = 'bbb'
 test "$(cat aaa)" = 'ccc'
 test "$(cat ddd)" = 'ddd'
