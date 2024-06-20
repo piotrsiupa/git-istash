@@ -9,7 +9,7 @@ git add aaa
 git commit -m 'added aaa'
 
 printf 'bbb\n' >aaa
-earlier_stash_hash="$(git stash create 'earlier stash entry')"
+git stash create 'earlier stash entry'
 git reset --hard
 
 printf 'ccc\n' >aaa

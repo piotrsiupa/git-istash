@@ -13,7 +13,7 @@ earlier_stash_hash="$(git stash create 'earlier stash entry')"
 git reset --hard
 
 printf 'ccc\n' >aaa
-later_stash_hash="$(git stash create 'later stash entry')"
+git stash create 'later stash entry'
 git reset --hard
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 0
 

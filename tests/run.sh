@@ -36,8 +36,8 @@ run_test() { # test_name
 	fi
 }
 run_tests() { # pattern
-	find . -maxdepth 1 -type f -name 'test_*.sh' \
-	| xargs -rn1 -- basename | rev | cut -c4- | rev | cut -c6- \
+	find . -maxdepth 1 -type f -name 'test_*.sh' -print0 \
+	| xargs -r0n1 -- basename | rev | cut -c4- | rev | cut -c6- \
 	| grep -P "$1" \
 	| sort \
 	| while read -r test_name
@@ -78,7 +78,8 @@ else
 fi
 
 test -d "$scripts_dir"
-export PATH="$(realpath "$scripts_dir"):$PATH"
+PATH="$(realpath "$scripts_dir"):$PATH"
+export PATH
 run_tests "$filter" | tee "$results_file"
 print_summary "$results_file"
 rm -f "$results_file"

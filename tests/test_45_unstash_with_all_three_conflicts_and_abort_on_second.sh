@@ -27,7 +27,7 @@ then
 	rm -f "$temp_file"
 	exit 1
 fi
-text="$(cat "$temp_file" | tail -n4)"
+text="$(tail -n4 <"$temp_file")"
 rm -f "$temp_file"
 test "$text" = '
 hint: Disregard all hints above about using "git rebase".
@@ -44,7 +44,7 @@ then
 	rm -f "$temp_file"
 	exit 1
 fi
-text="$(cat "$temp_file" | tail -n4)"
+text="$(tail -n4 <"$temp_file")"
 rm -f "$temp_file"
 test "$text" = '
 hint: Disregard all hints above about using "git rebase".
