@@ -21,3 +21,4 @@ test "$(git status --porcelain)" = \
 test "$(git show :aaa)" = 'bbb'
 test "$(cat aaa)" = 'ccc'
 test "$(cat ddd)" = 'ddd'
+test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 0

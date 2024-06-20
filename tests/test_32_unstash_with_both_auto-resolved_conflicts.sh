@@ -22,3 +22,4 @@ git unstash
 test "$(git status --porcelain)" = ' M aaa'
 test "$(git show :aaa)" = 'bbb'
 test "$(cat aaa)" = 'ccc'
+test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 0

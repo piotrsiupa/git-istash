@@ -31,6 +31,7 @@ hint: Disregard all hints above about using "git rebase".
 hint: Use "git unstash --continue" after fixing conflicts.
 hint: To abort and get back to the state before "git unstash", run "git unstash --abort".'
 test "$(git status --porcelain)" = 'UU aaa'
+test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
 
 printf 'eee\n' >aaa
 git add aaa
@@ -47,8 +48,10 @@ hint: Disregard all hints above about using "git rebase".
 hint: Use "git unstash --continue" after fixing conflicts.
 hint: To abort and get back to the state before "git unstash", run "git unstash --abort".'
 test "$(git status --porcelain)" = 'UU aaa'
+test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
 
 git unstash --abort
 test "$(git status --porcelain)" = ''
 test "$(git show :aaa)" = 'ddd'
 test "$(cat aaa)" = 'ddd'
+test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
