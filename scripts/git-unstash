@@ -82,7 +82,10 @@ end_with_success() {
 		git switch "$current_branch"
 	fi
 	delete_data
-	git stash drop "$stash"
+	if printf '%s' "$stash" | grep -xq 'stash@{[0-9]\+}'
+	then
+		git stash drop "$stash"
+	fi
 	printf '\nSuccessfully unstashed the stash\n' 1>&2
 }
 
@@ -97,12 +100,22 @@ check_repository_state() {
 }
 
 find_stash() { # [arg]
-	if [ $# -eq 0 ]
+	if [ $# -eq 0 ] || [ "$1" = 'stash' ]
 	then
 		stash='stash@{0}'
 	elif [ "$1" -eq "$1" ] 2>/dev/null
 	then
-		stash="stash@{$1}"
+		if [ "$1" -ge 0 ]
+		then
+			stash="stash@{$1}"
+		else
+			stash="stash@{$(($(git rev-list --walk-reflogs --count --ignore-missing refs/stash) + $1))}"
+		fi
+	elif printf '%s' "$1" | grep -xq 'stash\^{/.*}'
+	then
+		stash_text="$(printf '%s' "$1" | sed 's/^stash\^{\/\(.*\)}$/\1/')"
+		stash_hash="$(git rev-list --walk-reflogs --grep-reflog="$stash_text" --ignore-missing refs/stash | head -n1)"
+		stash="stash@{$(($(git rev-list --walk-reflogs refs/stash | grep -Fxn "$stash_hash" | cut -d: -f1) - 1))}"
 	else
 		stash="$1"
 	fi
