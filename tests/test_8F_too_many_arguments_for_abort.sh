@@ -30,9 +30,11 @@ hint: Use "git unstash --continue" after fixing conflicts.
 hint: To abort and get back to the state before "git unstash", run "git unstash --abort".'
 test "$(git status --porcelain)" = 'UU aaa'
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
+test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 2
 
 printf 'eee\n' >aaa
 git add aaa
 if git unstash --abort 0 ; then exit 1 ; fi
 test "$(git status --porcelain)" = 'M  aaa'
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
+test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 2

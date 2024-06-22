@@ -24,6 +24,7 @@ test "$(git show :aaa)" = 'aaa'
 test "$(cat aaa)" = 'aaa'
 test "$(git show :xxx)" = 'xxx'
 test "$(cat xxx)" = 'xxx'
+test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 2
 
 if git unstash ; then exit 1 ; fi
 test "$(git status --porcelain)" = ''
@@ -32,3 +33,4 @@ test "$(git show :aaa)" = 'aaa'
 test "$(cat aaa)" = 'aaa'
 test "$(git show :xxx)" = 'xxx'
 test "$(cat xxx)" = 'xxx'
+test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 2

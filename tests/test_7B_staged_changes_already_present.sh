@@ -12,6 +12,7 @@ printf 'ddd\n' >aaa
 git add aaa
 printf 'eee\n' >aaa
 git stash push -m 'the stash'
+test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1
 
 printf 'xxx\n' >aaa
 git add aaa
@@ -21,3 +22,4 @@ test "$(git show :aaa)" = 'xxx'
 test "$(cat aaa)" = 'xxx'
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
 test "$(git rev-list --count HEAD)" -eq 2
+test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1

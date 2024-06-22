@@ -22,6 +22,7 @@ test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
 test "$(git show :aaa)" = 'aaa'
 test "$(cat aaa)" = 'aaa'
 test "$(git rev-list --count HEAD)" -eq 2
+test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 2
 
 if git unstash ; then exit 1 ; fi
 test "$(git status --porcelain)" = ''
@@ -29,3 +30,4 @@ test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
 test "$(git show :aaa)" = 'aaa'
 test "$(cat aaa)" = 'aaa'
 test "$(git rev-list --count HEAD)" -eq 2
+test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 2
