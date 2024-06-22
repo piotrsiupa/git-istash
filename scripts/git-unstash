@@ -75,12 +75,22 @@ end_with_rebase_problem() {
 	exit 1
 }
 end_with_success() {
-	git reset --mixed HEAD~
-	git reset --soft HEAD~
-	if [ "$detached" -eq 0 ]
+	other_changes_hash="$(git rev-parse HEAD)"
+	staged_changes_hash="$(git rev-parse HEAD~)"
+	if printf '%s' "$current_branch" | grep -q '^~'
+	then
+		current_branch="$(printf '%s' "$current_branch" | cut -c2-)"
+		git branch --delete --force "$current_branch"
+		git switch --orphan="$current_branch"
+	elif [ "$detached" -eq 0 ]
 	then
 		git switch "$current_branch"
+	else
+		git switch -d HEAD~2
 	fi
+	git restore --source="$staged_changes_hash" -- . || true
+	git add -- .
+	git restore --source="$other_changes_hash" -- . || true
 	delete_data
 	if printf '%s' "$stash" | grep -xq 'stash@{[0-9]\+}'
 	then
@@ -90,7 +100,7 @@ end_with_success() {
 }
 
 check_repository_state() {
-	if ! git diff --quiet HEAD
+	if [ -n "$(git status --porcelain)" ]
 	then
 		# There are still are some limitations.
 		printf 'error: There are uncommitted changes in the working directory.\n' 1>&2
@@ -174,11 +184,16 @@ find_stash() { # [arg]
 
 find_current_branch() {
 	detached=0
-	current_branch="$(git rev-parse --abbrev-ref HEAD)"
-	if [ "$current_branch" = 'HEAD' ]
+	if git rev-parse HEAD >/dev/null 2>&1
 	then
-		detached=1
-		current_branch="$(git rev-parse HEAD)"
+		current_branch="$(git rev-parse --abbrev-ref HEAD)"
+		if [ "$current_branch" = 'HEAD' ]
+		then
+			detached=1
+			current_branch="$(git rev-parse HEAD)"
+		fi
+	else
+		current_branch="~$(git branch --show-current)"
 	fi
 }
 
@@ -216,8 +231,15 @@ do_start() { # args...
 	find_current_branch
 	save_data
 	
+	if printf '%s' "$current_branch" | grep -q '^~'
+	then
+		git commit --allow-empty --message 'Temporary commit by "git-stash"'
+		rebase_branch="$(printf '%s' "$current_branch" | cut -c2-)"
+	else
+		rebase_branch="$current_branch"
+	fi
 	untangle_git_stash
-	if git rebase --onto "$current_branch" "HEAD~2" "HEAD"
+	if git rebase --onto "$rebase_branch" "HEAD~2" "HEAD"
 	then
 		end_with_success
 	else
@@ -242,7 +264,22 @@ do_abort() { # args...
 	load_data
 	
 	git rebase --abort || true  # Errors are ignored because if rebase is not in progress, we still want to try to restore HEAD.
-	if git switch --quiet "$current_branch"
+	succeeded_switch=0
+	if printf '%s' "$current_branch" | grep -q '^~'
+	then
+		current_branch="$(printf '%s' "$current_branch" | cut -c2-)"
+		git branch --delete --force "$current_branch"
+		if git switch --orphan="$current_branch"
+		then
+			succeeded_switch=1
+		fi
+	else
+		if git switch --quiet "$current_branch"
+		then
+			succeeded_switch=1
+		fi
+	fi
+	if [ "$succeeded_switch" -ne 0 ]
 	then
 		delete_data
 		printf 'Aborted "git unstash"\n' 1>&2
