@@ -19,3 +19,4 @@ test "$(git status --porcelain)" = ' M aaa'
 test "$(git show :aaa)" = 'aaa'
 test "$(cat aaa)" = 'xxx'
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
+test "$(git rev-list --count HEAD)" -eq 2

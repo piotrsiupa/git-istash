@@ -18,6 +18,7 @@ test "$(git status --porcelain)" = ''
 test "$(git show :aaa)" = 'aaa'
 test "$(cat aaa)" = 'aaa'
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
+test "$(git rev-list --count HEAD)" -eq 2
 
 printf 'ddd\n' >aaa
 git add aaa
@@ -27,3 +28,4 @@ test "$(git status --porcelain)" = 'MM aaa'
 test "$(git show :aaa)" = 'ddd'
 test "$(cat aaa)" = 'eee'
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
+test "$(git rev-list --count HEAD)" -eq 2

@@ -67,3 +67,4 @@ test "$(cat aaa)" = 'fff'
 test "$(git show :zzz)" = 'yyy'
 test "$(cat zzz)" = 'xxx'
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 0
+test "$(git rev-list --count HEAD)" -eq 3

@@ -22,3 +22,4 @@ test "$(cat aaa)" = 'aaa'
 test "$(git show :xxx)" = 'xxx'
 test "$(cat xxx)" = 'xxx'
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
+test "$(git rev-list --count HEAD)" -eq 2
