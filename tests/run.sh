@@ -18,7 +18,7 @@ cleanup_test() { # test_name
 }
 create_test_dir() { # test_name
 	test_dir="$(get_test_dir "$1")"
-	git init "$test_dir"
+	git init --initial-branch=master "$test_dir"
 	git -C "$test_dir" config --local user.email 'test@localhost'
 	git -C "$test_dir" config --local user.name 'test'
 	git -C "$test_dir" commit --allow-empty -m 'Initial commit'

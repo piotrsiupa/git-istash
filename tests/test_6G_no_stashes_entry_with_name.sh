@@ -22,6 +22,7 @@ test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
 test "$(git rev-list --count HEAD)" -eq 2
 test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1
 test "$(git rev-parse HEAD)" = "$correct_head_hash"
+test "$(git rev-parse --abbrev-ref --symbolic-full-name HEAD)" = 'master'
 
 printf 'ddd\n' >aaa
 git add aaa
@@ -34,3 +35,4 @@ test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
 test "$(git rev-list --count HEAD)" -eq 2
 test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1
 test "$(git rev-parse HEAD)" = "$correct_head_hash"
+test "$(git rev-parse --abbrev-ref --symbolic-full-name HEAD)" = 'master'
