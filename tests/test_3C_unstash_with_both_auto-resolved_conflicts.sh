@@ -18,6 +18,7 @@ git switch -c branch1
 printf 'bbb\n' >aaa
 git commit -am 'Changed aaa'
 
+correct_head_hash="$(git rev-parse HEAD)"
 git unstash
 test "$(git status --porcelain)" = ' M aaa'
 test "$(git show :aaa)" = 'bbb'
@@ -25,3 +26,4 @@ test "$(cat aaa)" = 'ccc'
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 0
 test "$(git rev-list --count HEAD)" -eq 3
 test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 2
+test "$(git rev-parse HEAD)" = "$correct_head_hash"

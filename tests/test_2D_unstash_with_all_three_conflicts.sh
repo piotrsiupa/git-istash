@@ -21,6 +21,7 @@ printf 'yyy\n' >zzz
 git add aaa zzz
 git commit -m 'Changed aaa & added zzz'
 
+correct_head_hash="$(git rev-parse HEAD)"
 temp_file="$(mktemp)"
 if git unstash 2>"$temp_file"
 then
@@ -71,3 +72,4 @@ test "$(cat zzz)" = 'xxx'
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 0
 test "$(git rev-list --count HEAD)" -eq 3
 test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 2
+test "$(git rev-parse HEAD)" = "$correct_head_hash"

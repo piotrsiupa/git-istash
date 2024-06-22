@@ -26,6 +26,7 @@ test "$(git show :xxx)" = 'xxx'
 test "$(cat xxx)" = 'xxx'
 test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 2
 
+correct_head_hash="$(git rev-parse HEAD)"
 if git unstash ; then exit 1 ; fi
 test "$(git status --porcelain)" = ''
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
@@ -34,3 +35,4 @@ test "$(cat aaa)" = 'aaa'
 test "$(git show :xxx)" = 'xxx'
 test "$(cat xxx)" = 'xxx'
 test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 2
+test "$(git rev-parse HEAD)" = "$correct_head_hash"

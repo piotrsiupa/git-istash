@@ -14,6 +14,7 @@ printf 'eee\n' >aaa
 git stash push -m 'the stash'
 test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1
 
+correct_head_hash="$(git rev-parse HEAD)"
 printf 'xxx\n' >aaa
 git add aaa
 if git unstash 1 ; then exit 1 ; fi
@@ -23,3 +24,4 @@ test "$(cat aaa)" = 'xxx'
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
 test "$(git rev-list --count HEAD)" -eq 2
 test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1
+test "$(git rev-parse HEAD)" = "$correct_head_hash"
