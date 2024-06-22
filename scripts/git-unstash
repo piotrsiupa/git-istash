@@ -128,22 +128,22 @@ find_stash() { # [arg]
 	parents_num="$(git rev-list --no-walk --count "$stash^@")"
 	if [ "$parents_num" -lt 2 ] || [ "$parents_num" -gt 3 ]
 	then
-		printf 'fatal: "%s" should have 2 or 3 parents.\n' "$stash" 1>&2
+		printf 'fatal: "%s" should have 2 or 3 parents to be a stash.\n' "$stash" 1>&2
 		exit 1
 	fi
 	if [ "$parents_num" -eq 3 ] && [ "$(git rev-list --no-walk --count "$stash^3^@")" -ne 0 ]
 	then
-		printf 'fatal: "%s^3" should have no parents.\n' "$stash" 1>&2
+		printf 'fatal: "%s^3" should have no parents to be a part of a stash.\n' "$stash" 1>&2
 		exit 1
 	fi
 	if [ "$(git rev-list --no-walk --count "$stash^2^@")" -ne 1 ]
 	then
-		printf 'fatal: The commit "%s^2" should have one parent.\n' "$stash" 1>&2
+		printf 'fatal: The commit "%s^2" should have one parent to be a part of a stash.\n' "$stash" 1>&2
 		exit 1
 	fi
 	if [ "$(git rev-parse "$stash^1")" != "$(git rev-parse "$stash^2^")" ]
 	then
-		printf 'fatal: The commit "%s^1" should be the parent of "%s^2".\n' "$stash" "$stash" 1>&2
+		printf 'fatal: The commit "%s^1" should be the parent of "%s^2" to be a part of a stash.\n' "$stash" "$stash" 1>&2
 		exit 1
 	fi
 	correct_commit_msgs=0
@@ -182,15 +182,6 @@ find_current_branch() {
 	fi
 }
 
-check_sanity() {
-	if [ "$(git rev-parse "$current_branch")" = "$(git rev-parse "$stash")" ] || [ "$(git rev-parse "$current_branch")" = "$(git rev-parse "$stash^2")" ] || [ "$(git rev-parse "$current_branch")" = "$(git rev-parse "$stash^3" 2>/dev/null)" ]
-	then
-		printf 'error: HEAD is part of the stash.\n' 1>&2
-		printf 'error: This is insane; I refuse.\n' 1>&2
-		exit 1
-	fi
-}
-
 untangle_git_stash() {
 	git switch --detach "$stash^2"
 	git merge --ff-only --squash "$stash"
@@ -223,7 +214,6 @@ do_start() { # args...
 	check_repository_state
 	find_stash "$@"
 	find_current_branch
-	check_sanity
 	save_data
 	
 	untangle_git_stash
