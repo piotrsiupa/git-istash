@@ -2,6 +2,8 @@
 
 set -e
 
+. "$(dirname "$0")/utils.sh" 1>/dev/null
+
 git branch -m branch0
 printf 'aaa\n' >aaa
 git add aaa
@@ -20,14 +22,8 @@ git add aaa zzz
 git commit -m 'Changed aaa & added zzz'
 
 correct_head_hash="$(git rev-parse HEAD)"
-temp_file="$(mktemp)"
-if git unstash 2>"$temp_file"
-then
-	rm -f "$temp_file"
-	exit 1
-fi
-text="$(tail -n4 <"$temp_file")"
-rm -f "$temp_file"
+if run_and_capture git unstash ; then exit 1 ; fi
+text="$(printf '%s' "$stderr" | tail -n4)"
 test "$text" = '
 hint: Disregard all hints above about using "git rebase".
 hint: Use "git unstash --continue" after fixing conflicts.
