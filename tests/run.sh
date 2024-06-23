@@ -5,6 +5,14 @@ set -e
 cd "$(dirname "$0")"
 scripts_dir='../scripts'
 
+print_color_code() { # code
+	if [ "$use_color" -ne 0 ]
+	then
+		#shellcheck disable=SC2059
+		printf "$1"
+	fi
+}
+
 get_test_script() { # test_name
 	printf 'test_%s.sh' "$1"
 }
@@ -33,7 +41,7 @@ find_tests() { # pattern
 run_test() { # test_name
 	cleanup_test "$1"
 	create_test_dir "$1" 1>/dev/null
-	if [ "$debug" -eq 0 ]
+	if [ "$debug_mode" -eq 0 ]
 	then
 		test_passed=0
 		if "./$(get_test_script "$1")" "$(get_test_dir "$1")" 1>/dev/null 2>&1
@@ -52,7 +60,7 @@ run_test() { # test_name
 			else
 				printf '0\n' 1>&4
 			fi 5>&2 2>&1 1>&5 5>&- \
-			| if [ -t 1 ]
+			| if [ "$use_color" -ne 0 ]
 			then
 				sed -u 's/^.*$/\t\x1B[31m&\x1B[39m/'
 			else
@@ -64,15 +72,16 @@ run_test() { # test_name
 	fi
 	if [ "$test_passed" -ne 0 ]
 	then
-		printf '\e[0;1;32m'
+		print_color_code '\e[0;1;32m'
 		printf 'PASSED - "%s"' "$(printf '%s' "$1" | tr '_' ' ')"
-		printf '\e[22;39m\n'
+		print_color_code '\e[22;39m'
+		printf '\n'
 		cleanup_test "$1"
 		return 0
 	else
-		printf '\e[0;1;31m'
+		print_color_code '\e[0;1;31m'
 		printf 'FAILED - "%s"' "$(printf '%s' "$1" | tr '_' ' ')"
-		printf '\e[22;39m'
+		print_color_code '\e[22;39m'
 		printf ' (the result is kept)\n'
 		return 1
 	fi
@@ -100,25 +109,61 @@ print_summary() {
 	then
 		if [ "$passed_tests" -eq "$total_tests" ]
 		then
-			printf '\e[42;1;32;4m'
+			print_color_code '\e[42;1;32;4m'
 			printf 'Passed all %i tests.' "$total_tests"
 		else
-			printf '\e[41;2;31;4m'
+			print_color_code '\e[41;2;31;4m'
 			printf 'Passed %i out of %i tests.' "$passed_tests" "$total_tests"
 		fi
 	else
-		printf '\e[43;1;33;4m'
+		print_color_code '\e[43;1;33;4m'
 		printf 'No matching tests were found!'
 	fi
-	printf '\e[0m'
+	print_color_code '\e[0m'
 	printf '\n'
 }
 
-debug=0
-if [ "$1" = '--debug' ]
-then
-	debug=1
+getopt_result="$(getopt --long debug -o c: --long color: -n "$(basename "$0")" -- "$@")"
+eval set -- "$getopt_result"
+debug_mode=0
+use_color='auto'
+while true
+do
+	case "$1" in
+	--debug)
+		debug_mode=1
+		;;
+	-c|--color)
+		shift
+		if printf '%s' "$1" | grep -ixq 'auto\|default'
+		then
+			use_color='auto'
+		elif printf '%s' "$1" | grep -ixq 'yes\|always\|true\|1'
+		then
+			use_color=1
+		elif printf '%s' "$1" | grep -ixq 'no\|never\|false\|0'
+		then
+			use_color=0
+		else
+			printf '"%s" is not a valid color setting. (always / never / auto)\n' "$1" 1>&2
+			exit 1
+		fi
+		;;
+	--)
+		shift
+		break
+		;;
+	esac
 	shift
+done
+if [ "$use_color" = 'auto' ]
+then
+	if [ -t 1 ] && [ -t 2 ]
+	then
+		use_color=1
+	else
+		use_color=0
+	fi
 fi
 if [ $# -eq 0 ]
 then
