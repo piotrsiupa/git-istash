@@ -2,8 +2,6 @@
 
 set -e
 
-cd "$1"
-
 printf 'aaa\n' >aaa
 git add aaa
 git commit -m 'Added aaa'

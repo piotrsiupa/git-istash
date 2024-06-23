@@ -2,8 +2,6 @@
 
 set -e
 
-cd "$1"
-
 git branch -m branch0
 printf 'aaa\n' >aaa
 git add aaa

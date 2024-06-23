@@ -2,8 +2,6 @@
 
 set -e
 
-cd "$1"
-
 rm -rf ./.git
 git init
 

@@ -41,35 +41,41 @@ find_tests() { # pattern
 run_test() { # test_name
 	cleanup_test "$1"
 	create_test_dir "$1" 1>/dev/null
-	if [ "$debug_mode" -eq 0 ]
-	then
-		test_passed=0
-		if "./$(get_test_script "$1")" "$(get_test_dir "$1")" 1>/dev/null 2>&1
+	pipe_file="$(mktemp -u)"
+	mkfifo "$pipe_file"
+	exec 4<>"$pipe_file"
+	rm "$pipe_file"
+	(
+		if ! cd "$(get_test_dir "$1")"
 		then
-			test_passed=1
-		fi
-	else
-		pipe_file="$(mktemp -u)"
-		mkfifo "$pipe_file"
-		exec 4<>"$pipe_file"
-		rm "$pipe_file"
-		{
-			if "./$(get_test_script "$1")" "$(get_test_dir "$1")"
+			printf '0\n' 1>&4
+		elif [ "$debug_mode" -eq 0 ]
+		then
+			if "../$(get_test_script "$1")" 1>/dev/null 2>&1
 			then
 				printf '1\n' 1>&4
 			else
 				printf '0\n' 1>&4
-			fi 5>&2 2>&1 1>&5 5>&- \
-			| if [ "$use_color" -ne 0 ]
-			then
-				sed -u 's/^.*$/\t\x1B[31m&\x1B[39m/'
-			else
-				sed -u 's/^/\t/'
 			fi
-		} 5>&2 2>&1 1>&5 5>&- | sed -u 's/^/\t/'
-		read -r test_passed <&4
-		exec 4>&-
-	fi
+		else
+			{
+				if "../$(get_test_script "$1")"
+				then
+					printf '1\n' 1>&4
+				else
+					printf '0\n' 1>&4
+				fi 5>&2 2>&1 1>&5 5>&- \
+				| if [ "$use_color" -ne 0 ]
+				then
+					sed -u 's/^.*$/\t\x1B[31m&\x1B[39m/'
+				else
+					sed -u 's/^/\t/'
+				fi
+			} 5>&2 2>&1 1>&5 5>&- | sed -u 's/^/\t/'
+		fi
+	)
+	read -r test_passed <&4
+	exec 4>&-
 	if [ "$test_passed" -ne 0 ]
 	then
 		print_color_code '\e[0;1;32m'
