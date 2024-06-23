@@ -19,6 +19,8 @@ printf 'zzz\n' >zzz
 git add aaa zzz
 git commit -m 'Changed aaa & added zzz'
 
+git switch -d HEAD
+
 correct_head_hash="$(git rev-parse HEAD)"
 git unstash
 test "$(git status --porcelain)" = ' M aaa'
@@ -30,4 +32,4 @@ test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 0
 test "$(git rev-list --count HEAD)" -eq 3
 test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 2
 test "$(git rev-parse HEAD)" = "$correct_head_hash"
-test "$(git rev-parse --abbrev-ref --symbolic-full-name HEAD)" = 'branch1'
+test "$(git rev-parse --abbrev-ref --symbolic-full-name HEAD)" = 'HEAD'

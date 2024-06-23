@@ -239,7 +239,7 @@ do_start() { # args...
 		rebase_branch="$current_branch"
 	fi
 	untangle_git_stash
-	if git rebase --onto "$rebase_branch" "HEAD~2" "HEAD"
+	if git rebase --onto "$rebase_branch" "HEAD~2" "HEAD" --empty=keep --keep-empty
 	then
 		end_with_success
 	else
@@ -273,8 +273,14 @@ do_abort() { # args...
 		then
 			succeeded_switch=1
 		fi
-	else
+	elif [ "$detached" -eq 0 ]
+	then
 		if git switch --quiet "$current_branch"
+		then
+			succeeded_switch=1
+		fi
+	else
+		if git switch --detach --quiet "$current_branch"
 		then
 			succeeded_switch=1
 		fi

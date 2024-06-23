@@ -16,6 +16,8 @@ git switch -c branch1
 printf 'ddd\n' >aaa
 git commit -am 'Changed aaa'
 
+git switch -d HEAD
+
 if run_and_capture git unstash ; then exit 1 ; fi
 text="$(printf '%s' "$stderr" | tail -n4)"
 test "$text" = '

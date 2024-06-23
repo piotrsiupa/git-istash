@@ -13,6 +13,8 @@ git stash push
 git switch -c branch1
 git commit --allow-empty -m 'Changed nothing'
 
+git switch -d HEAD
+
 git switch branch0
 git merge branch1 --no-ff --no-commit
 test "$(git status --porcelain)" = ''

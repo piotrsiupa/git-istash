@@ -15,6 +15,8 @@ printf 'xxx\n' >xxx
 git add xxx
 git commit -m 'Changed xxx'
 
+git switch -d HEAD
+
 git rebase branch0 --exec='return 1' || true
 test "$(git status --porcelain)" = ''
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1

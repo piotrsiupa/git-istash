@@ -17,6 +17,8 @@ git switch -c branch1
 printf 'ddd\n' >aaa
 git commit -am 'Changed aaa'
 
+git switch -d HEAD
+
 correct_head_hash="$(git rev-parse HEAD)"
 if run_and_capture git unstash ; then exit 1 ; fi
 text="$(printf '%s' "$stderr" | tail -n4)"
@@ -36,4 +38,4 @@ test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
 test "$(git rev-list --count HEAD)" -eq 3
 test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 2
 test "$(git rev-parse HEAD)" = "$correct_head_hash"
-test "$(git rev-parse --abbrev-ref --symbolic-full-name HEAD)" = 'branch1'
+test "$(git rev-parse --abbrev-ref --symbolic-full-name HEAD)" = 'HEAD'
