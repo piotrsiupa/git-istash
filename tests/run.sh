@@ -41,29 +41,26 @@ find_tests() { # pattern
 run_test() { # test_name
 	cleanup_test "$1"
 	create_test_dir "$1" 1>/dev/null
-	pipe_file="$(mktemp -u)"
-	mkfifo "$pipe_file"
-	exec 4<>"$pipe_file"
-	rm "$pipe_file"
-	(
+	exec 4>&1
+	test_passed="$(
 		if ! cd "$(get_test_dir "$1")"
 		then
-			printf '0\n' 1>&4
+			printf '0' 1>&4
 		elif [ "$debug_mode" -eq 0 ]
 		then
 			if "../$(get_test_script "$1")" 1>/dev/null 2>&1
 			then
-				printf '1\n' 1>&4
+				printf '1' 1>&4
 			else
-				printf '0\n' 1>&4
+				printf '0' 1>&4
 			fi
 		else
 			{
 				if "../$(get_test_script "$1")"
 				then
-					printf '1\n' 1>&4
+					printf '1' 1>&4
 				else
-					printf '0\n' 1>&4
+					printf '0' 1>&4
 				fi 5>&2 2>&1 1>&5 5>&- \
 				| if [ "$use_color" -ne 0 ]
 				then
@@ -72,9 +69,8 @@ run_test() { # test_name
 					sed -u 's/^/\t/'
 				fi
 			} 5>&2 2>&1 1>&5 5>&- | sed -u 's/^/\t/'
-		fi
-	)
-	read -r test_passed <&4
+		fi 5>&4 4>&1 1>&5 5>&-
+	)"
 	exec 4>&-
 	if [ "$test_passed" -ne 0 ]
 	then
@@ -93,20 +89,17 @@ run_test() { # test_name
 	fi
 }
 run_tests() { # pattern
-	pipe_file="$(mktemp -u)"
-	mkfifo "$pipe_file"
-	exec 3<>"$pipe_file"
-	rm "$pipe_file"
-	find_tests "$1" \
-	| while read -r test_name
-	do
-		if run_test "$test_name"
-		then
-			printf '1' 1>&3
-		fi
-	done
-	printf '\n' 1>&3
-	passed_tests="$(head -n 1 <&3 | tr -d '\n' | wc -c)"
+	exec 3>&1
+	passed_tests="$(
+		find_tests "$1" \
+		| while read -r test_name
+		do
+			if run_test "$test_name" 1>&3
+			then
+				printf '1'
+			fi
+		done | head -n 1 | wc -c
+	)"
 	exec 3>&-
 }
 
@@ -190,3 +183,9 @@ total_tests="$(find_tests "$filter" | wc -l)"
 export PATH
 run_tests "$filter"
 print_summary
+if [ "$total_tests" -ne 0 ] && [ "$passed_tests" -eq "$total_tests" ]
+then
+	exit 0
+else
+	exit 1
+fi
