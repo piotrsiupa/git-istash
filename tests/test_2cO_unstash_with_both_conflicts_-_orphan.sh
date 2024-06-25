@@ -4,7 +4,6 @@ set -e
 
 . "$(dirname "$0")/utils.sh" 1>/dev/null
 
-git branch -m branch0
 printf 'aaa\n' >aaa
 git add aaa
 git commit -m 'Added aaa'
@@ -14,18 +13,15 @@ git add aaa
 printf 'ccc\n' >aaa
 git stash push
 
-git switch -c branch1
-printf 'ddd\n' >aaa
-git commit -am 'Changed aaa'
+git switch --orphan ooo
 
-correct_head_hash="$(git rev-parse HEAD)"
 if run_and_capture git unstash ; then exit 1 ; fi
 text="$(printf '%s' "$stderr" | tail -n4)"
 test "$text" = '
 hint: Disregard all hints above about using "git rebase".
 hint: Use "git unstash --continue" after fixing conflicts.
 hint: To abort and get back to the state before "git unstash", run "git unstash --abort".'
-test "$(git status --porcelain)" = 'UU aaa'
+test "$(git status --porcelain)" = 'DU aaa'
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
 test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 2
 
@@ -44,11 +40,10 @@ test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 2
 printf 'fff\n' >aaa
 git add aaa
 git unstash --continue
-test "$(git status --porcelain)" = 'MM aaa'
+test "$(git status --porcelain)" = 'AM aaa'
 test "$(git show :aaa)" = 'eee'
 test "$(cat aaa)" = 'fff'
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 0
-test "$(git rev-list --count HEAD)" -eq 3
-test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 2
-test "$(git rev-parse HEAD)" = "$correct_head_hash"
-test "$(git rev-parse --abbrev-ref --symbolic-full-name HEAD)" = 'branch1'
+test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1
+if git rev-parse HEAD ; then exit 1 ; fi
+test "$(git branch --show-current)" = 'ooo'

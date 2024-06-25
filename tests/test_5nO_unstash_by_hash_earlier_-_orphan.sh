@@ -2,26 +2,24 @@
 
 set -e
 
-printf 'aaa\n' >aaa
-git add aaa
-git commit -m 'added aaa'
-
 printf 'bbb\n' >aaa
-earlier_stash_hash="$(git stash create 'earlier stash entry')"
+git stash push -u -m 'earlier stash entry'
+earlier_stash_hash="$(git rev-parse stash)"
+git stash drop
 git reset --hard
 
 printf 'ccc\n' >aaa
-git stash create 'later stash entry'
+git stash push -u -m 'later stash entry'
+git stash drop
 git reset --hard
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 0
 
-correct_head_hash="$(git rev-parse HEAD)"
+git switch --orphan ooo
+
 git unstash "$earlier_stash_hash"
-test "$(git status --porcelain)" = ' M aaa'
-test "$(git show :aaa)" = 'aaa'
+test "$(git status --porcelain)" = '?? aaa'
 test "$(cat aaa)" = 'bbb'
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 0
-test "$(git rev-list --count HEAD)" -eq 2
 test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1
-test "$(git rev-parse HEAD)" = "$correct_head_hash"
-test "$(git rev-parse --abbrev-ref --symbolic-full-name HEAD)" = 'master'
+if git rev-parse HEAD ; then exit 1 ; fi
+test "$(git branch --show-current)" = 'ooo'
