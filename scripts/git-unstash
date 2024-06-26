@@ -318,7 +318,7 @@ do_unstash() { # args...
 	fi
 }
 
-getopt_result="$(getopt -o h --long help -o c --long continue --long abort -n "$(basename "$0")" -- "$@")"
+getopt_result="$(getopt -oh --long=help -oc --long=continue --long=abort -n "$(basename "$0")" -- "$@")"
 eval set -- "$getopt_result"
 continue_set=0
 abort_set=0

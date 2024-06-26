@@ -131,7 +131,7 @@ print_summary() {
 	printf '\n'
 }
 
-getopt_result="$(getopt --long debug -o q --long quiet -o c: --long color: --long raw --long raw-name --long file-name -n "$(basename "$0")" -- "$@")"
+getopt_result="$(getopt --long debug -oq --long=quiet -oc: --long=color: --long=raw --long=raw-name --long=file-name -n "$(basename "$0")" -- "$@")"
 eval set -- "$getopt_result"
 debug_mode=0
 quiet_mode=0
