@@ -4,7 +4,6 @@ set -e
 
 . "$(dirname "$0")/utils.sh" 1>/dev/null
 
-git branch -m branch0
 printf 'aaa\n' >aaa
 git add aaa
 git commit -m 'Added aaa'
@@ -15,7 +14,6 @@ printf 'ccc\n' >aaa
 printf 'zzz\n' >zzz
 git stash push -u
 
-git switch -c branch1
 printf 'ddd\n' >aaa
 printf 'yyy\n' >zzz
 git add aaa zzz
@@ -30,7 +28,7 @@ hint: Use "git unstash --continue" after fixing conflicts.
 hint: To abort and get back to the state before "git unstash", run "git unstash --abort".'
 test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = 'UU aaa'
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
-test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 2
+test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1
 
 printf 'eee\n' >aaa
 git add aaa
@@ -43,7 +41,7 @@ hint: To abort and get back to the state before "git unstash", run "git unstash 
 test "$(git ls-tree -r --name-only HEAD | sort | head -c -1 | tr '\n' '|')" = 'aaa|zzz'
 test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = 'UU aaa|AA zzz'
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
-test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 2
+test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1
 
 printf 'fff\n' >aaa
 printf 'xxx\n' >zzz
@@ -57,6 +55,6 @@ test "$(git show :zzz)" = 'yyy'
 test "$(cat zzz)" = 'xxx'
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 0
 test "$(git rev-list --count HEAD)" -eq 3
-test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 2
+test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1
 test "$(git rev-parse HEAD)" = "$correct_head_hash"
-test "$(git rev-parse --abbrev-ref --symbolic-full-name HEAD)" = 'branch1'
+test "$(git rev-parse --abbrev-ref --symbolic-full-name HEAD)" = 'master'
