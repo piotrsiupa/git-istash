@@ -72,12 +72,18 @@ run_test() { # test_name
 		fi 5>&4 4>&1 1>&5 5>&-
 	)"
 	exec 4>&-
+	if [ "$raw_name" -eq 0 ]
+	then
+		display_name="\"$(printf '%s' "$1" | tr '_' ' ')\""
+	else
+		display_name="$(dirname "$0")/test_$1.sh"
+	fi
 	if [ "$test_passed" -ne 0 ]
 	then
 		if [ "$quiet_mode" -eq 0 ]
 		then
 			print_color_code '\e[0;1;32m'
-			printf 'PASSED - "%s"' "$(printf '%s' "$1" | tr '_' ' ')"
+			printf 'PASSED - %s' "$display_name"
 			print_color_code '\e[22;39m'
 			printf '\n'
 		fi
@@ -85,7 +91,7 @@ run_test() { # test_name
 		return 0
 	else
 		print_color_code '\e[0;1;31m'
-		printf 'FAILED - "%s"' "$(printf '%s' "$1" | tr '_' ' ')"
+		printf 'FAILED - %s' "$display_name"
 		print_color_code '\e[22;39m'
 		printf ' (the result is kept)\n'
 		return 1
@@ -125,11 +131,12 @@ print_summary() {
 	printf '\n'
 }
 
-getopt_result="$(getopt --long debug -o q --long quiet -o c: --long color: -n "$(basename "$0")" -- "$@")"
+getopt_result="$(getopt --long debug -o q --long quiet -o c: --long color: --long raw --long raw-name --long file-name -n "$(basename "$0")" -- "$@")"
 eval set -- "$getopt_result"
 debug_mode=0
 quiet_mode=0
 use_color='auto'
+raw_name=0
 while true
 do
 	case "$1" in
@@ -154,6 +161,9 @@ do
 			printf '"%s" is not a valid color setting. (always / never / auto)\n' "$1" 1>&2
 			exit 1
 		fi
+		;;
+	--raw|--raw-name|--file-name)
+		raw_name=1
 		;;
 	--)
 		shift
