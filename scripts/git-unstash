@@ -82,7 +82,7 @@ end_with_success() {
 		current_branch="$(printf '%s' "$current_branch" | cut -c2-)"
 		git branch --delete --force "$current_branch"
 		git switch --orphan="$current_branch"
-	elif [ "$detached" -eq 0 ]
+	elif [ "$detached" = n ]
 	then
 		git switch "$current_branch"
 	else
@@ -183,13 +183,13 @@ find_stash() { # [arg]
 }
 
 find_current_branch() {
-	detached=0
+	detached=n
 	if git rev-parse HEAD >/dev/null 2>&1
 	then
 		current_branch="$(git rev-parse --abbrev-ref HEAD)"
 		if [ "$current_branch" = 'HEAD' ]
 		then
-			detached=1
+			detached=y
 			current_branch="$(git rev-parse HEAD)"
 		fi
 	else
@@ -264,28 +264,28 @@ do_abort() { # args...
 	load_data
 	
 	git rebase --abort || true  # Errors are ignored because if rebase is not in progress, we still want to try to restore HEAD.
-	succeeded_switch=0
+	succeeded_switch=n
 	if printf '%s' "$current_branch" | grep -q '^~'
 	then
 		current_branch="$(printf '%s' "$current_branch" | cut -c2-)"
 		git branch --delete --force "$current_branch"
 		if git switch --orphan="$current_branch"
 		then
-			succeeded_switch=1
+			succeeded_switch=y
 		fi
-	elif [ "$detached" -eq 0 ]
+	elif [ "$detached" = n ]
 	then
 		if git switch --quiet "$current_branch"
 		then
-			succeeded_switch=1
+			succeeded_switch=y
 		fi
 	else
 		if git switch --detach --quiet "$current_branch"
 		then
-			succeeded_switch=1
+			succeeded_switch=y
 		fi
 	fi
-	if [ "$succeeded_switch" -ne 0 ]
+	if [ "$succeeded_switch" = y ]
 	then
 		delete_data
 		printf 'Aborted "git unstash"\n' 1>&2
@@ -307,10 +307,10 @@ do_abort() { # args...
 }
 
 do_unstash() { # args...
-	if [ "$continue_set" -ne 0 ]
+	if [ "$continue_set" = y ]
 	then
 		do_continue "$@"
-	elif [ "$abort_set" -ne 0 ]
+	elif [ "$abort_set" = y ]
 	then
 		do_abort "$@"
 	else
@@ -320,8 +320,8 @@ do_unstash() { # args...
 
 getopt_result="$(getopt -oh --long=help -oc --long=continue --long=abort -n "$(basename "$0")" -- "$@")"
 eval set -- "$getopt_result"
-continue_set=0
-abort_set=0
+continue_set=n
+abort_set=n
 while true
 do
 	case "$1" in
@@ -330,10 +330,10 @@ do
 		exit 0
 		;;
 	-c|--continue)
-		continue_set=1
+		continue_set=y
 		;;
 	--abort)
-		abort_set=1
+		abort_set=y
 		;;
 	--)
 		shift
@@ -342,7 +342,7 @@ do
 	esac
 	shift
 done
-if [ $continue_set -ne 0 ] && [ $abort_set -ne 0 ]
+if [ $continue_set = y ] && [ $abort_set = y ]
 then
 	printf 'error: Unclear whether to continue aborting or to abort continuing.\n' 1>&2
 	exit 1

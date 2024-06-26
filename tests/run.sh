@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 scripts_dir='../scripts'
 
 print_color_code() { # code
-	if [ "$use_color" -ne 0 ]
+	if [ "$use_color" = y ]
 	then
 		#shellcheck disable=SC2059
 		printf "$1"
@@ -37,7 +37,7 @@ find_tests() { # pattern
 	| grep -P "$1" \
 	| while read -r test_name
 	do
-		if [ "$only_failed" -eq 0 ] || [ -d "$(get_test_dir "$test_name")" ]
+		if [ "$only_failed" = n ] || [ -d "$(get_test_dir "$test_name")" ]
 		then
 			printf '%s\n' "$test_name"
 		fi
@@ -53,23 +53,23 @@ run_test() { # test_name
 		if ! cd "$(get_test_dir "$1")"
 		then
 			printf '0' 1>&4
-		elif [ "$debug_mode" -eq 0 ]
+		elif [ "$debug_mode" = n ]
 		then
 			if "../$(get_test_script "$1")" 1>/dev/null 2>&1
 			then
-				printf '1' 1>&4
+				printf y 1>&4
 			else
-				printf '0' 1>&4
+				printf n 1>&4
 			fi
 		else
 			{
 				if "../$(get_test_script "$1")"
 				then
-					printf '1' 1>&4
+					printf y 1>&4
 				else
-					printf '0' 1>&4
+					printf n 1>&4
 				fi 5>&2 2>&1 1>&5 5>&- \
-				| if [ "$use_color" -ne 0 ]
+				| if [ "$use_color" = y ]
 				then
 					sed -u 's/^.*$/\t\x1B[31m&\x1B[39m/'
 				else
@@ -79,15 +79,15 @@ run_test() { # test_name
 		fi 5>&4 4>&1 1>&5 5>&-
 	)"
 	exec 4>&-
-	if [ "$raw_name" -eq 0 ]
+	if [ "$raw_name" = n ]
 	then
 		display_name="\"$(printf '%s' "$1" | tr '_' ' ')\""
 	else
 		display_name="$(dirname "$0")/test_$1.sh"
 	fi
-	if [ "$test_passed" -ne 0 ]
+	if [ "$test_passed" = y ]
 	then
-		if [ "$quiet_mode" -eq 0 ]
+		if [ "$quiet_mode" = n ]
 		then
 			print_color_code '\e[0;1;32m'
 			printf 'PASSED - %s' "$display_name"
@@ -140,41 +140,41 @@ print_summary() {
 
 getopt_result="$(getopt -of --long=failed --long debug -oq --long=quiet -oc: --long=color: --long=raw --long=raw-name --long=file-name -n "$(basename "$0")" -- "$@")"
 eval set -- "$getopt_result"
-only_failed=0
-debug_mode=0
-quiet_mode=0
+only_failed=n
+debug_mode=n
+quiet_mode=n
 use_color='auto'
-raw_name=0
+raw_name=n
 while true
 do
 	case "$1" in
 	--failed)
-		only_failed=1
+		only_failed=y
 		;;
 	--debug)
-		debug_mode=1
+		debug_mode=y
 		;;
 	-q|--quiet)
-		quiet_mode=1
+		quiet_mode=y
 		;;
 	-c|--color)
 		shift
 		if printf '%s' "$1" | grep -ixq 'auto\|default'
 		then
 			use_color='auto'
-		elif printf '%s' "$1" | grep -ixq 'yes\|always\|true\|1'
+		elif printf '%s' "$1" | grep -ixq 'y\|yes\|always\|true\|1'
 		then
-			use_color=1
-		elif printf '%s' "$1" | grep -ixq 'no\|never\|false\|0'
+			use_color=y
+		elif printf '%s' "$1" | grep -ixq 'n\|no\|never\|false\|0'
 		then
-			use_color=0
+			use_color=n
 		else
 			printf '"%s" is not a valid color setting. (always / never / auto)\n' "$1" 1>&2
 			exit 1
 		fi
 		;;
 	--raw|--raw-name|--file-name)
-		raw_name=1
+		raw_name=y
 		;;
 	--)
 		shift
@@ -187,9 +187,9 @@ if [ "$use_color" = 'auto' ]
 then
 	if [ -t 1 ] && [ -t 2 ]
 	then
-		use_color=1
+		use_color=y
 	else
-		use_color=0
+		use_color=n
 	fi
 fi
 if [ $# -eq 0 ]
