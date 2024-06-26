@@ -74,10 +74,13 @@ run_test() { # test_name
 	exec 4>&-
 	if [ "$test_passed" -ne 0 ]
 	then
-		print_color_code '\e[0;1;32m'
-		printf 'PASSED - "%s"' "$(printf '%s' "$1" | tr '_' ' ')"
-		print_color_code '\e[22;39m'
-		printf '\n'
+		if [ "$quiet_mode" -eq 0 ]
+		then
+			print_color_code '\e[0;1;32m'
+			printf 'PASSED - "%s"' "$(printf '%s' "$1" | tr '_' ' ')"
+			print_color_code '\e[22;39m'
+			printf '\n'
+		fi
 		cleanup_test "$1"
 		return 0
 	else
@@ -122,15 +125,19 @@ print_summary() {
 	printf '\n'
 }
 
-getopt_result="$(getopt --long debug -o c: --long color: -n "$(basename "$0")" -- "$@")"
+getopt_result="$(getopt --long debug -o q --long quiet -o c: --long color: -n "$(basename "$0")" -- "$@")"
 eval set -- "$getopt_result"
 debug_mode=0
+quiet_mode=0
 use_color='auto'
 while true
 do
 	case "$1" in
 	--debug)
 		debug_mode=1
+		;;
+	-q|--quiet)
+		quiet_mode=1
 		;;
 	-c|--color)
 		shift
