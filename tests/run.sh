@@ -35,6 +35,13 @@ find_tests() { # pattern
 	find . -maxdepth 1 -type f -name 'test_*.sh' -print0 \
 	| xargs -r0n1 -- basename | rev | cut -c4- | rev | cut -c6- \
 	| grep -P "$1" \
+	| while read -r test_name
+	do
+		if [ "$only_failed" -eq 0 ] || [ -d "$(get_test_dir "$test_name")" ]
+		then
+			printf '%s\n' "$test_name"
+		fi
+	done \
 	| sort
 }
 
@@ -131,8 +138,9 @@ print_summary() {
 	printf '\n'
 }
 
-getopt_result="$(getopt --long debug -oq --long=quiet -oc: --long=color: --long=raw --long=raw-name --long=file-name -n "$(basename "$0")" -- "$@")"
+getopt_result="$(getopt -of --long=failed --long debug -oq --long=quiet -oc: --long=color: --long=raw --long=raw-name --long=file-name -n "$(basename "$0")" -- "$@")"
 eval set -- "$getopt_result"
+only_failed=0
 debug_mode=0
 quiet_mode=0
 use_color='auto'
@@ -140,6 +148,9 @@ raw_name=0
 while true
 do
 	case "$1" in
+	--failed)
+		only_failed=1
+		;;
 	--debug)
 		debug_mode=1
 		;;
