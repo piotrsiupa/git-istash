@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-printf 'WARNING: This script is not supposed to be run.\n'
+printf 'This script is not supposed to be run.\n'
 #shellcheck disable=SC2016
 printf 'If you want to use it in a test, source it with the command:\n. ../utils.sh 1>/dev/null\n'
 

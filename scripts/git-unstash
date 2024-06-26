@@ -348,5 +348,6 @@ then
 	exit 1
 fi
 
+cd "$(git rev-parse --show-toplevel)"
 find_data_file
 do_unstash "$@"
