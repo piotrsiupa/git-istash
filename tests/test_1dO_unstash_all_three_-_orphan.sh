@@ -11,9 +11,7 @@ git stash push -u
 git switch --orphan ooo
 
 git unstash
-test "$(git status --porcelain)" = \
-'AM aaa
-?? ddd'
+test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = 'AM aaa|?? ddd'
 test "$(git show :aaa)" = 'bbb'
 test "$(cat aaa)" = 'ccc'
 test "$(cat ddd)" = 'ddd'

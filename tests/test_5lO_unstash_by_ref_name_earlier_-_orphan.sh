@@ -18,7 +18,7 @@ test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 0
 git switch --orphan ooo
 
 git unstash earlier
-test "$(git status --porcelain)" = '?? aaa'
+test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = '?? aaa'
 test "$(cat aaa)" = 'bbb'
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 0
 test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 3

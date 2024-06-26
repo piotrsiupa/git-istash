@@ -9,7 +9,7 @@ git stash push
 git switch --orphan ooo
 
 git unstash
-test "$(git status --porcelain)" = 'A  aaa'
+test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = 'A  aaa'
 test "$(git show :aaa)" = 'bbb'
 test "$(cat aaa)" = 'bbb'
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 0

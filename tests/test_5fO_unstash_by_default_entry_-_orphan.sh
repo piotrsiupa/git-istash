@@ -12,7 +12,7 @@ git stash push -u -m 'later stash entry'
 git switch --orphan ooo
 
 git unstash stash
-test "$(git status --porcelain)" = '?? aaa'
+test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = '?? aaa'
 test "$(cat aaa)" = 'ccc'
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
 test "$(git rev-parse 'stash@{0}')" = "$earlier_stash_hash"

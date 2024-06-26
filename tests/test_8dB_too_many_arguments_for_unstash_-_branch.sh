@@ -13,7 +13,7 @@ git stash push -m 'the only stash'
 
 correct_head_hash="$(git rev-parse HEAD)"
 if git unstash 0 0 ; then exit 1 ; fi
-test "$(git status --porcelain)" = ''
+test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = ''
 test "$(git show :aaa)" = 'aaa'
 test "$(cat aaa)" = 'aaa'
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
@@ -26,7 +26,7 @@ printf 'ddd\n' >aaa
 git add aaa
 printf 'eee\n' >aaa
 if git unstash 0 0 ; then exit 1 ; fi
-test "$(git status --porcelain)" = 'MM aaa'
+test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = 'MM aaa'
 test "$(git show :aaa)" = 'ddd'
 test "$(cat aaa)" = 'eee'
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1

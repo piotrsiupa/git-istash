@@ -12,7 +12,7 @@ git switch --orphan ooo
 
 printf 'xxx\n' >xxx
 if git unstash 1 ; then exit 1 ; fi
-test "$(git status --porcelain)" = '?? xxx'
+test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = '?? xxx'
 test "$(cat xxx)" = 'xxx'
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
 test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1

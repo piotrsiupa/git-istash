@@ -17,7 +17,7 @@ git switch -d HEAD
 correct_head_hash="$(git rev-parse HEAD)"
 printf 'xxx\n' >xxx
 if git unstash 1 ; then exit 1 ; fi
-test "$(git status --porcelain)" = '?? xxx'
+test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = '?? xxx'
 test "$(git show :aaa)" = 'aaa'
 test "$(cat aaa)" = 'aaa'
 test "$(cat xxx)" = 'xxx'

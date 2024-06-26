@@ -12,7 +12,7 @@ git switch --orphan ooo
 printf 'xxx\n' >xxx
 git add xxx
 if git unstash 1 ; then exit 1 ; fi
-test "$(git status --porcelain)" = 'A  xxx'
+test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = 'A  xxx'
 test "$(git show :xxx)" = 'xxx'
 test "$(cat xxx)" = 'xxx'
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1

@@ -21,7 +21,7 @@ git commit -m 'Changed aaa & added zzz'
 
 correct_head_hash="$(git rev-parse HEAD)"
 git unstash
-test "$(git status --porcelain)" = ' M aaa'
+test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = ' M aaa'
 test "$(git show :aaa)" = 'bbb'
 test "$(cat aaa)" = 'ccc'
 test "$(git show :zzz)" = 'zzz'

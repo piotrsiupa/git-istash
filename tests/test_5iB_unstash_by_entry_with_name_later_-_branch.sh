@@ -15,7 +15,7 @@ git stash push -m 'later stash entry'
 
 correct_head_hash="$(git rev-parse HEAD)"
 git unstash 'stash^{/later}'
-test "$(git status --porcelain)" = ' M aaa'
+test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = ' M aaa'
 test "$(git show :aaa)" = 'aaa'
 test "$(cat aaa)" = 'ccc'
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1

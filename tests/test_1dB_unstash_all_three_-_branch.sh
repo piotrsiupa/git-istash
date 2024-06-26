@@ -14,9 +14,7 @@ git stash push -u
 
 correct_head_hash="$(git rev-parse HEAD)"
 git unstash
-test "$(git status --porcelain)" = \
-'MM aaa
-?? ddd'
+test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = 'MM aaa|?? ddd'
 test "$(git show :aaa)" = 'bbb'
 test "$(cat aaa)" = 'ccc'
 test "$(cat ddd)" = 'ddd'
