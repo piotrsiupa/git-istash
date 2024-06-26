@@ -17,6 +17,7 @@ git switch -d HEAD
 
 correct_head_hash="$(git rev-parse HEAD)"
 git unstash 'stash@{1}'
+test "$(git ls-tree -r --name-only HEAD | sort | head -c -1 | tr '\n' '|')" = 'aaa'
 test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = ' M aaa'
 test "$(git show :aaa)" = 'aaa'
 test "$(cat aaa)" = 'bbb'

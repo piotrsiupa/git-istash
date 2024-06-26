@@ -5,6 +5,7 @@ set -e
 printf 'aaa\n' >aaa
 git add aaa
 git commit -m 'Added aaa'
+test "$(git ls-tree -r --name-only HEAD | sort | head -c -1 | tr '\n' '|')" = 'aaa'
 test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = ''
 test "$(git show :aaa)" = 'aaa'
 test "$(cat aaa)" = 'aaa'
@@ -14,6 +15,7 @@ test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1
 
 printf 'bbb\n' >aaa
 git stash push
+test "$(git ls-tree -r --name-only HEAD | sort | head -c -1 | tr '\n' '|')" = 'aaa'
 test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = ''
 test "$(git show :aaa)" = 'aaa'
 test "$(cat aaa)" = 'aaa'
@@ -23,6 +25,7 @@ test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1
 
 correct_head_hash="$(git rev-parse HEAD)"
 git stash pop
+test "$(git ls-tree -r --name-only HEAD | sort | head -c -1 | tr '\n' '|')" = 'aaa'
 test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = ' M aaa'
 test "$(git show :aaa)" = 'aaa'
 test "$(cat aaa)" = 'bbb'

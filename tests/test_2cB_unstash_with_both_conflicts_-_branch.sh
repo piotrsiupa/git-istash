@@ -25,6 +25,7 @@ test "$text" = '
 hint: Disregard all hints above about using "git rebase".
 hint: Use "git unstash --continue" after fixing conflicts.
 hint: To abort and get back to the state before "git unstash", run "git unstash --abort".'
+test "$(git ls-tree -r --name-only HEAD | sort | head -c -1 | tr '\n' '|')" = 'aaa'
 test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = 'UU aaa'
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
 test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 2
@@ -37,6 +38,7 @@ test "$text" = '
 hint: Disregard all hints above about using "git rebase".
 hint: Use "git unstash --continue" after fixing conflicts.
 hint: To abort and get back to the state before "git unstash", run "git unstash --abort".'
+test "$(git ls-tree -r --name-only HEAD | sort | head -c -1 | tr '\n' '|')" = 'aaa'
 test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = 'UU aaa'
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
 test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 2
@@ -44,6 +46,7 @@ test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 2
 printf 'fff\n' >aaa
 git add aaa
 git unstash --continue
+test "$(git ls-tree -r --name-only HEAD | sort | head -c -1 | tr '\n' '|')" = 'aaa'
 test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = 'MM aaa'
 test "$(git show :aaa)" = 'eee'
 test "$(cat aaa)" = 'fff'

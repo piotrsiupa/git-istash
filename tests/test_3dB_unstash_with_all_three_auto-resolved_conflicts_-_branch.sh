@@ -21,6 +21,7 @@ git commit -m 'Changed aaa & added zzz'
 
 correct_head_hash="$(git rev-parse HEAD)"
 git unstash
+test "$(git ls-tree -r --name-only HEAD | sort | head -c -1 | tr '\n' '|')" = 'aaa|zzz'
 test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = ' M aaa'
 test "$(git show :aaa)" = 'bbb'
 test "$(cat aaa)" = 'ccc'

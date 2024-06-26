@@ -30,11 +30,13 @@ test "$text" = '
 hint: Disregard all hints above about using "git rebase".
 hint: Use "git unstash --continue" after fixing conflicts.
 hint: To abort and get back to the state before "git unstash", run "git unstash --abort".'
+test "$(git ls-tree -r --name-only HEAD | sort | head -c -1 | tr '\n' '|')" = 'aaa|zzz'
 test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = 'UU aaa'
 test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
 test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 2
 
 git unstash --abort
+test "$(git ls-tree -r --name-only HEAD | sort | head -c -1 | tr '\n' '|')" = 'aaa|zzz'
 test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = ''
 test "$(git show :aaa)" = 'ddd'
 test "$(cat aaa)" = 'ddd'

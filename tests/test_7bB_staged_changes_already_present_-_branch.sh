@@ -16,6 +16,7 @@ correct_head_hash="$(git rev-parse HEAD)"
 printf 'xxx\n' >aaa
 git add aaa
 if git unstash 1 ; then exit 1 ; fi
+test "$(git ls-tree -r --name-only HEAD | sort | head -c -1 | tr '\n' '|')" = 'aaa'
 test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = 'M  aaa'
 test "$(git show :aaa)" = 'xxx'
 test "$(cat aaa)" = 'xxx'
