@@ -10,7 +10,7 @@ is_color_allowed() { # stream_num
 	esac
 }
 
-show_help() {
+print_help() {
 	printf 'git-unstash - Improved version of "git stash pop" the can handle conflicts.\n'
 	printf '\n'
 	printf 'usage: git unstash [<stash>]\n'
@@ -72,21 +72,35 @@ end_with_rebase_problem() {
 	then
 		printf '\e[39m'
 	fi
+	exit 1
 }
 end_with_success() {
-	git reset --mixed HEAD~
-	git reset --soft HEAD~
-	if [ "$detached" -eq 0 ]
+	other_changes_hash="$(git rev-parse HEAD)"
+	staged_changes_hash="$(git rev-parse HEAD~)"
+	if printf '%s' "$current_branch" | grep -q '^~'
+	then
+		current_branch="$(printf '%s' "$current_branch" | cut -c2-)"
+		git branch --delete --force "$current_branch"
+		git switch --orphan="$current_branch"
+	elif [ "$detached" = n ]
 	then
 		git switch "$current_branch"
+	else
+		git switch -d HEAD~2
 	fi
+	git restore --source="$staged_changes_hash" -- . || true
+	git add -- .
+	git restore --source="$other_changes_hash" -- . || true
 	delete_data
-	git stash drop "$stash"
+	if printf '%s' "$stash" | grep -xq 'stash@{[0-9]\+}'
+	then
+		git stash drop "$stash"
+	fi
 	printf '\nSuccessfully unstashed the stash\n' 1>&2
 }
 
 check_repository_state() {
-	if ! git diff --quiet HEAD
+	if [ -n "$(git status --porcelain)" ]
 	then
 		# There are still are some limitations.
 		printf 'error: There are uncommitted changes in the working directory.\n' 1>&2
@@ -96,12 +110,22 @@ check_repository_state() {
 }
 
 find_stash() { # [arg]
-	if [ $# -eq 0 ]
+	if [ $# -eq 0 ] || [ "$1" = 'stash' ]
 	then
 		stash='stash@{0}'
 	elif [ "$1" -eq "$1" ] 2>/dev/null
 	then
-		stash="stash@{$1}"
+		if [ "$1" -ge 0 ]
+		then
+			stash="stash@{$1}"
+		else
+			stash="stash@{$(($(git rev-list --walk-reflogs --count --ignore-missing refs/stash) + $1))}"
+		fi
+	elif printf '%s' "$1" | grep -xq 'stash\^{/.*}'
+	then
+		stash_text="$(printf '%s' "$1" | sed 's/^stash\^{\/\(.*\)}$/\1/')"
+		stash_hash="$(git rev-list --walk-reflogs --grep-reflog="$stash_text" --ignore-missing refs/stash | head -n1)"
+		stash="stash@{$(($(git rev-list --walk-reflogs refs/stash | grep -Fxn "$stash_hash" | cut -d: -f1) - 1))}"
 	else
 		stash="$1"
 	fi
@@ -114,22 +138,22 @@ find_stash() { # [arg]
 	parents_num="$(git rev-list --no-walk --count "$stash^@")"
 	if [ "$parents_num" -lt 2 ] || [ "$parents_num" -gt 3 ]
 	then
-		printf 'fatal: "%s" should have 2 or 3 parents.\n' "$stash" 1>&2
+		printf 'fatal: "%s" should have 2 or 3 parents to be a stash.\n' "$stash" 1>&2
 		exit 1
 	fi
 	if [ "$parents_num" -eq 3 ] && [ "$(git rev-list --no-walk --count "$stash^3^@")" -ne 0 ]
 	then
-		printf 'fatal: "%s^3" should have no parents.\n' "$stash" 1>&2
+		printf 'fatal: "%s^3" should have no parents to be a part of a stash.\n' "$stash" 1>&2
 		exit 1
 	fi
 	if [ "$(git rev-list --no-walk --count "$stash^2^@")" -ne 1 ]
 	then
-		printf 'fatal: The commit "%s^2" should have one parent.\n' "$stash" 1>&2
+		printf 'fatal: The commit "%s^2" should have one parent to be a part of a stash.\n' "$stash" 1>&2
 		exit 1
 	fi
 	if [ "$(git rev-parse "$stash^1")" != "$(git rev-parse "$stash^2^")" ]
 	then
-		printf 'fatal: The commit "%s^1" should be the parent of "%s^2".\n' "$stash" "$stash" 1>&2
+		printf 'fatal: The commit "%s^1" should be the parent of "%s^2" to be a part of a stash.\n' "$stash" "$stash" 1>&2
 		exit 1
 	fi
 	correct_commit_msgs=0
@@ -159,21 +183,17 @@ find_stash() { # [arg]
 }
 
 find_current_branch() {
-	detached=0
-	current_branch="$(git rev-parse --abbrev-ref HEAD)"
-	if [ "$current_branch" = 'HEAD' ]
+	detached=n
+	if git rev-parse HEAD >/dev/null 2>&1
 	then
-		detached=1
-		current_branch="$(git rev-parse HEAD)"
-	fi
-}
-
-check_sanity() {
-	if [ "$(git rev-parse "$current_branch")" = "$(git rev-parse "$stash")" ] || [ "$(git rev-parse "$current_branch")" = "$(git rev-parse "$stash^2")" ] || [ "$(git rev-parse "$current_branch")" = "$(git rev-parse "$stash^3" 2>/dev/null)" ]
-	then
-		printf 'error: HEAD is part of the stash.\n' 1>&2
-		printf 'error: This is insane; I refuse.\n' 1>&2
-		exit 1
+		current_branch="$(git rev-parse --abbrev-ref HEAD)"
+		if [ "$current_branch" = 'HEAD' ]
+		then
+			detached=y
+			current_branch="$(git rev-parse HEAD)"
+		fi
+	else
+		current_branch="~$(git branch --show-current)"
 	fi
 }
 
@@ -209,11 +229,17 @@ do_start() { # args...
 	check_repository_state
 	find_stash "$@"
 	find_current_branch
-	check_sanity
 	save_data
 	
+	if printf '%s' "$current_branch" | grep -q '^~'
+	then
+		git commit --allow-empty --message 'Temporary commit by "git-stash"'
+		rebase_branch="$(printf '%s' "$current_branch" | cut -c2-)"
+	else
+		rebase_branch="$current_branch"
+	fi
 	untangle_git_stash
-	if git rebase --onto "$current_branch" "HEAD~2" "HEAD"
+	if git rebase --onto "$rebase_branch" "HEAD~2" "HEAD" --empty=keep --keep-empty
 	then
 		end_with_success
 	else
@@ -238,7 +264,28 @@ do_abort() { # args...
 	load_data
 	
 	git rebase --abort || true  # Errors are ignored because if rebase is not in progress, we still want to try to restore HEAD.
-	if git switch --quiet "$current_branch"
+	succeeded_switch=n
+	if printf '%s' "$current_branch" | grep -q '^~'
+	then
+		current_branch="$(printf '%s' "$current_branch" | cut -c2-)"
+		git branch --delete --force "$current_branch"
+		if git switch --orphan="$current_branch"
+		then
+			succeeded_switch=y
+		fi
+	elif [ "$detached" = n ]
+	then
+		if git switch --quiet "$current_branch"
+		then
+			succeeded_switch=y
+		fi
+	else
+		if git switch --detach --quiet "$current_branch"
+		then
+			succeeded_switch=y
+		fi
+	fi
+	if [ "$succeeded_switch" = y ]
 	then
 		delete_data
 		printf 'Aborted "git unstash"\n' 1>&2
@@ -260,10 +307,10 @@ do_abort() { # args...
 }
 
 do_unstash() { # args...
-	if [ "$continue_set" -ne 0 ]
+	if [ "$continue_set" = y ]
 	then
 		do_continue "$@"
-	elif [ "$abort_set" -ne 0 ]
+	elif [ "$abort_set" = y ]
 	then
 		do_abort "$@"
 	else
@@ -271,22 +318,22 @@ do_unstash() { # args...
 	fi
 }
 
-getopt_result="$(getopt -o h --long help -o c --long continue --long abort -n "$(basename "$0")" -- "$@")"
+getopt_result="$(getopt -o'hc' --long='help,continue,abort' -n"$(basename "$0")" -- "$@")"
 eval set -- "$getopt_result"
-continue_set=0
-abort_set=0
+continue_set=n
+abort_set=n
 while true
 do
 	case "$1" in
 	-h|--help)
-		show_help
+		print_help
 		exit 0
 		;;
 	-c|--continue)
-		continue_set=1
+		continue_set=y
 		;;
 	--abort)
-		abort_set=1
+		abort_set=y
 		;;
 	--)
 		shift
@@ -295,11 +342,12 @@ do
 	esac
 	shift
 done
-if [ $continue_set -ne 0 ] && [ $abort_set -ne 0 ]
+if [ $continue_set = y ] && [ $abort_set = y ]
 then
 	printf 'error: Unclear whether to continue aborting or to abort continuing.\n' 1>&2
 	exit 1
 fi
 
+cd "$(git rev-parse --show-toplevel)"
 find_data_file
 do_unstash "$@"
