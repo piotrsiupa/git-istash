@@ -9,7 +9,7 @@ list_files() {
 	find . -maxdepth 1 -type f -name '*.sh'
 }
 
-if list_files | xargs -- shellcheck
+if list_files | xargs -- shellcheck --shell=sh
 then
 	printf 'All %i files are correct.\n' "$(list_files | wc -l)"
 	exit 0

@@ -1,5 +1,3 @@
-#!/usr/bin/env sh
-
 set -e
 
 git switch --orphan ooo

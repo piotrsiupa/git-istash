@@ -1,5 +1,3 @@
-#!/usr/bin/env sh
-
 set -e
 
 . "$(dirname "$0")/utils.sh" 1>/dev/null
