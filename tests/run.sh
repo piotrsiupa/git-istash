@@ -53,7 +53,7 @@ create_test_dir() { # test_name
 
 find_tests() { # pattern
 	find . -maxdepth 1 -type f -name 'test_*.sh' -print0 \
-	| xargs -r0n1 -- basename | rev | cut -c4- | rev | cut -c6- \
+	| xargs -r0n1 -- basename | sed 's/^test_\(.*\)\.sh$/\1/' \
 	| grep -P "$1" \
 	| while read -r test_name
 	do
