@@ -2,8 +2,27 @@
 
 set -e
 
-cd "$(dirname "$0")"
-scripts_dir='../scripts'
+print_help() {
+	printf '%s - Script that runs tests from this directory.\n' "$(basename "$0")"
+	printf '\n'
+	printf 'Usage: %s [<options>] [--] [<filter>...]\n' "$(basename "$0")"
+	printf '\n'
+	printf 'Options:\n'
+	printf '    -h, --help\t\t- Print this help message.\n'
+	printf '    -f, --failed\t- Rerun only the tests that failed the last time when\n\t\t\t  they were run. (Check the presence of the test dir.)\n'
+	printf '        --debug\t\t- Print outputs of all commands in run in the tests.\n'
+	printf '    -q, --quiet\t\t- Don'\''t print summaries for passed tests.\n'
+	printf '    -c, --color=when\t- Set color mode (always / never / auto).\n'
+	printf '        --raw-name\t- Print paths to test files instead of prettified names.\n'
+	printf '\n'
+	printf 'Filters:\n'
+	printf 'You can specify one or more filters in the command call. '
+	printf 'The filters are PCRE\nregexps that match test names that should be run. '
+	printf '(A test name is the name of\nthe file without the prefix "test_" and the file extension.) '
+	printf 'A test will be run\nif it matches any of the filters. '
+	printf 'If there are no filters, all tests are run.\n'
+	printf 'This can be used to either list individual tests or filter out some categories.\n'
+}
 
 print_color_code() { # code
 	if [ "$use_color" = y ]
@@ -138,7 +157,7 @@ print_summary() {
 	printf '\n'
 }
 
-getopt_result="$(getopt -o'fqc:' --long='failed,debug,quiet,color,raw,raw-name,file-name' -n"$(basename "$0")" -- "$@")"
+getopt_result="$(getopt -o'hfqc:' --long='help,failed,debug,quiet,color,raw,raw-name,file-name' -n"$(basename "$0")" -- "$@")"
 eval set -- "$getopt_result"
 only_failed=n
 debug_mode=n
@@ -148,6 +167,10 @@ raw_name=n
 while true
 do
 	case "$1" in
+	-h|--help)
+		print_help
+		exit 0
+		;;
 	--failed)
 		only_failed=y
 		;;
@@ -205,15 +228,12 @@ else
 	done
 fi
 
+cd "$(dirname "$0")"
+scripts_dir='../scripts'
 test -d "$scripts_dir"
 PATH="$(realpath "$scripts_dir"):$PATH"
-total_tests="$(find_tests "$filter" | wc -l)"
 export PATH
+total_tests="$(find_tests "$filter" | wc -l)"
 run_tests "$filter"
 print_summary
-if [ "$total_tests" -ne 0 ] && [ "$passed_tests" -eq "$total_tests" ]
-then
-	exit 0
-else
-	exit 1
-fi
+[ "$total_tests" -ne 0 ] && [ "$passed_tests" -eq "$total_tests" ]
