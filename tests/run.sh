@@ -22,6 +22,7 @@ print_help() {
 	printf 'A test will be run\nif it matches any of the filters. '
 	printf 'If there are no filters, all tests are run.\n'
 	printf 'This can be used to either list individual tests or filter out some categories.\n'
+	printf '(See "README.md" in the test directory for more information about test names.)\n'
 }
 
 print_color_code() { # code
