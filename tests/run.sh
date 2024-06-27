@@ -138,7 +138,7 @@ print_summary() {
 	printf '\n'
 }
 
-getopt_result="$(getopt -of --long=failed --long debug -oq --long=quiet -oc: --long=color: --long=raw --long=raw-name --long=file-name -n "$(basename "$0")" -- "$@")"
+getopt_result="$(getopt -o'fqc:' --long='failed,debug,quiet,color,raw,raw-name,file-name' -n"$(basename "$0")" -- "$@")"
 eval set -- "$getopt_result"
 only_failed=n
 debug_mode=n

@@ -10,7 +10,7 @@ is_color_allowed() { # stream_num
 	esac
 }
 
-show_help() {
+print_help() {
 	printf 'git-unstash - Improved version of "git stash pop" the can handle conflicts.\n'
 	printf '\n'
 	printf 'usage: git unstash [<stash>]\n'
@@ -318,7 +318,7 @@ do_unstash() { # args...
 	fi
 }
 
-getopt_result="$(getopt -oh --long=help -oc --long=continue --long=abort -n "$(basename "$0")" -- "$@")"
+getopt_result="$(getopt -o'hc' --long='help,continue,abort' -n"$(basename "$0")" -- "$@")"
 eval set -- "$getopt_result"
 continue_set=n
 abort_set=n
@@ -326,7 +326,7 @@ while true
 do
 	case "$1" in
 	-h|--help)
-		show_help
+		print_help
 		exit 0
 		;;
 	-c|--continue)
