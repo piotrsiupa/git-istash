@@ -55,7 +55,7 @@ run_test() { # test_name
 			printf '0' 1>&4
 		elif [ "$debug_mode" = n ]
 		then
-			if "../$(get_test_script "$1")" 1>/dev/null 2>&1
+			if sh "../$(get_test_script "$1")" 1>/dev/null 2>&1
 			then
 				printf y 1>&4
 			else
@@ -63,7 +63,7 @@ run_test() { # test_name
 			fi
 		else
 			{
-				if "../$(get_test_script "$1")"
+				if sh "../$(get_test_script "$1")"
 				then
 					printf y 1>&4
 				else
