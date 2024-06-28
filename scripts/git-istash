@@ -22,7 +22,10 @@ find_data_file() {
 	data_file="$git_dir/istash"
 }
 save_data() {
-	printf '%s\n%s\n%s\n' "$stash" "$current_branch" "$detached" >"$data_file"
+	printf '%s\n%s\n' \
+		"$stash" \
+		"$(if [ "$orphan" = y ] ; then printf '~' ; fi ; printf '%s' "$target")" \
+		>"$data_file"
 }
 does_data_exits() {
 	test -f "$data_file"
@@ -32,16 +35,28 @@ load_data() {
 	then
 		printf 'fatal: No istash in progress?\n' 1>&2
 		exit 1
-	elif [ "$(wc -l <"$data_file")" -ne 3 ]
+	elif [ "$(wc -l <"$data_file")" -ne 2 ]
 	then
-		printf 'fatal: "%s" is should contain 3 lines.\n' "$data_file" 1>&2
+		printf 'fatal: "%s" is should contain 2 lines.\n' "$data_file" 1>&2
 		exit 1
 	else
 		{
 			read -r stash
-			read -r current_branch
-			read -r detached
+			read -r target
 		} <"$data_file"
+		if printf '%s' "$target" | grep -q '^~'
+		then
+			orphan=y
+			target="$(printf '%s' "$target" | cut -c2-)"
+		else
+			orphan=n
+		fi
+		if [ "$orphan" = n ] && [ "$(git rev-parse "$target")" = "$target" ]
+		then
+			detached=y
+		else
+			detached=n
+		fi
 	fi
 }
 delete_data() {
@@ -77,14 +92,13 @@ end_with_rebase_problem() {
 end_with_success() {
 	other_changes_hash="$(git rev-parse HEAD)"
 	staged_changes_hash="$(git rev-parse HEAD~)"
-	if printf '%s' "$current_branch" | grep -q '^~'
+	if [ "$orphan" = 'y' ]
 	then
-		current_branch="$(printf '%s' "$current_branch" | cut -c2-)"
-		git branch --delete --force "$current_branch"
-		git switch --orphan="$current_branch"
+		git branch --delete --force "$target"
+		git switch --orphan "$target"
 	elif [ "$detached" = n ]
 	then
-		git switch "$current_branch"
+		git switch "$target"
 	else
 		git switch -d HEAD~2
 	fi
@@ -184,16 +198,18 @@ find_stash() { # [arg]
 
 find_current_branch() {
 	detached=n
+	orphan=n
 	if git rev-parse HEAD >/dev/null 2>&1
 	then
-		current_branch="$(git rev-parse --abbrev-ref HEAD)"
-		if [ "$current_branch" = 'HEAD' ]
+		target="$(git rev-parse --abbrev-ref HEAD)"
+		if [ "$target" = 'HEAD' ]
 		then
 			detached=y
-			current_branch="$(git rev-parse HEAD)"
+			target="$(git rev-parse HEAD)"
 		fi
 	else
-		current_branch="~$(git branch --show-current)"
+		orphan=y
+		target="$(git branch --show-current)"
 	fi
 }
 
@@ -231,15 +247,12 @@ do_start() { # args...
 	find_current_branch
 	save_data
 	
-	if printf '%s' "$current_branch" | grep -q '^~'
+	if [ "$orphan" = y ]
 	then
 		git commit --allow-empty --message 'Temporary commit by "git-stash"'
-		rebase_branch="$(printf '%s' "$current_branch" | cut -c2-)"
-	else
-		rebase_branch="$current_branch"
 	fi
 	untangle_git_stash
-	if git rebase --onto "$rebase_branch" "HEAD~2" "HEAD" --empty=keep --keep-empty
+	if git rebase --onto "$target" "HEAD~2" "HEAD" --empty=keep --keep-empty
 	then
 		end_with_success
 	else
@@ -265,22 +278,21 @@ do_abort() { # args...
 	
 	git rebase --abort || true  # Errors are ignored because if rebase is not in progress, we still want to try to restore HEAD.
 	succeeded_switch=n
-	if printf '%s' "$current_branch" | grep -q '^~'
+	if [ "$orphan" = y ]
 	then
-		current_branch="$(printf '%s' "$current_branch" | cut -c2-)"
-		git branch --delete --force "$current_branch"
-		if git switch --orphan="$current_branch"
+		git branch --delete --force "$target"
+		if git switch --orphan "$target"
 		then
 			succeeded_switch=y
 		fi
 	elif [ "$detached" = n ]
 	then
-		if git switch --quiet "$current_branch"
+		if git switch --quiet "$target"
 		then
 			succeeded_switch=y
 		fi
 	else
-		if git switch --detach --quiet "$current_branch"
+		if git switch --detach --quiet "$target"
 		then
 			succeeded_switch=y
 		fi
