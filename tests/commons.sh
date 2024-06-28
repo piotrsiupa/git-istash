@@ -2,7 +2,10 @@
 
 printf 'This script is not supposed to be run.\n'
 #shellcheck disable=SC2016
-printf 'If you want to use it in a test, source it with the command:\n. ../utils.sh 1>/dev/null\n'
+printf 'If you want to use it IN a test, source it with the command:\n. ../commons.sh 1>/dev/null\n'
+if [ -t 1 ] ; then exit 1 ; fi
+
+set -e
 
 run_and_capture() { # command [arguments...]
 	stdout_pipe_file="$(mktemp)"

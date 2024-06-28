@@ -1,4 +1,4 @@
-set -e
+. "$(dirname "$0")/commons.sh" 1>/dev/null
 
 mkdir xxx yyy
 printf 'bbb0\n' >aaa

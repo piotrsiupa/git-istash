@@ -1,4 +1,4 @@
-set -e
+. "$(dirname "$0")/commons.sh" 1>/dev/null
 
 printf 'ddd\n' >aaa
 git add aaa

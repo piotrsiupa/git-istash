@@ -1,6 +1,4 @@
-set -e
-
-. "$(dirname "$0")/utils.sh" 1>/dev/null
+. "$(dirname "$0")/commons.sh" 1>/dev/null
 
 printf 'aaa\n' >aaa
 git add aaa

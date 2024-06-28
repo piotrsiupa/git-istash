@@ -1,4 +1,4 @@
-set -e
+. "$(dirname "$0")/commons.sh" 1>/dev/null
 
 printf 'bbb\n' >aaa
 git stash push -u -m 'earlier stash entry'
