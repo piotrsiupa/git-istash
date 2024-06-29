@@ -68,37 +68,49 @@ find_tests() { # pattern
 run_test() { # test_name
 	cleanup_test "$1"
 	create_test_dir "$1" 1>/dev/null
-	exec 4>&1
+	exec 5>&1
 	test_passed="$(
-		if ! cd "$(get_test_dir "$1")"
-		then
-			printf '0' 1>&4
-		elif [ "$debug_mode" = n ]
-		then
-			if sh "../$(get_test_script "$1")" 1>/dev/null 2>&1
-			then
-				printf y 1>&4
-			else
-				printf n 1>&4
-			fi
-		else
+		exec 3>&2
+		{
 			{
-				if sh "../$(get_test_script "$1")"
+				if ! cd "$(get_test_dir "$1")"
 				then
-					printf y 1>&4
-				else
-					printf n 1>&4
-				fi 5>&2 2>&1 1>&5 5>&- \
-				| if [ "$use_color" = y ]
+					printf '0' 1>&5
+				elif [ "$debug_mode" = n ]
 				then
-					sed -u 's/^.*$/\t\x1B[31m&\x1B[39m/'
+					if sh "../$(get_test_script "$1")" 1>/dev/null 2>&1
+					then
+						printf y 1>&5
+					else
+						printf n 1>&5
+					fi
 				else
-					sed -u 's/^/\t/'
-				fi
-			} 5>&2 2>&1 1>&5 5>&- | sed -u 's/^/\t/'
-		fi 5>&4 4>&1 1>&5 5>&-
+					{
+						if sh "../$(get_test_script "$1")"
+						then
+							printf y 1>&5
+						else
+							printf n 1>&5
+						fi 6>&2 2>&1 1>&6 6>&- \
+						| if [ "$use_color" = y ]
+						then
+							sed -u 's/^.*$/\t\x1B[31m&\x1B[39m/'
+						else
+							sed -u 's/^/\t/'
+						fi
+					} 6>&2 2>&1 1>&6 6>&- | sed -u 's/^/\t/'
+				fi 6>&5 5>&1 1>&6 6>&-
+			} 6>&3 3>&1 1>&6 6>&- \
+			| if [ "$use_color" = y ]
+			then
+				sed -u 's/^.*$/\t\x1B[1;31mFailed assertion:\x1B[22m &\x1B[39m/'
+			else
+				sed -u 's/^/\tFailed assertion: /'
+			fi
+		} 6>&3 3>&1 1>&6 6>&-
+		exec 3>&-
 	)"
-	exec 4>&-
+	exec 5>&-
 	if [ "$raw_name" = n ]
 	then
 		display_name="\"$(printf '%s' "$1" | tr '_' ' ')\""
@@ -125,18 +137,18 @@ run_test() { # test_name
 	fi
 }
 run_tests() { # pattern
-	exec 3>&1
+	exec 4>&1
 	passed_tests="$(
 		find_tests "$1" \
 		| while read -r test_name
 		do
-			if run_test "$test_name" 1>&3
+			if run_test "$test_name" 1>&4
 			then
 				printf '1'
 			fi
 		done | head -n 1 | wc -c
 	)"
-	exec 3>&-
+	exec 4>&-
 }
 
 print_summary() {
@@ -158,7 +170,7 @@ print_summary() {
 	printf '\n'
 }
 
-getopt_result="$(getopt -o'hfqc:' --long='help,failed,debug,quiet,color,raw,raw-name,file-name' -n"$(basename "$0")" -- "$@")"
+getopt_result="$(getopt -o'hfqc:' --long='help,failed,debug,quiet,color:,raw,raw-name,file-name' -n"$(basename "$0")" -- "$@")"
 eval set -- "$getopt_result"
 only_failed=n
 debug_mode=n

@@ -12,7 +12,7 @@ git stash push
 git switch --orphan ooo
 
 assert_failure capture_outputs git unstash
-assert_conflict_message
+assert_conflict_message git unstash
 assert_status 'DU aaa'
 assert_stash_count 1
 assert_branch_count 2

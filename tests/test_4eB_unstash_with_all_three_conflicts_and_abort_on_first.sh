@@ -17,7 +17,7 @@ git commit -m 'Changed aaa & added zzz'
 
 correct_head_hash="$(git rev-parse HEAD)"
 assert_failure capture_outputs git unstash
-assert_conflict_message
+assert_conflict_message git unstash
 assert_tracked_files 'aaa|zzz'
 assert_status 'UU aaa'
 assert_stash_count 1

@@ -34,7 +34,7 @@ correct_head_hash="$(git rev-parse HEAD)"
 cd ./xxx
 assert_failure capture_outputs git unstash
 cd ..
-assert_conflict_message
+assert_conflict_message git unstash
 assert_status 'UU aaa|UU xxx/aaa|UU yyy/aaa'
 assert_stash_count 1
 assert_branch_count 1

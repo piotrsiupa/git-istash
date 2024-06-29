@@ -25,7 +25,7 @@ mkdir xxx
 cd ./xxx
 assert_failure capture_outputs git unstash
 cd ..
-assert_conflict_message
+assert_conflict_message git unstash
 assert_status 'DU aaa|DU xxx/aaa|DU yyy/aaa'
 assert_stash_count 1
 assert_branch_count 2
