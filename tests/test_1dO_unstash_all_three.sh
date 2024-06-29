@@ -1,4 +1,4 @@
-set -e
+. "$(dirname "$0")/commons.sh" 1>/dev/null
 
 printf 'bbb\n' >aaa
 git add aaa
@@ -9,11 +9,9 @@ git stash push -u
 git switch --orphan ooo
 
 git istash
-test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = 'AM aaa|?? ddd'
-test "$(git show :aaa)" = 'bbb'
-test "$(cat aaa)" = 'ccc'
-test "$(cat ddd)" = 'ddd'
-test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 0
-test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1
-if git rev-parse HEAD ; then exit 1 ; fi
-test "$(git branch --show-current)" = 'ooo'
+assert_status 'AM aaa|?? ddd'
+assert_file_contents aaa 'ccc' 'bbb'
+assert_file_contents ddd 'ddd'
+assert_stash_count 0
+assert_branch_count 1
+assert_head_name '~ooo'

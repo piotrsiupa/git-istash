@@ -1,4 +1,4 @@
-set -e
+. "$(dirname "$0")/commons.sh" 1>/dev/null
 
 printf 'aaa\n' >aaa
 git add aaa
@@ -12,13 +12,12 @@ git stash push -u
 
 correct_head_hash="$(git rev-parse HEAD)"
 git istash
-test "$(git ls-tree -r --name-only HEAD | sort | head -c -1 | tr '\n' '|')" = 'aaa'
-test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = 'MM aaa|?? ddd'
-test "$(git show :aaa)" = 'bbb'
-test "$(cat aaa)" = 'ccc'
-test "$(cat ddd)" = 'ddd'
-test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 0
-test "$(git rev-list --count HEAD)" -eq 2
-test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1
-test "$(git rev-parse HEAD)" = "$correct_head_hash"
-test "$(git rev-parse --abbrev-ref --symbolic-full-name HEAD)" = 'master'
+assert_tracked_files 'aaa'
+assert_status 'MM aaa|?? ddd'
+assert_file_contents aaa 'ccc' 'bbb'
+assert_file_contents ddd 'ddd'
+assert_stash_count 0
+assert_log_length 2
+assert_branch_count 1
+assert_head_hash "$correct_head_hash"
+assert_head_name 'master'

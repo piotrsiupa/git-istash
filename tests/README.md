@@ -15,10 +15,10 @@ A script that checks all the scripts in the projects (including the tests), usin
 (For more information, run `shellcheck.sh --help`.)
 
 
-# `utils.sh`
+# `commons.sh`
 
 A helper file with utility functions for implementing tests.
-This script is not intended to use outside of tests.
+This script is **not** intended to be used outside of tests.
 
 
 # Tests

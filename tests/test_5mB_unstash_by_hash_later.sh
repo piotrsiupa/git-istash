@@ -1,4 +1,4 @@
-set -e
+. "$(dirname "$0")/commons.sh" 1>/dev/null
 
 printf 'aaa\n' >aaa
 git add aaa
@@ -11,16 +11,15 @@ git reset --hard
 printf 'ccc\n' >aaa
 later_stash_hash="$(git stash create 'later stash entry')"
 git reset --hard
-test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 0
+assert_stash_count 0
 
 correct_head_hash="$(git rev-parse HEAD)"
-git istash "$later_stash_hash"
-test "$(git ls-tree -r --name-only HEAD | sort | head -c -1 | tr '\n' '|')" = 'aaa'
-test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = ' M aaa'
-test "$(git show :aaa)" = 'aaa'
-test "$(cat aaa)" = 'ccc'
-test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 0
-test "$(git rev-list --count HEAD)" -eq 2
-test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1
-test "$(git rev-parse HEAD)" = "$correct_head_hash"
-test "$(git rev-parse --abbrev-ref --symbolic-full-name HEAD)" = 'master'
+assert_success git istash "$later_stash_hash"
+assert_tracked_files 'aaa'
+assert_status ' M aaa'
+assert_file_contents aaa 'ccc' 'aaa'
+assert_stash_count 0
+assert_log_length 2
+assert_branch_count 1
+assert_head_hash "$correct_head_hash"
+assert_head_name 'master'

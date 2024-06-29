@@ -1,4 +1,4 @@
-set -e
+. "$(dirname "$0")/commons.sh" 1>/dev/null
 
 git branch -m branch0
 printf 'aaa\n' >aaa
@@ -15,21 +15,19 @@ git switch -d HEAD
 
 git switch branch0
 git merge branch1 --no-ff --no-commit
-test "$(git ls-tree -r --name-only HEAD | sort | head -c -1 | tr '\n' '|')" = 'aaa'
-test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = ''
-test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
-test "$(git show :aaa)" = 'aaa'
-test "$(cat aaa)" = 'aaa'
-test "$(git rev-list --count HEAD)" -eq 2
-test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 2
+assert_tracked_files 'aaa'
+assert_status ''
+assert_stash_count 1
+assert_file_contents aaa 'aaa' 'aaa'
+assert_log_length 2
+assert_branch_count 2
 
 correct_head_hash="$(git rev-parse HEAD)"
-if git istash ; then exit 1 ; fi
-test "$(git ls-tree -r --name-only HEAD | sort | head -c -1 | tr '\n' '|')" = 'aaa'
-test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = ''
-test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
-test "$(git show :aaa)" = 'aaa'
-test "$(cat aaa)" = 'aaa'
-test "$(git rev-list --count HEAD)" -eq 2
-test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 2
-test "$(git rev-parse HEAD)" = "$correct_head_hash"
+assert_failure git istash
+assert_tracked_files 'aaa'
+assert_status ''
+assert_stash_count 1
+assert_file_contents aaa 'aaa' 'aaa'
+assert_log_length 2
+assert_branch_count 2
+assert_head_hash "$correct_head_hash"

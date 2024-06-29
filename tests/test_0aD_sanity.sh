@@ -1,36 +1,33 @@
-set -e
+. "$(dirname "$0")/commons.sh" 1>/dev/null
 
 printf 'aaa\n' >aaa
 git add aaa
 git commit -m 'Added aaa'
-test "$(git ls-tree -r --name-only HEAD | sort | head -c -1 | tr '\n' '|')" = 'aaa'
-test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = ''
-test "$(git show :aaa)" = 'aaa'
-test "$(cat aaa)" = 'aaa'
-test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 0
-test "$(git rev-list --count HEAD)" -eq 2
-test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1
+assert_tracked_files 'aaa'
+assert_status ''
+assert_file_contents aaa 'aaa' 'aaa'
+assert_stash_count 0
+assert_log_length 2
+assert_branch_count 1
 
 printf 'bbb\n' >aaa
 git stash push
-test "$(git ls-tree -r --name-only HEAD | sort | head -c -1 | tr '\n' '|')" = 'aaa'
-test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = ''
-test "$(git show :aaa)" = 'aaa'
-test "$(cat aaa)" = 'aaa'
-test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
-test "$(git rev-list --count HEAD)" -eq 2
-test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1
+assert_tracked_files 'aaa'
+assert_status ''
+assert_file_contents aaa 'aaa' 'aaa'
+assert_stash_count 1
+assert_log_length 2
+assert_branch_count 1
 
 git switch -d HEAD
 
 correct_head_hash="$(git rev-parse HEAD)"
-git stash pop
-test "$(git ls-tree -r --name-only HEAD | sort | head -c -1 | tr '\n' '|')" = 'aaa'
-test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = ' M aaa'
-test "$(git show :aaa)" = 'aaa'
-test "$(cat aaa)" = 'bbb'
-test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 0
-test "$(git rev-list --count HEAD)" -eq 2
-test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1
-test "$(git rev-parse HEAD)" = "$correct_head_hash"
-test "$(git rev-parse --abbrev-ref --symbolic-full-name HEAD)" = 'HEAD'
+assert_success git stash pop
+assert_tracked_files 'aaa'
+assert_status ' M aaa'
+assert_file_contents aaa 'bbb' 'aaa'
+assert_stash_count 0
+assert_log_length 2
+assert_branch_count 1
+assert_head_hash "$correct_head_hash"
+assert_head_name 'HEAD'
