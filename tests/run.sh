@@ -53,7 +53,7 @@ create_test_dir() { # test_name
 
 find_tests() { # pattern
 	find . -maxdepth 1 -type f -name 'test_*.sh' -print0 \
-	| xargs -r0n1 -- basename | rev | cut -c4- | rev | cut -c6- \
+	| xargs -r0n1 -- basename | sed 's/^test_\(.*\)\.sh$/\1/' \
 	| grep -P "$1" \
 	| while read -r test_name
 	do
@@ -144,10 +144,10 @@ print_summary() {
 	then
 		if [ "$passed_tests" -eq "$total_tests" ]
 		then
-			print_color_code '\e[42;1;32;4m'
+			print_color_code '\e[42;37;4m'
 			printf 'Passed all %i tests.' "$total_tests"
 		else
-			print_color_code '\e[41;2;31;4m'
+			print_color_code '\e[41;30;4m'
 			printf 'Passed %i out of %i tests.' "$passed_tests" "$total_tests"
 		fi
 	else
