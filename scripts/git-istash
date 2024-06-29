@@ -92,8 +92,23 @@ end_with_rebase_problem() {
 end_with_success() {
 	other_changes_hash="$(git rev-parse HEAD)"
 	staged_changes_hash="$(git rev-parse HEAD~)"
+	if [ "$orphan" = n ] && [ "$(git rev-parse HEAD~2)" != "$(git rev-parse "$target")" ]
+	then
+		printf 'Fatal: HEAD is not in correct position after rebasing.\n' 1>&2
+		exit 1
+	fi
 	if [ "$orphan" = 'y' ]
 	then
+		if [ "$(git rev-list --no-walk --count HEAD~2^@)" -ne 0 ]
+		then
+			printf 'Fatal: Target branch is not an orphan anymore.\n' 1>&2
+			exit 1
+		fi
+		if [ -n "$(git ls-tree -r --name-only HEAD~2)" ]
+		then
+			printf 'Fatal: The empty commit created for the command is not empty.\n' 1>&2
+			exit 1
+		fi
 		git branch --delete --force "$target"
 		git switch --orphan "$target"
 	elif [ "$detached" = n ]
