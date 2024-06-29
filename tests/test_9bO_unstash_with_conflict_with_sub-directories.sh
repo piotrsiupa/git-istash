@@ -23,33 +23,25 @@ git switch --orphan ooo
 
 mkdir xxx
 cd ./xxx
-if run_and_capture git unstash ; then exit 1 ; fi
+assert_failure capture_outputs git unstash
 cd ..
-text="$(printf '%s' "$stderr" | tail -n4)"
-test "$text" = '
-hint: Disregard all hints above about using "git rebase".
-hint: Use "git unstash --continue" after fixing conflicts.
-hint: To abort and get back to the state before "git unstash", run "git unstash --abort".'
-test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = 'DU aaa|DU xxx/aaa|DU yyy/aaa'
-test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
-test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 2
+assert_conflict_message
+assert_status 'DU aaa|DU xxx/aaa|DU yyy/aaa'
+assert_stash_count 1
+assert_branch_count 2
 
 printf 'eee0\n' >aaa
 printf 'eee1\n' >xxx/aaa
 printf 'eee2\n' >yyy/aaa
 git add aaa xxx/aaa yyy/aaa
 cd ./xxx
-if run_and_capture git unstash --continue ; then exit 1 ; fi
+assert_failure capture_outputs git unstash --continue
 cd ..
-text="$(printf '%s' "$stderr" | tail -n4)"
-test "$text" = '
-hint: Disregard all hints above about using "git rebase".
-hint: Use "git unstash --continue" after fixing conflicts.
-hint: To abort and get back to the state before "git unstash", run "git unstash --abort".'
-test "$(git ls-tree -r --name-only HEAD | sort | head -c -1 | tr '\n' '|')" = 'aaa|xxx/aaa|yyy/aaa'
-test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = 'UU aaa|UU xxx/aaa|A  xxx/zzz|UU yyy/aaa|A  yyy/zzz|A  zzz'
-test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
-test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 2
+assert_conflict_message
+assert_tracked_files 'aaa|xxx/aaa|yyy/aaa'
+assert_status 'UU aaa|UU xxx/aaa|A  xxx/zzz|UU yyy/aaa|A  yyy/zzz|A  zzz'
+assert_stash_count 1
+assert_branch_count 2
 
 printf 'fff0\n' >aaa
 printf 'fff1\n' >xxx/aaa
@@ -59,19 +51,15 @@ printf 'xxx1\n' >xxx/zzz
 printf 'xxx2\n' >yyy/zzz
 git add aaa xxx/aaa yyy/aaa zzz xxx/zzz yyy/zzz
 cd ./xxx
-git unstash --continue
+assert_success git unstash --continue
 cd ..
-test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = 'AM aaa|AM xxx/aaa|AM yyy/aaa|?? xxx/zzz|?? yyy/zzz|?? zzz'
-test "$(git show :aaa)" = 'eee0'
-test "$(git show :xxx/aaa)" = 'eee1'
-test "$(git show :yyy/aaa)" = 'eee2'
-test "$(cat aaa)" = 'fff0'
-test "$(cat xxx/aaa)" = 'fff1'
-test "$(cat yyy/aaa)" = 'fff2'
-test "$(cat zzz)" = 'xxx0'
-test "$(cat xxx/zzz)" = 'xxx1'
-test "$(cat yyy/zzz)" = 'xxx2'
-test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 0
-test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1
-if git rev-parse HEAD ; then exit 1 ; fi
-test "$(git branch --show-current)" = 'ooo'
+assert_status 'AM aaa|AM xxx/aaa|AM yyy/aaa|?? xxx/zzz|?? yyy/zzz|?? zzz'
+assert_file_contents aaa 'fff0' 'eee0'
+assert_file_contents xxx/aaa 'fff1' 'eee1'
+assert_file_contents yyy/aaa 'fff2' 'eee2'
+assert_file_contents zzz 'xxx0'
+assert_file_contents xxx/zzz 'xxx1'
+assert_file_contents yyy/zzz 'xxx2'
+assert_stash_count 0
+assert_branch_count 1
+assert_head_name '~ooo'

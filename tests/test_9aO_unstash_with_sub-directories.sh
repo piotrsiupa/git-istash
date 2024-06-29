@@ -19,17 +19,13 @@ mkdir xxx
 cd ./xxx
 git unstash
 cd ..
-test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = 'AM aaa|AM xxx/aaa|AM yyy/aaa|?? xxx/zzz|?? yyy/zzz|?? zzz'
-test "$(git show :aaa)" = 'bbb0'
-test "$(git show :xxx/aaa)" = 'bbb1'
-test "$(git show :yyy/aaa)" = 'bbb2'
-test "$(cat aaa)" = 'ccc0'
-test "$(cat xxx/aaa)" = 'ccc1'
-test "$(cat yyy/aaa)" = 'ccc2'
-test "$(cat zzz)" = 'zzz0'
-test "$(cat xxx/zzz)" = 'zzz1'
-test "$(cat yyy/zzz)" = 'zzz2'
-test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 0
-test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1
-if git rev-parse HEAD ; then exit 1 ; fi
-test "$(git branch --show-current)" = 'ooo'
+assert_status 'AM aaa|AM xxx/aaa|AM yyy/aaa|?? xxx/zzz|?? yyy/zzz|?? zzz'
+assert_file_contents aaa 'ccc0' 'bbb0'
+assert_file_contents xxx/aaa 'ccc1' 'bbb1'
+assert_file_contents yyy/aaa 'ccc2' 'bbb2'
+assert_file_contents zzz 'zzz0'
+assert_file_contents xxx/zzz 'zzz1'
+assert_file_contents yyy/zzz 'zzz2'
+assert_stash_count 0
+assert_branch_count 1
+assert_head_name '~ooo'

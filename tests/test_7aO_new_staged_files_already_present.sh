@@ -9,11 +9,9 @@ git switch --orphan ooo
 
 printf 'xxx\n' >xxx
 git add xxx
-if git unstash 1 ; then exit 1 ; fi
-test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = 'A  xxx'
-test "$(git show :xxx)" = 'xxx'
-test "$(cat xxx)" = 'xxx'
-test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
-test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1
-if git rev-parse HEAD ; then exit 1 ; fi
-test "$(git branch --show-current)" = 'ooo'
+assert_failure git unstash 1
+assert_status 'A  xxx'
+assert_file_contents xxx 'xxx' 'xxx'
+assert_stash_count 1
+assert_branch_count 1
+assert_head_name '~ooo'

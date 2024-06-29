@@ -9,26 +9,21 @@ git stash push
 
 git switch --orphan ooo
 
-if run_and_capture git unstash ; then exit 1 ; fi
-text="$(printf '%s' "$stderr" | tail -n4)"
-test "$text" = '
-hint: Disregard all hints above about using "git rebase".
-hint: Use "git unstash --continue" after fixing conflicts.
-hint: To abort and get back to the state before "git unstash", run "git unstash --abort".'
-test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = 'DU aaa'
-test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
-test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 2
+assert_failure capture_outputs git unstash
+assert_conflict_message
+assert_status 'DU aaa'
+assert_stash_count 1
+assert_branch_count 2
 
 correct_head_hash2="$(git rev-parse HEAD)"
-if git unstash --continue --abort ; then exit 1 ; fi
-test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = 'DU aaa'
-test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
-test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 2
-test "$(git rev-parse HEAD)" = "$correct_head_hash2"
+assert_failure git unstash --continue --abort
+assert_status 'DU aaa'
+assert_stash_count 1
+assert_branch_count 2
+assert_head_hash "$correct_head_hash2"
 
-git unstash --abort
-test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = ''
-test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
-test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1
-if git rev-parse HEAD ; then exit 1 ; fi
-test "$(git branch --show-current)" = 'ooo'
+assert_success git unstash --abort
+assert_status ''
+assert_stash_count 1
+assert_branch_count 1
+assert_head_name '~ooo'

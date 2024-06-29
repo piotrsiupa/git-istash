@@ -7,21 +7,18 @@ git stash push -m 'the only stash'
 
 git switch --orphan ooo
 
-if git unstash 'stash^{/second}' ; then exit 1 ; fi
-test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = ''
-test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
-test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1
-if git rev-parse HEAD ; then exit 1 ; fi
-test "$(git branch --show-current)" = 'ooo'
+assert_failure git unstash 'stash^{/second}'
+assert_status ''
+assert_stash_count 1
+assert_branch_count 1
+assert_head_name '~ooo'
 
 printf 'ddd\n' >aaa
 git add aaa
 printf 'eee\n' >aaa
-if git unstash 'stash^{/second}' ; then exit 1 ; fi
-test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = 'AM aaa'
-test "$(git show :aaa)" = 'ddd'
-test "$(cat aaa)" = 'eee'
-test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
-test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1
-if git rev-parse HEAD ; then exit 1 ; fi
-test "$(git branch --show-current)" = 'ooo'
+assert_failure git unstash 'stash^{/second}'
+assert_status 'AM aaa'
+assert_file_contents aaa 'eee' 'ddd'
+assert_stash_count 1
+assert_branch_count 1
+assert_head_name '~ooo'

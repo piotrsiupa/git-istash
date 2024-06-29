@@ -12,27 +12,25 @@ git stash push -m 'the only stash'
 git switch -d HEAD
 
 correct_head_hash="$(git rev-parse HEAD)"
-if git unstash --abort ; then exit 1 ; fi
-test "$(git ls-tree -r --name-only HEAD | sort | head -c -1 | tr '\n' '|')" = 'aaa'
-test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = ''
-test "$(git show :aaa)" = 'aaa'
-test "$(cat aaa)" = 'aaa'
-test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
-test "$(git rev-list --count HEAD)" -eq 2
-test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1
-test "$(git rev-parse HEAD)" = "$correct_head_hash"
-test "$(git rev-parse --abbrev-ref --symbolic-full-name HEAD)" = 'HEAD'
+assert_failure git unstash --abort
+assert_tracked_files 'aaa'
+assert_status ''
+assert_file_contents aaa 'aaa' 'aaa'
+assert_stash_count 1
+assert_log_length 2
+assert_branch_count 1
+assert_head_hash "$correct_head_hash"
+assert_head_name 'HEAD'
 
 printf 'ddd\n' >aaa
 git add aaa
 printf 'eee\n' >aaa
-if git unstash --abort ; then exit 1 ; fi
-test "$(git ls-tree -r --name-only HEAD | sort | head -c -1 | tr '\n' '|')" = 'aaa'
-test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = 'MM aaa'
-test "$(git show :aaa)" = 'ddd'
-test "$(cat aaa)" = 'eee'
-test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
-test "$(git rev-list --count HEAD)" -eq 2
-test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1
-test "$(git rev-parse HEAD)" = "$correct_head_hash"
-test "$(git rev-parse --abbrev-ref --symbolic-full-name HEAD)" = 'HEAD'
+assert_failure git unstash --abort
+assert_tracked_files 'aaa'
+assert_status 'MM aaa'
+assert_file_contents aaa 'eee' 'ddd'
+assert_stash_count 1
+assert_log_length 2
+assert_branch_count 1
+assert_head_hash "$correct_head_hash"
+assert_head_name 'HEAD'

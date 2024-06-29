@@ -8,19 +8,18 @@ printf 'ddd\n' >aaa
 git add aaa
 printf 'eee\n' >aaa
 git stash push -m 'the stash'
-test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1
+assert_branch_count 1
 
 git switch -d HEAD
 
 correct_head_hash="$(git rev-parse HEAD)"
 printf 'xxx\n' >aaa
-if git unstash 1 ; then exit 1 ; fi
-test "$(git ls-tree -r --name-only HEAD | sort | head -c -1 | tr '\n' '|')" = 'aaa'
-test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = ' M aaa'
-test "$(git show :aaa)" = 'aaa'
-test "$(cat aaa)" = 'xxx'
-test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
-test "$(git rev-list --count HEAD)" -eq 2
-test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1
-test "$(git rev-parse HEAD)" = "$correct_head_hash"
-test "$(git rev-parse --abbrev-ref --symbolic-full-name HEAD)" = 'HEAD'
+assert_failure git unstash 1
+assert_tracked_files 'aaa'
+assert_status ' M aaa'
+assert_file_contents aaa 'xxx' 'aaa'
+assert_stash_count 1
+assert_log_length 2
+assert_branch_count 1
+assert_head_hash "$correct_head_hash"
+assert_head_name 'HEAD'

@@ -14,14 +14,13 @@ later_stash_hash="$(git rev-parse 'stash@{0}')"
 git switch -d HEAD
 
 correct_head_hash="$(git rev-parse HEAD)"
-git unstash 'stash@{1}'
-test "$(git ls-tree -r --name-only HEAD | sort | head -c -1 | tr '\n' '|')" = 'aaa'
-test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = ' M aaa'
-test "$(git show :aaa)" = 'aaa'
-test "$(cat aaa)" = 'bbb'
-test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
-test "$(git rev-parse 'stash@{0}')" = "$later_stash_hash"
-test "$(git rev-list --count HEAD)" -eq 2
-test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1
-test "$(git rev-parse HEAD)" = "$correct_head_hash"
-test "$(git rev-parse --abbrev-ref --symbolic-full-name HEAD)" = 'HEAD'
+assert_success git unstash 'stash@{1}'
+assert_tracked_files 'aaa'
+assert_status ' M aaa'
+assert_file_contents aaa 'bbb' 'aaa'
+assert_stash_count 1
+assert_stash_hash 0 "$later_stash_hash"
+assert_log_length 2
+assert_branch_count 1
+assert_head_hash "$correct_head_hash"
+assert_head_name 'HEAD'

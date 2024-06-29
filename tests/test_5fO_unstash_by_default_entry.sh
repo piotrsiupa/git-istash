@@ -9,11 +9,10 @@ git stash push -u -m 'later stash entry'
 
 git switch --orphan ooo
 
-git unstash stash
-test "$(git status --porcelain | head -c -1 | tr '\n' '|')" = '?? aaa'
-test "$(cat aaa)" = 'ccc'
-test "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" -eq 1
-test "$(git rev-parse 'stash@{0}')" = "$earlier_stash_hash"
-test "$(git for-each-ref refs/heads --format='x' | wc -l)" -eq 1
-if git rev-parse HEAD ; then exit 1 ; fi
-test "$(git branch --show-current)" = 'ooo'
+assert_success git unstash stash
+assert_status '?? aaa'
+assert_file_contents aaa 'ccc'
+assert_stash_count 1
+assert_stash_hash 0 "$earlier_stash_hash"
+assert_branch_count 1
+assert_head_name '~ooo'
