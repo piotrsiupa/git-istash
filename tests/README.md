@@ -15,10 +15,10 @@ A script that checks all the scripts in the projects (including the tests), usin
 (For more information, run `shellcheck.sh --help`.)
 
 
-# `utils.sh`
+# `commons.sh`
 
 A helper file with utility functions for implementing tests.
-This script is not intended to use outside of tests.
+This script is **not** intended to be used outside of tests.
 
 
 # Tests
@@ -53,6 +53,6 @@ Each test has 3-character prefix followed by a `_`.
 - The lowercase letter at the second position is just an "ID" of the specific test. (Like a test number but a letter instead.)
   If there are multiple tests with the same "ID" in a category, they are testing for the same thing.
 - The uppercase letter at the third position is the state of the Git `HEAD` during the test:  
-  `B` - `HEAD` points to a normal Git branch. (Also, the test name ends with `_-_branch`.)  
-  `D` - `HEAD` is detached (it only points to a commit hash). (Also, the test name ends with `_-_detach`.)  
-  `O` - `HEAD` doesn't exist because the operation is performed on a freshly created orphan branch. (Also, the test name ends with `_-_orphan`.)  
+  `B` - `HEAD` points to a normal Git branch.  
+  `D` - `HEAD` is detached (it only points to a commit hash).  
+  `O` - `HEAD` doesn't exist because the operation is performed on a freshly created orphan branch.  
