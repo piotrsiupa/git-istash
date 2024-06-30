@@ -1,5 +1,7 @@
 . "$(dirname "$0")/commons.sh" 1>/dev/null
 
+wrong_hash="$(git rev-parse HEAD)"
+
 printf 'aaa\n' >aaa
 git add aaa
 git commit -m 'Added aaa'
@@ -10,6 +12,8 @@ git stash push
 printf 'ddd\n' >aaa
 git commit -am 'Changed aaa'
 
+git switch -d HEAD
+
 assert_failure capture_outputs git istash
 assert_conflict_message git istash
 assert_tracked_files 'aaa'
@@ -19,7 +23,5 @@ assert_branch_count 1
 
 printf 'eee\n' >aaa
 git add aaa
-mv '.git/istash' '.git/istash~'
-head -n 1 '.git/istash~' >'.git/istash'
-{ printf '~' ; tail -n 1 '.git/istash~' ; } >>'.git/istash'
+printf '%s\n' "$wrong_hash" >'.git/ISTASH_TARGET'
 assert_failure git istash --continue

@@ -10,8 +10,6 @@ git stash push
 printf 'ddd\n' >aaa
 git commit -am 'Changed aaa'
 
-git switch -d HEAD
-
 correct_head_hash="$(git rev-parse HEAD)"
 assert_failure capture_outputs git istash
 assert_conflict_message git istash
@@ -23,8 +21,8 @@ assert_branch_count 1
 correct_head_hash2="$(git rev-parse HEAD)"
 printf 'eee\n' >aaa
 git add aaa
-cp ./.git/istash ./.git/istash~
-printf '' >./.git/istash
+mv ./.git/ISTASH_STASH ./.git/ISTASH_STASH~
+printf '' >./.git/ISTASH_STASH
 assert_failure git istash --continue
 assert_tracked_files 'aaa'
 assert_status 'M  aaa'
@@ -32,7 +30,7 @@ assert_stash_count 1
 assert_branch_count 1
 assert_head_hash "$correct_head_hash2"
 
-cp ./.git/istash~ ./.git/istash
+mv ./.git/ISTASH_STASH~ ./.git/ISTASH_STASH
 assert_success git istash --continue
 assert_tracked_files 'aaa'
 assert_status ' M aaa'
@@ -41,4 +39,4 @@ assert_stash_count 0
 assert_log_length 3
 assert_branch_count 1
 assert_head_hash "$correct_head_hash"
-assert_head_name 'HEAD'
+assert_head_name 'master'

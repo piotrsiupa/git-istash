@@ -23,7 +23,5 @@ assert_branch_count 2
 
 printf 'eee\n' >aaa
 git add aaa
-mv '.git/istash' '.git/istash~'
-head -n 1 '.git/istash~' >'.git/istash'
-printf 'wrong_branch\n' >>'.git/istash'
+printf 'wrong_branch\n' >'.git/ISTASH_TARGET'
 assert_failure git istash --continue
