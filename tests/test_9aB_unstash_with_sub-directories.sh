@@ -20,7 +20,7 @@ printf 'zzz2\n' >yyy/zzz
 git stash push -u
 
 correct_head_hash="$(git rev-parse HEAD)"
-cd ./xxx
+cd xxx
 git istash
 cd ..
 assert_tracked_files 'aaa|xxx/aaa|yyy/aaa'

@@ -16,7 +16,7 @@ git stash push -u
 git switch --orphan ooo
 
 mkdir xxx
-cd ./xxx
+cd xxx
 git istash
 cd ..
 assert_status 'AM aaa|AM xxx/aaa|AM yyy/aaa|?? xxx/zzz|?? yyy/zzz|?? zzz'

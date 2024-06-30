@@ -22,7 +22,7 @@ git stash push -u
 git switch --orphan ooo
 
 mkdir xxx
-cd ./xxx
+cd xxx
 assert_failure capture_outputs git istash
 cd ..
 assert_conflict_message git istash
@@ -34,7 +34,7 @@ printf 'eee0\n' >aaa
 printf 'eee1\n' >xxx/aaa
 printf 'eee2\n' >yyy/aaa
 git add aaa xxx/aaa yyy/aaa
-cd ./xxx
+cd xxx
 assert_failure capture_outputs git istash --continue
 cd ..
 assert_conflict_message git istash --continue
@@ -50,7 +50,7 @@ printf 'xxx0\n' >zzz
 printf 'xxx1\n' >xxx/zzz
 printf 'xxx2\n' >yyy/zzz
 git add aaa xxx/aaa yyy/aaa zzz xxx/zzz yyy/zzz
-cd ./xxx
+cd xxx
 assert_success git istash --continue
 cd ..
 assert_status 'AM aaa|AM xxx/aaa|AM yyy/aaa|?? xxx/zzz|?? yyy/zzz|?? zzz'

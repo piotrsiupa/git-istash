@@ -1,6 +1,6 @@
 . "$(dirname "$0")/commons.sh" 1>/dev/null
 
-rm -rf ./.git
+rm -rf .git
 git init
 
 git switch --orphan ooo

@@ -22,7 +22,7 @@ git stash push -u
 git switch -d HEAD
 
 correct_head_hash="$(git rev-parse HEAD)"
-cd ./xxx
+cd xxx
 git istash
 cd ..
 assert_tracked_files 'aaa|xxx/aaa|yyy/aaa'
