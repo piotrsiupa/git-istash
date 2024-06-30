@@ -58,14 +58,29 @@ load_data() {
 		printf 'fatal: "%s" is should contain exactly 1 line.\n' "$target_data_file" 1>&2
 		exit 1
 	else
-		read -r stash <"$stash_data_file"
-		read -r target <"$target_data_file"
+		stash="$(cat "$stash_data_file")"
+		if ! [ "$stash" -eq "$stash" ] 2>/dev/null || [ "$stash" -lt 0 ]
+		then
+			printf 'fatal: "%s" doesn'\''t contain a positive integer.\n' "$stash_data_file" 1>&2
+			exit 1
+		fi
+		if [ "$stash" -ge "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" ]
+		then
+			printf 'fatal: "%s" says "%i" but there is no such stash.\n' "$stash_data_file" "$stash" 1>&2
+			exit 1
+		fi
+		target="$(cat "$target_data_file")"
 		if printf '%s' "$target" | grep -q '^~'
 		then
 			orphan=y
 			target="$(printf '%s' "$target" | cut -c2-)"
 		else
 			orphan=n
+		fi
+		if ! git rev-parse --quiet --verify "$target^{commit}" 1>/dev/null
+		then
+			printf 'fatal: "%s" says "%s" but there is no such commit.\n' "$target_data_file" "$target" 1>&2
+			exit 1
 		fi
 		if [ "$orphan" = n ] && [ "$(git rev-parse "$target")" = "$target" ]
 		then
@@ -137,7 +152,7 @@ end_with_success() {
 	git add -- .
 	git restore --source="$other_changes_hash" -- . || true
 	delete_data
-	if [ "$stash" -eq "$stash" ]
+	if [ "$stash" -eq "$stash" ] 2>/dev/null
 	then
 		git stash drop "$stash"
 	fi
