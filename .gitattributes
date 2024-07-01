@@ -1,6 +1,6 @@
 .gitattributes text
 .gitignore text
-/scripts/* text eol=lf
+/scripts/**/* text eol=lf
 *.sh text eol=lf
 *.bat text eol=crlf
 *.txt text
