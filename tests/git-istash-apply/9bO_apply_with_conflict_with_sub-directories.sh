@@ -1,4 +1,4 @@
-. "$(dirname "$0")/commons.sh" 1>/dev/null
+. "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 mkdir xxx yyy
 printf 'aaa0\n' >aaa
@@ -23,9 +23,9 @@ git switch --orphan ooo
 
 mkdir xxx
 cd xxx
-assert_failure capture_outputs git istash
+assert_failure capture_outputs git istash-apply
 cd ..
-assert_conflict_message git istash
+assert_conflict_message git istash-apply
 assert_status 'DU aaa|DU xxx/aaa|DU yyy/aaa'
 assert_stash_count 1
 assert_branch_count 2
@@ -35,9 +35,9 @@ printf 'eee1\n' >xxx/aaa
 printf 'eee2\n' >yyy/aaa
 git add aaa xxx/aaa yyy/aaa
 cd xxx
-assert_failure capture_outputs git istash --continue
+assert_failure capture_outputs git istash-apply --continue
 cd ..
-assert_conflict_message git istash --continue
+assert_conflict_message git istash-apply --continue
 assert_tracked_files 'aaa|xxx/aaa|yyy/aaa'
 assert_status 'UU aaa|UU xxx/aaa|A  xxx/zzz|UU yyy/aaa|A  yyy/zzz|A  zzz'
 assert_stash_count 1
@@ -51,7 +51,7 @@ printf 'xxx1\n' >xxx/zzz
 printf 'xxx2\n' >yyy/zzz
 git add aaa xxx/aaa yyy/aaa zzz xxx/zzz yyy/zzz
 cd xxx
-assert_success git istash --continue
+assert_success git istash-apply --continue
 cd ..
 assert_status 'AM aaa|AM xxx/aaa|AM yyy/aaa|?? xxx/zzz|?? yyy/zzz|?? zzz'
 assert_file_contents aaa 'fff0' 'eee0'

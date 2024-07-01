@@ -1,4 +1,4 @@
-. "$(dirname "$0")/commons.sh" 1>/dev/null
+. "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 printf 'aaa\n' >aaa
 git add aaa
@@ -11,7 +11,7 @@ printf 'bbb\n' >aaa
 git commit -am 'Changed aaa'
 
 correct_head_hash="$(git rev-parse HEAD)"
-git istash
+git istash-apply
 assert_tracked_files 'aaa'
 assert_status ''
 assert_file_contents aaa 'bbb' 'bbb'

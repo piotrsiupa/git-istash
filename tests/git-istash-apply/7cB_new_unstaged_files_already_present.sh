@@ -1,4 +1,4 @@
-. "$(dirname "$0")/commons.sh" 1>/dev/null
+. "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 printf 'aaa\n' >aaa
 git add aaa
@@ -13,7 +13,7 @@ assert_branch_count 1
 correct_head_hash="$(git rev-parse HEAD)"
 printf 'xxx\n' >xxx
 git add -N xxx
-assert_failure git istash 1
+assert_failure git istash-apply 1
 assert_tracked_files 'aaa'
 assert_status ' A xxx'
 assert_file_contents aaa 'aaa' 'aaa'

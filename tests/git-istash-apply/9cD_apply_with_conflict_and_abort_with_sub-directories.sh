@@ -1,4 +1,4 @@
-. "$(dirname "$0")/commons.sh" 1>/dev/null
+. "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 mkdir xxx yyy
 printf 'aaa0\n' >aaa
@@ -32,9 +32,9 @@ git switch -d HEAD
 
 correct_head_hash="$(git rev-parse HEAD)"
 cd xxx
-assert_failure capture_outputs git istash
+assert_failure capture_outputs git istash-apply
 cd ..
-assert_conflict_message git istash
+assert_conflict_message git istash-apply
 assert_status 'UU aaa|UU xxx/aaa|UU yyy/aaa'
 assert_stash_count 1
 assert_branch_count 1
@@ -44,7 +44,7 @@ printf 'eee1\n' >xxx/aaa
 printf 'eee2\n' >yyy/aaa
 git add aaa xxx/aaa yyy/aaa
 cd xxx
-assert_success git istash --abort
+assert_success git istash-apply --abort
 cd ..
 assert_tracked_files 'aaa|xxx/aaa|xxx/zzz|yyy/aaa|yyy/zzz|zzz'
 assert_status ''

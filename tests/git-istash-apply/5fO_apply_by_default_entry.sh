@@ -1,4 +1,4 @@
-. "$(dirname "$0")/commons.sh" 1>/dev/null
+. "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 printf 'bbb\n' >aaa
 git stash push -u -m 'earlier stash entry'
@@ -9,7 +9,7 @@ git stash push -u -m 'later stash entry'
 
 git switch --orphan ooo
 
-assert_success git istash stash
+assert_success git istash-apply stash
 assert_status '?? aaa'
 assert_file_contents aaa 'ccc'
 assert_stash_count 1

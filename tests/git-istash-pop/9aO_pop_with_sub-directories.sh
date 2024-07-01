@@ -1,4 +1,4 @@
-. "$(dirname "$0")/commons.sh" 1>/dev/null
+. "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 mkdir xxx yyy
 printf 'bbb0\n' >aaa
@@ -17,7 +17,7 @@ git switch --orphan ooo
 
 mkdir xxx
 cd xxx
-git istash
+git istash-pop
 cd ..
 assert_status 'AM aaa|AM xxx/aaa|AM yyy/aaa|?? xxx/zzz|?? yyy/zzz|?? zzz'
 assert_file_contents aaa 'ccc0' 'bbb0'

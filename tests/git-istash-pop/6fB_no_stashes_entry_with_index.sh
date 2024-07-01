@@ -1,4 +1,4 @@
-. "$(dirname "$0")/commons.sh" 1>/dev/null
+. "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 printf 'aaa\n' >aaa
 git add aaa
@@ -10,7 +10,7 @@ printf 'eee\n' >aaa
 git stash push -m 'the only stash'
 
 correct_head_hash="$(git rev-parse HEAD)"
-assert_failure git istash 'stash@{1}'
+assert_failure git istash-pop 'stash@{1}'
 assert_tracked_files 'aaa'
 assert_status ''
 assert_file_contents aaa 'aaa' 'aaa'
@@ -23,7 +23,7 @@ assert_head_name 'master'
 printf 'ddd\n' >aaa
 git add aaa
 printf 'eee\n' >aaa
-assert_failure git istash 'stash@{1}'
+assert_failure git istash-pop 'stash@{1}'
 assert_tracked_files 'aaa'
 assert_status 'MM aaa'
 assert_file_contents aaa 'eee' 'ddd'

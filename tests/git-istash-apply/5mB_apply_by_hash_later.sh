@@ -1,4 +1,4 @@
-. "$(dirname "$0")/commons.sh" 1>/dev/null
+. "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 printf 'aaa\n' >aaa
 git add aaa
@@ -14,7 +14,7 @@ git reset --hard
 assert_stash_count 0
 
 correct_head_hash="$(git rev-parse HEAD)"
-assert_success git istash "$later_stash_hash"
+assert_success git istash-apply "$later_stash_hash"
 assert_tracked_files 'aaa'
 assert_status ' M aaa'
 assert_file_contents aaa 'ccc' 'aaa'

@@ -1,4 +1,4 @@
-. "$(dirname "$0")/commons.sh" 1>/dev/null
+. "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 printf 'aaa\n' >aaa
 git add aaa
@@ -7,7 +7,7 @@ git commit -m 'added aaa'
 git switch -d HEAD
 
 correct_head_hash="$(git rev-parse HEAD)"
-assert_failure git istash
+assert_failure git istash-apply
 assert_tracked_files 'aaa'
 assert_status ''
 assert_file_contents aaa 'aaa' 'aaa'
@@ -19,7 +19,7 @@ assert_head_name 'HEAD'
 printf 'ddd\n' >aaa
 git add aaa
 printf 'eee\n' >aaa
-assert_failure git istash
+assert_failure git istash-apply
 assert_tracked_files 'aaa'
 assert_status 'MM aaa'
 assert_file_contents aaa 'eee' 'ddd'

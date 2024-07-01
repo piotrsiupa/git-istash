@@ -3,7 +3,7 @@
 set -e
 
 print_help() {
-	printf '%s - Script that runs tests from this directory.\n' "$(basename "$0")"
+	printf '%s - Script that runs tests from sub-directories of this directory.\n' "$(basename "$0")"
 	printf '\n'
 	printf 'Usage: %s [<options>] [--] [<filter>...]\n' "$(basename "$0")"
 	printf '\n'
@@ -18,10 +18,10 @@ print_help() {
 	printf 'Filters:\n'
 	printf 'You can specify one or more filters in the command call. '
 	printf 'The filters are PCRE\nregexps that match test names that should be run. '
-	printf '(A test name is the name of\nthe file without the prefix "test_" and the file extension.) '
-	printf 'A test will be run\nif it matches any of the filters. '
-	printf 'If there are no filters, all tests are run.\n'
-	printf 'This can be used to either list individual tests or filter out some categories.\n'
+	printf '(A test name is the name of\nthe inluding the sub-directory but without the file extension.) '
+	printf 'A test will be\nrun if it matches any of the filters. '
+	printf 'If there are no filters, all tests are\nrun. '
+	printf 'This can be used to either list individual tests or choose some categories.\n'
 	printf '(See "README.md" in the test directory for more information about test names.)\n'
 }
 
@@ -32,12 +32,18 @@ print_color_code() { # code
 		printf "$1"
 	fi
 }
+print_centered() { # text character
+	padding_size=$((80 - 2 - ${#1}))
+	printf -- "$2%.0s" $(seq 1 $((padding_size / 2)))
+	printf -- ' %s ' "$1"
+	printf -- "$2%.0s" $(seq 1 $((padding_size - (padding_size / 2))))
+}
 
 get_test_script() { # test_name
-	printf 'test_%s.sh' "$1"
+	printf '%s.sh' "$1"
 }
 get_test_dir() { # test_name
-	printf 't_dir_%s' "$1"
+	printf '%s/t_dir__%s' "$(basename "$(dirname "$1")")" "$(basename "$1")"
 }
 
 cleanup_test() { # test_name
@@ -52,8 +58,8 @@ create_test_dir() { # test_name
 }
 
 find_tests() { # pattern
-	find . -maxdepth 1 -type f -name 'test_*.sh' -print0 \
-	| xargs -r0n1 -- basename | sed 's/^test_\(.*\)\.sh$/\1/' \
+	find . -mindepth 2 -maxdepth 2 -type f -name '*.sh' \
+	| sed 's;^\./\(.*\)\.sh$;\1;' \
 	| grep -P "$1" \
 	| while read -r test_name
 	do
@@ -78,7 +84,7 @@ run_test() { # test_name
 					printf '0' 1>&5
 				elif [ "$debug_mode" = n ]
 				then
-					if sh "../$(get_test_script "$1")" 1>/dev/null 2>&1
+					if sh "../$(basename "$(get_test_script "$1")")" 1>/dev/null 2>&1
 					then
 						printf y 1>&5
 					else
@@ -86,7 +92,7 @@ run_test() { # test_name
 					fi
 				else
 					{
-						if sh "../$(get_test_script "$1")"
+						if sh "../$(basename "$(get_test_script "$1")")"
 						then
 							printf y 1>&5
 						else
@@ -136,22 +142,60 @@ run_test() { # test_name
 		return 1
 	fi
 }
-run_tests() { # pattern
+run_tests() {
 	exec 4>&1
 	passed_tests="$(
-		find_tests "$1" \
+		previous_category=''
+		printf '%s\n' "$tests" \
 		| while read -r test_name
 		do
+			current_category="$(dirname "$test_name")"
+			if [ "$current_category" != "$previous_category" ]
+			then
+				previous_category="$current_category"
+				{
+					print_color_code '\e[1m'
+					print_centered "$current_category" '-'
+					print_color_code '\e[22m'
+					printf '\n'
+				} 1>&4
+				printf '%s\n' "$current_category"
+			fi
 			if run_test "$test_name" 1>&4
 			then
-				printf '1'
+				printf '%s\n' "$current_category"
 			fi
-		done | head -n 1 | wc -c
+		done | uniq -c | awk '{print $1 - 1}'
 	)"
 	exec 4>&-
 }
 
 print_summary() {
+	print_color_code '\e[1m'
+	print_centered 'Results' '='
+	print_color_code '\e[22m'
+	printf '\n'
+	i=0
+	printf '%s\n' "$tests" | xargs -rn1 -- dirname | uniq -c | awk '{$1=$1;print}' \
+	| while read -r category
+	do
+		i=$((i + 1))
+		total_in_category="$(printf '%s\n' "$category" | cut -d' ' -f1)"
+		passed_in_category="$(printf '%s' "$passed_tests" | head -n $i | tail -n 1)"
+		printf '%s: ' "$(printf '%s' "$category" | cut -d' ' -f2)"
+		if [ "$passed_in_category" -eq "$total_in_category" ]
+		then
+			print_color_code '\e[1;32;4m'
+			printf 'Passed all %i tests.' "$total_in_category"
+		else
+			print_color_code '\e[1;31;4m'
+			printf 'Passed %i out of %i tests.' "$passed_in_category" "$total_in_category"
+		fi
+		print_color_code '\e[0m'
+		printf '\n'
+	done
+	passed_tests=$(($(printf '%s' "$passed_tests" | tr '\n' '+')))
+	total_tests="$(printf '%s\n' "$tests" | wc -l)"
 	if [ "$total_tests" -ne 0 ]
 	then
 		if [ "$passed_tests" -eq "$total_tests" ]
@@ -246,7 +290,7 @@ scripts_dir='../scripts'
 test -d "$scripts_dir"
 PATH="$(realpath "$scripts_dir"):$PATH"
 export PATH
-total_tests="$(find_tests "$filter" | wc -l)"
-run_tests "$filter"
+tests="$(find_tests "$filter")"
+run_tests
 print_summary
 [ "$total_tests" -ne 0 ] && [ "$passed_tests" -eq "$total_tests" ]

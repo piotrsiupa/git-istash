@@ -1,4 +1,4 @@
-. "$(dirname "$0")/commons.sh" 1>/dev/null
+. "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 mkdir xxx yyy
 printf 'aaa0\n' >aaa
@@ -30,9 +30,9 @@ git commit -m 'Changed aaa & added zzz'
 
 correct_head_hash="$(git rev-parse HEAD)"
 cd xxx
-assert_failure capture_outputs git istash
+assert_failure capture_outputs git istash-apply
 cd ..
-assert_conflict_message git istash
+assert_conflict_message git istash-apply
 assert_status 'UU aaa|UU xxx/aaa|UU yyy/aaa'
 assert_stash_count 1
 assert_branch_count 1
@@ -42,9 +42,9 @@ printf 'eee1\n' >xxx/aaa
 printf 'eee2\n' >yyy/aaa
 git add aaa xxx/aaa yyy/aaa
 cd xxx
-assert_failure capture_outputs git istash --continue
+assert_failure capture_outputs git istash-apply --continue
 cd ..
-assert_conflict_message git istash --continue
+assert_conflict_message git istash-apply --continue
 assert_tracked_files 'aaa|xxx/aaa|xxx/zzz|yyy/aaa|yyy/zzz|zzz'
 assert_status 'UU aaa|UU xxx/aaa|AA xxx/zzz|UU yyy/aaa|AA yyy/zzz|AA zzz'
 assert_stash_count 1
@@ -58,7 +58,7 @@ printf 'xxx1\n' >xxx/zzz
 printf 'xxx2\n' >yyy/zzz
 git add aaa xxx/aaa yyy/aaa zzz xxx/zzz yyy/zzz
 cd xxx
-assert_success git istash --continue
+assert_success git istash-apply --continue
 cd ..
 assert_tracked_files 'aaa|xxx/aaa|xxx/zzz|yyy/aaa|yyy/zzz|zzz'
 assert_status 'MM aaa|MM xxx/aaa| M xxx/zzz|MM yyy/aaa| M yyy/zzz| M zzz'

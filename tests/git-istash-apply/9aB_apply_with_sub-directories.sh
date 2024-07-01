@@ -1,4 +1,4 @@
-. "$(dirname "$0")/commons.sh" 1>/dev/null
+. "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 mkdir xxx yyy
 printf 'aaa0\n' >aaa
@@ -21,7 +21,7 @@ git stash push -u
 
 correct_head_hash="$(git rev-parse HEAD)"
 cd xxx
-git istash
+git istash-apply
 cd ..
 assert_tracked_files 'aaa|xxx/aaa|yyy/aaa'
 assert_status 'MM aaa|MM xxx/aaa|MM yyy/aaa|?? xxx/zzz|?? yyy/zzz|?? zzz'
