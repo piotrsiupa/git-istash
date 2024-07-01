@@ -22,11 +22,11 @@ assert_branch_count 1
 git switch -d HEAD
 
 correct_head_hash="$(git rev-parse HEAD)"
-assert_success git stash pop
+assert_success git stash apply
 assert_tracked_files 'aaa'
 assert_status ' M aaa'
 assert_file_contents aaa 'bbb' 'aaa'
-assert_stash_count 0
+assert_stash_count 1
 assert_log_length 2
 assert_branch_count 1
 assert_head_hash "$correct_head_hash"

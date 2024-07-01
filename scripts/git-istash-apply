@@ -11,7 +11,7 @@ is_color_allowed() { # stream_num
 }
 
 print_help() {
-	printf 'git-istash - Improved version of "git stash pop" the can handle conflicts.\n'
+	printf 'git-istash - Improved version of "git stash apply" the can handle conflicts.\n'
 	printf '\n'
 	printf 'usage: git istash [<stash>]\n'
 	printf '   or: git istash (-c | --continue | --abort)\n'
@@ -19,56 +19,25 @@ print_help() {
 
 find_data_files() {
 	git_dir="$(git rev-parse --git-dir)"
-	stash_data_file="$git_dir/ISTASH_STASH"
 	target_data_file="$git_dir/ISTASH_TARGET"
 }
 save_data() {
-	if [ "$stash" -eq "$stash" ] 2>/dev/null
-	then
-		printf '%s\n' "$stash" >"$stash_data_file"
-	else
-		touch "$stash_data_file"
-	fi
 	target_data="$(if [ "$orphan" = y ] ; then printf '~' ; fi ; printf '%s' "$target")"
 	printf '%s\n' "$target_data" >"$target_data_file"
 }
 does_data_exits() {
-	if [ -f "$stash_data_file" ] && [ -f "$target_data_file" ]
-	then
-		return 0
-	elif [ -f "$stash_data_file" ] || [ -f "$target_data_file" ]
-	then
-		printf 'fatal: One of the data files is missing.\n' 1>&2
-		exit 1
-	else
-		return 1
-	fi
+	[ -f "$target_data_file" ]
 }
 load_data() {
 	if ! does_data_exits
 	then
 		printf 'fatal: No istash in progress?\n' 1>&2
 		exit 1
-	elif [ "$(wc -l <"$stash_data_file")" -gt 1 ]
-	then
-		printf 'fatal: "%s" is should contain exactly 1 line.\n' "$stash_data_file" 1>&2
-		exit 1
 	elif [ "$(wc -l <"$target_data_file")" -ne 1 ]
 	then
 		printf 'fatal: "%s" is should contain exactly 1 line.\n' "$target_data_file" 1>&2
 		exit 1
 	else
-		stash="$(cat "$stash_data_file")"
-		if ! [ "$stash" -eq "$stash" ] 2>/dev/null || [ "$stash" -lt 0 ]
-		then
-			printf 'fatal: "%s" doesn'\''t contain a positive integer.\n' "$stash_data_file" 1>&2
-			exit 1
-		fi
-		if [ "$stash" -ge "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" ]
-		then
-			printf 'fatal: "%s" says "%i" but there is no such stash.\n' "$stash_data_file" "$stash" 1>&2
-			exit 1
-		fi
 		target="$(cat "$target_data_file")"
 		if printf '%s' "$target" | grep -q '^~'
 		then
@@ -91,7 +60,7 @@ load_data() {
 	fi
 }
 delete_data() {
-	rm -f "$stash_data_file" "$target_data_file"
+	rm -f "$target_data_file"
 }
 
 check_args() { # max_free_args args...
@@ -152,10 +121,6 @@ end_with_success() {
 	git add -- .
 	git restore --source="$other_changes_hash" -- . || true
 	delete_data
-	if [ "$stash" -eq "$stash" ] 2>/dev/null
-	then
-		git stash drop "$stash"
-	fi
 	printf '\nSuccessfully istashed the stash\n' 1>&2
 }
 
@@ -369,7 +334,7 @@ do_abort() { # args...
 			printf '\e[33m'
 		fi
 		printf 'hint: Fix problems and rerun "git istash --abort"\n' 1>&2
-		printf 'hint: or delete files "%s" and "%s" to cancel manually.\n' "$stash_data_file" "$target_data_file" 1>&2
+		printf 'hint: or delete the file "%s" to cancel manually.\n' "$target_data_file" 1>&2
 		if is_color_allowed 2
 		then
 			printf '\e[39m'

@@ -68,7 +68,7 @@ assert_file_contents yyy/aaa 'fff2' 'eee2'
 assert_file_contents zzz 'xxx0' 'yyy0'
 assert_file_contents xxx/zzz 'xxx1' 'yyy1'
 assert_file_contents yyy/zzz 'xxx2' 'yyy2'
-assert_stash_count 0
+assert_stash_count 1
 assert_log_length 3
 assert_branch_count 1
 assert_head_hash "$correct_head_hash"

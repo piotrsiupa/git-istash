@@ -49,7 +49,7 @@ load_data() {
 	then
 		printf 'fatal: No istash in progress?\n' 1>&2
 		exit 1
-	elif [ "$(wc -l <"$stash_data_file")" -gt 1 ]
+	elif [ "$(wc -l <"$stash_data_file")" -ne 1 ]
 	then
 		printf 'fatal: "%s" is should contain exactly 1 line.\n' "$stash_data_file" 1>&2
 		exit 1

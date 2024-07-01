@@ -16,7 +16,7 @@ assert_tracked_files 'aaa'
 assert_status 'MM aaa|?? ddd'
 assert_file_contents aaa 'ccc' 'bbb'
 assert_file_contents ddd 'ddd'
-assert_stash_count 0
+assert_stash_count 1
 assert_log_length 2
 assert_branch_count 1
 assert_head_hash "$correct_head_hash"

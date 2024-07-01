@@ -19,7 +19,7 @@ correct_head_hash2="$(git rev-parse HEAD)"
 printf 'eee\n' >aaa
 git add aaa
 mv .git/ISTASH_TARGET .git/ISTASH_TARGET~
-printf '' >.git/ISTASH_TARGET
+touch .git/ISTASH_TARGET
 assert_failure git istash-pop --continue
 assert_status 'A  aaa'
 assert_stash_count 1

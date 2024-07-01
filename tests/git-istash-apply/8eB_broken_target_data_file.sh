@@ -35,7 +35,7 @@ assert_success git istash-apply --continue
 assert_tracked_files 'aaa'
 assert_status ' M aaa'
 assert_file_contents aaa 'eee' 'ddd'
-assert_stash_count 0
+assert_stash_count 1
 assert_log_length 3
 assert_branch_count 1
 assert_head_hash "$correct_head_hash"

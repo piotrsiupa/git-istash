@@ -8,7 +8,6 @@ assert_stash_count 0
 printf 'bbb\n' >aaa
 git stash push -m 'earlier stash entry'
 assert_stash_count 1
-earlier_stash_hash="$(git rev-parse 'stash@{0}')"
 
 printf 'ccc\n' >aaa
 git stash push -m 'later stash entry'
@@ -19,8 +18,7 @@ git istash-apply
 assert_tracked_files 'aaa'
 assert_status ' M aaa'
 assert_file_contents aaa 'ccc' 'aaa'
-assert_stash_count 1
-assert_stash_hash 0 "$earlier_stash_hash"
+assert_stash_count 2
 assert_log_length 2
 assert_branch_count 1
 assert_head_hash "$correct_head_hash"

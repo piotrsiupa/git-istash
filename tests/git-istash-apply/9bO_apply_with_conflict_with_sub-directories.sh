@@ -60,6 +60,6 @@ assert_file_contents yyy/aaa 'fff2' 'eee2'
 assert_file_contents zzz 'xxx0'
 assert_file_contents xxx/zzz 'xxx1'
 assert_file_contents yyy/zzz 'xxx2'
-assert_stash_count 0
+assert_stash_count 1
 assert_branch_count 1
 assert_head_name '~ooo'

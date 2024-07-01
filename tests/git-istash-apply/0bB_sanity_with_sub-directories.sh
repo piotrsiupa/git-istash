@@ -21,7 +21,7 @@ git stash push -u
 
 correct_head_hash="$(git rev-parse HEAD)"
 cd xxx
-assert_success git stash pop --index
+assert_success git stash apply --index
 cd ..
 assert_tracked_files 'aaa|xxx/aaa|yyy/aaa'
 assert_status 'MM aaa|MM xxx/aaa|MM yyy/aaa|?? xxx/zzz|?? yyy/zzz|?? zzz'
@@ -31,7 +31,7 @@ assert_file_contents yyy/aaa 'ccc2' 'bbb2'
 assert_file_contents zzz 'zzz0'
 assert_file_contents xxx/zzz 'zzz1'
 assert_file_contents yyy/zzz 'zzz2'
-assert_stash_count 0
+assert_stash_count 1
 assert_log_length 2
 assert_branch_count 1
 assert_head_hash "$correct_head_hash"
