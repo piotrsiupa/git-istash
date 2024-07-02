@@ -2,25 +2,15 @@
 
 set -e
 
-is_color_allowed() { # stream_num
-	case "$(git config --get color.ui)" in
-		always|true|1) return 0 ;;
-		never|false|0) return 1 ;;
-		*)             test -t "$1" ;;
-	esac
-}
+. "$(dirname "$0")/.git-istash/git-istash-commons"
 
 print_help() {
-	printf 'git-istash - Improved version of "git stash apply" the can handle conflicts.\n'
+	printf 'git-istash-apply - Improved version of "git stash apply" that can handle\n    conflicts.\n'
 	printf '\n'
-	printf 'usage: git istash [<stash>]\n'
-	printf '   or: git istash (-c | --continue | --abort)\n'
+	printf 'usage: git istash-apply [<stash>]\n'
+	printf '   or: git istash-apply (-c | --continue | --abort)\n'
 }
 
-find_data_files() {
-	git_dir="$(git rev-parse --git-dir)"
-	target_data_file="$git_dir/ISTASH_TARGET"
-}
 save_data() {
 	target_data="$(if [ "$orphan" = y ] ; then printf '~' ; fi ; printf '%s' "$target")"
 	printf '%s\n' "$target_data" >"$target_data_file"
@@ -63,15 +53,8 @@ delete_data() {
 	rm -f "$target_data_file"
 }
 
-check_args() { # max_free_args args...
-	max_free_args="$1"
-	shift
-	if [ $# -gt "$max_free_args" ]
-	then
-		printf 'error: Too many arguments.\n' 1>&2
-		printf 'error: Type "git istash --help" for more information.\n' 1>&2
-		exit 1
-	fi
+check_args_for_apply() { # max_free_args args...
+	check_args 'istash-apply' "$@"
 }
 
 end_with_rebase_problem() {
@@ -81,8 +64,8 @@ end_with_rebase_problem() {
 		printf '\e[33m'
 	fi
 	printf 'hint: Disregard all hints above about using "git rebase".\n' 1>&2
-	printf 'hint: Use "git istash --continue" after fixing conflicts.\n' 1>&2
-	printf 'hint: To abort and get back to the state before "git istash", run "git istash --abort".\n' 1>&2
+	printf 'hint: Use "git istash-apply --continue" after fixing conflicts.\n' 1>&2
+	printf 'hint: To abort and get back to the state before "git istash-apply", run "git istash-apply --abort".\n' 1>&2
 	if is_color_allowed 2
 	then
 		printf '\e[39m'
@@ -121,7 +104,7 @@ end_with_success() {
 	git add -- .
 	git restore --source="$other_changes_hash" -- . || true
 	delete_data
-	printf '\nSuccessfully istashed the stash\n' 1>&2
+	printf '\nSuccessfully applied the stash\n'
 }
 
 check_repository_state() {
@@ -131,109 +114,6 @@ check_repository_state() {
 		printf 'error: There are uncommitted changes in the working directory.\n' 1>&2
 		printf 'error: Please commit or stash them.\n' 1>&2
 		exit 1
-	fi
-}
-
-get_stash_commit() { # stash
-	if [ "$1" -eq "$1" ] 2>/dev/null
-	then
-		printf '%s' "stash@{$1}"
-	else
-		printf '%s' "$1"
-	fi
-}
-
-find_stash() { # [arg]
-	if [ $# -eq 0 ] || [ "$1" = 'stash' ]
-	then
-		stash=0
-	elif [ "$1" -eq "$1" ] 2>/dev/null
-	then
-		if [ "$1" -ge 0 ]
-		then
-			stash=$1
-		else
-			stash=$(($(git rev-list --walk-reflogs --count --ignore-missing refs/stash) + $1))
-		fi
-	elif printf '%s' "$1" | grep -xq 'stash\^{/.*}'
-	then
-		stash_text="$(printf '%s' "$1" | sed 's/^stash\^{\/\(.*\)}$/\1/')"
-		stash_hash="$(git rev-list --walk-reflogs --grep-reflog="$stash_text" --ignore-missing refs/stash | head -n1)"
-		stash="$(($(git rev-list --walk-reflogs refs/stash | grep -Fxn "$stash_hash" | cut -d: -f1) - 1))"
-	elif printf '%s' "$1" | grep -xq 'stash@{[0-9]\+}'
-	then
-		stash="$(printf '%s' "$1" | sed 's/^stash@{\(.*\)}$/\1/')"
-	else
-		stash="$1"
-	fi
-	
-	stash_commit="$(get_stash_commit "$stash")"
-	if ! git rev-parse --quiet --verify "$stash_commit^{commit}" 1>/dev/null
-	then
-		printf 'fatal: There is no commit "%s".\n' "$stash_commit" 1>&2
-		exit 1
-	fi
-	parents_num="$(git rev-list --no-walk --count "$stash_commit^@")"
-	if [ "$parents_num" -lt 2 ] || [ "$parents_num" -gt 3 ]
-	then
-		printf 'fatal: "%s" should have 2 or 3 parents to be a stash.\n' "$stash_commit" 1>&2
-		exit 1
-	fi
-	if [ "$parents_num" -eq 3 ] && [ "$(git rev-list --no-walk --count "$stash_commit^3^@")" -ne 0 ]
-	then
-		printf 'fatal: "%s^3" should have no parents to be a part of a stash.\n' "$stash_commit" 1>&2
-		exit 1
-	fi
-	if [ "$(git rev-list --no-walk --count "$stash_commit^2^@")" -ne 1 ]
-	then
-		printf 'fatal: The commit "%s^2" should have one parent to be a part of a stash.\n' "$stash_commit" 1>&2
-		exit 1
-	fi
-	if [ "$(git rev-parse "$stash_commit^1")" != "$(git rev-parse "$stash_commit^2^")" ]
-	then
-		printf 'fatal: The commit "%s^1" should be the parent of "%s^2" to be a part of a stash.\n' "$stash_commit" "$stash_commit" 1>&2
-		exit 1
-	fi
-	correct_commit_msgs=0
-	if [ "$parents_num" -eq 3 ] && git rev-list --format='%B' --max-count=1 "$stash_commit^3" | head -n 2 | tail -n 1 | grep -q '^untracked files on .\+:'
-	then
-		correct_commit_msgs=$((correct_commit_msgs + 1))
-	fi
-	if git rev-list --format='%B' --max-count=1 "$stash_commit^2" | head -n 2 | tail -n 1 | grep -q '^index on .\+:'
-	then
-		correct_commit_msgs=$((correct_commit_msgs + 1))
-	fi
-	if git rev-list --format='%B' --max-count=1 "$stash_commit" | head -n 2 | tail -n 1 | grep -q '^\(WIP on\|On\) .\+:'
-	then
-		correct_commit_msgs=$((correct_commit_msgs + 1))
-	fi
-	if [ $correct_commit_msgs -ne "$parents_num" ]
-	then
-		if [ $correct_commit_msgs -eq 0 ]
-		then
-			printf 'error: "%s"'\''s commits don'\''t have correct messages for stash.\n' "$stash_commit" 1>&2
-		else
-			printf 'error: some of "%s"'\'' commits don'\''t have correct messages for stash.\n' "$stash_commit" 1>&2
-		fi
-		printf 'error: It may not be a stash entry or it may be damaged.\n'
-		exit 1
-	fi
-}
-
-find_current_branch() {
-	detached=n
-	orphan=n
-	if git rev-parse HEAD >/dev/null 2>&1
-	then
-		target="$(git rev-parse --abbrev-ref HEAD)"
-		if [ "$target" = 'HEAD' ]
-		then
-			detached=y
-			target="$(git rev-parse HEAD)"
-		fi
-	else
-		orphan=y
-		target="$(git branch --show-current)"
 	fi
 }
 
@@ -251,7 +131,7 @@ untangle_git_stash() {
 }
 
 do_start() { # args...
-	check_args 1 "$@"
+	check_args_for_apply 1 "$@"
 	if does_data_exits
 	then
 		printf '\n' 1>&2
@@ -286,7 +166,7 @@ do_start() { # args...
 }
 
 do_continue() { # args...
-	check_args 0 "$@"
+	check_args_for_apply 0 "$@"
 	load_data
 	
 	if git -c 'core.editor=true' rebase --continue
@@ -298,7 +178,7 @@ do_continue() { # args...
 }
 
 do_abort() { # args...
-	check_args 0 "$@"
+	check_args_for_apply 0 "$@"
 	load_data
 	
 	git rebase --abort || true  # Errors are ignored because if rebase is not in progress, we still want to try to restore HEAD.
@@ -333,7 +213,7 @@ do_abort() { # args...
 		then
 			printf '\e[33m'
 		fi
-		printf 'hint: Fix problems and rerun "git istash --abort"\n' 1>&2
+		printf 'hint: Fix problems and rerun "git istash-apply --abort"\n' 1>&2
 		printf 'hint: or delete the file "%s" to cancel manually.\n' "$target_data_file" 1>&2
 		if is_color_allowed 2
 		then
@@ -386,5 +266,5 @@ then
 fi
 
 cd "$(git rev-parse --show-toplevel)"
-find_data_files
+target_data_file="$(make_data_file_path 'target')"
 do_unstash "$@"

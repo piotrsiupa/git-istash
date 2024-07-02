@@ -64,8 +64,8 @@ assert_failure() { # command [arguments...]
 assert_conflict_message() { # command [arguments...]
 	if [ "$(printf '%s' "$stderr" | tail -n4)" != '
 hint: Disregard all hints above about using "git rebase".
-hint: Use "git istash --continue" after fixing conflicts.
-hint: To abort and get back to the state before "git istash", run "git istash --abort".' ]
+hint: Use "git istash-apply --continue" after fixing conflicts.
+hint: To abort and get back to the state before "git istash-apply", run "git istash-apply --abort".' ]
 	then
 		printf 'Command %s didn'\''t print the correct conflict message!\n' "$(command_to_string "$@")" 1>&3
 		return 1
