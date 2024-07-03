@@ -148,18 +148,18 @@ check_stash() { # stash
 }
 
 find_current_branch() {
-	detached=n
-	orphan=n
 	if git rev-parse HEAD >/dev/null 2>&1
 	then
 		target="$(git rev-parse --abbrev-ref HEAD)"
+		target_type='normal'
 		if [ "$target" = 'HEAD' ]
 		then
-			detached=y
 			target="$(git rev-parse HEAD)"
+			target_type='detached'
 		fi
 	else
-		orphan=y
 		target="$(git branch --show-current)"
+		#shellcheck disable=SC2034
+		target_type='orphan'
 	fi
 }

@@ -83,7 +83,7 @@ check_data_files() { # resume
 			then
 				printf '\e[31m'
 			fi
-			printf 'fatal: "git istash-pop" seems to be in progress but "%s" is missing!\n' "$target_data_file" 1>&2
+			printf 'fatal: "git istash-pop" seems to be in progress but "%s" is missing!\n' "$(make_target_data_file)" 1>&2
 			if is_color_allowed 2
 			then
 				printf '\e[33m'
