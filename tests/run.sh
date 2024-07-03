@@ -14,6 +14,7 @@ print_help() {
 	printf '    -q, --quiet\t\t- Don'\''t print summaries for passed tests.\n'
 	printf '    -c, --color=when\t- Set color mode (always / never / auto).\n'
 	printf '        --raw-name\t- Print paths to test files instead of prettified names.\n'
+	printf '    -l, --limit=number\t- Set maximum number of tests to be run. (It pairs well\n\t\t\t  with "--failed" to e.g. rerun the first failed test.)\n'
 	printf '\n'
 	printf 'Filters:\n'
 	printf 'You can specify one or more filters in the command call. '
@@ -68,6 +69,12 @@ find_tests() { # pattern
 			printf '%s\n' "$test_name"
 		fi
 	done \
+	| if [ "$test_limit" -eq 0 ]
+	then
+		cat
+	else
+		head -n "$test_limit"
+	fi \
 	| sort
 }
 
@@ -214,13 +221,14 @@ print_summary() {
 	printf '\n'
 }
 
-getopt_result="$(getopt -o'hfqc:' --long='help,failed,debug,quiet,color:,raw,raw-name,file-name' -n"$(basename "$0")" -- "$@")"
+getopt_result="$(getopt -o'hfqc:l:' --long='help,failed,debug,quiet,color:,raw,raw-name,file-name,limit:' -n"$(basename "$0")" -- "$@")"
 eval set -- "$getopt_result"
 only_failed=n
 debug_mode=n
 quiet_mode=n
 use_color='auto'
 raw_name=n
+test_limit=0
 while true
 do
 	case "$1" in
@@ -255,6 +263,16 @@ do
 		;;
 	--raw|--raw-name|--file-name)
 		raw_name=y
+		;;
+	-l|--limit)
+		shift
+		if [ "$1" -eq "$1" ] 2>/dev/null && [ "$1" -ge 0 ]
+		then
+			test_limit="$1"
+		else
+			printf '"%s" is not a valid number of tests (a non-negative integer).\n' "$1" 1>&2
+			exit 1
+		fi
 		;;
 	--)
 		shift
