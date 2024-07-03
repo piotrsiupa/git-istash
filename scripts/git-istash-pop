@@ -14,30 +14,22 @@ print_help() {
 save_data() {
 	printf '%s\n' "$stash" >"$stash_data_file"
 }
-does_data_exits() {
-	[ -f "$stash_data_file" ]
-}
 load_data() {
-	if ! does_data_exits
-	then
-		printf 'fatal: No istash in progress?\n' 1>&2
-		exit 1
-	elif [ "$(wc -l <"$stash_data_file")" -ne 1 ]
+	if [ "$(wc -l <"$stash_data_file")" -ne 1 ]
 	then
 		printf 'fatal: "%s" is should contain exactly 1 line.\n' "$stash_data_file" 1>&2
 		exit 1
-	else
-		stash="$(cat "$stash_data_file")"
-		if ! [ "$stash" -eq "$stash" ] 2>/dev/null || [ "$stash" -lt 0 ]
-		then
-			printf 'fatal: "%s" doesn'\''t contain a positive integer.\n' "$stash_data_file" 1>&2
-			exit 1
-		fi
-		if [ "$stash" -ge "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" ]
-		then
-			printf 'fatal: "%s" says "%i" but there is no such stash.\n' "$stash_data_file" "$stash" 1>&2
-			exit 1
-		fi
+	fi
+	stash="$(cat "$stash_data_file")"
+	if ! [ "$stash" -eq "$stash" ] 2>/dev/null || [ "$stash" -lt 0 ]
+	then
+		printf 'fatal: "%s" doesn'\''t contain a positive integer.\n' "$stash_data_file" 1>&2
+		exit 1
+	fi
+	if [ "$stash" -ge "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" ]
+	then
+		printf 'fatal: "%s" says "%i" but there is no such stash.\n' "$stash_data_file" "$stash" 1>&2
+		exit 1
 	fi
 }
 delete_data() {
@@ -54,27 +46,71 @@ end_with_success() {
 	printf '\nSuccessfully popped the stash\n'
 }
 
+check_data_files() { # resume
+	case "$(find_data_files)" in
+		pop)
+			if [ "$1" = y ] ; then return 0 ; fi
+			printf '\n' 1>&2
+			if is_color_allowed 2
+			then
+				printf '\e[33m'
+			fi
+			printf 'fatal: "git istash-pop" is already in progress?\n' 1>&2
+			printf 'hint: Use "git istash-pop --continue" or "git istash-pop --abort".\n' 1>&2
+			if is_color_allowed 2
+			then
+				printf '\e[39m'
+			fi
+			exit 1
+			;;
+		apply)
+			printf '\n' 1>&2
+			if is_color_allowed 2
+			then
+				printf '\e[33m'
+			fi
+			printf 'fatal: "git istash-apply" is already in progress?\n' 1>&2
+			printf 'hint: Finish that operation before starting "git istash-pop".\n' 1>&2
+			if is_color_allowed 2
+			then
+				printf '\e[39m'
+			fi
+			exit 1
+			;;
+		error)
+			printf '\n' 1>&2
+			if is_color_allowed 2
+			then
+				printf '\e[31m'
+			fi
+			printf 'fatal: "git istash-pop" seems to be in progress but "%s" is missing!\n' "$target_data_file" 1>&2
+			if is_color_allowed 2
+			then
+				printf '\e[33m'
+			fi
+			printf 'hint: Fix the problem and finish that operation before starting a new one\n' 1>&2
+			printf 'hint: or remove the file "%s" to manually cancel it.\n' "$(make_stash_data_file_path)" 1>&2
+			if is_color_allowed 2
+			then
+				printf '\e[39m'
+			fi
+			exit 1
+			;;
+		nothing)
+			if [ "$1" = n ] ; then return 0 ; fi
+			printf 'fatal: No istash-pop in progress?\n' 1>&2
+			exit 1
+			;;
+	esac
+}
+
 run_apply() { # args...
-	sh "$(dirname "$0")/git-istash-apply" "$@" || exit 1
+	sh "$(dirname "$0")/git-istash-apply" --called-from-pop "$@" || exit 1
 }
 
 do_start() { # args...
 	check_args_for_pop 1 "$@"
-	if does_data_exits
-	then
-		printf '\n' 1>&2
-		if is_color_allowed 2
-		then
-			printf '\e[33m'
-		fi
-		printf 'fatal: Istash already in progress?\n' 1>&2
-		printf 'hint: Use "git istash --continue" or "git istash --abort".\n' 1>&2
-		if is_color_allowed 2
-		then
-			printf '\e[39m'
-		fi
-		exit 1
-	fi
+	check_data_files n
 	check_repository_state
 	find_stash "$@"
 	save_data
@@ -84,6 +120,7 @@ do_start() { # args...
 
 do_continue() { # args...
 	check_args_for_pop 0 "$@"
+	check_data_files y
 	load_data
 	run_apply --continue
 	end_with_success
@@ -91,6 +128,7 @@ do_continue() { # args...
 
 do_abort() { # args...
 	check_args_for_pop 0 "$@"
+	check_data_files y
 	load_data
 	run_apply --abort
 	delete_data
@@ -139,5 +177,5 @@ then
 fi
 
 cd "$(git rev-parse --show-toplevel)"
-stash_data_file="$(make_data_file_path 'stash')"
+stash_data_file="$(make_stash_data_file_path)"
 do_pop "$@"

@@ -61,11 +61,11 @@ assert_failure() { # command [arguments...]
 	fi
 }
 
-assert_conflict_message() { # command [arguments...]
-	if [ "$(printf '%s' "$stderr" | tail -n4)" != '
-hint: Disregard all hints above about using "git rebase".
-hint: Use "git istash-apply --continue" after fixing conflicts.
-hint: To abort and get back to the state before "git istash-apply", run "git istash-apply --abort".' ]
+assert_conflict_message() { # git command [arguments...]
+	if [ "$(printf '%s' "$stderr" | tail -n4)" != "
+hint: Disregard all hints above about using \"git rebase\".
+hint: Use \"$1 $2 --continue\" after fixing conflicts.
+hint: To abort and get back to the state before \"$1 $2\", run \"$1 $2 --abort\"." ]
 	then
 		printf 'Command %s didn'\''t print the correct conflict message!\n' "$(command_to_string "$@")" 1>&3
 		return 1

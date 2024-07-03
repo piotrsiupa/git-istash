@@ -8,8 +8,32 @@ is_color_allowed() { # stream_num
 
 make_data_file_path() { # name
 	git rev-parse --git-dir | tr -d '\n'
-	printf '/ISTASH_'
-	printf '%s' "$1" | tr 'a-z' 'A-Z'
+	printf '/istash %s' "$1" | tr ' [:lower:]' '_[:upper:]'
+}
+make_target_data_file_path() {
+	make_data_file_path 'target'
+}
+make_stash_data_file_path() {
+	make_data_file_path 'stash'
+}
+
+find_data_files() {
+	if [ -f "$(make_target_data_file_path)" ]
+	then
+		if [ -f "$(make_stash_data_file_path)" ]
+		then
+			printf 'pop'
+		else
+			printf 'apply'
+		fi
+	else
+		if [ -f "$(make_stash_data_file_path)" ]
+		then
+			printf 'error'
+		else
+			printf 'nothing'
+		fi
+	fi
 }
 
 check_args() { # max_free_args args...
@@ -66,8 +90,11 @@ find_stash() { # [arg]
 	else
 		stash="$1"
 	fi
-	
-	stash_commit="$(get_stash_commit "$stash")"
+	check_stash "$stash"
+}
+
+check_stash() { # stash
+	stash_commit="$(get_stash_commit "$1")"
 	if ! git rev-parse --quiet --verify "$stash_commit^{commit}" 1>/dev/null
 	then
 		printf 'fatal: There is no commit "%s".\n' "$stash_commit" 1>&2
