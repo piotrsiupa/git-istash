@@ -16,6 +16,7 @@ assert_tracked_files 'aaa'
 assert_status 'UU aaa'
 assert_stash_count 1
 assert_branch_count 1
+assert_data_files 'apply'
 
 printf 'eee\n' >aaa
 git add aaa

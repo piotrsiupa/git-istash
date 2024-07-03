@@ -5,7 +5,7 @@ printf 'If you want to use it IN a test, source it with the command:\n. ../commo
 if [ -t 1 ] ; then exit 1 ; fi
 
 # Note that this script sets terminal to exit upon encountering any error.
-# Note that the arguments of these functions are not validated. Familiarize youself with them before trying to use them.
+# Note that the arguments of these functions are not thoroughly validated. Familiarize yourself with them before trying to use them.
 # Note that streams 4..8 are used by scripts (here and in `run.sh`) and they shouldn't be touched. (Stream is used to print assertion errors and you can write to it.)
 
 set -e
@@ -185,4 +185,52 @@ assert_head_name() { # expected
 		return 1
 	fi
 	unset value_for_assert
+}
+
+assert_data_file() { # is_expected data_point_name
+	file_path_for_assert=".git/ISTASH_$2"
+	if [ "$1" = n ]
+	then
+		if [ -e "$file_path_for_assert" ]
+		then
+			printf 'Expected the file "%s" to NOT be present!\n' "$file_path_for_assert" 1>&3
+			return 1
+		fi
+	else
+		if [ ! -e "$file_path_for_assert" ]
+		then
+			printf 'Expected the file "%s" to be present!\n' "$file_path_for_assert" 1>&3
+			return 1
+		fi
+		if [ ! -f "$file_path_for_assert" ]
+		then
+			printf 'Expected "%s" to be a file!\n' "$file_path_for_assert" 1>&3
+			return 1
+		fi
+		if [ "$(wc -l "$file_path_for_assert" | awk '{print $1}')" -ne 1 ]
+		then
+			printf 'Expected the file "%s" to have 1 line!\n' "$file_path_for_assert" 1>&3
+			return 1
+		fi
+	fi
+	unset file_path_for_assert
+}
+assert_data_files() { # expected_state
+	case "$1" in
+		none)
+			assert_data_file n 'TARGET'
+			assert_data_file n 'STASH'
+			;;
+		apply)
+			assert_data_file y 'TARGET'
+			assert_data_file n 'STASH'
+			;;
+		pop)
+			assert_data_file y 'TARGET'
+			assert_data_file y 'STASH'
+			;;
+		*)
+			return 1
+			;;
+	esac
 }

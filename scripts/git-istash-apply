@@ -184,6 +184,7 @@ do_start() { # args...
 	check_args_for_apply 1 "$@"
 	check_data_files n
 	check_repository_state
+	check_other_git_commands_state
 	find_stash "$@"
 	find_current_branch
 	save_data

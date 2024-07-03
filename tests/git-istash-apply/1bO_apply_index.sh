@@ -12,3 +12,4 @@ assert_file_contents aaa 'bbb' 'bbb'
 assert_stash_count 1
 assert_branch_count 1
 assert_head_name '~ooo'
+assert_data_files 'none'

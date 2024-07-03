@@ -38,6 +38,7 @@ assert_conflict_message git istash-apply
 assert_status 'UU aaa|UU xxx/aaa|UU yyy/aaa'
 assert_stash_count 1
 assert_branch_count 1
+assert_data_files 'apply'
 
 printf 'eee0\n' >aaa
 printf 'eee1\n' >xxx/aaa
@@ -59,3 +60,4 @@ assert_log_length 3
 assert_branch_count 1
 assert_head_hash "$correct_head_hash"
 assert_head_name 'HEAD'
+assert_data_files 'none'

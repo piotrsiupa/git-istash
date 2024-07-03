@@ -58,6 +58,20 @@ check_repository_state() {
 	fi
 }
 
+check_other_git_commands_state() {
+	git_dir="$(git rev-parse --git-dir)"
+	if [ -e "$git_dir/rebase-apply" ] || [ -e "$git_dir/rebase-merge" ]
+	then
+		printf 'error: There is currently a rebase in progress.\n' 1>&2
+		exit 1
+	fi
+	if [ -e "$git_dir/MERGE_HEAD" ]
+	then
+		printf 'error: There is currently a merge in progress.\n' 1>&2
+		exit 1
+	fi
+}
+
 get_stash_commit() { # stash
 	if [ "$1" -eq "$1" ] 2>/dev/null
 	then
