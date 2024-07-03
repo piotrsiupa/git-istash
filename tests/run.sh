@@ -10,7 +10,7 @@ print_help() {
 	printf 'Options:\n'
 	printf '    -h, --help\t\t- Print this help message.\n'
 	printf '    -f, --failed\t- Rerun only the tests that failed the last time when\n\t\t\t  they were run. (Check the presence of the test dir.)\n'
-	printf '        --debug\t\t- Print outputs of all commands in run in the tests.\n'
+	printf '    -d, --debug\t\t- Print outputs of all commands in run in the tests.\n'
 	printf '    -q, --quiet\t\t- Don'\''t print summaries for passed tests.\n'
 	printf '    -c, --color=when\t- Set color mode (always / never / auto).\n'
 	printf '        --raw-name\t- Print paths to test files instead of prettified names.\n'
@@ -221,7 +221,7 @@ print_summary() {
 	printf '\n'
 }
 
-getopt_result="$(getopt -o'hfqc:l:' --long='help,failed,debug,quiet,color:,raw,raw-name,file-name,limit:' -n"$(basename "$0")" -- "$@")"
+getopt_result="$(getopt -o'hfdqc:l:' --long='help,failed,debug,quiet,color:,raw,raw-name,file-name,limit:' -n"$(basename "$0")" -- "$@")"
 eval set -- "$getopt_result"
 only_failed=n
 debug_mode=n
@@ -236,10 +236,10 @@ do
 		print_help
 		exit 0
 		;;
-	--failed)
+	-f|--failed)
 		only_failed=y
 		;;
-	--debug)
+	-d|--debug)
 		debug_mode=y
 		;;
 	-q|--quiet)
