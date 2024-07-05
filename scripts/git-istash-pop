@@ -46,6 +46,16 @@ end_with_success() {
 	printf '\nSuccessfully popped the stash\n'
 }
 
+check_stash_for_pop() {
+	if [ "$stash" -eq "$stash" ] 2>/dev/null
+	then
+		:
+	else
+		printf 'error: Only stash entries can be popped.\n' 1>&2
+		exit 1
+	fi
+}
+
 check_data_files() { # resume
 	case "$(find_data_files)" in
 		pop)
@@ -105,7 +115,7 @@ check_data_files() { # resume
 }
 
 run_apply() { # args...
-	sh "$(dirname "$0")/git-istash-apply" --called-from-pop "$@" || exit 1
+	sh "$(dirname "$0")/git-istash-apply" --called-from-pop "$@"
 }
 
 do_start() { # args...
@@ -114,16 +124,25 @@ do_start() { # args...
 	check_repository_state
 	check_other_git_commands_state
 	find_stash "$@"
+	check_stash_for_pop
 	save_data
-	run_apply -- "$@"
-	end_with_success
+	if run_apply -- "$@"
+	then
+		end_with_success
+	elif are_there_conflicts
+	then
+		exit 1
+	else
+		delete_data
+		exit 1
+	fi
 }
 
 do_continue() { # args...
 	check_args_for_pop 0 "$@"
 	check_data_files y
 	load_data
-	run_apply --continue
+	run_apply --continue || exit 1
 	end_with_success
 }
 
@@ -131,7 +150,7 @@ do_abort() { # args...
 	check_args_for_pop 0 "$@"
 	check_data_files y
 	load_data
-	run_apply --abort
+	run_apply --abort || exit 1
 	delete_data
 }
 

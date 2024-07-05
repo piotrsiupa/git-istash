@@ -177,3 +177,7 @@ find_current_branch() {
 		target_type='orphan'
 	fi
 }
+
+are_there_conflicts() {
+	git status --porcelain | grep -q '^.U\|^U.'
+}

@@ -197,8 +197,12 @@ do_start() { # args...
 	if git rebase --onto "$target" "HEAD~2" "HEAD" --empty=keep --keep-empty
 	then
 		end_with_success
-	else
+	elif are_there_conflicts
+	then
 		end_with_rebase_problem
+	else
+		do_abort
+		exit 1
 	fi
 }
 
@@ -210,8 +214,11 @@ do_continue() { # args...
 	if git -c 'core.editor=true' rebase --continue
 	then
 		end_with_success
-	else
+	elif are_there_conflicts
+	then
 		end_with_rebase_problem
+	else
+		exit 1
 	fi
 }
 
