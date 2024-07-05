@@ -12,7 +12,7 @@ git stash push -m 'later stash entry'
 later_stash_hash="$(git rev-parse 'stash@{0}')"
 
 correct_head_hash="$(git rev-parse HEAD)"
-assert_success git istash-pop 'stash^{/earlier}'
+assert_exit_code 0 git istash-pop 'stash^{/earlier}'
 assert_tracked_files 'aaa'
 assert_status ' M aaa'
 assert_file_contents aaa 'bbb' 'aaa'

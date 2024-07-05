@@ -30,7 +30,7 @@ git commit -m 'Changed aaa & added zzz'
 
 correct_head_hash="$(git rev-parse HEAD)"
 cd xxx
-assert_failure capture_outputs git istash-pop
+assert_exit_code 2 capture_outputs git istash-pop
 cd ..
 assert_conflict_message git istash-pop
 assert_status 'UU aaa|UU xxx/aaa|UU yyy/aaa'
@@ -43,7 +43,7 @@ printf 'eee1\n' >xxx/aaa
 printf 'eee2\n' >yyy/aaa
 git add aaa xxx/aaa yyy/aaa
 cd xxx
-assert_success git istash-pop --abort
+assert_exit_code 0 git istash-pop --abort
 cd ..
 assert_tracked_files 'aaa|xxx/aaa|xxx/zzz|yyy/aaa|yyy/zzz|zzz'
 assert_status ''

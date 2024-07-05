@@ -13,7 +13,7 @@ git commit -am 'Changed aaa'
 git switch -d HEAD
 
 correct_head_hash="$(git rev-parse HEAD)"
-assert_failure capture_outputs git istash-apply
+assert_exit_code 2 capture_outputs git istash-apply
 assert_conflict_message git istash-apply
 assert_tracked_files 'aaa'
 assert_status 'UU aaa'
@@ -23,7 +23,7 @@ assert_data_files 'apply'
 
 printf 'eee\n' >aaa
 git add aaa
-assert_success git istash-apply --continue
+assert_exit_code 0 git istash-apply --continue
 assert_tracked_files 'aaa'
 assert_status ' M aaa'
 assert_file_contents aaa 'eee' 'ddd'

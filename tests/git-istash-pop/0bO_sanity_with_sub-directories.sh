@@ -17,7 +17,7 @@ git switch --orphan ooo
 
 mkdir xxx
 cd xxx
-assert_success git stash pop --index
+assert_exit_code 0 git stash pop --index
 cd ..
 assert_status 'AM aaa|AM xxx/aaa|AM yyy/aaa|?? xxx/zzz|?? yyy/zzz|?? zzz'
 assert_file_contents aaa 'ccc0' 'bbb0'

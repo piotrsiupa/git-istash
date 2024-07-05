@@ -13,7 +13,7 @@ git commit -am 'Changed aaa'
 printf '#!/usr/bin/env sh\nexit 1\n' >.git/hooks/pre-rebase
 chmod +x .git/hooks/pre-rebase
 correct_head_hash="$(git rev-parse HEAD)"
-assert_failure git istash-pop
+assert_exit_code 1 git istash-pop
 assert_tracked_files 'aaa'
 assert_status ''
 assert_file_contents aaa 'ddd' 'ddd'

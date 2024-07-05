@@ -11,7 +11,7 @@ printf 'ddd\n' >aaa
 git commit -am 'Changed aaa'
 
 correct_head_hash="$(git rev-parse HEAD)"
-assert_failure capture_outputs git istash-apply
+assert_exit_code 2 capture_outputs git istash-apply
 assert_conflict_message git istash-apply
 assert_tracked_files 'aaa'
 assert_status 'UU aaa'
@@ -21,12 +21,12 @@ assert_data_files 'apply'
 
 master_hash="$(git rev-parse master)"
 git branch -D master
-assert_failure git istash-apply --abort
+assert_exit_code 1 git istash-apply --abort
 assert_branch_count 0
 assert_data_files 'apply'
 
 git branch master "$master_hash"
-assert_success git istash-apply --abort
+assert_exit_code 0 git istash-apply --abort
 assert_tracked_files 'aaa'
 assert_status ''
 assert_file_contents aaa 'ddd' 'ddd'

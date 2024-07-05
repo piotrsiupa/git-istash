@@ -32,7 +32,7 @@ git switch -d HEAD
 
 correct_head_hash="$(git rev-parse HEAD)"
 cd xxx
-assert_failure capture_outputs git istash-pop
+assert_exit_code 2 capture_outputs git istash-pop
 cd ..
 assert_conflict_message git istash-pop
 assert_status 'UU aaa|UU xxx/aaa|UU yyy/aaa'
@@ -45,7 +45,7 @@ printf 'eee1\n' >xxx/aaa
 printf 'eee2\n' >yyy/aaa
 git add aaa xxx/aaa yyy/aaa
 cd xxx
-assert_failure capture_outputs git istash-pop --continue
+assert_exit_code 2 capture_outputs git istash-pop --continue
 cd ..
 assert_conflict_message git istash-pop --continue
 assert_tracked_files 'aaa|xxx/aaa|xxx/zzz|yyy/aaa|yyy/zzz|zzz'
@@ -62,7 +62,7 @@ printf 'xxx1\n' >xxx/zzz
 printf 'xxx2\n' >yyy/zzz
 git add aaa xxx/aaa yyy/aaa zzz xxx/zzz yyy/zzz
 cd xxx
-assert_success git istash-pop --continue
+assert_exit_code 0 git istash-pop --continue
 cd ..
 assert_tracked_files 'aaa|xxx/aaa|xxx/zzz|yyy/aaa|yyy/zzz|zzz'
 assert_status 'MM aaa|MM xxx/aaa| M xxx/zzz|MM yyy/aaa| M yyy/zzz| M zzz'

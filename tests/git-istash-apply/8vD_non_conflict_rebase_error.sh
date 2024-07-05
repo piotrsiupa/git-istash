@@ -15,7 +15,7 @@ git switch -d HEAD
 printf '#!/usr/bin/env sh\nexit 1\n' >.git/hooks/pre-rebase
 chmod +x .git/hooks/pre-rebase
 correct_head_hash="$(git rev-parse HEAD)"
-assert_failure git istash-apply
+assert_exit_code 1 git istash-apply
 assert_tracked_files 'aaa'
 assert_status ''
 assert_file_contents aaa 'ddd' 'ddd'

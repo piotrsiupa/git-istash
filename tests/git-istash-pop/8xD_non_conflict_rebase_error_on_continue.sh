@@ -12,7 +12,7 @@ git commit -am 'Changed aaa'
 
 git switch -d HEAD
 
-assert_failure capture_outputs git istash-pop
+assert_exit_code 2 capture_outputs git istash-pop
 assert_conflict_message git istash-pop
 assert_tracked_files 'aaa'
 assert_status 'UU aaa'
@@ -23,7 +23,7 @@ assert_data_files 'pop'
 printf 'eee\n' >aaa
 git add aaa
 rm -rf '.git/rebase-apply' '.git/rebase-merge'
-assert_failure git istash-pop --continue
+assert_exit_code 1 git istash-pop --continue
 assert_tracked_files 'aaa'
 assert_status 'M  aaa'
 assert_file_contents aaa 'eee' 'eee'

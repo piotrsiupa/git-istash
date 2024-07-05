@@ -10,7 +10,7 @@ git stash push
 
 git switch --orphan ooo
 
-assert_failure capture_outputs git istash-pop
+assert_exit_code 2 capture_outputs git istash-pop
 assert_conflict_message git istash-pop
 assert_tracked_files ''
 assert_status 'DU aaa'
@@ -23,4 +23,4 @@ git add aaa
 printf 'zzz\n' >zzz
 git add zzz
 git commit --amend --no-edit -- zzz
-assert_failure git istash-pop --continue
+assert_exit_code 1 git istash-pop --continue

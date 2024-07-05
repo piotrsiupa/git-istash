@@ -16,7 +16,7 @@ assert_stash_count 0
 git switch -d HEAD
 
 correct_head_hash="$(git rev-parse HEAD)"
-assert_success git istash-apply "$earlier_stash_hash"
+assert_exit_code 0 git istash-apply "$earlier_stash_hash"
 assert_tracked_files 'aaa'
 assert_status ' M aaa'
 assert_file_contents aaa 'bbb' 'aaa'

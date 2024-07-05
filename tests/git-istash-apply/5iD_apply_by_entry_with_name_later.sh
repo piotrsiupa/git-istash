@@ -13,7 +13,7 @@ git stash push -m 'later stash entry'
 git switch -d HEAD
 
 correct_head_hash="$(git rev-parse HEAD)"
-assert_success git istash-apply 'stash^{/later}'
+assert_exit_code 0 git istash-apply 'stash^{/later}'
 assert_tracked_files 'aaa'
 assert_status ' M aaa'
 assert_file_contents aaa 'ccc' 'aaa'

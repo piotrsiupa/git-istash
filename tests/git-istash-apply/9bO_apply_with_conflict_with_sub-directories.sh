@@ -23,7 +23,7 @@ git switch --orphan ooo
 
 mkdir xxx
 cd xxx
-assert_failure capture_outputs git istash-apply
+assert_exit_code 2 capture_outputs git istash-apply
 cd ..
 assert_conflict_message git istash-apply
 assert_status 'DU aaa|DU xxx/aaa|DU yyy/aaa'
@@ -36,7 +36,7 @@ printf 'eee1\n' >xxx/aaa
 printf 'eee2\n' >yyy/aaa
 git add aaa xxx/aaa yyy/aaa
 cd xxx
-assert_failure capture_outputs git istash-apply --continue
+assert_exit_code 2 capture_outputs git istash-apply --continue
 cd ..
 assert_conflict_message git istash-apply --continue
 assert_tracked_files 'aaa|xxx/aaa|yyy/aaa'
@@ -53,7 +53,7 @@ printf 'xxx1\n' >xxx/zzz
 printf 'xxx2\n' >yyy/zzz
 git add aaa xxx/aaa yyy/aaa zzz xxx/zzz yyy/zzz
 cd xxx
-assert_success git istash-apply --continue
+assert_exit_code 0 git istash-apply --continue
 cd ..
 assert_status 'AM aaa|AM xxx/aaa|AM yyy/aaa|?? xxx/zzz|?? yyy/zzz|?? zzz'
 assert_file_contents aaa 'fff0' 'eee0'

@@ -9,7 +9,7 @@ git add aaa
 git stash push
 
 correct_head_hash="$(git rev-parse HEAD)"
-git istash-apply
+assert_exit_code 0 git istash-apply
 assert_tracked_files 'aaa'
 assert_status 'M  aaa'
 assert_file_contents aaa 'bbb' 'bbb'

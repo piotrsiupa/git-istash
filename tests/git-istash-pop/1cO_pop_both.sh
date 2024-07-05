@@ -7,7 +7,7 @@ git stash push
 
 git switch --orphan ooo
 
-git istash-pop
+assert_exit_code 0 git istash-pop
 assert_status 'AM aaa'
 assert_file_contents aaa 'ccc' 'bbb'
 assert_stash_count 0

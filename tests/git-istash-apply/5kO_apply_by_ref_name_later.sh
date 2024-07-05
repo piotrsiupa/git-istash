@@ -15,7 +15,7 @@ assert_stash_count 0
 
 git switch --orphan ooo
 
-assert_success git istash-apply later
+assert_exit_code 0 git istash-apply later
 assert_status '?? aaa'
 assert_file_contents aaa 'ccc'
 assert_stash_count 0

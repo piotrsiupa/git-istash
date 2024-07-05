@@ -13,7 +13,7 @@ printf 'ddd\n' >aaa
 git commit -am 'Changed aaa'
 
 correct_head_hash="$(git rev-parse HEAD)"
-assert_failure capture_outputs git istash-pop
+assert_exit_code 2 capture_outputs git istash-pop
 assert_conflict_message git istash-pop
 assert_tracked_files 'aaa'
 assert_status 'UU aaa'
@@ -23,7 +23,7 @@ assert_data_files 'pop'
 
 printf 'eee\n' >aaa
 git add aaa
-assert_failure capture_outputs git istash-pop --continue
+assert_exit_code 2 capture_outputs git istash-pop --continue
 assert_conflict_message git istash-pop --continue
 assert_tracked_files 'aaa'
 assert_status 'UU aaa'
@@ -33,7 +33,7 @@ assert_data_files 'pop'
 
 printf 'fff\n' >aaa
 git add aaa
-assert_success git istash-pop --continue
+assert_exit_code 0 git istash-pop --continue
 assert_tracked_files 'aaa'
 assert_status 'MM aaa'
 assert_file_contents aaa 'fff' 'eee'

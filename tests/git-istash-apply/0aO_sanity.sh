@@ -11,7 +11,7 @@ assert_data_files 'none'
 
 git switch --orphan ooo
 
-assert_success git stash apply
+assert_exit_code 0 git stash apply
 assert_status 'A  aaa'
 assert_file_contents aaa 'bbb' 'bbb'
 assert_stash_count 1

@@ -23,7 +23,7 @@ git switch -d HEAD
 
 correct_head_hash="$(git rev-parse HEAD)"
 cd xxx
-assert_success git stash pop --index
+assert_exit_code 0 git stash pop --index
 cd ..
 assert_tracked_files 'aaa|xxx/aaa|yyy/aaa'
 assert_status 'MM aaa|MM xxx/aaa|MM yyy/aaa|?? xxx/zzz|?? yyy/zzz|?? zzz'

@@ -45,20 +45,18 @@ command_to_string() { # command [arguments...]
 	printf '"%s"' "$*"
 }
 
-assert_success() { # command [arguments...]
-	if ! "$@"
+assert_exit_code() { # expected_code command [arguments...]
+	expected_exit_code_for_assert="$1"
+	shift
+	exit_code_for_assert=0
+	"$@" || exit_code_for_assert=$?
+	if [ "$exit_code_for_assert" -ne "$expected_exit_code_for_assert" ]
 	then
-		printf 'Command %s returned a non-0 exit code!\n' "$(command_to_string "$@")" 1>&3
+		printf 'Command %s returned exit code %i but %i was expected!\n' "$(command_to_string "$@")" $exit_code_for_assert "$expected_exit_code_for_assert" 1>&3
 		return 1
 	fi
-}
-
-assert_failure() { # command [arguments...]
-	if "$@"
-	then
-		printf 'Command %s returned exit code 0!\n' "$(command_to_string "$@")" 1>&3
-		return 1
-	fi
+	unset expected_exit_code_for_assert
+	unset exit_code_for_assert
 }
 
 assert_conflict_message() { # git command [arguments...]

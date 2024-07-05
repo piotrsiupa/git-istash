@@ -16,7 +16,7 @@ git add aaa zzz
 git commit -m 'Changed aaa & added zzz'
 
 correct_head_hash="$(git rev-parse HEAD)"
-assert_failure capture_outputs git istash-pop
+assert_exit_code 2 capture_outputs git istash-pop
 assert_conflict_message git istash-pop
 assert_status 'UU aaa'
 assert_stash_count 1
@@ -25,7 +25,7 @@ assert_data_files 'pop'
 
 printf 'eee\n' >aaa
 git add aaa
-assert_failure capture_outputs git istash-pop --continue
+assert_exit_code 2 capture_outputs git istash-pop --continue
 assert_conflict_message git istash-pop --continue
 assert_tracked_files 'aaa|zzz'
 assert_status 'UU aaa|AA zzz'
@@ -36,7 +36,7 @@ assert_data_files 'pop'
 printf 'fff\n' >aaa
 printf 'xxx\n' >zzz
 git add aaa zzz
-assert_success git istash-pop --continue
+assert_exit_code 0 git istash-pop --continue
 assert_tracked_files 'aaa|zzz'
 assert_status 'MM aaa| M zzz'
 assert_file_contents aaa 'fff' 'eee'

@@ -10,7 +10,7 @@ git stash push
 printf 'ddd\n' >aaa
 git commit -am 'Changed aaa'
 
-assert_failure capture_outputs git istash-pop
+assert_exit_code 2 capture_outputs git istash-pop
 assert_conflict_message git istash-pop
 assert_tracked_files 'aaa'
 assert_status 'UU aaa'
@@ -19,7 +19,7 @@ assert_branch_count 1
 assert_data_files 'pop'
 
 correct_head_hash="$(git rev-parse HEAD)"
-assert_failure git istash-pop
+assert_exit_code 1 git istash-pop
 assert_tracked_files 'aaa'
 assert_status 'UU aaa'
 assert_stash_count 1

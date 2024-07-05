@@ -70,7 +70,7 @@ end_with_rebase_problem() {
 	then
 		printf '\e[39m'
 	fi
-	exit 1
+	exit 2
 }
 end_with_success() {
 	other_changes_hash="$(git rev-parse HEAD)"

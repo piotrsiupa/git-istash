@@ -12,7 +12,7 @@ printf 'ccc\n' >aaa
 git stash push -m 'later stash entry'
 
 correct_head_hash="$(git rev-parse HEAD)"
-assert_success git istash-pop 'stash@{0}'
+assert_exit_code 0 git istash-pop 'stash@{0}'
 assert_tracked_files 'aaa'
 assert_status ' M aaa'
 assert_file_contents aaa 'ccc' 'aaa'

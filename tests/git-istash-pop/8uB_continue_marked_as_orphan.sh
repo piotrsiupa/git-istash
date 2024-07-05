@@ -10,7 +10,7 @@ git stash push
 printf 'ddd\n' >aaa
 git commit -am 'Changed aaa'
 
-assert_failure capture_outputs git istash-pop
+assert_exit_code 2 capture_outputs git istash-pop
 assert_conflict_message git istash-pop
 assert_tracked_files 'aaa'
 assert_status 'UU aaa'
@@ -22,4 +22,4 @@ printf 'eee\n' >aaa
 git add aaa
 mv '.git/ISTASH_TARGET' '.git/ISTASH_TARGET~'
 { printf '~' ; cat '.git/ISTASH_TARGET~' ; } >'.git/ISTASH_TARGET'
-assert_failure git istash-pop --continue
+assert_exit_code 1 git istash-pop --continue

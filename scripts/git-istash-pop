@@ -129,9 +129,9 @@ do_start() { # args...
 	if run_apply -- "$@"
 	then
 		end_with_success
-	elif are_there_conflicts
+	elif [ $? -eq 2 ]
 	then
-		exit 1
+		exit 2
 	else
 		delete_data
 		exit 1
@@ -142,7 +142,7 @@ do_continue() { # args...
 	check_args_for_pop 0 "$@"
 	check_data_files y
 	load_data
-	run_apply --continue || exit 1
+	run_apply --continue
 	end_with_success
 }
 
@@ -150,7 +150,7 @@ do_abort() { # args...
 	check_args_for_pop 0 "$@"
 	check_data_files y
 	load_data
-	run_apply --abort || exit 1
+	run_apply --abort
 	delete_data
 }
 

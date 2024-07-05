@@ -14,7 +14,7 @@ git switch --orphan ooo
 
 printf 'xxx\n' >xxx
 git add -N xxx
-assert_failure git istash-pop 1
+assert_exit_code 1 git istash-pop 1
 assert_status ' A xxx'
 assert_file_contents xxx 'xxx'
 assert_stash_count 1

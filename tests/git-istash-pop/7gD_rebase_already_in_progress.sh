@@ -25,7 +25,7 @@ assert_branch_count 2
 assert_data_files 'none'
 
 correct_head_hash="$(git rev-parse HEAD)"
-assert_failure git istash-pop
+assert_exit_code 1 git istash-pop
 assert_tracked_files 'aaa|xxx'
 assert_status ''
 assert_stash_count 1
