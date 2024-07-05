@@ -128,7 +128,7 @@ run_test() { # test_name
 	then
 		display_name="\"$(printf '%s' "$1" | tr '_' ' ')\""
 	else
-		display_name="$(dirname "$0")/test_$1.sh"
+		display_name="$(dirname "$0")/$1.sh"
 	fi
 	if [ "$test_passed" = y ]
 	then
