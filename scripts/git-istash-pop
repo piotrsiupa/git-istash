@@ -18,18 +18,18 @@ load_data() {
 	if [ "$(wc -l <"$stash_data_file")" -ne 1 ]
 	then
 		printf 'fatal: "%s" is should contain exactly 1 line.\n' "$stash_data_file" 1>&2
-		exit 1
+		return 1
 	fi
 	stash="$(cat "$stash_data_file")"
 	if ! [ "$stash" -eq "$stash" ] 2>/dev/null || [ "$stash" -lt 0 ]
 	then
 		printf 'fatal: "%s" doesn'\''t contain a positive integer.\n' "$stash_data_file" 1>&2
-		exit 1
+		return 1
 	fi
 	if [ "$stash" -ge "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" ]
 	then
 		printf 'fatal: "%s" says "%i" but there is no such stash.\n' "$stash_data_file" "$stash" 1>&2
-		exit 1
+		return 1
 	fi
 }
 delete_data() {
@@ -52,7 +52,7 @@ check_stash_for_pop() {
 		:
 	else
 		printf 'error: Only stash entries can be popped.\n' 1>&2
-		exit 1
+		return 1
 	fi
 }
 
@@ -71,7 +71,7 @@ check_data_files() { # resume
 			then
 				printf '\e[39m'
 			fi
-			exit 1
+			return 1
 			;;
 		apply)
 			printf '\n' 1>&2
@@ -85,7 +85,7 @@ check_data_files() { # resume
 			then
 				printf '\e[39m'
 			fi
-			exit 1
+			return 1
 			;;
 		error)
 			printf '\n' 1>&2
@@ -104,12 +104,12 @@ check_data_files() { # resume
 			then
 				printf '\e[39m'
 			fi
-			exit 1
+			return 1
 			;;
 		nothing)
 			if [ "$1" = n ] ; then return 0 ; fi
 			printf 'fatal: No istash-pop in progress?\n' 1>&2
-			exit 1
+			return 1
 			;;
 	esac
 }
@@ -131,10 +131,10 @@ do_start() { # args...
 		end_with_success
 	elif [ $? -eq 2 ]
 	then
-		exit 2
+		return 2
 	else
 		delete_data
-		exit 1
+		return 1
 	fi
 }
 
