@@ -12,7 +12,7 @@ git stash push -m 'the only stash'
 git switch -d HEAD
 
 correct_head_hash="$(git rev-parse HEAD)"
-assert_exit_code 1 git istash-apply --abort
+assert_exit_code 1 git istash apply --abort
 assert_tracked_files 'aaa'
 assert_status ''
 assert_file_contents aaa 'aaa' 'aaa'
@@ -27,7 +27,7 @@ assert_rebase n
 printf 'ddd\n' >aaa
 git add aaa
 printf 'eee\n' >aaa
-assert_exit_code 1 git istash-apply --abort
+assert_exit_code 1 git istash apply --abort
 assert_tracked_files 'aaa'
 assert_status 'MM aaa'
 assert_file_contents aaa 'eee' 'ddd'

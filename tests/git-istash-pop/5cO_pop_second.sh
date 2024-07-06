@@ -9,7 +9,7 @@ later_stash_hash="$(git rev-parse 'stash@{0}')"
 
 git switch --orphan ooo
 
-assert_exit_code 0 git istash-pop 1
+assert_exit_code 0 git istash pop 1
 assert_status '?? aaa'
 assert_file_contents aaa 'bbb'
 assert_stash_count 1

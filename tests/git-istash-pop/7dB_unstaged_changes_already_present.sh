@@ -12,7 +12,7 @@ assert_branch_count 1
 
 correct_head_hash="$(git rev-parse HEAD)"
 printf 'xxx\n' >aaa
-assert_exit_code 1 git istash-pop 1
+assert_exit_code 1 git istash pop 1
 assert_tracked_files 'aaa'
 assert_status ' M aaa'
 assert_file_contents aaa 'xxx' 'aaa'

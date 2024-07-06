@@ -6,7 +6,7 @@ git stash push
 
 git switch --orphan ooo
 
-assert_exit_code 0 git istash-apply
+assert_exit_code 0 git istash apply
 assert_status 'A  aaa'
 assert_file_contents aaa 'bbb' 'bbb'
 assert_stash_count 1

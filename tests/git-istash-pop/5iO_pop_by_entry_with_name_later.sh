@@ -9,7 +9,7 @@ git stash push -u -m 'later stash entry'
 
 git switch --orphan ooo
 
-assert_exit_code 0 git istash-pop 'stash^{/later}'
+assert_exit_code 0 git istash pop 'stash^{/later}'
 assert_status '?? aaa'
 assert_file_contents aaa 'ccc'
 assert_stash_count 1

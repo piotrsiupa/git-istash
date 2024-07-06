@@ -21,7 +21,7 @@ git stash push -u
 
 correct_head_hash="$(git rev-parse HEAD)"
 cd xxx
-assert_exit_code 0 git istash-apply
+assert_exit_code 0 git istash apply
 cd ..
 assert_tracked_files 'aaa|xxx/aaa|yyy/aaa'
 assert_status 'MM aaa|MM xxx/aaa|MM yyy/aaa|?? xxx/zzz|?? yyy/zzz|?? zzz'

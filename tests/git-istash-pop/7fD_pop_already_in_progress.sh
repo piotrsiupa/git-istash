@@ -12,8 +12,8 @@ git commit -am 'Changed aaa'
 
 git switch -d HEAD
 
-assert_exit_code 2 capture_outputs git istash-pop
-assert_conflict_message git istash-pop
+assert_exit_code 2 capture_outputs git istash pop
+assert_conflict_message git istash pop
 assert_tracked_files 'aaa'
 assert_status 'UU aaa'
 assert_stash_count 1
@@ -22,7 +22,7 @@ assert_data_files 'pop'
 assert_rebase y
 
 correct_head_hash="$(git rev-parse HEAD)"
-assert_exit_code 1 git istash-pop
+assert_exit_code 1 git istash pop
 assert_tracked_files 'aaa'
 assert_status 'UU aaa'
 assert_stash_count 1

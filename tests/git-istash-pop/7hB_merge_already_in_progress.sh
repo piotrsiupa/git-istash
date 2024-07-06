@@ -23,7 +23,7 @@ assert_data_files 'none'
 assert_rebase n
 
 correct_head_hash="$(git rev-parse HEAD)"
-assert_exit_code 1 git istash-pop
+assert_exit_code 1 git istash pop
 assert_tracked_files 'aaa'
 assert_status ''
 assert_stash_count 1

@@ -9,8 +9,8 @@ git stash push
 
 git switch --orphan ooo
 
-assert_exit_code 2 capture_outputs git istash-apply
-assert_conflict_message git istash-apply
+assert_exit_code 2 capture_outputs git istash apply
+assert_conflict_message git istash apply
 assert_status 'DU aaa'
 assert_stash_count 1
 assert_branch_count 2
@@ -20,7 +20,7 @@ assert_rebase y
 printf 'eee\n' >aaa
 git add aaa
 rm -rf '.git/rebase-apply' '.git/rebase-merge'
-assert_exit_code 1 git istash-apply --continue
+assert_exit_code 1 git istash apply --continue
 assert_tracked_files ''
 assert_status 'A  aaa'
 assert_file_contents aaa 'eee' 'eee'

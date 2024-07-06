@@ -9,7 +9,7 @@ git switch --orphan ooo
 
 printf 'xxx\n' >xxx
 git add xxx
-assert_exit_code 1 git istash-pop 1
+assert_exit_code 1 git istash pop 1
 assert_status 'A  xxx'
 assert_file_contents xxx 'xxx' 'xxx'
 assert_stash_count 1

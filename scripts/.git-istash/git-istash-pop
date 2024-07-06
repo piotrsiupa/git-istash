@@ -2,13 +2,13 @@
 
 set -e
 
-. "$(dirname "$0")/.git-istash/git-istash-commons"
+. "$(dirname "$0")/git-istash-commons"
 
 print_help() {
-	printf 'git-istash-pop - Improved version of "git stash pop" that can handle conflicts.\n'
+	printf 'git istash pop - Improved version of "git stash pop" that can handle conflicts.\n'
 	printf '\n'
-	printf 'usage: git istash-pop [<stash>]\n'
-	printf '   or: git istash-pop (-c | --continue | --abort)\n'
+	printf 'usage: git istash pop [<stash>]\n'
+	printf '   or: git istash pop (-c | --continue | --abort)\n'
 }
 
 save_data() {
@@ -37,7 +37,7 @@ delete_data() {
 }
 
 check_args_for_pop() { # max_free_args args...
-	check_args 'istash-pop' "$@"
+	check_args 'istash pop' "$@"
 }
 
 end_with_success() {
@@ -65,8 +65,8 @@ check_data_files() { # resume
 			then
 				printf '\e[33m'
 			fi
-			printf 'fatal: "git istash-pop" is already in progress?\n' 1>&2
-			printf 'hint: Use "git istash-pop --continue" or "git istash-pop --abort".\n' 1>&2
+			printf 'fatal: "git istash pop" is already in progress?\n' 1>&2
+			printf 'hint: Use "git istash pop --continue" or "git istash pop --abort".\n' 1>&2
 			if is_color_allowed 2
 			then
 				printf '\e[39m'
@@ -79,8 +79,8 @@ check_data_files() { # resume
 			then
 				printf '\e[33m'
 			fi
-			printf 'fatal: "git istash-apply" is already in progress?\n' 1>&2
-			printf 'hint: Finish that operation before starting "git istash-pop".\n' 1>&2
+			printf 'fatal: "git istash apply" is already in progress?\n' 1>&2
+			printf 'hint: Finish that operation before starting "git istash pop".\n' 1>&2
 			if is_color_allowed 2
 			then
 				printf '\e[39m'
@@ -93,7 +93,7 @@ check_data_files() { # resume
 			then
 				printf '\e[31m'
 			fi
-			printf 'fatal: "git istash-pop" seems to be in progress but "%s" is missing!\n' "$(make_target_data_file)" 1>&2
+			printf 'fatal: "git istash pop" seems to be in progress but "%s" is missing!\n' "$(make_target_data_file)" 1>&2
 			if is_color_allowed 2
 			then
 				printf '\e[33m'
@@ -108,7 +108,7 @@ check_data_files() { # resume
 			;;
 		nothing)
 			if [ "$1" = n ] ; then return 0 ; fi
-			printf 'fatal: No istash-pop in progress?\n' 1>&2
+			printf 'fatal: No istash pop in progress?\n' 1>&2
 			return 1
 			;;
 	esac

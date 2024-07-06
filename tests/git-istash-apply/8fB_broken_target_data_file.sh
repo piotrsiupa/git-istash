@@ -11,8 +11,8 @@ printf 'ddd\n' >aaa
 git commit -am 'Changed aaa'
 
 correct_head_hash="$(git rev-parse HEAD)"
-assert_exit_code 2 capture_outputs git istash-apply
-assert_conflict_message git istash-apply
+assert_exit_code 2 capture_outputs git istash apply
+assert_conflict_message git istash apply
 assert_tracked_files 'aaa'
 assert_status 'UU aaa'
 assert_stash_count 1
@@ -25,7 +25,7 @@ printf 'eee\n' >aaa
 git add aaa
 mv .git/ISTASH_TARGET .git/ISTASH_TARGET~
 printf 'fa4e08a58\n' >.git/ISTASH_TARGET
-assert_exit_code 1 git istash-apply --continue
+assert_exit_code 1 git istash apply --continue
 assert_tracked_files 'aaa'
 assert_status 'M  aaa'
 assert_stash_count 1
@@ -35,7 +35,7 @@ assert_data_files 'apply'
 assert_rebase y
 
 mv .git/ISTASH_TARGET~ .git/ISTASH_TARGET
-assert_exit_code 0 git istash-apply --continue
+assert_exit_code 0 git istash apply --continue
 assert_tracked_files 'aaa'
 assert_status ' M aaa'
 assert_file_contents aaa 'eee' 'ddd'

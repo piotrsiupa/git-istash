@@ -10,15 +10,15 @@ git stash push
 
 git switch --orphan ooo
 
-assert_exit_code 2 capture_outputs git istash-apply
-assert_conflict_message git istash-apply
+assert_exit_code 2 capture_outputs git istash apply
+assert_conflict_message git istash apply
 assert_status 'DU aaa'
 assert_stash_count 1
 assert_branch_count 2
 assert_data_files 'apply'
 assert_rebase y
 
-assert_exit_code 0 git istash-apply --abort
+assert_exit_code 0 git istash apply --abort
 assert_status ''
 assert_stash_count 1
 assert_branch_count 1

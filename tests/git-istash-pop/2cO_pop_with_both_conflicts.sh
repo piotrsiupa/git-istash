@@ -11,8 +11,8 @@ git stash push
 
 git switch --orphan ooo
 
-assert_exit_code 2 capture_outputs git istash-pop
-assert_conflict_message git istash-pop
+assert_exit_code 2 capture_outputs git istash pop
+assert_conflict_message git istash pop
 assert_status 'DU aaa'
 assert_stash_count 1
 assert_branch_count 2
@@ -21,8 +21,8 @@ assert_rebase y
 
 printf 'eee\n' >aaa
 git add aaa
-assert_exit_code 2 capture_outputs git istash-pop --continue
-assert_conflict_message git istash-pop --continue
+assert_exit_code 2 capture_outputs git istash pop --continue
+assert_conflict_message git istash pop --continue
 assert_status 'UU aaa'
 assert_stash_count 1
 assert_branch_count 2
@@ -31,7 +31,7 @@ assert_rebase y
 
 printf 'fff\n' >aaa
 git add aaa
-assert_exit_code 0 git istash-pop --continue
+assert_exit_code 0 git istash pop --continue
 assert_status 'AM aaa'
 assert_file_contents aaa 'fff' 'eee'
 assert_stash_count 0

@@ -59,11 +59,11 @@ assert_exit_code() { # expected_code command [arguments...]
 	unset exit_code_for_assert
 }
 
-assert_conflict_message() { # git command [arguments...]
+assert_conflict_message() { # git command subcommand [arguments...]
 	if [ "$(printf '%s' "$stderr" | tail -n4)" != "
 hint: Disregard all hints above about using \"git rebase\".
-hint: Use \"$1 $2 --continue\" after fixing conflicts.
-hint: To abort and get back to the state before \"$1 $2\", run \"$1 $2 --abort\"." ]
+hint: Use \"$1 $2 $3 --continue\" after fixing conflicts.
+hint: To abort and get back to the state before \"$1 $2 $3\", run \"$1 $2 $3 --abort\"." ]
 	then
 		printf 'Command %s didn'\''t print the correct conflict message!\n' "$(command_to_string "$@")" 1>&3
 		return 1

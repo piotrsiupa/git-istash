@@ -11,7 +11,7 @@ printf 'ddd\n' >ddd
 git stash push -u
 
 correct_head_hash="$(git rev-parse HEAD)"
-assert_exit_code 0 git istash-pop
+assert_exit_code 0 git istash pop
 assert_tracked_files 'aaa'
 assert_status 'MM aaa|?? ddd'
 assert_file_contents aaa 'ccc' 'bbb'

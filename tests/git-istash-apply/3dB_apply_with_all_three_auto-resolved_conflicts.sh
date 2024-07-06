@@ -16,7 +16,7 @@ git add aaa zzz
 git commit -m 'Changed aaa & added zzz'
 
 correct_head_hash="$(git rev-parse HEAD)"
-assert_exit_code 0 git istash-apply
+assert_exit_code 0 git istash apply
 assert_tracked_files 'aaa|zzz'
 assert_status ' M aaa'
 assert_file_contents aaa 'ccc' 'bbb'

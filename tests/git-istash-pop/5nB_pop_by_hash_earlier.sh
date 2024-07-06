@@ -14,7 +14,7 @@ git reset --hard
 assert_stash_count 0
 
 correct_head_hash="$(git rev-parse HEAD)"
-assert_exit_code 1 git istash-pop "$earlier_stash_hash"
+assert_exit_code 1 git istash pop "$earlier_stash_hash"
 assert_tracked_files 'aaa'
 assert_status ''
 assert_file_contents aaa 'aaa' 'aaa'
