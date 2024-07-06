@@ -69,13 +69,13 @@ find_tests() { # pattern
 			printf '%s\n' "$test_name"
 		fi
 	done \
+	| sort \
 	| if [ "$test_limit" -eq 0 ]
 	then
 		cat
 	else
 		head -n "$test_limit"
-	fi \
-	| sort
+	fi
 }
 
 run_test() { # test_name
