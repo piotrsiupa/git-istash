@@ -21,11 +21,12 @@ fi
 cd "$(dirname "$0")"
 
 list_files() {
-	find ../scripts -maxdepth 1 -type f -not -name '.*'
-	find . -maxdepth 1 -type f -name '*.sh'
+	find ../scripts -type f ! -name '.*'
+	find . -maxdepth 2 -type f -name '*.sh'
 }
 
-if list_files | xargs -- shellcheck --shell=sh
+test_dirs="$(find . -mindepth 1 -maxdepth 1 -type d -print0 | xargs -r0n1 basename | tr '\n' ':')"  # Not a clean solution but `shellcheck` doesn't support anything better.
+if list_files | xargs -- shellcheck --shell=sh --source-path="${test_dirs}../scripts/.git-istash/"
 then
 	printf 'All %i files are correct.\n' "$(list_files | wc -l)"
 	exit 0

@@ -1,0 +1,53 @@
+#!/usr/bin/env sh
+
+set -e
+
+print_help() {
+	printf 'git istash - Improved version of "git stash" that can handle more corner cases.\n'
+	printf '\n'
+	printf 'usage: git istash <sub-command> [<argument>...]\n'
+	printf '   or: git istash --help\n'
+	printf '\n'
+	printf 'options:\n'
+	printf '\t--help\t- Show this help text.\n'
+	printf '\n'
+	printf 'sub-commands:\n'
+	printf '\tapply\t- Analog to "git stash apply --index".\n'
+	printf '\tpop\t- Analog to "git stash pop --index".\n'
+}
+
+run_subcommand() { # subcommand [arguments...]
+	subcommand="$1"
+	shift
+	case "$subcommand" in
+		apply)
+			sh "$(dirname "$0")/.git-istash/git-istash-apply" "$@"
+			;;
+		pop)
+			sh "$(dirname "$0")/.git-istash/git-istash-pop" "$@"
+			;;
+		-*)
+			printf 'git-istash: Missing sub-command. See "git istash --help".\n' 1>&2
+			return 1
+			;;
+		*)
+			printf 'git-istash: "%s" is not a sub-command. See "git istash --help".\n' "$subcommand" 1>&2
+			return 1
+			;;
+	esac
+}
+
+if [ "$1" = '--help' ]
+then
+	print_help
+	exit 0
+elif [ $# -ge 1 ]
+then
+	run_subcommand "$@"
+else
+	printf 'git-istash: Missing sub-command.\n' 1>&2
+	printf 'hint: Please, specify the sub-command to run as the first argument after "git istash".\n' 1>&2
+	printf '\n'
+	print_help
+	exit 1
+fi

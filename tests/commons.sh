@@ -5,7 +5,7 @@ printf 'If you want to use it IN a test, source it with the command:\n. ../commo
 if [ -t 1 ] ; then exit 1 ; fi
 
 # Note that this script sets terminal to exit upon encountering any error.
-# Note that the arguments of these functions are not validated. Familiarize youself with them before trying to use them.
+# Note that the arguments of these functions are not thoroughly validated. Familiarize yourself with them before trying to use them.
 # Note that streams 4..8 are used by scripts (here and in `run.sh`) and they shouldn't be touched. (Stream is used to print assertion errors and you can write to it.)
 
 set -e
@@ -45,27 +45,25 @@ command_to_string() { # command [arguments...]
 	printf '"%s"' "$*"
 }
 
-assert_success() { # command [arguments...]
-	if ! "$@"
+assert_exit_code() { # expected_code command [arguments...]
+	expected_exit_code_for_assert="$1"
+	shift
+	exit_code_for_assert=0
+	"$@" || exit_code_for_assert=$?
+	if [ "$exit_code_for_assert" -ne "$expected_exit_code_for_assert" ]
 	then
-		printf 'Command %s returned a non-0 exit code!\n' "$(command_to_string "$@")" 1>&3
+		printf 'Command %s returned exit code %i but %i was expected!\n' "$(command_to_string "$@")" $exit_code_for_assert "$expected_exit_code_for_assert" 1>&3
 		return 1
 	fi
+	unset expected_exit_code_for_assert
+	unset exit_code_for_assert
 }
 
-assert_failure() { # command [arguments...]
-	if "$@"
-	then
-		printf 'Command %s returned exit code 0!\n' "$(command_to_string "$@")" 1>&3
-		return 1
-	fi
-}
-
-assert_conflict_message() { # command [arguments...]
-	if [ "$(printf '%s' "$stderr" | tail -n4)" != '
-hint: Disregard all hints above about using "git rebase".
-hint: Use "git unstash --continue" after fixing conflicts.
-hint: To abort and get back to the state before "git unstash", run "git unstash --abort".' ]
+assert_conflict_message() { # git command subcommand [arguments...]
+	if [ "$(printf '%s' "$stderr" | tail -n4)" != "
+hint: Disregard all hints above about using \"git rebase\".
+hint: Use \"$1 $2 $3 --continue\" after fixing conflicts.
+hint: To abort and get back to the state before \"$1 $2 $3\", run \"$1 $2 $3 --abort\"." ]
 	then
 		printf 'Command %s didn'\''t print the correct conflict message!\n' "$(command_to_string "$@")" 1>&3
 		return 1
@@ -185,4 +183,74 @@ assert_head_name() { # expected
 		return 1
 	fi
 	unset value_for_assert
+}
+
+assert_data_file() { # is_expected data_point_name
+	file_path_for_assert=".git/ISTASH_$2"
+	if [ "$1" = n ]
+	then
+		if [ -e "$file_path_for_assert" ]
+		then
+			printf 'Expected the file "%s" to NOT be present!\n' "$file_path_for_assert" 1>&3
+			return 1
+		fi
+	else
+		if [ ! -e "$file_path_for_assert" ]
+		then
+			printf 'Expected the file "%s" to be present!\n' "$file_path_for_assert" 1>&3
+			return 1
+		fi
+		if [ ! -f "$file_path_for_assert" ]
+		then
+			printf 'Expected "%s" to be a file!\n' "$file_path_for_assert" 1>&3
+			return 1
+		fi
+		if [ "$(wc -l "$file_path_for_assert" | awk '{print $1}')" -ne 1 ]
+		then
+			printf 'Expected the file "%s" to have 1 line!\n' "$file_path_for_assert" 1>&3
+			return 1
+		fi
+	fi
+	unset file_path_for_assert
+}
+assert_data_files() { # expected_state
+	case "$1" in
+		none)
+			assert_data_file n 'TARGET'
+			assert_data_file n 'STASH'
+			;;
+		apply)
+			assert_data_file y 'TARGET'
+			assert_data_file n 'STASH'
+			;;
+		pop)
+			assert_data_file y 'TARGET'
+			assert_data_file y 'STASH'
+			;;
+		*)
+			return 1
+			;;
+	esac
+}
+
+assert_rebase() { # expected_in_progress
+	if [ "$1" = y ]
+	then
+		if [ -e ".git/rebase-apply" ]
+		then
+			printf 'Expected rebase to be in the merge mode!\n' 1>&3
+			return 1
+		fi
+		if [ ! -e ".git/rebase-merge" ]
+		then
+			printf 'Expected rebase to be in progress!\n' 1>&3
+			return 1
+		fi
+	else
+		if [ -e ".git/rebase-apply" ] || [ -e ".git/rebase-merge" ]
+		then
+			printf 'Expected rebase to NOT be in progress!\n' 1>&3
+			return 1
+		fi
+	fi
 }
