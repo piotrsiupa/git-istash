@@ -21,6 +21,7 @@ assert_file_contents aaa 'aaa' 'aaa'
 assert_file_contents xxx 'xxx' 'xxx'
 assert_branch_count 2
 assert_data_files 'none'
+assert_rebase y
 
 correct_head_hash="$(git rev-parse HEAD)"
 assert_exit_code 1 git istash-pop
@@ -32,3 +33,4 @@ assert_file_contents xxx 'xxx' 'xxx'
 assert_branch_count 2
 assert_head_hash "$correct_head_hash"
 assert_data_files 'none'
+assert_rebase y

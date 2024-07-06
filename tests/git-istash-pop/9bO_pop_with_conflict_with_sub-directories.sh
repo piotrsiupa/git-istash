@@ -30,6 +30,7 @@ assert_status 'DU aaa|DU xxx/aaa|DU yyy/aaa'
 assert_stash_count 1
 assert_branch_count 2
 assert_data_files 'pop'
+assert_rebase y
 
 printf 'eee0\n' >aaa
 printf 'eee1\n' >xxx/aaa
@@ -44,6 +45,7 @@ assert_status 'UU aaa|UU xxx/aaa|A  xxx/zzz|UU yyy/aaa|A  yyy/zzz|A  zzz'
 assert_stash_count 1
 assert_branch_count 2
 assert_data_files 'pop'
+assert_rebase y
 
 printf 'fff0\n' >aaa
 printf 'fff1\n' >xxx/aaa
@@ -66,3 +68,4 @@ assert_stash_count 0
 assert_branch_count 1
 assert_head_name '~ooo'
 assert_data_files 'none'
+assert_rebase n

@@ -22,6 +22,7 @@ assert_file_contents aaa 'aaa' 'aaa'
 assert_log_length 2
 assert_branch_count 2
 assert_data_files 'none'
+assert_rebase n
 
 correct_head_hash="$(git rev-parse HEAD)"
 assert_exit_code 1 git istash-apply
@@ -33,3 +34,4 @@ assert_log_length 2
 assert_branch_count 2
 assert_head_hash "$correct_head_hash"
 assert_data_files 'none'
+assert_rebase n

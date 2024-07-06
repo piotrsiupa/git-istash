@@ -20,6 +20,7 @@ assert_status 'UU aaa'
 assert_stash_count 1
 assert_branch_count 1
 assert_data_files 'apply'
+assert_rebase y
 
 correct_head_hash2="$(git rev-parse HEAD)"
 printf 'eee\n' >aaa
@@ -33,6 +34,7 @@ assert_stash_count 1
 assert_branch_count 1
 assert_head_hash "$correct_head_hash2"
 assert_data_files 'apply'
+assert_rebase y
 
 mv .git/ISTASH_TARGET~ .git/ISTASH_TARGET
 assert_exit_code 0 git istash-apply --continue
@@ -45,3 +47,4 @@ assert_branch_count 1
 assert_head_hash "$correct_head_hash"
 assert_head_name 'HEAD'
 assert_data_files 'none'
+assert_rebase n

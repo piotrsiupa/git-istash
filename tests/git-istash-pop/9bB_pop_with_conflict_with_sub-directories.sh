@@ -37,6 +37,7 @@ assert_status 'UU aaa|UU xxx/aaa|UU yyy/aaa'
 assert_stash_count 1
 assert_branch_count 1
 assert_data_files 'pop'
+assert_rebase y
 
 printf 'eee0\n' >aaa
 printf 'eee1\n' >xxx/aaa
@@ -51,6 +52,7 @@ assert_status 'UU aaa|UU xxx/aaa|AA xxx/zzz|UU yyy/aaa|AA yyy/zzz|AA zzz'
 assert_stash_count 1
 assert_branch_count 1
 assert_data_files 'pop'
+assert_rebase y
 
 printf 'fff0\n' >aaa
 printf 'fff1\n' >xxx/aaa
@@ -76,3 +78,4 @@ assert_branch_count 1
 assert_head_hash "$correct_head_hash"
 assert_head_name 'master'
 assert_data_files 'none'
+assert_rebase n

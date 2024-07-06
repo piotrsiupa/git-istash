@@ -17,3 +17,4 @@ assert_stash_hash 0 "$later_stash_hash"
 assert_branch_count 1
 assert_head_name '~ooo'
 assert_data_files 'none'
+assert_rebase n

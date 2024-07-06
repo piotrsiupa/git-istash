@@ -232,3 +232,25 @@ assert_data_files() { # expected_state
 			;;
 	esac
 }
+
+assert_rebase() { # expected_in_progress
+	if [ "$1" = y ]
+	then
+		if [ -e ".git/rebase-apply" ]
+		then
+			printf 'Expected rebase to be in the merge mode!\n' 1>&3
+			return 1
+		fi
+		if [ ! -e ".git/rebase-merge" ]
+		then
+			printf 'Expected rebase to be in progress!\n' 1>&3
+			return 1
+		fi
+	else
+		if [ -e ".git/rebase-apply" ] || [ -e ".git/rebase-merge" ]
+		then
+			printf 'Expected rebase to NOT be in progress!\n' 1>&3
+			return 1
+		fi
+	fi
+}

@@ -22,3 +22,4 @@ assert_stash_count 0
 assert_branch_count 3
 assert_head_name '~ooo'
 assert_data_files 'none'
+assert_rebase n

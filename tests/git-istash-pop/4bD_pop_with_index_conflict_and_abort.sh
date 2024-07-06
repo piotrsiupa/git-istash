@@ -21,6 +21,7 @@ assert_status 'UU aaa'
 assert_stash_count 1
 assert_branch_count 1
 assert_data_files 'pop'
+assert_rebase y
 
 assert_exit_code 0 git istash-pop --abort
 assert_tracked_files 'aaa'
@@ -32,3 +33,4 @@ assert_branch_count 1
 assert_head_hash "$correct_head_hash"
 assert_head_name 'HEAD'
 assert_data_files 'none'
+assert_rebase n
