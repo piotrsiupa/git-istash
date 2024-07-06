@@ -18,7 +18,7 @@ print_help() {
 	printf '\n'
 	printf 'Filters:\n'
 	printf 'You can specify one or more filters in the command call. '
-	printf 'The filters are PCRE\nregexps that match test names that should be run. '
+	printf 'The filters are BRE\nregexps that match test names that should be run. '
 	printf '(A test name is the name of\nthe inluding the sub-directory but without the file extension.) '
 	printf 'A test will be\nrun if it matches any of the filters. '
 	printf 'If there are no filters, all tests are\nrun. '
@@ -61,7 +61,7 @@ create_test_dir() { # test_name
 find_tests() { # pattern
 	find . -mindepth 2 -maxdepth 2 -type f -name '*.sh' \
 	| sed 's;^\./\(.*\)\.sh$;\1;' \
-	| grep -P "$1" \
+	| grep "$1" \
 	| while read -r test_name
 	do
 		if [ "$only_failed" = n ] || [ -d "$(get_test_dir "$test_name")" ]
@@ -107,18 +107,18 @@ run_test() { # test_name
 						fi 6>&2 2>&1 1>&6 6>&- \
 						| if [ "$use_color" = y ]
 						then
-							sed -u 's/^.*$/\t\x1B[31m&\x1B[39m/'
+							$sed_call 's/^.*$/\t'"$esc_char"'[31m&'"$esc_char"'[39m/'
 						else
-							sed -u 's/^/\t/'
+							$sed_call 's/^/\t/'
 						fi
-					} 6>&2 2>&1 1>&6 6>&- | sed -u 's/^/\t/'
+					} 6>&2 2>&1 1>&6 6>&- | $sed_call 's/^/\t/'
 				fi 6>&5 5>&1 1>&6 6>&-
 			} 6>&3 3>&1 1>&6 6>&- \
 			| if [ "$use_color" = y ]
 			then
-				sed -u 's/^.*$/\t\x1B[1;31mFailed assertion:\x1B[22m &\x1B[39m/'
+				$sed_call 's/^.*$/\t'"$esc_char"'[1;31mFailed assertion:'"$esc_char"'[22m &'"$esc_char"'[39m/'
 			else
-				sed -u 's/^/\tFailed assertion: /'
+				$sed_call 's/^/\tFailed assertion: /'
 			fi
 		} 6>&3 3>&1 1>&6 6>&-
 		exec 3>&-
@@ -134,22 +134,29 @@ run_test() { # test_name
 	then
 		if [ "$quiet_mode" = n ]
 		then
-			print_color_code '\e[0;1;32m'
+			print_color_code '\033[0;1;32m'
 			printf 'PASSED - %s' "$display_name"
-			print_color_code '\e[22;39m'
+			print_color_code '\033[22;39m'
 			printf '\n'
 		fi
 		cleanup_test "$1"
 		return 0
 	else
-		print_color_code '\e[0;1;31m'
+		print_color_code '\033[0;1;31m'
 		printf 'FAILED - %s' "$display_name"
-		print_color_code '\e[22;39m'
+		print_color_code '\033[22;39m'
 		printf ' (the result is kept)\n'
 		return 1
 	fi
 }
 run_tests() {
+	if printf '' | sed --unbuffered 's/^/x/' 1>/dev/null 2>&1
+	then
+		sed_call='sed --unbuffered'
+	else
+		sed_call='sed'
+	fi
+	esc_char="$(printf '\033')"
 	exec 4>&1
 	passed_tests="$(
 		previous_category=''
@@ -161,9 +168,9 @@ run_tests() {
 			then
 				previous_category="$current_category"
 				{
-					print_color_code '\e[1m'
+					print_color_code '\033[1m'
 					print_centered "$current_category" '-'
-					print_color_code '\e[22m'
+					print_color_code '\033[22m'
 					printf '\n'
 				} 1>&4
 				printf '%s\n' "$current_category"
@@ -178,9 +185,9 @@ run_tests() {
 }
 
 print_summary() {
-	print_color_code '\e[1m'
+	print_color_code '\033[1m'
 	print_centered 'Results' '='
-	print_color_code '\e[22m'
+	print_color_code '\033[22m'
 	printf '\n'
 	i=0
 	printf '%s\n' "$tests" | xargs -rn1 -- dirname | uniq -c | awk '{$1=$1;print}' \
@@ -192,13 +199,13 @@ print_summary() {
 		printf '%s: ' "$(printf '%s' "$category" | cut -d' ' -f2)"
 		if [ "$passed_in_category" -eq "$total_in_category" ]
 		then
-			print_color_code '\e[1;32;4m'
+			print_color_code '\033[1;32;4m'
 			printf 'Passed all %i tests.' "$total_in_category"
 		else
-			print_color_code '\e[1;31;4m'
+			print_color_code '\033[1;31;4m'
 			printf 'Passed %i out of %i tests.' "$passed_in_category" "$total_in_category"
 		fi
-		print_color_code '\e[0m'
+		print_color_code '\033[0m'
 		printf '\n'
 	done
 	passed_tests=$(($(printf '%s' "$passed_tests" | tr '\n' '+')))
@@ -207,17 +214,17 @@ print_summary() {
 	then
 		if [ "$passed_tests" -eq "$total_tests" ]
 		then
-			print_color_code '\e[42;1;37;4m'
+			print_color_code '\033[42;1;37;4m'
 			printf 'Passed all %i tests.' "$total_tests"
 		else
-			print_color_code '\e[41;30;4m'
+			print_color_code '\033[41;30;4m'
 			printf 'Passed %i out of %i tests.' "$passed_tests" "$total_tests"
 		fi
 	else
-		print_color_code '\e[43;1;33;4m'
+		print_color_code '\033[43;1;33;4m'
 		printf 'No matching tests were found!'
 	fi
-	print_color_code '\e[0m'
+	print_color_code '\033[0m'
 	printf '\n'
 }
 
@@ -294,19 +301,19 @@ if [ $# -eq 0 ]
 then
 	filter=''
 else
-	filter="($1)"
+	filter="\\($1\\)"
 	shift
 	while [ $# -ne 0 ]
 	do
-		filter="$filter|($1)"
+		filter="$filter\\|\\($1\\)"
 		shift
 	done
 fi
 
 cd "$(dirname "$0")"
-scripts_dir='../scripts'
-test -d "$scripts_dir"
-PATH="$(realpath "$scripts_dir"):$PATH"
+cd '../scripts'
+PATH="$(pwd):$PATH"
+cd "$OLDPWD"
 export PATH
 tests="$(find_tests "$filter")"
 run_tests

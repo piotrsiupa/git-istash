@@ -8,7 +8,7 @@ is_color_allowed() { # stream_num
 
 make_data_file_path() { # name
 	git rev-parse --git-dir | tr -d '\n'
-	printf '/istash %s' "$1" | tr ' [:lower:]' '_[:upper:]'
+	printf '/istash %s' "$1" | tr ' a-z' '_A-Z'
 }
 make_target_data_file_path() {
 	make_data_file_path 'target'

@@ -21,7 +21,7 @@ fi
 cd "$(dirname "$0")"
 
 list_files() {
-	find ../scripts -type f -not -name '.*'
+	find ../scripts -type f ! -name '.*'
 	find . -maxdepth 2 -type f -name '*.sh'
 }
 
