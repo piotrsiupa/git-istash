@@ -17,21 +17,38 @@ print_help() {
 	printf '\n'
 	printf 'options:\n'
 	printf '    -h, --help\t\t- Show this help text.\n'
+	printf '    -u, --uninstall\t- Undo all the changes that the install script would\n\t\t\t  made without this flag.\n'
 }
 
 gather_tasks() {
 	tasks="$(
-		if [ ! -e "$target_path" ]
+		if [ "$uninstall" = n ]
 		then
-			printf 'create-home-local-bin\n'
-		fi
-		if [ -n "$(find "$source_path" -type f | while read -r script ; do if [ ! -e "$script" ] ; then printf 'n' ; elif ! cmp -s "$script" "$target_path$(printf '%s' "$script" | cut -c$((${#source_path} + 1))-)" ; then printf 'c' ; fi ; done)" ]
-		then
-			printf 'copy-to-home-local-bin\n'
-		fi
-		if ! printf '%s' "$PATH" | tr ':' '\n' | grep -qFx "$HOME/.local/bin"
-		then
-			printf 'add-home-local-bin-to-path\n'
+			if [ ! -e "$target_path" ]
+			then
+				printf 'create-home-local-bin\n'
+			fi
+			if [ -n "$(find "$source_path" -type f | while read -r script ; do if ! cmp -s "$script" "$target_path$(printf '%s' "$script" | cut -c$((${#source_path} + 1))-)" ; then printf 'c' ; fi ; done)" ]
+			then
+				printf 'copy-to-home-local-bin\n'
+			fi
+			if ! printf '%s' "$PATH" | tr ':' '\n' | grep -qFx "$HOME/.local/bin"
+			then
+				printf 'add-home-local-bin-to-path\n'
+			fi
+		else
+			if [ -z "$(find "$target_path" -type f | while read -r f ; do if [ ! -e "$source_path$(printf '%s\n' "$f" | cut -c$((${#target_path} + 1))-)" ] ; then printf 'x' ; break ; fi ; done)" ]
+			then
+				printf 'remove-home-local-bin-from-path\n'
+			fi
+			if [ -n "$(find "$source_path" -type f | while read -r script ; do if [ -e "$target_path$(printf '%s' "$script" | cut -c$((${#source_path} + 1))-)" ] ; then printf 'e' ; fi ; done)" ]
+			then
+				printf 'delete-from-home-local-bin\n'
+			fi
+			if [ -z "$(find "$target_path" -type f | while read -r f ; do if [ ! -e "$source_path$(printf '%s\n' "$f" | cut -c$((${#target_path} + 1))-)" ] ; then printf 'x' ; break ; fi ; done)" ]
+			then
+				printf 'remove-home-local-bin\n'
+			fi
 		fi
 	)"
 }
@@ -53,6 +70,16 @@ show_tasks() {
 			add-home-local-bin-to-path)
 				#shellcheck disable=SC2016
 				printf '"%s" will be added to "$PATH" by appending\n    a line to the "%s".\n' "$target_path" "$profile_path"
+				;;
+			remove-home-local-bin-from-path)
+				#shellcheck disable=SC2016
+				printf 'The line in "%s" that appends\n    "%s" to "$PATH" will be removed.\n' "$profile_path" "$target_path"
+				;;
+			delete-from-home-local-bin)
+				printf 'The contents of the directory "%s" will be deleted from\n    "%s".\n' "$source_path" "$target_path"
+				;;
+			remove-home-local-bin)
+				printf 'The (now empty) directory "%s" will be removed.\n' "$target_path"
 				;;
 			*)
 				printf 'fatal: Unknown task "%s".' "$task" 1>&2
@@ -79,6 +106,13 @@ ask_confirmation() {
 	return 1
 }
 
+print_export_path() {
+	printf '\n'
+	printf '# add user'\''s private bin directory to PATH\n'
+	#shellcheck disable=SC2016
+	printf 'export PATH="$HOME/%s:$PATH"\n' "$target_path_relative_to_home"
+}
+
 run_tasks() {
 	printf '%s\n' "$tasks" \
 	| while read -r task
@@ -88,15 +122,24 @@ run_tasks() {
 				mkdir -p "$target_path"
 				;;
 			copy-to-home-local-bin)
-				cp -r "$source_path"/* "$target_path"
+				cp -fr "$source_path"/* "$target_path"
 				;;
 			add-home-local-bin-to-path)
-				{
-					printf '\n'
-					printf '# add user'\''s private bin directory to PATH\n'
-					#shellcheck disable=SC2016
-					printf 'export PATH="$HOME/%s:$PATH"\n' "$target_path_relative_to_home"
-				} >>"$profile_path"
+				print_export_path >>"$profile_path"
+				;;
+			remove-home-local-bin-from-path)
+				delete_regex='\(^\|\n\?\n\)\([\t ]*#[^\n]*\n\)\?\s*'"$(print_export_path | tail -n 1 | head -c -1 | sed -e 's/[^^]/[&]/g' -e 's/\^/\\^/g')"'[\t ]*'
+				sed -i -e ':s;$!{N;bs}' -e "\$s;$delete_regex;;" "$profile_path"
+				;;
+			delete-from-home-local-bin)
+				find "$source_path" -type f \
+				| while read -r script
+				do
+					rm -f '"%s"\n' "$target_path$(printf '%s' "$script" | cut -c$((${#source_path} + 1))-)"
+				done
+				;;
+			remove-home-local-bin)
+				rmdir -p "$target_path"
 				;;
 			*)
 				printf 'fatal: Unknown task "%s"!' "$task" 1>&2
@@ -123,19 +166,28 @@ do_the_install_thing() {
 			exit 2
 		fi
 	else
-		printf 'Nothing to do. Everything is up to date.\n'
+		if [ "$uninstall" = n ]
+		then
+			printf 'Nothing to do. Everything is up to date.\n'
+		else
+			printf 'Nothing to do. Everything is already removed.\n'
+		fi
 		exit 0
 	fi
 }
 
-getopt_result="$(getopt -o'h' --long='help' -n"$(basename "$0")" -- "$@")"
+getopt_result="$(getopt -o'hu' --long='help,uninstall' -n"$(basename "$0")" -- "$@")"
 eval set -- "$getopt_result"
+uninstall=n
 while true
 do
 	case "$1" in
 	-h|--help)
 		print_help
 		exit 0
+		;;
+	-u|--uninstall)
+		uninstall=y
 		;;
 	--)
 		shift
