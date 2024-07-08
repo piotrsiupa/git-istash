@@ -4,7 +4,6 @@ set -e
 
 print_help() {
 	printf '%s - An installation script for "git istash".\n' "$(basename "$0")"
-	#shellcheck disable=SC2016
 	printf '    It copies files to the appropriate places and sets up the PATH variable if\n    needed. '
 	printf     'With the flag "--uninstall", it can also undo the changes it makes.\n'
 	printf '    (Hardcore terminal dwellers will may want to do it their own way but for\n    everyone else this script should be more than good enough.)\n'
@@ -14,6 +13,9 @@ print_help() {
 	printf 'options:\n'
 	printf '    -h, --help\t\t- Show this help text.\n'
 	printf '    -g, --global\t- Install for all users. (Requires root access rights.)\n'
+	#shellcheck disable=SC2016
+	printf '    -c, --custom-dir=X\t- Use a custom installation directory instead of\n\t\t\t  "$HOME/.local" or "/usr/local".\n'
+	printf '    -C, --create-dir=X\t- Like "--custom-dir" but the directory is created if\n\t\t\t  it doesn'\''t exist.\n'
 	printf '    -u, --uninstall\t- Undo all the changes that the install script would\n\t\t\t  made without this flag.\n'
 }
 
@@ -37,11 +39,18 @@ check_root() {
 }
 
 make_target_path() { # source_path
-	if [ "$global" = y ]
+	if [ -n "$custom_dir" ]
 	then
-		printf '/usr/local/%s' "$1"
+		printf '%s' "$custom_dir"
+	elif [ "$global" = y ]
+	then
+		printf '/usr/local'
 	else
-		printf '%s/.local/%s' "$HOME" "$1"
+		printf '%s/.local' "$HOME"
+	fi
+	if [ -n "$1" ]
+	then
+		printf '/%s' "$1"
 	fi
 }
 
@@ -89,6 +98,12 @@ are_knows_files_in_target() { # source_path
 				fi
 			done
 		)" = 'x'
+}
+
+are_any_files_in_target() { # source_path
+	source_path="$1"
+	target_path="$(make_target_path "$source_path")"
+	find "$target_path" -mindepth 1 -maxdepth 1 | grep -q '.'
 }
 
 are_foreign_files_in_target() { # source_path
@@ -142,7 +157,12 @@ execute_create_directory_task() { # source_path
 }
 
 make_remove_directory_task() { # source_path
-	if ! are_foreign_files_in_target "$1" || [ "$debug" = y ]
+	if { [ -d "$(make_target_path "$1")" ] \
+			&& {
+				{ [ -z "$source_path" ] && ! are_any_files_in_target "$1" ; } \
+				|| { [ -n "$source_path" ] && ! are_foreign_files_in_target "$1" ; }
+			}
+		} || [ "$debug" = y ]
 	then
 		printf 'rmdir_%s\n' "$1"
 	fi
@@ -151,7 +171,7 @@ print_remove_directory_task() { # source_path
 	printf 'The (now empty) directory "%s" will be removed.\n' "$(make_target_path "$1")"
 }
 execute_remove_directory_task() { # source_path
-	rmdir -p "$(make_target_path "$1")"
+	rmdir "$(make_target_path "$1")"
 }
 
 make_copy_files_task() { # source_path
@@ -200,7 +220,7 @@ execute_add_to_profile_task() { # source_path
 }
 
 make_remove_from_profile_task() { # source_path
-	if ( is_target_in_PATH "$1" && ! are_foreign_files_in_target "$1" ) || [ "$debug" = y ]
+	if { is_target_in_PATH "$1" && ! are_foreign_files_in_target "$1" ; } || [ "$debug" = y ]
 	then
 		printf 'remove-path_%s\n' "$1"
 	fi
@@ -217,6 +237,13 @@ gather_tasks() {
 	tasks="$(
 		if [ "$uninstall" = n ]
 		then
+			if [ -n "$custom_dir" ] && [ "$create_custom_dir" = n ] && [ ! -d "$custom_dir" ]
+			then
+				printf 'fatal: "%s" doesn'\''t exist.\n' "$custom_dir" 1>&2
+				printf 'hint: Did you mean "--create-dir"?\n' 1>&2
+				exit 1
+			fi
+			make_create_directory_task ''
 			make_create_directory_task 'lib'
 			make_copy_files_task 'lib'
 			make_create_directory_task 'bin'
@@ -228,6 +255,10 @@ gather_tasks() {
 			if [ "$global" = n ] ; then make_remove_directory_task 'bin' ; fi
 			make_remove_files_task 'lib'
 			if [ "$global" = n ] ; then make_remove_directory_task 'lib' ; fi
+			if { [ -n "$custom_dir" ] && [ "$create_custom_dir" = y ] ; } || { [ -z "$custom_dir" ] && [ "$global" = n ] ; }
+			then
+				make_remove_directory_task ''
+			fi
 		fi
 	)"
 }
@@ -332,11 +363,13 @@ do_the_install_thing() {
 	fi
 }
 
-getopt_result="$(getopt -o'hgu' --long='help,global,uninstall,debug' -n"$(basename "$0")" -- "$@")"
+getopt_result="$(getopt -o'hgc:C:u' --long='help,global,custom-dir:,create-dir:,uninstall,debug' -n"$(basename "$0")" -- "$@")"
 eval set -- "$getopt_result"
 global=n
 uninstall=n
 debug=n
+custom_dir=''
+create_custom_dir=n
 while true
 do
 	case "$1" in
@@ -346,6 +379,25 @@ do
 		;;
 	-g|--global)
 		global=y
+		;;
+	-c|--custom-dir)
+		shift
+		if [ -n "$custom_dir" ]
+		then
+			printf 'error: Cannot specify multiple custom directories.\n' 1>&2
+			exit 1
+		fi
+		custom_dir="$1"
+		;;
+	-C|--create-dir)
+		shift
+		if [ -n "$custom_dir" ]
+		then
+			printf 'error: Cannot specify multiple custom directories.\n' 1>&2
+			exit 1
+		fi
+		custom_dir="$1"
+		create_custom_dir=y
 		;;
 	-u|--uninstall)
 		uninstall=y
