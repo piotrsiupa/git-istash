@@ -8,6 +8,9 @@ print_help() {
 	printf     'With the flag "--uninstall", it can also undo the changes it makes.\n'
 	printf '    (Hardcore terminal dwellers will may want to do it their own way but for\n    everyone else this script should be more than good enough.)\n'
 	printf '\n'
+	printf 'In a case you'\''re not sure that the script does what you want, just run it.\n'
+	printf 'It will list all the pending operation and ask for confirmation before making\nany changes in the system.\n'
+	printf '\n'
 	printf 'usage: %s [<option>...]\n' "$(basename "$0")"
 	printf '\n'
 	printf 'options:\n'
@@ -100,12 +103,6 @@ are_knows_files_in_target() { # source_path
 		)" = 'x'
 }
 
-are_any_files_in_target() { # source_path
-	source_path="$1"
-	target_path="$(make_target_path "$source_path")"
-	find "$target_path" -mindepth 1 -maxdepth 1 | grep -q '.'
-}
-
 are_foreign_files_in_target() { # source_path
 	source_path="$1"
 	target_path="$(make_target_path "$source_path")"
@@ -120,6 +117,12 @@ are_foreign_files_in_target() { # source_path
 				fi
 			done
 		)" = 'x'
+}
+
+are_foreign_files_in_root_target() {
+	are_foreign_files_in_target 'bin' \
+	|| are_foreign_files_in_target 'lib' \
+	|| find "$(make_target_path '')" -mindepth 1 -maxdepth 1 | grep -qv '/\(bin\|lib\)$'
 }
 
 is_target_in_PATH() { # source_path
@@ -159,8 +162,8 @@ execute_create_directory_task() { # source_path
 make_remove_directory_task() { # source_path
 	if { [ -d "$(make_target_path "$1")" ] \
 			&& {
-				{ [ -z "$source_path" ] && ! are_any_files_in_target "$1" ; } \
-				|| { [ -n "$source_path" ] && ! are_foreign_files_in_target "$1" ; }
+				{ [ -z "$1" ] && ! are_foreign_files_in_root_target ; } \
+				|| { [ -n "$1" ] && ! are_foreign_files_in_target "$1" ; }
 			}
 		} || [ "$debug" = y ]
 	then
@@ -230,19 +233,13 @@ print_remove_from_profile_task() { # source_path
 }
 execute_remove_from_profile_task() { # source_path
 	delete_regex='\(^\|\n\?\n\)\([\t ]*#[^\n]*\n\)\?\s*'"$(make_profile_insertion "$(make_target_path "$1")" | tail -n 1 | head -c -1 | sed -e 's/[^^]/[&]/g' -e 's/\^/\\^/g')"'[\t ]*'
-	sed -i -e ':s;$!{N;bs}' -e "\$s;$delete_regex;;" "$(make_profile_path)"
+	sed -i -e ':s ; $! { N ; bs }' -e "\$s;$delete_regex;;" "$(make_profile_path)"
 }
 
 gather_tasks() {
 	tasks="$(
 		if [ "$uninstall" = n ]
 		then
-			if [ -n "$custom_dir" ] && [ "$create_custom_dir" = n ] && [ ! -d "$custom_dir" ]
-			then
-				printf 'fatal: "%s" doesn'\''t exist.\n' "$custom_dir" 1>&2
-				printf 'hint: Did you mean "--create-dir"?\n' 1>&2
-				exit 1
-			fi
 			make_create_directory_task ''
 			make_create_directory_task 'lib'
 			make_copy_files_task 'lib'
@@ -250,11 +247,11 @@ gather_tasks() {
 			make_copy_files_task 'bin'
 			make_add_to_profile_task 'bin'
 		else
-			if [ "$global" = n ] ; then make_remove_from_profile_task 'bin' ; fi
+			if [ -n "$custom_dir" ] || [ "$global" = n ] ; then make_remove_from_profile_task 'bin' ; fi
 			make_remove_files_task 'bin'
-			if [ "$global" = n ] ; then make_remove_directory_task 'bin' ; fi
+			if [ -n "$custom_dir" ] || [ "$global" = n ] ; then make_remove_directory_task 'bin' ; fi
 			make_remove_files_task 'lib'
-			if [ "$global" = n ] ; then make_remove_directory_task 'lib' ; fi
+			if [ -n "$custom_dir" ] || [ "$global" = n ] ; then make_remove_directory_task 'lib' ; fi
 			if { [ -n "$custom_dir" ] && [ "$create_custom_dir" = y ] ; } || { [ -z "$custom_dir" ] && [ "$global" = n ] ; }
 			then
 				make_remove_directory_task ''
@@ -369,6 +366,19 @@ global=n
 uninstall=n
 debug=n
 custom_dir=''
+set_custom_dir() { # dir
+	if [ -n "$custom_dir" ]
+	then
+		printf 'error: Cannot specify multiple custom directories.\n' 1>&2
+		exit 1
+	fi
+	if printf '%s' "$1" | grep -q '^/'
+	then
+		custom_dir="$1"
+	else
+		custom_dir="$(pwd)/$1"
+	fi
+}
 create_custom_dir=n
 while true
 do
@@ -382,21 +392,17 @@ do
 		;;
 	-c|--custom-dir)
 		shift
-		if [ -n "$custom_dir" ]
+		if [ ! -d "$1" ]
 		then
-			printf 'error: Cannot specify multiple custom directories.\n' 1>&2
+			printf 'fatal: "%s" doesn'\''t exist.\n' "$1" 1>&2
+			printf 'hint: Did you mean "--create-dir"?\n' 1>&2
 			exit 1
 		fi
-		custom_dir="$1"
+		set_custom_dir "$1"
 		;;
 	-C|--create-dir)
 		shift
-		if [ -n "$custom_dir" ]
-		then
-			printf 'error: Cannot specify multiple custom directories.\n' 1>&2
-			exit 1
-		fi
-		custom_dir="$1"
+		set_custom_dir "$1"
 		create_custom_dir=y
 		;;
 	-u|--uninstall)
