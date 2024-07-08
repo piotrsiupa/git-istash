@@ -16,9 +16,8 @@ print_help() {
 	printf '    -u, --uninstall\t- Undo all the changes that the install script would\n\t\t\t  made without this flag.\n'
 }
 
-make_target_path() { # source_path (temporarily unused)
-	# This will have more sense after the directories in the project are reorganized.
-	printf '%s/.local/bin' "$HOME"
+make_target_path() { # source_path
+	printf '%s/.local/%s' "$HOME" "$1"
 }
 
 make_profile_path() {
@@ -188,13 +187,17 @@ gather_tasks() {
 	tasks="$(
 		if [ "$uninstall" = n ]
 		then
-			make_create_directory_task 'scripts'
-			make_copy_files_task 'scripts'
-			make_add_to_profile_task 'scripts'
+			make_create_directory_task 'lib'
+			make_copy_files_task 'lib'
+			make_create_directory_task 'bin'
+			make_copy_files_task 'bin'
+			make_add_to_profile_task 'bin'
 		else
-			make_remove_from_profile_task 'scripts'
-			make_remove_files_task 'scripts'
-			make_remove_directory_task 'scripts'
+			make_remove_from_profile_task 'bin'
+			make_remove_files_task 'bin'
+			make_remove_directory_task 'bin'
+			make_remove_files_task 'lib'
+			make_remove_directory_task 'lib'
 		fi
 	)"
 }

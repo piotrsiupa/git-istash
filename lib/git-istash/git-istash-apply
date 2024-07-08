@@ -2,7 +2,7 @@
 
 set -e
 
-. "$(dirname "$0")/_git-istash-commons"
+. "$(dirname "$0")/git-istash-commons"
 
 print_help() {
 	printf 'git istash apply - Improved version of "git stash apply" that can handle\n    conflicts.\n'
