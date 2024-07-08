@@ -13,15 +13,45 @@ print_help() {
 	printf '\n'
 	printf 'options:\n'
 	printf '    -h, --help\t\t- Show this help text.\n'
+	printf '    -g, --global\t- Install for all users. (Requires root access rights.)\n'
 	printf '    -u, --uninstall\t- Undo all the changes that the install script would\n\t\t\t  made without this flag.\n'
 }
 
+check_root() {
+	if [ "$(id -u)" -eq 0 ]
+	then
+		if [ "$global" = n ]
+		then
+			printf 'error: You'\''ve attempted to install / uninstall "git istash" for a single user using a root access.\n' 1>&2
+			printf 'hint: Did you mean "install.sh --global"?\n' 1>&2
+			exit 1
+		fi
+	else
+		if [ "$global" = y ]
+		then
+			printf 'error: You'\''ve attempted to install / uninstall "git istash" for for all users without a root access.\n' 1>&2
+			printf 'hint: Try to rerun the command with "sudo".\n' 1>&2
+			exit 1
+		fi
+	fi
+}
+
 make_target_path() { # source_path
-	printf '%s/.local/%s' "$HOME" "$1"
+	if [ "$global" = y ]
+	then
+		printf '/usr/local/%s' "$1"
+	else
+		printf '%s/.local/%s' "$HOME" "$1"
+	fi
 }
 
 make_profile_path() {
-	printf '%s/.profile' "$HOME"
+	if [ "$global" = y ]
+	then
+		printf '/etc/profile'
+	else
+		printf '%s/.profile' "$HOME"
+	fi
 }
 
 switch_prefix() { # old_prefix new_prefix string
@@ -49,7 +79,7 @@ are_knows_files_in_target() { # source_path
 	source_path="$1"
 	target_path="$(make_target_path "$source_path")"
 	test "$(
-			find "$source_path" -type f \
+			find "$source_path" -mindepth 1 -maxdepth 1 \
 			| while read -r f
 			do
 				if [ -e "$(switch_prefix "$source_path" "$target_path" "$f")" ]
@@ -65,7 +95,7 @@ are_foreign_files_in_target() { # source_path
 	source_path="$1"
 	target_path="$(make_target_path "$source_path")"
 	test "$(
-			find "$target_path" -type f \
+			find "$target_path" -mindepth 1 -maxdepth 1 \
 			| while read -r f
 			do
 				if [ ! -e "$(switch_prefix "$target_path" "$source_path" "$f")" ]
@@ -193,11 +223,11 @@ gather_tasks() {
 			make_copy_files_task 'bin'
 			make_add_to_profile_task 'bin'
 		else
-			make_remove_from_profile_task 'bin'
+			if [ "$global" = n ] ; then make_remove_from_profile_task 'bin' ; fi
 			make_remove_files_task 'bin'
-			make_remove_directory_task 'bin'
+			if [ "$global" = n ] ; then make_remove_directory_task 'bin' ; fi
 			make_remove_files_task 'lib'
-			make_remove_directory_task 'lib'
+			if [ "$global" = n ] ; then make_remove_directory_task 'lib' ; fi
 		fi
 	)"
 }
@@ -261,6 +291,7 @@ run_tasks() {
 }
 
 do_the_install_thing() {
+	check_root
 	gather_tasks
 	if [ -n "$tasks" ]
 	then
@@ -301,8 +332,9 @@ do_the_install_thing() {
 	fi
 }
 
-getopt_result="$(getopt -o'hu' --long='help,uninstall,debug' -n"$(basename "$0")" -- "$@")"
+getopt_result="$(getopt -o'hgu' --long='help,global,uninstall,debug' -n"$(basename "$0")" -- "$@")"
 eval set -- "$getopt_result"
+global=n
 uninstall=n
 debug=n
 while true
@@ -311,6 +343,9 @@ do
 	-h|--help)
 		print_help
 		exit 0
+		;;
+	-g|--global)
+		global=y
 		;;
 	-u|--uninstall)
 		uninstall=y
