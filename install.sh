@@ -5,21 +5,21 @@ set -e
 print_help() {
 	printf '%s - An installation script for "git istash".\n' "$(basename "$0")"
 	printf '    It copies files to the appropriate places and sets up the PATH variable if\n    needed. '
-	printf     'With the flag "--uninstall", it can also undo the changes it makes.\n'
-	printf '    (Hardcore terminal dwellers will may want to do it their own way but for\n    everyone else this script should be more than good enough.)\n'
+	printf     'With the "--uninstall" flag, it can also undo the changes it made.\n'
+	printf '    (Hardcore terminal dwellers may prefer to do it their own way, but for\n    everyone else, this script should be more than sufficient.)\n'
 	printf '\n'
-	printf 'In a case you'\''re not sure that the script does what you want, just run it.\n'
-	printf 'It will list all the pending operation and ask for confirmation before making\nany changes in the system.\n'
+	printf 'In a case you'\''re not sure what the script does, just run it!\n'
+	printf 'It will list all the pending operations and ask for confirmation before making\nany changes to the system.\n'
 	printf '\n'
-	printf 'usage: %s [<option>...]\n' "$(basename "$0")"
+	printf 'Usage: %s [<option>...]\n' "$(basename "$0")"
 	printf '\n'
-	printf 'options:\n'
+	printf 'Options:\n'
 	printf '    -h, --help\t\t- Show this help text.\n'
 	printf '    -g, --global\t- Install for all users. (Requires root access rights.)\n'
 	#shellcheck disable=SC2016
 	printf '    -c, --custom-dir=X\t- Use a custom installation directory instead of\n\t\t\t  "$HOME/.local" or "/usr/local".\n'
 	printf '    -C, --create-dir=X\t- Like "--custom-dir" but the directory is created if\n\t\t\t  it doesn'\''t exist.\n'
-	printf '    -u, --uninstall\t- Undo all the changes that the install script would\n\t\t\t  made without this flag.\n'
+	printf '    -u, --uninstall\t- Undo all the changes that the script would have made\n\t\t\t  when run with the same flags (excluding this one).\n'
 }
 
 is_windows() {
