@@ -311,7 +311,7 @@ else
 fi
 
 cd "$(dirname "$0")"
-cd '../scripts'
+cd '../bin'
 PATH="$(pwd):$PATH"
 cd "$OLDPWD"
 export PATH

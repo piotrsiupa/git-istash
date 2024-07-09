@@ -1,7 +1,8 @@
 .gitattributes text
-.gitignore text
-/scripts/**/* text eol=lf
-*.sh text eol=lf
-*.bat text eol=crlf
-*.txt text
-*.md text
+.gitignore     text
+/bin/*         text eol=lf
+/lib/**/*      text eol=lf
+*.sh           text eol=lf
+*.bat          text eol=crlf
+*.txt          text
+*.md           text

@@ -21,10 +21,10 @@ run_subcommand() { # subcommand [arguments...]
 	shift
 	case "$subcommand" in
 		apply)
-			sh "$(dirname "$0")/.git-istash/git-istash-apply" "$@"
+			sh "$(dirname "$0")/../lib/git-istash/git-istash-apply" "$@"
 			;;
 		pop)
-			sh "$(dirname "$0")/.git-istash/git-istash-pop" "$@"
+			sh "$(dirname "$0")/../lib/git-istash/git-istash-pop" "$@"
 			;;
 		-*)
 			printf 'git-istash: Missing sub-command. See "git istash --help".\n' 1>&2
