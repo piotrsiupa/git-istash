@@ -22,9 +22,18 @@ print_help() {
 	printf '    -u, --uninstall\t- Undo all the changes that the install script would\n\t\t\t  made without this flag.\n'
 }
 
+is_windows() {
+	test "$OS" = 'Windows_NT'
+}
+
 check_root() {
-	if [ "$(id -u)" -eq 0 ]
+	if { ! is_windows && [ "$(id -u)" -eq 0 ] ; } || { is_windows && net session 1>/dev/null 2>&1 ; }
 	then
+		if is_windows && [ -n "$custom_dir" ]
+		then
+			printf 'error: Installation in a custom directory is not suppported on Windows.\n' 1>&2
+			exit 1
+		fi
 		if [ "$global" = n ]
 		then
 			printf 'error: You'\''ve attempted to install / uninstall "git istash" for a single user using a root access.\n' 1>&2
@@ -32,10 +41,20 @@ check_root() {
 			exit 1
 		fi
 	else
+		if is_windows && [ "$global" = n ]
+		then
+			printf 'error: Installation without the option "--global" is not suppported on Windows.\n' 1>&2
+			exit 1
+		fi
 		if [ "$global" = y ]
 		then
 			printf 'error: You'\''ve attempted to install / uninstall "git istash" for for all users without a root access.\n' 1>&2
-			printf 'hint: Try to rerun the command with "sudo".\n' 1>&2
+			if is_windows
+			then
+				printf 'hint: Try to right click on the script and "run as administrator".\n' 1>&2
+			else
+				printf 'hint: Try to rerun the command with "sudo".\n' 1>&2
+			fi
 			exit 1
 		fi
 	fi
@@ -45,6 +64,9 @@ make_target_path() { # source_path
 	if [ -n "$custom_dir" ]
 	then
 		printf '%s' "$custom_dir"
+	elif is_windows
+	then
+		printf '/usr'
 	elif [ "$global" = y ]
 	then
 		printf '/usr/local'
@@ -245,7 +267,7 @@ gather_tasks() {
 			make_copy_files_task 'lib'
 			make_create_directory_task 'bin'
 			make_copy_files_task 'bin'
-			make_add_to_profile_task 'bin'
+			if ! is_windows ; then make_add_to_profile_task 'bin' ; fi
 		else
 			if [ -n "$custom_dir" ] || [ "$global" = n ] ; then make_remove_from_profile_task 'bin' ; fi
 			make_remove_files_task 'bin'
