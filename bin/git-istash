@@ -4,16 +4,24 @@ set -e
 
 print_help() {
 	printf 'git istash - Improved version of "git stash" that can handle more corner cases.\n'
+	printf '    (See "--help" of individual sub-commands.)\n'
 	printf '\n'
-	printf 'usage: git istash <sub-command> [<argument>...]\n'
-	printf '   or: git istash --help\n'
+	printf 'Usage: git istash <sub-command> [<argument>...]\n'
+	printf '   or: git istash (-h | --help)\n'
+	printf '   or: git istash --version\n'
 	printf '\n'
-	printf 'options:\n'
-	printf '\t--help\t- Show this help text.\n'
+	printf 'Options:\n'
+	printf '    -h, --help\t\t- Show this help text and exit.\n'
+	printf '\t--version\t- Show version information and exit.\n'
 	printf '\n'
-	printf 'sub-commands:\n'
+	printf 'Sub-commands:\n'
 	printf '\tapply\t- Analog to "git stash apply --index".\n'
 	printf '\tpop\t- Analog to "git stash pop --index".\n'
+}
+
+print_version() {
+	printf 'git-istash version 1.0.0\n'
+	printf 'Author: Piotr Siupa\n'
 }
 
 run_subcommand() { # subcommand [arguments...]
@@ -37,9 +45,13 @@ run_subcommand() { # subcommand [arguments...]
 	esac
 }
 
-if [ "$1" = '--help' ]
+if [ "$1" = '-h' ] || [ "$1" = '--help' ]
 then
 	print_help
+	exit 0
+elif [ "$1" = '--version' ]
+then
+	print_version
 	exit 0
 elif [ $# -ge 1 ]
 then

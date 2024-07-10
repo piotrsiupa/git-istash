@@ -5,10 +5,23 @@ set -e
 . "$(dirname "$0")/git-istash-commons"
 
 print_help() {
-	printf 'git istash apply - Improved version of "git stash apply" that can handle\n    conflicts.\n'
+	printf 'git istash apply - Improved version of "git stash apply" that can handle\n    conflicts without loosing information about the files in index.\n'
 	printf '\n'
-	printf 'usage: git istash apply [<stash>]\n'
+	printf 'Usage: git istash apply [<stash>]\n'
 	printf '   or: git istash apply (-c | --continue | --abort)\n'
+	printf '   or: git istash apply (-h | --help)\n'
+	printf '   or: git istash apply --version\n'
+	printf '\n'
+	printf 'Options:\n'
+	printf '    -h, --help\t\t- Show this help text and exit.\n'
+	printf '\t--version\t- Show version information and exit.\n'
+	printf '    -c, --continue\t- Resume the previous operation.\n\t\t\t  (Conflicts need to be resolved before that.)\n'
+	printf '\t--abort\t\t- Abort the previous operation and return the repository\n\t\t\t  to the state before it started.\n'
+}
+
+print_version() {
+	printf 'git-istash-apply version 1.0.0\n'
+	printf 'Author: Piotr Siupa\n'
 }
 
 get_sub_command_name() { #
@@ -288,7 +301,7 @@ do_apply() { # args...
 	fi
 }
 
-getopt_result="$(getopt -o'hc' --long='help,continue,abort,called-from-pop' -n"$(basename "$0")" -- "$@")"
+getopt_result="$(getopt -o'hc' --long='help,version,continue,abort,called-from-pop' -n"$(basename "$0")" -- "$@")"
 eval set -- "$getopt_result"
 continue_set=n
 abort_set=n
@@ -298,6 +311,10 @@ do
 	case "$1" in
 	-h|--help)
 		print_help
+		exit 0
+		;;
+	--version)
+		print_version
 		exit 0
 		;;
 	-c|--continue)

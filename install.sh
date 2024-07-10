@@ -14,12 +14,17 @@ print_help() {
 	printf 'Usage: %s [<option>...]\n' "$(basename "$0")"
 	printf '\n'
 	printf 'Options:\n'
-	printf '    -h, --help\t\t- Show this help text.\n'
+	printf '    -h, --help\t\t- Print this help text and exit.\n'
+	printf '\t--version\t- Print version information and exit.\n'
 	printf '    -g, --global\t- Install for all users. (Requires root access rights.)\n'
 	#shellcheck disable=SC2016
 	printf '    -c, --custom-dir=X\t- Use a custom installation directory instead of\n\t\t\t  "$HOME/.local" or "/usr/local".\n'
 	printf '    -C, --create-dir=X\t- Like "--custom-dir" but the directory is created if\n\t\t\t  it doesn'\''t exist.\n'
 	printf '    -u, --uninstall\t- Undo all the changes that the script would have made\n\t\t\t  when run with the same flags (excluding this one).\n'
+}
+
+print_version() {
+	printf 'version 1.0.0\n'
 }
 
 is_windows() {
@@ -382,7 +387,7 @@ do_the_install_thing() {
 	fi
 }
 
-getopt_result="$(getopt -o'hgc:C:u' --long='help,global,custom-dir:,create-dir:,uninstall,debug' -n"$(basename "$0")" -- "$@")"
+getopt_result="$(getopt -o'hgc:C:u' --long='help,version,global,custom-dir:,create-dir:,uninstall,debug' -n"$(basename "$0")" -- "$@")"
 eval set -- "$getopt_result"
 global=n
 uninstall=n
@@ -407,6 +412,10 @@ do
 	case "$1" in
 	-h|--help)
 		print_help
+		exit 0
+		;;
+	--version)
+		print_version
 		exit 0
 		;;
 	-g|--global)
