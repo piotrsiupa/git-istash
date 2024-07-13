@@ -1,4 +1,4 @@
-.TH GIT-ISTASH 1 "2022-07-13" "git-istash 1.0.0"
+.TH GIT-ISTASH 1 "2022-07-14" "git-istash 1.0.0"
 .nh
 .ad l
 
@@ -54,6 +54,22 @@ Resume the operation after conflicts have been resolved.
 \fB\-\-abort\fR
 .RS 4
 Cancel the operation and return to the repository state before it started.
+.RE
+
+.PP
+\fB\-\-help\fR
+.RS 4
+Display a rudimentary help text.
+.sp
+This is a fallback option that is to be used when the man page is not available. \
+Prefer \fBgit help istash\fR over calls like \fBgit-istash --help\fR or \fBgit istash <sub-command> --help\fR.
+.RE
+
+.PP
+\fB\-\-version\fR
+.RS 4
+Display version information for the script. \
+Note that each script has separate versioning and e.g. \fBgit istash --version\fR, \fBgit istash apply --version\fR and \fBgit istash pop --version\fR may each display a different version number.
 .RE
 
 .PP

@@ -6,6 +6,8 @@ print_help() {
 	printf 'git istash - Improved version of "git stash" that can handle more corner cases.\n'
 	printf '    (See "--help" of individual sub-commands.)\n'
 	printf '\n'
+	printf 'This is only a rudimentary help text. Prefer "git help istash" if available.\n'
+	printf '\n'
 	printf 'Usage: git istash <sub-command> [<argument>...]\n'
 	printf '   or: git istash (-h | --help)\n'
 	printf '   or: git istash --version\n'

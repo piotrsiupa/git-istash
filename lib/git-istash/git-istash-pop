@@ -7,6 +7,8 @@ set -e
 print_help() {
 	printf 'git istash pop - Improved version of "git stash pop" that can handle conflicts\n    without loosing information about the files in index.\n'
 	printf '\n'
+	printf 'This is only a rudimentary help text. Prefer "git help istash" if available.\n'
+	printf '\n'
 	printf 'Usage: git istash pop [<stash>]\n'
 	printf '   or: git istash pop (-c | --continue | --abort)\n'
 	printf '   or: git istash pop (-h | --help)\n'
