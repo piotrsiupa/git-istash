@@ -73,6 +73,7 @@ prepare_man() {
 		'./man-src/build.sh'
 		if [ "$is_root" = y ]
 		then
+			#shellcheck disable=SC2012
 			chown -R "$(ls -nd './man-src' | awk '{print $3":"$4}')" './share'
 		fi
 		man_present=y
@@ -205,16 +206,20 @@ execute_remove_directory_task() { # source_path
 }
 
 make_copy_files_task() { # source_path
-	if ! are_files_correct_in_target "$1" || [ "$debug" = y ]
-	then
-		printf 'copy_%s\n' "$1"
-	fi
+	find "$1" -mindepth 1 -maxdepth 1 \
+	| while read -r f
+	do
+		if ! are_files_correct_in_target "$f" || [ "$debug" = y ]
+		then
+			printf 'copy_%s\n' "$f"
+		fi
+	done
 }
 print_copy_files_task() { # source_path
-	printf 'The contents of the directory "%s" will be copied to "%s".\n' "$1" "$(make_target_path "$1")"
+	printf 'The "%s" will be copied to "%s".\n' "$1" "$(make_target_path "$(dirname "$1")")"
 }
 execute_copy_files_task() { # source_path
-	cp -fr "$1"/* "$(make_target_path "$1")"
+	cp -fr "$1" "$(make_target_path "$(dirname "$1")")"
 }
 
 make_remove_files_tasks() { # source_path
@@ -284,8 +289,8 @@ gather_tasks() {
 			if ! is_windows ; then make_add_to_profile_task 'bin' ; fi
 			if [ "$man_present" = y ]
 			then
-				make_create_directory_task 'share/man'
-				make_copy_files_task 'share/man'
+				make_create_directory_task 'share/man/man1'
+				make_copy_files_task 'share/man/man1'
 			fi
 		else
 			if [ "$man_present" = y ]
