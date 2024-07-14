@@ -1,8 +1,9 @@
-.gitattributes text
-.gitignore     text
-/bin/*         text eol=lf
-/lib/**/*      text eol=lf
-*.sh           text eol=lf
-*.bat          text eol=crlf
-*.txt          text
-*.md           text
+.gitattributes  text
+.gitignore      text
+/bin/*          text eol=lf
+/lib/**/*       text eol=lf
+/man-src/man?/* text eol=lf
+*.sh            text eol=lf
+*.bat           text eol=crlf
+*.txt           text
+*.md            text

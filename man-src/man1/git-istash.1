@@ -1,0 +1,184 @@
+.TH GIT-ISTASH 1 "2022-07-14" "git-istash 1.0.0"
+.nh
+.ad l
+
+.SH NAME
+git\-istash \- Handle Git stashes without arbitrary limitations
+
+.SH SYNOPSIS
+.nf
+\fBgit istash\fR ( pop | apply ) [<\fIstash\fR>]
+\fBgit istash\fR ( pop | apply ) ( \-\-continue | \-\-abort )
+.fi
+
+.SH DESCRIPTION
+\fBgit istash\fR ("improved stash") is an extension for \fBgit stash\fR, compatible with stash entries created by it. \
+Use \fBgit istash\fR commands as a replacement for \fBgit stash\fR commands with the same names.
+.sp
+
+\fBgit istash apply\fR and \fBgit istash pop\fR:
+.RS 4
+Both of these commands restore stashed changes to the working directory. \
+Additionally, \fBgit istash pop\fR removes the stash entry on success.
+.br
+When there are no conflicts, these work the same as \fBgit stash apply \-\-index\fR and \fBgit stash pop \-\-index\fR. \
+In case of conflicts, instead of refusing and demanding to run it without \fB\-\-index\fR, they apply index and working directory changes separately and stop to resolve conflicts when needed, similarly to \fBgit rebase\fR. \
+After the conflicts are resolved, the commands can be resumed with \fB\-\-continue\fR. \
+Alternatively, \fB\-\-abort\fR can be used to cancel the operation and return to the repository state before it started.
+.br
+Even if there were multiple stages of conflict solving, \fIthe index saved to the stash entry will be preserved\fR.
+.RE
+
+.SH COMMANDS
+
+.PP
+\fBapply\fR [<\fIstash\fR>]
+.RS 4
+Like \fBgit stash apply \-\-index\fR, but it handles staged and unstaged conflicts separately, preventing those scopes from mixing. \
+\fB<stash>\fR may be any commit that looks like a commit created by \fBgit stash push\fR or \fBgit stash create\fR.
+.RE
+
+.PP
+\fBpop\fR [<\fIstash\fR>]
+.RS 4
+Like \fBgit stash pop \-\-index\fR, but it handles staged and unstaged conflicts separately, preventing those scopes from mixing. \
+Unlike \fBgit stash pop\fR, it can handle stashes referenced by name (\fBstash^{/<name>}\fR).
+.sp
+The only differences from \fBgit istash apply\fR are that it cannot use an arbitrary commit as \fB<stash>\fR and it removes the stash entry on success. \
+In case of conflicts, the stash is dropped after all conflicts are successfully resolved.
+.sp
+This is the inverse operation of \fBgit stash push\fR.
+.RE
+
+.SH OPTIONS
+
+.PP
+\fB\-\-continue\fR
+.RS 4
+Resume the operation after conflicts have been resolved.
+.RE
+
+.PP
+\fB\-\-abort\fR
+.RS 4
+Cancel the operation and restore the repository to the state before it started.
+.RE
+
+.PP
+\fB\-\-help\fR
+.RS 4
+Display a rudimentary help text.
+.sp
+This is a fallback option that is to be used when the man page is not available. \
+Prefer \fBgit help istash\fR over calls like \fBgit-istash --help\fR or \fBgit istash <sub-command> --help\fR.
+.RE
+
+.PP
+\fB\-\-version\fR
+.RS 4
+Display version information for the script. \
+Note that each script has separate versioning and e.g. \fBgit istash --version\fR, \fBgit istash apply --version\fR and \fBgit istash pop --version\fR may each display a different version number.
+.RE
+
+.PP
+\fB<stash>\fR
+.RS 4
+This option is only valid for \fBapply\fR and \fBpop\fR commands.
+.sp
+A reference of the form \fBstash@{<revision>}\fR or \fBstash^{/<name>}\fR. \
+In case of \fBapply\fR an arbitrary commit is allowed, as long as it looks like a stash entry.
+.br
+When no \fB<stash>\fR is given, the latest stash is assumed (that is, \fBstash@{0}\fR).
+.RE
+
+.SH EXIT CODES
+.nf
+\fB0\fR - command succeeded
+\fB1\fR - command failed
+\fB2\fR - command was stopped by a conflict and can be resumed with \fB\-\-continue\fR or aborted with \fB\-\-abort\fR
+.fi
+
+.SH EXAMPLES
+
+.PP
+Interrupted workflow, without loosing index
+.RS 4
+When you are in the middle of something and you suddenly have a \fIbrilliant idea\fR for something that should be changed \fIimmediately\fR, even before the things you're working on currently. \
+Traditionally, you would make a commit to a temporary branch to store your changes away, and return to your original branch to implement your awesome idea, like this:
+.sp
+.RS 4
+.nf
+# ... hack hack hack ...
+$ git switch \-c my_wip
+$ git commit \-a \-m "WIP"
+$ git switch original_branch
+# Implement the idea
+$ git commit \-a \-m "Best change ever"
+$ git switch my_wip
+$ git rebase original_branch
+$ git reset \-\-soft HEAD^
+$ git branch \-D original_branch
+$ git branch \-m original_branch
+# ... continue hacking ...
+.fi
+.RE
+.sp
+The above is complicated and has a lot of steps that can break something if you make a mistake. \
+Additionally, it doesn't preserve the index.
+.sp
+You can use \fBgit istash\fR to simplify it \fIand\fR keep the index intact:
+.sp
+.RS 4
+.nf
+# ... hack hack hack ...
+$ git stash
+# Implement the idea
+$ git commit \-a \-m "Best change ever"
+$ git istash pop
+# ... continue hacking ...
+.fi
+.RE
+.RE
+
+.PP
+Applying stash with conflicts both in staged and unstaged changes
+.RS 4
+Let's assume the same scenario as in the example above; however, this time the \fIbrilliant idea\fR involves editing some of the same lines that are currently changed.
+.sp
+When \fBgit istash\fR encounters conflicts, it behaves like \fBgit rebase\fR and stops to allow the user to deal with the problem. \
+(Actually, it uses \fBrebase\fR under the hood.)
+.sp
+.RS 4
+.nf
+# ... hack hack hack ...
+$ git stash
+# Implement the idea
+$ git commit \-a \-m "Best change ever"
+$ git istash pop
+# (git-istash will stop and report that some files have conflicts)
+# Fix the conflicts in the index
+$ git add -u
+$ git istash pop \-\-continue
+# (git-istash will stop and report that some files have conflicts again)
+# Fix the conflicts in unstaged changes
+$ git add -u
+$ git istash pop \-\-continue
+# ... continue hacking ...
+.fi
+.RE
+.sp
+The index is still intact after the whole operation is finished.
+.RE
+
+.SH SEE ALSO
+\fBgit-stash\fR(1), \fBgit-rebase\fR(1)
+
+.SH CURRENT LIMITATIONS
+.PP
+It is not possible to \fBapply\fR or \fBpop\fR stash on top of existing changes in the working copy. \
+All modified files need to be restored or stashed away before starting the process.
+
+.SH AUTHOR
+git\-istash was written by Piotr Siupa. (\fIpiotr.siupa+stash@gmail.com\fR)
+.sp
+The command and everything around it was strongly inspired by Git (quite obviously).

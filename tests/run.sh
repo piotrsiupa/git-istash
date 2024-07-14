@@ -8,7 +8,8 @@ print_help() {
 	printf 'Usage: %s [<options>] [--] [<filter>...]\n' "$(basename "$0")"
 	printf '\n'
 	printf 'Options:\n'
-	printf '    -h, --help\t\t- Print this help message.\n'
+	printf '    -h, --help\t\t- Print this help message end exit.\n'
+	printf '\t--version\t- Print version information and exit.\n'
 	printf '    -f, --failed\t- Rerun only the tests that failed the last time when\n\t\t\t  they were run. (Check the presence of the test dir.)\n'
 	printf '    -d, --debug\t\t- Print outputs of all commands in run in the tests.\n'
 	printf '    -q, --quiet\t\t- Don'\''t print summaries for passed tests.\n'
@@ -24,6 +25,10 @@ print_help() {
 	printf 'If there are no filters, all tests are\nrun. '
 	printf 'This can be used to either list individual tests or choose some categories.\n'
 	printf '(See "README.md" in the test directory for more information about test names.)\n'
+}
+
+print_version() {
+	printf 'version 1.0.0\n'
 }
 
 print_color_code() { # code
@@ -228,7 +233,7 @@ print_summary() {
 	printf '\n'
 }
 
-getopt_result="$(getopt -o'hfdqc:l:' --long='help,failed,debug,quiet,color:,raw,raw-name,file-name,limit:' -n"$(basename "$0")" -- "$@")"
+getopt_result="$(getopt -o'hfdqc:l:' --long='help,version,failed,debug,quiet,color:,raw,raw-name,file-name,limit:' -n"$(basename "$0")" -- "$@")"
 eval set -- "$getopt_result"
 only_failed=n
 debug_mode=n
@@ -241,6 +246,10 @@ do
 	case "$1" in
 	-h|--help)
 		print_help
+		exit 0
+		;;
+	--version)
+		print_version
 		exit 0
 		;;
 	-f|--failed)

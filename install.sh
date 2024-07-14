@@ -14,12 +14,17 @@ print_help() {
 	printf 'Usage: %s [<option>...]\n' "$(basename "$0")"
 	printf '\n'
 	printf 'Options:\n'
-	printf '    -h, --help\t\t- Show this help text.\n'
+	printf '    -h, --help\t\t- Print this help text and exit.\n'
+	printf '\t--version\t- Print version information and exit.\n'
 	printf '    -g, --global\t- Install for all users. (Requires root access rights.)\n'
 	#shellcheck disable=SC2016
 	printf '    -c, --custom-dir=X\t- Use a custom installation directory instead of\n\t\t\t  "$HOME/.local" or "/usr/local".\n'
 	printf '    -C, --create-dir=X\t- Like "--custom-dir" but the directory is created if\n\t\t\t  it doesn'\''t exist.\n'
 	printf '    -u, --uninstall\t- Undo all the changes that the script would have made\n\t\t\t  when run with the same flags (excluding this one).\n'
+}
+
+print_version() {
+	printf 'version 1.0.0\n'
 }
 
 is_windows() {
@@ -29,6 +34,7 @@ is_windows() {
 check_root() {
 	if { ! is_windows && [ "$(id -u)" -eq 0 ] ; } || { is_windows && net session 1>/dev/null 2>&1 ; }
 	then
+		is_root=y
 		if is_windows && [ -n "$custom_dir" ]
 		then
 			printf 'error: Installation in a custom directory is not suppported on Windows.\n' 1>&2
@@ -41,6 +47,7 @@ check_root() {
 			exit 1
 		fi
 	else
+		is_root=n
 		if is_windows && [ "$global" = n ]
 		then
 			printf 'error: Installation without the option "--global" is not suppported on Windows.\n' 1>&2
@@ -57,6 +64,21 @@ check_root() {
 			fi
 			exit 1
 		fi
+	fi
+}
+
+prepare_man() {
+	if command -v man 1>/dev/null 2>&1
+	then
+		'./man-src/build.sh'
+		if [ "$is_root" = y ]
+		then
+			#shellcheck disable=SC2012
+			chown -R "$(ls -nd './man-src' | awk '{print $3":"$4}')" './share'
+		fi
+		man_present=y
+	else
+		man_present=n
 	fi
 }
 
@@ -109,27 +131,11 @@ are_files_correct_in_target() { # source_path
 		)" != 'x'
 }
 
-are_knows_files_in_target() { # source_path
-	source_path="$1"
-	target_path="$(make_target_path "$source_path")"
-	test "$(
-			find "$source_path" -mindepth 1 -maxdepth 1 \
-			| while read -r f
-			do
-				if [ -e "$(switch_prefix "$source_path" "$target_path" "$f")" ]
-				then
-					printf 'x'
-					break
-				fi
-			done
-		)" = 'x'
-}
-
 are_foreign_files_in_target() { # source_path
 	source_path="$1"
 	target_path="$(make_target_path "$source_path")"
 	test "$(
-			find "$target_path" -mindepth 1 -maxdepth 1 \
+			find "$target_path" -mindepth 1 \
 			| while read -r f
 			do
 				if [ ! -e "$(switch_prefix "$target_path" "$source_path" "$f")" ]
@@ -200,35 +206,48 @@ execute_remove_directory_task() { # source_path
 }
 
 make_copy_files_task() { # source_path
-	if ! are_files_correct_in_target "$1" || [ "$debug" = y ]
-	then
-		printf 'copy_%s\n' "$1"
-	fi
+	find "$1" -mindepth 1 -maxdepth 1 \
+	| while read -r f
+	do
+		if ! are_files_correct_in_target "$f" || [ "$debug" = y ]
+		then
+			printf 'copy_%s\n' "$f"
+		fi
+	done
 }
 print_copy_files_task() { # source_path
-	printf 'The contents of the directory "%s" will be copied to "%s".\n' "$1" "$(make_target_path "$1")"
+	printf 'The "%s" will be copied to "%s".\n' "$1" "$(make_target_path "$(dirname "$1")")"
 }
 execute_copy_files_task() { # source_path
-	cp -fr "$1"/* "$(make_target_path "$1")"
+	cp -fr "$1" "$(make_target_path "$(dirname "$1")")"
 }
 
-make_remove_files_task() { # source_path
-	if are_knows_files_in_target "$1" || [ "$debug" = y ]
-	then
-		printf 'delete_%s\n' "$1"
-	fi
-}
-print_remove_files_task() { # source_path
-	printf 'The contents of the directory "%s" will be deleted from "%s".\n' "$1" "$(make_target_path "$1")"
-}
-execute_remove_files_task() { # source_path
+make_remove_files_tasks() { # source_path
 	source_path="$1"
 	target_path="$(make_target_path "$source_path")"
 	find "$source_path" -mindepth 1 -maxdepth 1 \
 	| while read -r f
 	do
-		rm -rf '"%s"\n' "$(switch_prefix "$source_path" "$target_path" "$f")"
+		if [ -e "$(switch_prefix "$source_path" "$target_path" "$f")" ] || [ "$debug" = y ]
+		then
+			if [ -f "$f" ]
+			then
+				printf 'delete_%s\n' "$f"
+			else
+				make_remove_files_tasks "$f"
+				if ! are_foreign_files_in_target "$f"
+				then
+					printf 'rmdir_%s\n' "$f"
+				fi
+			fi
+		fi
 	done
+}
+print_remove_files_task() { # source_path
+	printf 'The file "%s" will be deleted.\n' "$(make_target_path "$1")"
+}
+execute_remove_files_task() { # source_path
+	rm -f '"%s"\n' "$(make_target_path "$1")"
 }
 
 make_add_to_profile_task() { # source_path
@@ -268,11 +287,21 @@ gather_tasks() {
 			make_create_directory_task 'bin'
 			make_copy_files_task 'bin'
 			if ! is_windows ; then make_add_to_profile_task 'bin' ; fi
+			if [ "$man_present" = y ]
+			then
+				make_create_directory_task 'share/man/man1'
+				make_copy_files_task 'share/man/man1'
+			fi
 		else
+			if [ "$man_present" = y ]
+			then
+				make_remove_files_tasks 'share/man'
+				make_remove_directory_task 'share/man'
+			fi
 			if [ -n "$custom_dir" ] || [ "$global" = n ] ; then make_remove_from_profile_task 'bin' ; fi
-			make_remove_files_task 'bin'
+			make_remove_files_tasks 'bin'
 			if [ -n "$custom_dir" ] || [ "$global" = n ] ; then make_remove_directory_task 'bin' ; fi
-			make_remove_files_task 'lib'
+			make_remove_files_tasks 'lib'
 			if [ -n "$custom_dir" ] || [ "$global" = n ] ; then make_remove_directory_task 'lib' ; fi
 			if { [ -n "$custom_dir" ] && [ "$create_custom_dir" = y ] ; } || { [ -z "$custom_dir" ] && [ "$global" = n ] ; }
 			then
@@ -342,6 +371,7 @@ run_tasks() {
 
 do_the_install_thing() {
 	check_root
+	prepare_man
 	gather_tasks
 	if [ -n "$tasks" ]
 	then
@@ -382,7 +412,7 @@ do_the_install_thing() {
 	fi
 }
 
-getopt_result="$(getopt -o'hgc:C:u' --long='help,global,custom-dir:,create-dir:,uninstall,debug' -n"$(basename "$0")" -- "$@")"
+getopt_result="$(getopt -o'hgc:C:u' --long='help,version,global,custom-dir:,create-dir:,uninstall,debug' -n"$(basename "$0")" -- "$@")"
 eval set -- "$getopt_result"
 global=n
 uninstall=n
@@ -407,6 +437,10 @@ do
 	case "$1" in
 	-h|--help)
 		print_help
+		exit 0
+		;;
+	--version)
+		print_version
 		exit 0
 		;;
 	-g|--global)
