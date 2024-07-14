@@ -68,15 +68,10 @@ cd <path to repository in which to run the command>
 Contents of this repository are distributed under the MIT license. A full copy of it is available in the file [`LICENSE.txt`](LICENSE.txt).
 
 
-## Planned features
-
-- Creating stash entries when the working directory contains files added with the flag `--intent-to-add`.
-
-
 ## Current limitations
 
 - The script refuses to apply a stash when the working directory contains any changes.
-  (For technical reasons, this will be solved only after creating stashes with `--intent-to-add` is implemented.)
+  (Planned to be fixed soon.)
 
 
 ## Displaying help / additional information

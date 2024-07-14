@@ -179,7 +179,15 @@ assert_head_name() { # expected
 	fi
 	if [ "$value_for_assert" != "$1" ]
 	then
-		printf 'Expected the name of HEAD branch be "%s" but it is "%s"!\n' "$1" "$value_for_assert" 1>&3
+		if [ "$value_for_assert" = 'HEAD' ]
+		then
+			printf 'Expected the HEAD branch be named "%s" but it is a detached branch!\n' "$1" 1>&3
+		elif [ "$1" = 'HEAD' ]
+		then
+			printf 'Expected the HEAD branch be detached but it is named "%s"!\n' "$value_for_assert" 1>&3
+		else
+			printf 'Expected the name of the HEAD branch be "%s" but it is "%s"!\n' "$1" "$value_for_assert" 1>&3
+		fi
 		return 1
 	fi
 	unset value_for_assert
