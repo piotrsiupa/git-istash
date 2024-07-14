@@ -44,12 +44,21 @@ You can learn more by running:
 
 There is a wrapper script that allows running the installer on Windows, although, it has less options than the normal version.
 
-To install the command for all users, run:
+To install the command for all users (requires administrator access), run:
 ```bat
 windows-install.bat
 ```
 
 Uninstalling is done by rerunning the same command with added flag `--uninstall`.
+
+### Testing without Installation
+
+It is possible to run the command without installing it in the system, although, it's less convenient:
+```sh
+cd <path to repository in which to run the command>
+<path to this repository>/bin/git-istash
+```
+(On Windows you need use the wrapper script `run-git-bash.bat` in the second line.)
 
 
 ## License
@@ -66,6 +75,41 @@ Contents of this repository are distributed under the MIT license. A full copy o
 
 - The script refuses to apply a stash when the working directory contains any changes.
   (For technical reasons, this will be solved only after creating stashes with `--intent-to-add` is implemented.)
+
+
+## Displaying help / additional information
+
+### Manual
+
+On systems that have `man` installed, after installation, you can view the comprehensive documentation in the usual way, by running the command:
+```sh
+git help istash
+# or
+git istash --help
+# or
+man git-istash
+```
+
+It is also possible to display the manual without installation, by running the developer script:
+```sh
+man-src/display.sh
+```
+
+### `--help`
+
+If `man` is not installed (like in embedded systems) or it doesn't work (like it tends to do on Windows), you can access a rudimentary help text included in the commands.
+Each subcommand has its own help text that can be displayed by running:
+```sh
+git-istash --help
+
+git-istash apply --help
+# or
+git istash apply --help
+
+git-istash pop --help
+# or
+git istash pop --help
+```
 
 
 ## Examples
