@@ -15,7 +15,10 @@ git\-istash \- Handle Git stashes without arbitrary limitations
 \fBgit istash\fR ("improved stash") is an extension for \fBgit stash\fR, compatible with stash entries created by it. \
 Use \fBgit istash\fR commands as a replacement for \fBgit stash\fR commands with the same names.
 .sp
-Both \fBgit istash apply\fR and \fBgit istash pop\fR restore stashed changes to the working directory. \
+
+\fBgit istash apply\fR and \fBgit istash pop\fR:
+.RS 4
+Both of these commands restore stashed changes to the working directory. \
 Additionally, \fBgit istash pop\fR removes the stash entry on success.
 .br
 When there are no conflicts, these work the same as \fBgit stash apply \-\-index\fR and \fBgit stash pop \-\-index\fR. \
@@ -24,6 +27,7 @@ After the conflicts are resolved, the commands can be resumed with \fB\-\-contin
 Alternatively, \fB\-\-abort\fR can be used to cancel the operation and return to the repository state before it started.
 .br
 Even if there were multiple stages of conflict solving, \fIthe index saved to the stash entry will be preserved\fR.
+.RE
 
 .SH COMMANDS
 

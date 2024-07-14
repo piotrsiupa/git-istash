@@ -1,8 +1,8 @@
 # `git istash` - Improved stash commands for Git
 
-Alternative Git command for handling stashes, without arbitrary limitations of `git stash`.
+Alternative Git command for handling stashes, without the arbitrary limitations of `git stash`.
 
-It is written entirely in POSIX (Portable Operating System Interface) shell script which makes it compatible with basically every operating system (beside Windows but fortunately Git for Windows can handle POSIX scripts on its own).
+It is written entirely in POSIX (Portable Operating System Interface) shell script, making it compatible with basically every operating system (except Windows, but fortunately, Git for Windows can handle POSIX scripts on its own).
 
 
 ## Overview
@@ -10,18 +10,20 @@ It is written entirely in POSIX (Portable Operating System Interface) shell scri
 `git istash` ("improved stash") is an extension for `git stash`, compatible with stash entries created by it.
 Use `git istash` commands as a replacement for `git stash` commands with the same names.
 
-Both `git istash apply` and `git istash pop` restore stashed changes to the working directory.
+### `git istash apply` and `git istash pop`
+
+Both of these commands restore stashed changes to the working directory.
 Additionally, `git istash pop` removes the stash entry on success.  
 When there are no conflicts, these work the same as `git stash apply --index` and `git stash pop --index`.
-In case of conflicts, instead of refusing and demanding to run it without `--index`, they apply index and working directory changes separately and stop to resolve conflicts when needed, similarly to `git rebase`.
+In case of conflicts, instead of refusing and demanding to run it without `--index`, they apply index and working directory changes separately and stop to resolve conflicts when needed, similar to `git rebase`.
 After the conflicts are resolved, the commands can be resumed with `--continue`.
 Alternatively, `--abort` can be used to cancel the operation and return to the repository state before it started.  
-Even if there were multiple stages of conflict solving, *the index saved to the stash entry will be preserved*.
+Even if there were multiple stages of conflict resolution, *the index saved to the stash entry will be preserved*.
 
 
 ## Installation
 
-### Every OS beside Windows
+### Every OS except Windows
 
 To install the command for the current user only, run:
 ```sh
@@ -33,7 +35,7 @@ To install the command for all users (requires root privileges), run:
 sudo ./install.sh --global
 ```
 
-Uninstalling is done by rerunning the install command with added flag `--uninstall`.
+Uninstalling is done by rerunning the install command with the added flag `--uninstall`.
 
 You can learn more by running:
 ```sh
@@ -42,23 +44,23 @@ You can learn more by running:
 
 ### Windows
 
-There is a wrapper script that allows running the installer on Windows, although, it has less options than the normal version.
+There is a wrapper script that allows running the installer on Windows, although it has fewer options than the normal version.
 
 To install the command for all users (requires administrator access), run:
 ```bat
 windows-install.bat
 ```
 
-Uninstalling is done by rerunning the same command with added flag `--uninstall`.
+Uninstalling is done by rerunning the same command with the added flag `--uninstall`.
 
 ### Testing without Installation
 
-It is possible to run the command without installing it in the system, although, it's less convenient:
+It is possible to run the command without installing it in the system, although it's less convenient:
 ```sh
 cd <path to repository in which to run the command>
 <path to this repository>/bin/git-istash
 ```
-(On Windows you need use the wrapper script `run-git-bash.bat` in the second line.)
+(On Windows, you need to use the wrapper script `run-git-bash.bat` in the second line.)
 
 
 ## License
@@ -95,9 +97,9 @@ It is also possible to display the manual without installation, by running the d
 man-src/display.sh
 ```
 
-### `--help`
+### Brief help text
 
-If `man` is not installed (like in embedded systems) or it doesn't work (like it tends to do on Windows), you can access a rudimentary help text included in the commands.
+If `man` is not installed (like in embedded systems) or it doesn't work (as it tends to do on Windows), you can access a rudimentary help text included in the commands.
 Each subcommand has its own help text that can be displayed by running:
 ```sh
 git-istash --help
@@ -114,7 +116,7 @@ git istash pop --help
 
 ## Examples
 
-### Interrupted workflow, without loosing index
+### Interrupted workflow, without losing index
 
 When you are in the middle of something and you suddenly have a *brilliant idea* for something that should be changed *immediately*, even before the things you're working on currently.
 Traditionally, you would make a commit to a temporary branch to store your changes away, and return to your original branch to implement your awesome idea, like this:
