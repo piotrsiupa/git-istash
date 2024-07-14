@@ -15,18 +15,22 @@ git\-istash \- Handle Git stashes without arbitrary limitations
 \fBgit istash\fR ("improved stash") is an extension for \fBgit stash\fR, compatible with stash entries created by it. \
 Use \fBgit istash\fR commands as a replacement for \fBgit stash\fR commands with the same names.
 .sp
-\fBgit istash apply\fR and \fBgit istash pop\fR restore stashed changes to the working directory, and in the second case, remove the stash entry on success. \
-When there are no conflicts, they work the same as \fBgit stash apply \-\-index\fR and \fBgit stash pop \-\-index\fR. \
-In case of conflicts, instead of refusing and demanding to run it without \fB\-\-index\fR, it applies index and working directory changes separately and stops to resolve conflicts when needed, similarly to \fBgit rebase\fR. \
-After the conflicts are resolved, the command can be resumed with \fB\-\-continue\fR. \
+Both \fBgit istash apply\fR and \fBgit istash pop\fR restore stashed changes to the working directory. \
+Additionally, \fBgit istash pop\fR removes the stash entry on success.
+.br
+When there are no conflicts, these work the same as \fBgit stash apply \-\-index\fR and \fBgit stash pop \-\-index\fR. \
+In case of conflicts, instead of refusing and demanding to run it without \fB\-\-index\fR, they apply index and working directory changes separately and stop to resolve conflicts when needed, similarly to \fBgit rebase\fR. \
+After the conflicts are resolved, the commands can be resumed with \fB\-\-continue\fR. \
 Alternatively, \fB\-\-abort\fR can be used to cancel the operation and return to the repository state before it started.
+.br
+Even if there were multiple stages of conflict solving, \fIthe index saved to the stash entry will be preserved\fR.
 
 .SH COMMANDS
 
 .PP
 \fBapply\fR [<\fIstash\fR>]
 .RS 4
-Like \fBgit stash apply \-\-index\fR, but it handles staged and unstaged conflicts separately, preventing those scopes from mixing.
+Like \fBgit stash apply \-\-index\fR, but it handles staged and unstaged conflicts separately, preventing those scopes from mixing. \
 \fB<stash>\fR may be any commit that looks like a commit created by \fBgit stash push\fR or \fBgit stash create\fR.
 .RE
 
@@ -53,7 +57,7 @@ Resume the operation after conflicts have been resolved.
 .PP
 \fB\-\-abort\fR
 .RS 4
-Cancel the operation and return to the repository state before it started.
+Cancel the operation and restore the repository to the state before it started.
 .RE
 
 .PP
@@ -158,6 +162,8 @@ $ git istash pop \-\-continue
 # ... continue hacking ...
 .fi
 .RE
+.sp
+The index is still intact after the whole operation is finished.
 .RE
 
 .SH SEE ALSO
