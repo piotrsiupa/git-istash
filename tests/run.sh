@@ -28,7 +28,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'version 1.0.0\n'
+	printf 'test script version 1.0.0\n'
 }
 
 print_color_code() { # code

@@ -51,7 +51,7 @@ if [ "$1" = '-h' ] || [ "$1" = '--help' ]
 then
 	print_help
 	exit 0
-elif [ "$1" = '--version' ]
+elif [ "$1" = '--version' ] || [ "$2" = '--version' ]
 then
 	print_version
 	exit 0
