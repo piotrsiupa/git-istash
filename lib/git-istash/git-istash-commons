@@ -164,17 +164,17 @@ check_stash() { # stash
 find_current_branch() {
 	if git rev-parse HEAD >/dev/null 2>&1
 	then
-		target="$(git rev-parse --abbrev-ref HEAD)"
-		target_type='normal'
-		if [ "$target" = 'HEAD' ]
+		current_branch="$(git rev-parse --abbrev-ref HEAD)"
+		curr_branch_type='normal'
+		if [ "$current_branch" = 'HEAD' ]
 		then
-			target="$(git rev-parse HEAD)"
-			target_type='detached'
+			current_branch="$(git rev-parse HEAD)"
+			curr_branch_type='detached'
 		fi
 	else
-		target="$(git branch --show-current)"
+		current_branch="$(git branch --show-current)"
 		#shellcheck disable=SC2034
-		target_type='orphan'
+		curr_branch_type='orphan'
 	fi
 }
 

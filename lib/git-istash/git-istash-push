@@ -1,0 +1,49 @@
+#!/usr/bin/env sh
+
+set -e
+
+. "$(dirname "$0")/git-istash-commons"
+
+print_help() {
+	printf 'git istash push - Improved version of "git stash push" that can handle orphan\n    branches.\n'
+	printf '\n'
+	printf 'This is only a rudimentary help text. Prefer "git help istash" if available.\n'
+	printf '\n'
+	printf 'Usage: git istash push [-u | --include-untracked]\n'
+	printf '   or: git istash push --version\n'
+	printf '\n'
+	printf 'Options:\n'
+	printf '    -h, --help\t\t- Show this help text and exit.\n'
+	printf '\t--version\t- Show version information and exit.\n'
+	printf '    -u, --include-untracked - Include untracked files.\n'
+}
+
+print_version() {
+	printf 'git-istash-push version 1.0.0\n'
+	printf 'Author: Piotr Siupa\n'
+}
+
+if [ "$1" = '-h' ] || [ "$1" = '--help' ]
+then
+	print_help
+	exit 0
+elif [ "$1" = '--version' ]
+then
+	print_version
+	exit 0
+fi
+
+cd "$(git rev-parse --show-toplevel)"
+
+find_current_branch
+if [ "$curr_branch_type" = 'orphan' ]
+then
+	git commit --message="Base commit for stash entry on an orphan branch \"$current_branch\"" --allow-empty --no-verify --only --
+fi
+git stash "$@"
+if [ "$curr_branch_type" = 'orphan' ]
+then
+	git switch --detach HEAD
+	git branch --delete --force "$current_branch"
+	git switch --orphan "$current_branch"
+fi
