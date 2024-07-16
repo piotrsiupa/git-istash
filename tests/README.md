@@ -58,6 +58,7 @@ Generally these prefixes work as follows:
     - `0` - Sanity tests that don't use git commands from this repository.
     - `1` - pushing without additional options.
     - `2` - pushing with `--no-keep-index`.
+    - `3` - pushing with `--keep-index`.
 - The second character is a lowercase letter that with tandem with the digit acts as an ID of the test in the current directory.
 - The third character (which is skipped for the tests in the directory `git-istash`) is an uppercase letter and it describes the state of Git `HEAD` on which the test is performed:
   - `B` - `HEAD` points to a normal Git branch.
