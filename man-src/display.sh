@@ -16,7 +16,5 @@ fi
 
 cd "$(dirname "$0")"
 
-./build.sh
-cd ..
-export MANPATH="$(pwd)/share/man"
+export MANPATH="$(pwd)"
 exec man git-istash
