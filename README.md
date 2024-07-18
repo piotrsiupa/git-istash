@@ -102,15 +102,7 @@ man-src/display.sh
 If `man` is not installed (like in embedded systems) or it doesn't work (as it tends to do on Windows), you can access a rudimentary help text included in the commands.
 Each subcommand has its own help text that can be displayed by running:
 ```sh
-git-istash --help
-
-git-istash apply --help
-# or
-git istash apply --help
-
-git-istash pop --help
-# or
-git istash pop --help
+git istash [<sub command>] -h
 ```
 
 
