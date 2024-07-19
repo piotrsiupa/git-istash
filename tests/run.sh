@@ -25,6 +25,7 @@ print_help() {
 	printf 'If there are no filters, all tests are\nrun. '
 	printf 'This can be used to either list individual tests or choose some categories.\n'
 	printf '(See "README.md" in the test directory for more information about test names.)\n'
+	printf 'Paths to specific test files are also accepted.\n'
 }
 
 print_version() {
@@ -306,15 +307,24 @@ then
 		use_color=n
 	fi
 fi
+
+normalize_filter_entry() { # filter_entry
+	if [ -f "$1" ]
+	then
+		printf '%s' "$1" | sed 's;^.*/\([^/]\+/[^/]\+\)\.sh$;\1;'
+	else
+		printf '%s' "$1"
+	fi
+}
 if [ $# -eq 0 ]
 then
 	filter=''
 else
-	filter="\\($1\\)"
+	filter="\\($(normalize_filter_entry "$1")\\)"
 	shift
 	while [ $# -ne 0 ]
 	do
-		filter="$filter\\|\\($1\\)"
+		filter="$filter\\|\\($(normalize_filter_entry "$1")\\)"
 		shift
 	done
 fi
