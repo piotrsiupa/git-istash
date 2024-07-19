@@ -17,17 +17,17 @@ then
 	exit 1
 fi
 
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 
 list_files() {
-	find ../bin -type f ! -name '.*'
-	find ../lib -type f ! -name '.*'
-	find . -maxdepth 2 -type f -name '*.sh'
-	find .. -maxdepth 1 -type f -name '*.sh'
+	find bin -type f ! -name '.*'
+	find lib -type f ! -name '.*'
+	find . -maxdepth 1 -type f -name '*.sh' | cut -c3-
+	find tests -maxdepth 2 -type f -name '*.sh'
 }
 
-test_dirs="$(find . -mindepth 1 -maxdepth 1 -type d -print0 | xargs -r0n1 basename | tr '\n' ':')"  # Not a clean solution but `shellcheck` doesn't support anything better.
-if list_files | xargs -- shellcheck --shell=sh --source-path="${test_dirs}../lib/git-istash/"
+test_dirs="$(find tests -mindepth 1 -maxdepth 1 -type d -print0 | xargs -r0n1 basename | sed 's;^;tests/;' | tr '\n' ':')"  # Not a clean solution but `shellcheck` doesn't support anything better.
+if list_files | xargs -- shellcheck --shell=sh --source-path="${test_dirs}lib/git-istash"
 then
 	printf 'All %i files are correct.\n' "$(list_files | wc -l)"
 	exit 0
