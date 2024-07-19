@@ -92,9 +92,9 @@ git istash --help
 man git-istash
 ```
 
-It is also possible to display the manual without installation, by running the developer script:
+It is also possible to display the manual without installation, by running:
 ```sh
-man-src/display.sh
+bin/git-istash.sh --help
 ```
 
 ### Brief help text

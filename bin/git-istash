@@ -46,11 +46,19 @@ run_subcommand() { # subcommand [arguments...]
 
 if [ "$1" = '--help' ] || [ "$2" = '--help' ]
 then
-	if man git-istash
+	if [ -f "$(dirname "$0")/../man/man1/git-istash.1" ]
 	then
-		exit 0
+		if (
+			cd "$(dirname "$0")/../man"
+			MANPATH="$(pwd)"
+			export MANPATH
+			man git-istash
+		)
+		then
+			exit 0
+		fi
 	fi
-	if [ -f "$(dirname "$0")/../man-src/man1/git-istash.1" ] && [ -x "$(dirname "$0")/../man-src/display.sh" ] && "$(dirname "$0")/../man-src/display.sh"
+	if man git-istash
 	then
 		exit 0
 	fi
