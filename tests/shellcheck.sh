@@ -9,8 +9,13 @@ print_help() {
 	printf '\n'
 	printf 'Options:\n'
 	printf '    -h, --help\t\t- Print this help message and exit.\n'
+	printf '\t--version\t- Print version information and exit.\n'
 	printf '    -s, --skip-tests\t- Do not check test scripts from sub-directories of\n\t\t\t  the directory "tests". (a lot faster execution)\n'
 	exit 0
+}
+
+print_version() {
+	printf 'shellcheck wrapper script version 1.0.0\n'
 }
 
 list_files() {
@@ -30,7 +35,7 @@ run_shellcheck() {
 	printf 'All %i files are correct.\n' "$(list_files | wc -l)"
 }
 
-getopt_result="$(getopt -o'hs' --long='help,skip-tests' -n"$(basename "$0")" -- "$@")"
+getopt_result="$(getopt -o'hs' --long='help,skip-tests,version' -n"$(basename "$0")" -- "$@")"
 eval set -- "$getopt_result"
 skip_tests=n
 while true
@@ -42,6 +47,10 @@ do
 		;;
 	-s|--skip-tests)
 		skip_tests=y
+		;;
+	--version)
+		print_version
+		exit 0
 		;;
 	--)
 		shift
