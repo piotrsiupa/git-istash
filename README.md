@@ -18,7 +18,7 @@ When there are no conflicts, these work the same as `git stash apply --index` an
 In case of conflicts, instead of refusing and demanding to run it without `--index`, they apply index and working directory changes separately and stop to resolve conflicts when needed, similar to `git rebase`.
 After the conflicts are resolved, the commands can be resumed with `--continue`.
 Alternatively, `--abort` can be used to cancel the operation and return to the repository state before it started.  
-Even if there were multiple stages of conflict resolution, *the index saved to the stash entry will be preserved*.
+Because of the multi-stage conflict resolution, *the index saved to the stash entry will be preserved*.
 
 
 ## Installation
@@ -144,8 +144,11 @@ git istash pop
 
 ### Applying stash with conflicts both in staged and unstaged changes
 
+So far, you may be thinking:
+"Why would I need a custom Git script for that since a normal stash command can do it as well?"  
 Let's assume the same scenario as in the example above; however, this time the *brilliant idea* involves editing some of the same lines that are currently changed.
 
+In such situation, normal `git stash` won't let you use the option `--index`, forcing you to discard your changes in index.  
 When `git istash` encounters conflicts, it behaves like `git rebase` and stops to allow the user to deal with the problem.
 (Actually, it uses `rebase` under the hood.)
 
@@ -166,7 +169,7 @@ git istash pop --continue
 # ... continue hacking ...
 ```
 
-The index is still intact after the whole operation is finished.
+After the whole operation is finished, the stashed index is restored and intact.
 
 
 ## Testing

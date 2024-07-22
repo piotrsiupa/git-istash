@@ -26,7 +26,7 @@ In case of conflicts, instead of refusing and demanding to run it without \fB\-\
 After the conflicts are resolved, the commands can be resumed with \fB\-\-continue\fR. \
 Alternatively, \fB\-\-abort\fR can be used to cancel the operation and return to the repository state before it started.
 .br
-Even if there were multiple stages of conflict solving, \fIthe index saved to the stash entry will be preserved\fR.
+Because of the multi-stage conflict resolution, \fIthe index saved to the stash entry will be preserved\fR.
 .RE
 
 .SH COMMANDS
@@ -142,8 +142,13 @@ $ git istash pop
 .PP
 Applying stash with conflicts both in staged and unstaged changes
 .RS 4
+So far, you may be thinking: \
+"Why would I need a custom Git script for that since a normal stash command can do it as well?"
+.br
 Let's assume the same scenario as in the example above; however, this time the \fIbrilliant idea\fR involves editing some of the same lines that are currently changed.
 .sp
+In such situation, normal \fBgit stash\fR won't let you use the option \fB--index\fR, forcing you to discard your changes in index.
+.br
 When \fBgit istash\fR encounters conflicts, it behaves like \fBgit rebase\fR and stops to allow the user to deal with the problem. \
 (Actually, it uses \fBrebase\fR under the hood.)
 .sp
@@ -166,7 +171,7 @@ $ git istash pop \-\-continue
 .fi
 .RE
 .sp
-The index is still intact after the whole operation is finished.
+After the whole operation is finished, the stashed index is restored and intact.
 .RE
 
 .SH SEE ALSO
