@@ -167,3 +167,20 @@ git istash pop --continue
 ```
 
 The index is still intact after the whole operation is finished.
+
+
+## Testing
+
+You can find the tests in the directory [`tests`](/tests).
+
+If you've made changes to the scripts or just want to make sure they're working on your system / version of Git, you can run:
+```sh
+tests/run.sh
+```
+or on Windows:
+```bat
+tests/windows-run.bat
+```
+*Don't try to directly run individual test files!* They are designed to be run through the main test script and may mess up your files otherwise.
+
+To learn more, read [`tests/README.md`](/tests/README.md) and `tests/run.sh --help`.
