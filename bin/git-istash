@@ -9,11 +9,11 @@ print_help() {
 	printf 'This is only a rudimentary help text. Prefer "git help istash" if available.\n'
 	printf '\n'
 	printf 'Usage: git istash <sub-command> [<argument>...]\n'
-	printf '   or: git istash (-h | --help)\n'
+	printf '   or: git istash -h\n'
 	printf '   or: git istash --version\n'
 	printf '\n'
 	printf 'Options:\n'
-	printf '    -h, --help\t\t- Show this help text and exit.\n'
+	printf '    -h\t\t\t- Show this help text and exit.\n'
 	printf '\t--version\t- Show version information and exit.\n'
 	printf '\n'
 	printf 'Sub-commands:\n'
@@ -22,7 +22,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'git-istash version 1.0.0\n'
+	printf 'git-istash version 1.0.1\n'
 	printf 'Author: Piotr Siupa\n'
 }
 
@@ -30,11 +30,8 @@ run_subcommand() { # subcommand [arguments...]
 	subcommand="$1"
 	shift
 	case "$subcommand" in
-		apply)
-			sh "$(dirname "$0")/../lib/git-istash/git-istash-apply" "$@"
-			;;
-		pop)
-			sh "$(dirname "$0")/../lib/git-istash/git-istash-pop" "$@"
+		apply|pop)
+			sh "$(dirname "$0")/../lib/git-istash/git-istash-$subcommand" "$@"
 			;;
 		-*)
 			printf 'git-istash: Missing sub-command. See "git istash --help".\n' 1>&2
@@ -47,15 +44,45 @@ run_subcommand() { # subcommand [arguments...]
 	esac
 }
 
-if [ "$1" = '-h' ] || [ "$1" = '--help' ]
+if [ "$1" = '--help' ] || [ "$2" = '--help' ]
+then
+	if [ -f "$(dirname "$0")/../man/man1/git-istash.1" ]
+	then
+		if (
+			cd "$(dirname "$0")/../man"
+			MANPATH="$(pwd)"
+			export MANPATH
+			man git-istash
+		)
+		then
+			exit 0
+		fi
+	fi
+	if man git-istash
+	then
+		exit 0
+	fi
+	printf 'Unable to open the manual entry.\n' 1>&2
+	printf 'Falling back to the built-in help text.\n' 1>&2
+	printf '\n' 1>&2
+	if [ "$1" = '--help' ]
+	then
+		print_help
+		exit 0
+	else
+		eval set -- "$1" -h
+	fi
+elif [ "$1" = '-h' ] || [ "$1" = '--help' ]
 then
 	print_help
 	exit 0
-elif [ "$1" = '--version' ]
+elif [ "$1" = '--version' ] || [ "$2" = '--version' ]
 then
 	print_version
 	exit 0
-elif [ $# -ge 1 ]
+fi
+
+if [ $# -ge 1 ]
 then
 	run_subcommand "$@"
 else

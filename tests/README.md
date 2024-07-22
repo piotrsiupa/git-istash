@@ -2,33 +2,44 @@ This directory contain tests and related scripts.
 The most notable files are `run.sh` and `shellcheck.sh`.
 
 
-# `run.sh`
+# Scripts
+
+## `run.sh`
 
 The script that runs all the tests placed in this directory.
 Executing it without parameters will run all the tests.
 (For more information, run `run.sh --help`.)
 
-
-# `shellcheck.sh`
+## `shellcheck.sh`
 
 A script that checks all the scripts in the projects (including the tests), using `shellcheck`.
 (For more information, run `shellcheck.sh --help`.)
 
-
-# `commons.sh`
+## `commons.sh`
 
 A helper file with utility functions for implementing tests.
 This script is **not** intended to be used outside of tests.
+It should be sourced at the beginning of each test file.
 
 
 # Tests
 
-Each test is saved in a `*.sh` file, in a sub-directory (named the same after the tested command).
+Each test is a shell script saved in a `*.sh` file, in a sub-directory (named the same after the tested command).
 The file patch relative to the directory `tests` but without the extension is the name of the test.
 
 Tests are scripts that return an exit code `0` if the tests passed and non-`0` otherwise.
 To run a test, use the script `run.sh` which will create and initialize a new Git repository in which the test can be safely run.
 *Running a test without `run.sh` may mess up files in the Git repository or in the current directory.*
+(There is some rudimentary protection from doing that in the `commons.sh`, but don't try regardless.)
+
+## Test script
+
+Each test starts by sourcing `commons.sh`.
+After that there are some normal shell commands to set up the test scenario, usually involving a lot of calls of `git`.
+Finally, the tested command is called, which is followed by a bunch of assertions.
+(Sometimes, in more complex scenarios, some of these steps repeat a few times.)
+
+To fully understand a test, you need to read through `commons.sh` which sets up a test repository and contain the code for all the assertions (among other things).
 
 ## Naming convention
 

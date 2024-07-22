@@ -24,7 +24,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'version 1.0.0\n'
+	printf 'installer version 1.0.1\n'
 }
 
 is_windows() {
@@ -70,11 +70,12 @@ check_root() {
 prepare_man() {
 	if command -v man 1>/dev/null 2>&1
 	then
-		'./man-src/build.sh'
+		mkdir -p 'share/man/man1'
+		gzip -c 'man/man1/git-istash.1' >'share/man/man1/git-istash.1.gz'
 		if [ "$is_root" = y ]
 		then
 			#shellcheck disable=SC2012
-			chown -R "$(ls -nd './man-src' | awk '{print $3":"$4}')" './share'
+			chown -R "$(ls -nd './man' | awk '{print $3":"$4}')" './share'
 		fi
 		man_present=y
 	else
