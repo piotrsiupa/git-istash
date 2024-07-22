@@ -17,6 +17,7 @@ git add -N xxx
 assert_exit_code 1 git istash apply 1
 assert_status ' A xxx'
 assert_file_contents xxx 'xxx'
+assert_file_contents ignored 'ignored'
 assert_stash_count 1
 assert_branch_count 1
 assert_head_name '~ooo'

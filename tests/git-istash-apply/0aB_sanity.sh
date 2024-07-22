@@ -6,6 +6,7 @@ git commit -m 'Added aaa'
 assert_tracked_files 'aaa'
 assert_status ''
 assert_file_contents aaa 'aaa' 'aaa'
+assert_file_contents ignored 'ignored'
 assert_stash_count 0
 assert_log_length 2
 assert_branch_count 1
@@ -17,6 +18,7 @@ git stash push
 assert_tracked_files 'aaa'
 assert_status ''
 assert_file_contents aaa 'aaa' 'aaa'
+assert_file_contents ignored 'ignored'
 assert_stash_count 1
 assert_log_length 2
 assert_branch_count 1
@@ -28,6 +30,7 @@ assert_exit_code 0 git stash apply
 assert_tracked_files 'aaa'
 assert_status ' M aaa'
 assert_file_contents aaa 'bbb' 'aaa'
+assert_file_contents ignored 'ignored'
 assert_stash_count 1
 assert_log_length 2
 assert_branch_count 1

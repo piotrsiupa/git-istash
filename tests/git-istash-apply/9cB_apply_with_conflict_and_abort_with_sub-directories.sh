@@ -34,6 +34,7 @@ assert_exit_code 2 capture_outputs git istash apply
 cd ..
 assert_conflict_message git istash apply
 assert_status 'UU aaa|UU xxx/aaa|UU yyy/aaa'
+assert_file_contents ignored 'ignored'
 assert_stash_count 1
 assert_branch_count 1
 assert_data_files 'apply'
@@ -54,6 +55,7 @@ assert_file_contents yyy/aaa 'ddd2' 'ddd2'
 assert_file_contents zzz 'yyy0' 'yyy0'
 assert_file_contents xxx/zzz 'yyy1' 'yyy1'
 assert_file_contents yyy/zzz 'yyy2' 'yyy2'
+assert_file_contents ignored 'ignored'
 assert_stash_count 1
 assert_log_length 3
 assert_branch_count 1

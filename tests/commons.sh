@@ -10,6 +10,10 @@ if [ -t 1 ] ; then exit 1 ; fi
 
 set -e
 
+# Setting up the tests repository
+printf 'ignored\n' >>.git/info/exclude
+printf 'ignored\n' >ignored
+
 capture_outputs() { # command [arguments...]
 	stdout_file="$(mktemp)"
 	stderr_file="$(mktemp)"

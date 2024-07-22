@@ -26,6 +26,7 @@ assert_file_contents yyy/aaa 'ccc2' 'bbb2'
 assert_file_contents zzz 'zzz0'
 assert_file_contents xxx/zzz 'zzz1'
 assert_file_contents yyy/zzz 'zzz2'
+assert_file_contents ignored 'ignored'
 assert_stash_count 1
 assert_branch_count 1
 assert_head_name '~ooo'

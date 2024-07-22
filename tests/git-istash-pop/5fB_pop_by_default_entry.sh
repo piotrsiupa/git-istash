@@ -16,6 +16,7 @@ assert_exit_code 0 git istash pop stash
 assert_tracked_files 'aaa'
 assert_status ' M aaa'
 assert_file_contents aaa 'ccc' 'aaa'
+assert_file_contents ignored 'ignored'
 assert_stash_count 1
 assert_stash_hash 0 "$earlier_stash_hash"
 assert_log_length 2

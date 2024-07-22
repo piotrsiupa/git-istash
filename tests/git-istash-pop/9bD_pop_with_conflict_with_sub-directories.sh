@@ -36,6 +36,7 @@ assert_exit_code 2 capture_outputs git istash pop
 cd ..
 assert_conflict_message git istash pop
 assert_status 'UU aaa|UU xxx/aaa|UU yyy/aaa'
+assert_file_contents ignored 'ignored'
 assert_stash_count 1
 assert_branch_count 1
 assert_data_files 'pop'
@@ -51,6 +52,7 @@ cd ..
 assert_conflict_message git istash pop --continue
 assert_tracked_files 'aaa|xxx/aaa|xxx/zzz|yyy/aaa|yyy/zzz|zzz'
 assert_status 'UU aaa|UU xxx/aaa|AA xxx/zzz|UU yyy/aaa|AA yyy/zzz|AA zzz'
+assert_file_contents ignored 'ignored'
 assert_stash_count 1
 assert_branch_count 1
 assert_data_files 'pop'
@@ -74,6 +76,7 @@ assert_file_contents yyy/aaa 'fff2' 'eee2'
 assert_file_contents zzz 'xxx0' 'yyy0'
 assert_file_contents xxx/zzz 'xxx1' 'yyy1'
 assert_file_contents yyy/zzz 'xxx2' 'yyy2'
+assert_file_contents ignored 'ignored'
 assert_stash_count 0
 assert_log_length 3
 assert_branch_count 1

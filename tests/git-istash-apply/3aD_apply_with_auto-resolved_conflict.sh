@@ -17,6 +17,7 @@ assert_exit_code 0 git istash apply
 assert_tracked_files 'aaa'
 assert_status ''
 assert_file_contents aaa 'bbb' 'bbb'
+assert_file_contents ignored 'ignored'
 assert_stash_count 1
 assert_log_length 3
 assert_branch_count 1

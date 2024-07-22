@@ -22,6 +22,7 @@ assert_exit_code 2 capture_outputs git istash apply
 assert_conflict_message git istash apply
 assert_tracked_files 'aaa|zzz'
 assert_status 'UU aaa'
+assert_file_contents ignored 'ignored'
 assert_stash_count 1
 assert_branch_count 1
 assert_data_files 'apply'
@@ -33,6 +34,7 @@ assert_exit_code 2 capture_outputs git istash apply --continue
 assert_conflict_message git istash apply --continue
 assert_tracked_files 'aaa|zzz'
 assert_status 'UU aaa|AA zzz'
+assert_file_contents ignored 'ignored'
 assert_stash_count 1
 assert_branch_count 1
 assert_data_files 'apply'
@@ -46,6 +48,7 @@ assert_tracked_files 'aaa|zzz'
 assert_status 'MM aaa| M zzz'
 assert_file_contents aaa 'fff' 'eee'
 assert_file_contents zzz 'xxx' 'yyy'
+assert_file_contents ignored 'ignored'
 assert_stash_count 1
 assert_log_length 3
 assert_branch_count 1

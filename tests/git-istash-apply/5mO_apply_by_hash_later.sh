@@ -17,6 +17,7 @@ git switch --orphan ooo
 assert_exit_code 0 git istash apply "$later_stash_hash"
 assert_status '?? aaa'
 assert_file_contents aaa 'ccc'
+assert_file_contents ignored 'ignored'
 assert_stash_count 0
 assert_branch_count 1
 assert_head_name '~ooo'

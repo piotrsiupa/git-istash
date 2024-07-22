@@ -17,6 +17,7 @@ assert_tracked_files 'aaa'
 assert_status '?? xxx'
 assert_file_contents aaa 'aaa' 'aaa'
 assert_file_contents xxx 'xxx'
+assert_file_contents ignored 'ignored'
 assert_stash_count 1
 assert_log_length 2
 assert_branch_count 1

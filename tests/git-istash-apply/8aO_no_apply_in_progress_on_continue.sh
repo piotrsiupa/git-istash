@@ -9,6 +9,7 @@ git switch --orphan ooo
 
 assert_exit_code 1 git istash apply --continue
 assert_status ''
+assert_file_contents ignored 'ignored'
 assert_stash_count 1
 assert_branch_count 1
 assert_head_name '~ooo'
@@ -21,6 +22,7 @@ printf 'eee\n' >aaa
 assert_exit_code 1 git istash apply --continue
 assert_status 'AM aaa'
 assert_file_contents aaa 'eee' 'ddd'
+assert_file_contents ignored 'ignored'
 assert_stash_count 1
 assert_branch_count 1
 assert_head_name '~ooo'
