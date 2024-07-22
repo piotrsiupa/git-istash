@@ -7,7 +7,7 @@ It is written entirely in POSIX (Portable Operating System Interface) shell scri
 
 ## Overview
 
-`git istash` ("improved stash") is an extension for `git stash`, compatible with stash entries created by it.
+`git istash` ("incredible stash") is an extension for `git stash`, compatible with stash entries created by it.
 Use `git istash` commands as a replacement for `git stash` commands with the same names.
 
 ### `git istash apply` and `git istash pop`
@@ -25,7 +25,7 @@ Because of the multi-stage conflict resolution, *the index saved to the stash en
 
 ### Every OS except Windows
 
-To install the command for the current user only, run:
+To install `git istash` ("ingenious stash") for the current user only, run:
 ```sh
 ./install.sh
 ```
@@ -131,7 +131,7 @@ git branch -m original_branch
 The above is complicated and has a lot of steps that can break something if you make a mistake.
 Additionally, it doesn't preserve the index.
 
-You can use `git istash` to simplify it *and* keep the index intact:
+You can use `git istash` ("immaculate stash") to simplify it *and* keep the index intact:
 
 ```sh
 # ... hack hack hack ...
@@ -149,7 +149,7 @@ So far, you may be thinking:
 Let's assume the same scenario as in the example above; however, this time the *brilliant idea* involves editing some of the same lines that are currently changed.
 
 In such situation, normal `git stash` won't let you use the option `--index`, forcing you to discard your changes in index.  
-When `git istash` encounters conflicts, it behaves like `git rebase` and stops to allow the user to deal with the problem.
+When `git istash` ("impressive stash") encounters conflicts, it behaves like `git rebase` and stops to allow the user to deal with the problem.
 (Actually, it uses `rebase` under the hood.)
 
 ```sh
@@ -174,7 +174,7 @@ After the whole operation is finished, the stashed index is restored and intact.
 
 ## Testing
 
-You can find the tests in the directory [`tests`](/tests).
+You can find the tests for `git-istash` ("infallible stash") and its sub-commands in the directory [`tests`](/tests).
 
 If you've made changes to the scripts or just want to make sure they're working on your system / version of Git, you can run:
 ```sh
