@@ -11,19 +11,12 @@ print_help() {
 	printf '\n'
 	printf 'Usage: git istash pop [<stash>]\n'
 	printf '   or: git istash pop (-c | --continue | --abort)\n'
-	printf '   or: git istash pop (-h | --help)\n'
-	printf '   or: git istash pop --version\n'
+	printf '   or: git istash pop -h\n'
 	printf '\n'
 	printf 'Options:\n'
-	printf '    -h, --help\t\t- Show this help text and exit.\n'
-	printf '\t--version\t- Show version information and exit.\n'
+	printf '    -h\t\t\t- Show this help text and exit.\n'
 	printf '    -c, --continue\t- Resume the previous operation.\n\t\t\t  (Conflicts need to be resolved before that.)\n'
 	printf '\t--abort\t\t- Abort the previous operation and return the repository\n\t\t\t  to the state before it started.\n'
-}
-
-print_version() {
-	printf 'git-istash-pop version 1.0.0\n'
-	printf 'Author: Piotr Siupa\n'
 }
 
 save_data() {
@@ -181,19 +174,15 @@ do_pop() { # args...
 	fi
 }
 
-getopt_result="$(getopt -o'hc' --long='help,version,continue,abort' -n"$(basename "$0")" -- "$@")"
+getopt_result="$(getopt -o'hc' --long='continue,abort' -n"$(basename "$0")" -- "$@")"
 eval set -- "$getopt_result"
 continue_set=n
 abort_set=n
 while true
 do
 	case "$1" in
-	-h|--help)
+	-h)
 		print_help
-		exit 0
-		;;
-	--version)
-		print_version
 		exit 0
 		;;
 	-c|--continue)

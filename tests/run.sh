@@ -29,7 +29,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'version 1.0.0\n'
+	printf 'test script version 1.0.1\n'
 }
 
 print_color_code() { # code
@@ -58,10 +58,7 @@ cleanup_test() { # test_name
 }
 create_test_dir() { # test_name
 	test_dir="$(get_test_dir "$1")"
-	git init --initial-branch=master "$test_dir"
-	git -C "$test_dir" config --local user.email 'test@localhost'
-	git -C "$test_dir" config --local user.name 'test'
-	git -C "$test_dir" commit --allow-empty -m 'Initial commit'
+	mkdir "$test_dir"
 }
 
 find_tests() { # pattern
@@ -92,6 +89,7 @@ run_test() { # test_name
 		exec 3>&2
 		{
 			{
+				export WAS_IT_CALLED_FROM_RUN_SH='indeed'
 				if ! cd "$(get_test_dir "$1")"
 				then
 					printf '0' 1>&5
