@@ -204,10 +204,20 @@ print_summary() {
 		if [ "$passed_in_category" -eq "$total_in_category" ]
 		then
 			print_color_code '\033[1;32;4m'
-			printf 'Passed all %i tests.' "$total_in_category"
+			if [ "$total_in_category" -eq 1 ]
+			then
+				printf 'Passed the test.'
+			else
+				printf 'Passed all %i tests.' "$total_in_category"
+			fi
 		else
 			print_color_code '\033[1;31;4m'
-			printf 'Passed %i out of %i tests.' "$passed_in_category" "$total_in_category"
+			if [ "$total_in_category" -eq 1 ]
+			then
+				printf 'Failed the test.'
+			else
+				printf 'Passed %i out of %i tests.' "$passed_in_category" "$total_in_category"
+			fi
 		fi
 		print_color_code '\033[0m'
 		printf '\n'
@@ -219,10 +229,20 @@ print_summary() {
 		if [ "$passed_tests" -eq "$total_tests" ]
 		then
 			print_color_code '\033[42;1;37;4m'
-			printf 'Passed all %i tests.' "$total_tests"
+			if [ "$total_tests" -eq 1 ]
+			then
+				printf 'Passed the test.'
+			else
+				printf 'Passed all %i tests.' "$total_tests"
+			fi
 		else
 			print_color_code '\033[41;30;4m'
-			printf 'Passed %i out of %i tests.' "$passed_tests" "$total_tests"
+			if [ "$total_tests" -eq 1 ]
+			then
+				printf 'Failed the test.'
+			else
+				printf 'Passed %i out of %i tests.' "$passed_tests" "$total_tests"
+			fi
 		fi
 	else
 		print_color_code '\033[43;1;33;4m'
