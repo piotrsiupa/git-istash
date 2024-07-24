@@ -16,6 +16,7 @@ git commit -m 'Changed xxx'
 git switch -d HEAD
 
 git rebase branch0 --exec='return 1' || true
+assert_all_files 'aaa|ignored|xxx'
 assert_tracked_files 'aaa|xxx'
 assert_status ''
 assert_file_contents ignored 'ignored'
@@ -28,6 +29,7 @@ assert_rebase y
 
 correct_head_hash="$(git rev-parse HEAD)"
 assert_exit_code 1 git istash apply
+assert_all_files 'aaa|ignored|xxx'
 assert_tracked_files 'aaa|xxx'
 assert_status ''
 assert_file_contents ignored 'ignored'

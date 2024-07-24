@@ -85,6 +85,16 @@ hint: To abort and get back to the state before \"$1 $2 $3\", run \"$1 $2 $3 --a
 	fi
 }
 
+assert_all_files() { # expected
+	value_for_assert="$(find . -type f ! -path './.git/*' | cut -c3- | sort | head -c -1 | tr '\n' '|')"
+	if [ "$value_for_assert" != "$1" ]
+	then
+		printf 'Expected all files outside of ".git" to be "%s" but they are "%s"!\n' "$1" "$value_for_assert" 1>&3
+		return 1
+	fi
+	unset value_for_assert
+}
+
 assert_tracked_files() { # expected
 	value_for_assert="$(git ls-tree -r --name-only HEAD | sort | head -c -1 | tr '\n' '|')"
 	if [ "$value_for_assert" != "$1" ]

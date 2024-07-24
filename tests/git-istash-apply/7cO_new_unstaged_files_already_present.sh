@@ -15,6 +15,7 @@ git switch --orphan ooo
 printf 'xxx\n' >xxx
 git add -N xxx
 assert_exit_code 1 git istash apply 1
+assert_all_files 'ignored|xxx'
 assert_status ' A xxx'
 assert_file_contents xxx 'xxx'
 assert_file_contents ignored 'ignored'

@@ -3,6 +3,7 @@
 printf 'bbb\n' >aaa
 git add aaa
 git stash push
+assert_all_files 'ignored'
 assert_status ''
 assert_file_contents ignored 'ignored'
 assert_stash_count 1
@@ -14,6 +15,7 @@ assert_rebase n
 git switch --orphan ooo
 
 assert_exit_code 0 git stash apply
+assert_all_files 'aaa|ignored'
 assert_status 'A  aaa'
 assert_file_contents aaa 'bbb' 'bbb'
 assert_file_contents ignored 'ignored'

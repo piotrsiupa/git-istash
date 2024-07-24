@@ -12,6 +12,7 @@ git switch --orphan ooo
 
 assert_exit_code 2 capture_outputs git istash apply
 assert_conflict_message git istash apply
+assert_all_files 'aaa|ignored'
 assert_tracked_files ''
 assert_status 'DU aaa'
 assert_file_contents ignored 'ignored'

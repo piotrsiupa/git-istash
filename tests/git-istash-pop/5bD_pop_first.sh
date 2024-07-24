@@ -15,6 +15,7 @@ git switch -d HEAD
 
 correct_head_hash="$(git rev-parse HEAD)"
 assert_exit_code 0 git istash pop 0
+assert_all_files 'aaa|ignored'
 assert_tracked_files 'aaa'
 assert_status ' M aaa'
 assert_file_contents aaa 'ccc' 'aaa'

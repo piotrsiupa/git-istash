@@ -15,6 +15,7 @@ assert_stash_count 0
 git switch --orphan ooo
 
 assert_exit_code 0 git istash apply "$earlier_stash_hash"
+assert_all_files 'aaa|ignored'
 assert_status '?? aaa'
 assert_file_contents aaa 'bbb'
 assert_file_contents ignored 'ignored'

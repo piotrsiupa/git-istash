@@ -13,6 +13,7 @@ git commit -am 'Changed aaa'
 
 correct_head_hash="$(git rev-parse HEAD)"
 assert_exit_code 0 git istash apply
+assert_all_files 'aaa|ignored'
 assert_tracked_files 'aaa'
 assert_status ''
 assert_file_contents aaa 'bbb' 'bbb'

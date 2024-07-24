@@ -12,6 +12,7 @@ git stash push -u
 
 correct_head_hash="$(git rev-parse HEAD)"
 assert_exit_code 0 git istash pop
+assert_all_files 'aaa|ddd|ignored'
 assert_tracked_files 'aaa'
 assert_status 'MM aaa|?? ddd'
 assert_file_contents aaa 'ccc' 'bbb'

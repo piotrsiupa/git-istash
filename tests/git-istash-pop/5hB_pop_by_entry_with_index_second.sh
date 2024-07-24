@@ -13,6 +13,7 @@ later_stash_hash="$(git rev-parse 'stash@{0}')"
 
 correct_head_hash="$(git rev-parse HEAD)"
 assert_exit_code 0 git istash pop 'stash@{1}'
+assert_all_files 'aaa|ignored'
 assert_tracked_files 'aaa'
 assert_status ' M aaa'
 assert_file_contents aaa 'bbb' 'aaa'

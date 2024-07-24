@@ -26,6 +26,7 @@ cd xxx
 assert_exit_code 2 capture_outputs git istash pop
 cd ..
 assert_conflict_message git istash pop
+assert_all_files 'aaa|ignored|xxx/aaa|yyy/aaa'
 assert_status 'DU aaa|DU xxx/aaa|DU yyy/aaa'
 assert_file_contents ignored 'ignored'
 assert_stash_count 1
@@ -40,6 +41,7 @@ git add aaa xxx/aaa yyy/aaa
 cd xxx
 assert_exit_code 0 git istash pop --abort
 cd ..
+assert_all_files 'ignored'
 assert_status ''
 assert_file_contents ignored 'ignored'
 assert_stash_count 1

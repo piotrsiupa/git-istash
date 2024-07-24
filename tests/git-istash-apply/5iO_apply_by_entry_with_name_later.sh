@@ -9,6 +9,7 @@ git stash push -u -m 'later stash entry'
 git switch --orphan ooo
 
 assert_exit_code 0 git istash apply 'stash^{/later}'
+assert_all_files 'aaa|ignored'
 assert_status '?? aaa'
 assert_file_contents aaa 'ccc'
 assert_file_contents ignored 'ignored'

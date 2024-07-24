@@ -3,6 +3,7 @@
 printf 'aaa\n' >aaa
 git add aaa
 git commit -m 'Added aaa'
+assert_all_files 'aaa|ignored'
 assert_tracked_files 'aaa'
 assert_status ''
 assert_file_contents aaa 'aaa' 'aaa'
@@ -16,6 +17,7 @@ assert_rebase n
 
 printf 'bbb\n' >aaa
 git stash push
+assert_all_files 'aaa|ignored'
 assert_tracked_files 'aaa'
 assert_status ''
 assert_file_contents aaa 'aaa' 'aaa'
@@ -29,6 +31,7 @@ assert_rebase n
 
 correct_head_hash="$(git rev-parse HEAD)"
 assert_exit_code 0 git stash pop
+assert_all_files 'aaa|ignored'
 assert_tracked_files 'aaa'
 assert_status ' M aaa'
 assert_file_contents aaa 'bbb' 'aaa'

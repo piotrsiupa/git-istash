@@ -25,6 +25,7 @@ correct_head_hash="$(git rev-parse HEAD)"
 cd xxx
 assert_exit_code 0 git stash pop --index
 cd ..
+assert_all_files 'aaa|ignored|xxx/aaa|xxx/zzz|yyy/aaa|yyy/zzz|zzz'
 assert_tracked_files 'aaa|xxx/aaa|yyy/aaa'
 assert_status 'MM aaa|MM xxx/aaa|MM yyy/aaa|?? xxx/zzz|?? yyy/zzz|?? zzz'
 assert_file_contents aaa 'ccc0' 'bbb0'

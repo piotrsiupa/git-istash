@@ -11,6 +11,7 @@ git switch --orphan ooo
 
 assert_exit_code 2 capture_outputs git istash apply
 assert_conflict_message git istash apply
+assert_all_files 'aaa|ignored'
 assert_status 'DU aaa'
 assert_file_contents ignored 'ignored'
 assert_stash_count 1
@@ -24,6 +25,7 @@ git add aaa
 mv .git/ISTASH_TARGET .git/ISTASH_TARGET~
 printf 'fa4e08a58\n' >.git/ISTASH_TARGET
 assert_exit_code 1 git istash apply --continue
+assert_all_files 'aaa|ignored'
 assert_status 'A  aaa'
 assert_file_contents ignored 'ignored'
 assert_stash_count 1
@@ -34,6 +36,7 @@ assert_rebase y
 
 mv .git/ISTASH_TARGET~ .git/ISTASH_TARGET
 assert_exit_code 0 git istash apply --continue
+assert_all_files 'aaa|ignored'
 assert_status '?? aaa'
 assert_file_contents aaa 'eee'
 assert_file_contents ignored 'ignored'

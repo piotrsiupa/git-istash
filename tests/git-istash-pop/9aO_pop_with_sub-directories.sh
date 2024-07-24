@@ -19,6 +19,7 @@ mkdir xxx
 cd xxx
 assert_exit_code 0 git istash pop
 cd ..
+assert_all_files 'aaa|ignored|xxx/aaa|xxx/zzz|yyy/aaa|yyy/zzz|zzz'
 assert_status 'AM aaa|AM xxx/aaa|AM yyy/aaa|?? xxx/zzz|?? yyy/zzz|?? zzz'
 assert_file_contents aaa 'ccc0' 'bbb0'
 assert_file_contents xxx/aaa 'ccc1' 'bbb1'

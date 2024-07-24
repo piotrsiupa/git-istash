@@ -15,6 +15,7 @@ assert_stash_count 0
 
 correct_head_hash="$(git rev-parse HEAD)"
 assert_exit_code 1 git istash pop earlier
+assert_all_files 'aaa|ignored'
 assert_tracked_files 'aaa'
 assert_status ''
 assert_file_contents aaa 'aaa' 'aaa'

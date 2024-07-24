@@ -10,6 +10,7 @@ git switch --orphan ooo
 
 printf 'xxx\n' >xxx
 assert_exit_code 1 git istash pop 1
+assert_all_files 'ignored|xxx'
 assert_status '?? xxx'
 assert_file_contents xxx 'xxx'
 assert_file_contents ignored 'ignored'

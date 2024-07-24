@@ -8,6 +8,7 @@ git stash push -m 'the only stash'
 git switch --orphan ooo
 
 assert_exit_code 1 git istash apply 0 0
+assert_all_files 'ignored'
 assert_status ''
 assert_file_contents ignored 'ignored'
 assert_stash_count 1
@@ -20,6 +21,7 @@ printf 'ddd\n' >aaa
 git add aaa
 printf 'eee\n' >aaa
 assert_exit_code 1 git istash apply 0 0
+assert_all_files 'aaa|ignored'
 assert_status 'AM aaa'
 assert_file_contents aaa 'eee' 'ddd'
 assert_file_contents ignored 'ignored'
