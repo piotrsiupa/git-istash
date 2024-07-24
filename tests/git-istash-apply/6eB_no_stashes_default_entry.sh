@@ -6,9 +6,11 @@ git commit -m 'added aaa'
 
 correct_head_hash="$(git rev-parse HEAD)"
 assert_exit_code 1 git istash apply stash
+assert_all_files 'aaa|ignored'
 assert_tracked_files 'aaa'
 assert_status ''
 assert_file_contents aaa 'aaa' 'aaa'
+assert_file_contents ignored 'ignored'
 assert_stash_count 0
 assert_log_length 2
 assert_branch_count 1
@@ -21,9 +23,11 @@ printf 'ddd\n' >aaa
 git add aaa
 printf 'eee\n' >aaa
 assert_exit_code 1 git istash apply stash
+assert_all_files 'aaa|ignored'
 assert_tracked_files 'aaa'
 assert_status 'MM aaa'
 assert_file_contents aaa 'eee' 'ddd'
+assert_file_contents ignored 'ignored'
 assert_stash_count 0
 assert_log_length 2
 assert_branch_count 1

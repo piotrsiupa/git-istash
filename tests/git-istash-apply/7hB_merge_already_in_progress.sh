@@ -13,8 +13,10 @@ git commit --allow-empty -m 'Changed nothing'
 
 git switch branch0
 git merge branch1 --no-ff --no-commit
+assert_all_files 'aaa|ignored'
 assert_tracked_files 'aaa'
 assert_status ''
+assert_file_contents ignored 'ignored'
 assert_stash_count 1
 assert_file_contents aaa 'aaa' 'aaa'
 assert_log_length 2
@@ -24,8 +26,10 @@ assert_rebase n
 
 correct_head_hash="$(git rev-parse HEAD)"
 assert_exit_code 1 git istash apply
+assert_all_files 'aaa|ignored'
 assert_tracked_files 'aaa'
 assert_status ''
+assert_file_contents ignored 'ignored'
 assert_stash_count 1
 assert_file_contents aaa 'aaa' 'aaa'
 assert_log_length 2

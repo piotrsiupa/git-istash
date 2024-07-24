@@ -25,10 +25,11 @@ print_help() {
 	printf 'If there are no filters, all tests are\nrun. '
 	printf 'This can be used to either list individual tests or choose some categories.\n'
 	printf '(See "README.md" in the test directory for more information about test names.)\n'
+	printf 'Paths to specific test files are also accepted.\n'
 }
 
 print_version() {
-	printf 'test script version 1.0.1\n'
+	printf 'test script version 1.1.0\n'
 }
 
 print_color_code() { # code
@@ -203,10 +204,20 @@ print_summary() {
 		if [ "$passed_in_category" -eq "$total_in_category" ]
 		then
 			print_color_code '\033[1;32;4m'
-			printf 'Passed all %i tests.' "$total_in_category"
+			if [ "$total_in_category" -eq 1 ]
+			then
+				printf 'Passed the test.'
+			else
+				printf 'Passed all %i tests.' "$total_in_category"
+			fi
 		else
 			print_color_code '\033[1;31;4m'
-			printf 'Passed %i out of %i tests.' "$passed_in_category" "$total_in_category"
+			if [ "$total_in_category" -eq 1 ]
+			then
+				printf 'Failed the test.'
+			else
+				printf 'Passed %i out of %i tests.' "$passed_in_category" "$total_in_category"
+			fi
 		fi
 		print_color_code '\033[0m'
 		printf '\n'
@@ -218,10 +229,20 @@ print_summary() {
 		if [ "$passed_tests" -eq "$total_tests" ]
 		then
 			print_color_code '\033[42;1;37;4m'
-			printf 'Passed all %i tests.' "$total_tests"
+			if [ "$total_tests" -eq 1 ]
+			then
+				printf 'Passed the test.'
+			else
+				printf 'Passed all %i tests.' "$total_tests"
+			fi
 		else
 			print_color_code '\033[41;30;4m'
-			printf 'Passed %i out of %i tests.' "$passed_tests" "$total_tests"
+			if [ "$total_tests" -eq 1 ]
+			then
+				printf 'Failed the test.'
+			else
+				printf 'Passed %i out of %i tests.' "$passed_tests" "$total_tests"
+			fi
 		fi
 	else
 		print_color_code '\033[43;1;33;4m'
@@ -304,15 +325,24 @@ then
 		use_color=n
 	fi
 fi
+
+normalize_filter_entry() { # filter_entry
+	if [ -f "$1" ]
+	then
+		printf '%s' "$1" | sed 's;^.*/\([^/]\+/[^/]\+\)\.sh$;\1;'
+	else
+		printf '%s' "$1"
+	fi
+}
 if [ $# -eq 0 ]
 then
 	filter=''
 else
-	filter="\\($1\\)"
+	filter="\\($(normalize_filter_entry "$1")\\)"
 	shift
 	while [ $# -ne 0 ]
 	do
-		filter="$filter\\|\\($1\\)"
+		filter="$filter\\|\\($(normalize_filter_entry "$1")\\)"
 		shift
 	done
 fi

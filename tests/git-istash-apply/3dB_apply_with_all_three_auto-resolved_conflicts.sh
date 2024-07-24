@@ -17,10 +17,12 @@ git commit -m 'Changed aaa & added zzz'
 
 correct_head_hash="$(git rev-parse HEAD)"
 assert_exit_code 0 git istash apply
+assert_all_files 'aaa|ignored|zzz'
 assert_tracked_files 'aaa|zzz'
 assert_status ' M aaa'
 assert_file_contents aaa 'ccc' 'bbb'
 assert_file_contents zzz 'zzz' 'zzz'
+assert_file_contents ignored 'ignored'
 assert_stash_count 1
 assert_log_length 3
 assert_branch_count 1

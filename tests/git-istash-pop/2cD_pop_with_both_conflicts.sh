@@ -17,8 +17,10 @@ git switch -d HEAD
 correct_head_hash="$(git rev-parse HEAD)"
 assert_exit_code 2 capture_outputs git istash pop
 assert_conflict_message git istash pop
+assert_all_files 'aaa|ignored'
 assert_tracked_files 'aaa'
 assert_status 'UU aaa'
+assert_file_contents ignored 'ignored'
 assert_stash_count 1
 assert_branch_count 1
 assert_data_files 'pop'
@@ -28,8 +30,10 @@ printf 'eee\n' >aaa
 git add aaa
 assert_exit_code 2 capture_outputs git istash pop --continue
 assert_conflict_message git istash pop --continue
+assert_all_files 'aaa|ignored'
 assert_tracked_files 'aaa'
 assert_status 'UU aaa'
+assert_file_contents ignored 'ignored'
 assert_stash_count 1
 assert_branch_count 1
 assert_data_files 'pop'
@@ -38,9 +42,11 @@ assert_rebase y
 printf 'fff\n' >aaa
 git add aaa
 assert_exit_code 0 git istash pop --continue
+assert_all_files 'aaa|ignored'
 assert_tracked_files 'aaa'
 assert_status 'MM aaa'
 assert_file_contents aaa 'fff' 'eee'
+assert_file_contents ignored 'ignored'
 assert_stash_count 0
 assert_log_length 3
 assert_branch_count 1

@@ -26,7 +26,9 @@ cd xxx
 assert_exit_code 2 capture_outputs git istash apply
 cd ..
 assert_conflict_message git istash apply
+assert_all_files 'aaa|ignored|xxx/aaa|yyy/aaa'
 assert_status 'DU aaa|DU xxx/aaa|DU yyy/aaa'
+assert_file_contents ignored 'ignored'
 assert_stash_count 1
 assert_branch_count 2
 assert_data_files 'apply'
@@ -39,7 +41,9 @@ git add aaa xxx/aaa yyy/aaa
 cd xxx
 assert_exit_code 0 git istash apply --abort
 cd ..
+assert_all_files 'ignored'
 assert_status ''
+assert_file_contents ignored 'ignored'
 assert_stash_count 1
 assert_branch_count 1
 assert_head_name '~ooo'
