@@ -15,10 +15,12 @@ git switch -d HEAD
 correct_head_hash="$(git rev-parse HEAD)"
 printf 'xxx\n' >xxx
 assert_exit_code 1 git istash apply 1
+assert_all_files 'aaa|ignored|xxx'
 assert_tracked_files 'aaa'
 assert_status '?? xxx'
 assert_file_contents aaa 'aaa' 'aaa'
 assert_file_contents xxx 'xxx'
+assert_file_contents ignored 'ignored'
 assert_stash_count 1
 assert_log_length 2
 assert_branch_count 1

@@ -16,7 +16,9 @@ assert_stash_count 0
 git switch --orphan ooo
 
 assert_exit_code 1 git istash pop earlier
+assert_all_files 'ignored'
 assert_status ''
+assert_file_contents ignored 'ignored'
 assert_stash_count 0
 assert_branch_count 3
 assert_head_name '~ooo'

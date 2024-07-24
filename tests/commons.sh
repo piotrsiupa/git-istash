@@ -4,11 +4,26 @@ printf 'This script is not supposed to be run.\n'
 printf 'If you want to use it IN a test, source it with the command:\n. ../commons.sh 1>/dev/null\n'
 if [ -t 1 ] ; then exit 1 ; fi
 
+if [ "$WAS_IT_CALLED_FROM_RUN_SH" != 'indeed' ]
+then
+	printf 'It looks like you'\''re trying to run a test without using the script "tests/run.sh".\n' 1>&2
+	printf 'Don'\''t! It would break everything.\n' 1>&2
+	exit 1
+fi
+
 # Note that this script sets terminal to exit upon encountering any error.
 # Note that the arguments of these functions are not thoroughly validated. Familiarize yourself with them before trying to use them.
 # Note that streams 4..8 are used by scripts (here and in `run.sh`) and they shouldn't be touched. (Stream is used to print assertion errors and you can write to it.)
 
 set -e
+
+# Setting up the test repository
+git init --initial-branch=master
+git config --local user.email 'test@localhost'
+git config --local user.name 'test'
+git commit --allow-empty -m 'Initial commit'
+printf 'ignored\n' >>.git/info/exclude
+printf 'ignored\n' >ignored
 
 capture_outputs() { # command [arguments...]
 	stdout_file="$(mktemp)"
@@ -68,6 +83,16 @@ hint: To abort and get back to the state before \"$1 $2 $3\", run \"$1 $2 $3 --a
 		printf 'Command %s didn'\''t print the correct conflict message!\n' "$(command_to_string "$@")" 1>&3
 		return 1
 	fi
+}
+
+assert_all_files() { # expected
+	value_for_assert="$(find . -type f ! -path './.git/*' | cut -c3- | sort | head -c -1 | tr '\n' '|')"
+	if [ "$value_for_assert" != "$1" ]
+	then
+		printf 'Expected all files outside of ".git" to be "%s" but they are "%s"!\n' "$1" "$value_for_assert" 1>&3
+		return 1
+	fi
+	unset value_for_assert
 }
 
 assert_tracked_files() { # expected
