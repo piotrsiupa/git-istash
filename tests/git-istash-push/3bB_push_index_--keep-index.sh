@@ -8,9 +8,11 @@ printf 'bbb\n' >aaa
 git add aaa
 correct_head_hash="$(git rev-parse HEAD)"
 assert_exit_code 0 git istash push --keep-index
+assert_all_files 'aaa|ignored'
 assert_tracked_files 'aaa'
 assert_status 'M  aaa'
 assert_file_contents aaa 'bbb' 'bbb'
+assert_file_contents ignored 'ignored'
 assert_stash_count 1
 assert_log_length 2
 assert_branch_count 1
@@ -22,9 +24,11 @@ assert_rebase n
 git reset --hard
 
 assert_exit_code 0 git stash pop --index
+assert_all_files 'aaa|ignored'
 assert_tracked_files 'aaa'
 assert_status 'M  aaa'
 assert_file_contents aaa 'bbb' 'bbb'
+assert_file_contents ignored 'ignored'
 assert_stash_count 0
 assert_log_length 2
 assert_branch_count 1
