@@ -6,7 +6,7 @@ printf 'bbb\n' >aaa
 git add aaa
 printf 'ccc\n' >aaa
 printf 'ddd\n' >ddd
-assert_exit_code 0 git istash push --no-include-untracked --keep-index
+assert_exit_code 0 git istash push --no-include-untracked -k
 assert_all_files 'aaa|ddd|ignored'
 assert_status 'A  aaa|?? ddd'
 assert_file_contents aaa 'bbb' 'bbb'

@@ -11,7 +11,7 @@ git add aaa
 printf 'ccc\n' >aaa
 printf 'ddd\n' >ddd
 correct_head_hash="$(git rev-parse HEAD)"
-assert_exit_code 0 git istash push -u --no-keep-index
+assert_exit_code 0 git istash push --include-untracked --no-keep-index
 assert_all_files 'aaa|ignored'
 assert_tracked_files 'aaa'
 assert_status ''
