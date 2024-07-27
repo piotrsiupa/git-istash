@@ -155,6 +155,10 @@ run_test() { # test_name
 	fi
 }
 run_tests() {
+	if [ -z "$tests" ]
+	then
+		return 0
+	fi
 	if printf '' | sed --unbuffered 's/^/x/' 1>/dev/null 2>&1
 	then
 		sed_call='sed --unbuffered'
@@ -194,37 +198,45 @@ print_summary() {
 	print_centered 'Results' '='
 	print_color_code '\033[22m'
 	printf '\n'
-	i=0
-	printf '%s\n' "$tests" | xargs -rn1 -- dirname | uniq -c | awk '{$1=$1;print}' \
-	| while read -r category
-	do
-		i=$((i + 1))
-		total_in_category="$(printf '%s\n' "$category" | cut -d' ' -f1)"
-		passed_in_category="$(printf '%s' "$passed_tests" | head -n $i | tail -n 1)"
-		printf '%s: ' "$(printf '%s' "$category" | cut -d' ' -f2)"
-		if [ "$passed_in_category" -eq "$total_in_category" ]
-		then
-			print_color_code '\033[1;32;4m'
-			if [ "$total_in_category" -eq 1 ]
+	if [ -n "$tests" ]
+	then
+		i=0
+		printf '%s\n' "$tests" | xargs -rn1 -- dirname | uniq -c | awk '{$1=$1;print}' \
+		| while read -r category
+		do
+			i=$((i + 1))
+			total_in_category="$(printf '%s\n' "$category" | cut -d' ' -f1)"
+			passed_in_category="$(printf '%s' "$passed_tests" | head -n $i | tail -n 1)"
+			printf '%s: ' "$(printf '%s' "$category" | cut -d' ' -f2)"
+			if [ "$passed_in_category" -eq "$total_in_category" ]
 			then
-				printf 'Passed the test.'
+				print_color_code '\033[1;32;4m'
+				if [ "$total_in_category" -eq 1 ]
+				then
+					printf 'Passed the test.'
+				else
+					printf 'Passed all %i tests.' "$total_in_category"
+				fi
 			else
-				printf 'Passed all %i tests.' "$total_in_category"
+				print_color_code '\033[1;31;4m'
+				if [ "$total_in_category" -eq 1 ]
+				then
+					printf 'Failed the test.'
+				else
+					printf 'Passed %i out of %i tests.' "$passed_in_category" "$total_in_category"
+				fi
 			fi
-		else
-			print_color_code '\033[1;31;4m'
-			if [ "$total_in_category" -eq 1 ]
-			then
-				printf 'Failed the test.'
-			else
-				printf 'Passed %i out of %i tests.' "$passed_in_category" "$total_in_category"
-			fi
-		fi
-		print_color_code '\033[0m'
-		printf '\n'
-	done
+			print_color_code '\033[0m'
+			printf '\n'
+		done
+	fi
 	passed_tests=$(($(printf '%s' "$passed_tests" | tr '\n' '+')))
-	total_tests="$(printf '%s\n' "$tests" | wc -l)"
+	if [ -z "$tests" ]
+	then
+		total_tests=0
+	else
+		total_tests="$(printf '%s\n' "$tests" | wc -l)"
+	fi
 	if [ "$total_tests" -ne 0 ]
 	then
 		if [ "$passed_tests" -eq "$total_tests" ]
@@ -334,7 +346,12 @@ fi
 normalize_filter_entry() { # filter_entry
 	if [ -f "$1" ]
 	then
-		printf '%s' "$1" | sed 's;^.*/\([^/]\+/[^/]\+\)\.sh$;\1;'
+		printf '%s' "$1" \
+		| sed -e 's;^.*/\([^/]\+/[^/]\+\)$;\1;' \
+			-e 's;^[^/]\+$;./&;' \
+			-e "s;^\\./;$(basename "$(pwd)")/;" \
+			-e 's/\.sh$//' \
+			-e 's/^/^/'
 	else
 		printf '%s' "$1"
 	fi
