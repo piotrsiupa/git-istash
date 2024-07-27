@@ -16,6 +16,7 @@ print_help() {
 	printf '    -c, --color=when\t- Set color mode (always / never / auto).\n'
 	printf '        --raw-name\t- Print paths to test files instead of prettified names.\n'
 	printf '    -l, --limit=number\t- Set maximum number of tests to be run. (It pairs well\n\t\t\t  with "--failed" to e.g. rerun the first failed test.)\n'
+	printf '    -p, --print-paths\t- Instead of running tests, print their paths and exit.\n\t\t\t  (The paths are relative to the directory "tests".)\n'
 	printf '\n'
 	printf 'Filters:\n'
 	printf 'You can specify one or more filters in the command call. '
@@ -252,7 +253,7 @@ print_summary() {
 	printf '\n'
 }
 
-getopt_result="$(getopt -o'hfdqc:l:' --long='help,version,failed,debug,quiet,color:,raw,raw-name,file-name,limit:' -n"$(basename "$0")" -- "$@")"
+getopt_result="$(getopt -o'hfdqc:l:p' --long='help,version,failed,debug,quiet,color:,raw,raw-name,file-name,limit:,print-paths' -n"$(basename "$0")" -- "$@")"
 eval set -- "$getopt_result"
 only_failed=n
 debug_mode=n
@@ -260,6 +261,7 @@ quiet_mode=n
 use_color='auto'
 raw_name=n
 test_limit=0
+print_paths=n
 while true
 do
 	case "$1" in
@@ -309,6 +311,9 @@ do
 			exit 1
 		fi
 		;;
+	-p|--print-paths)
+		print_paths=y
+		;;
 	--)
 		shift
 		break
@@ -348,11 +353,17 @@ else
 fi
 
 cd "$(dirname "$0")"
+tests="$(find_tests "$filter")"
+if [ "$print_paths" = y ]
+then
+	printf '%s' "$tests" | xargs -- printf '%s.sh\n'
+	exit 0
+fi
+
 cd '../bin'
 PATH="$(pwd):$PATH"
 cd "$OLDPWD"
 export PATH
-tests="$(find_tests "$filter")"
 run_tests
 print_summary
 [ "$total_tests" -ne 0 ] && [ "$passed_tests" -eq "$total_tests" ]
