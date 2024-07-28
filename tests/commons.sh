@@ -134,6 +134,58 @@ assert_file_contents() { # file expected_current [expected_staged]
 	unset value_for_assert
 }
 
+assert_files() { # expected_files (see one of the tests as an example)
+	expected_files="$(printf '%s\n' "$1" | grep -v '^\s*$' | sed 's/^\(...\)\(.*\)$/\2\1/' | sort | sed 's/^\(.*\)\(...\)$/\2\1/')"
+	assert_all_files "$(printf '%s\n' "$expected_files" | sed 's/^...\(\S\+\)\(\s.*\)\?$/\1/' | head -c-1 | tr '\n' '|')"
+	assert_tracked_files "$(printf '%s\n' "$expected_files" | grep -v '^\(!!\|??\|^A[^A]\|^ A\|^D.\) ' | sed 's/^...\(\S\+\)\(\s.*\)\?$/\1/' | head -c-1 | tr '\n' '|')"
+	assert_status "$({ printf '%s\n' "$expected_files" | grep -v '^\(??\) ' ; printf '%s\n' "$expected_files" | grep '^\(??\) ' ; } | grep -v '^\(  \|!!\) ' | sed 's/^\(...\S\+\)\(\s.*\)\?$/\1/' | head -c-1 | tr '\n' '|')"
+	printf '%s\n' "$expected_files" \
+	| while IFS= read -r line
+	do
+		stripped_line="$(printf '%s' "$line" | cut -c4-)"
+		if printf '%s' "$line" | grep -q '^\(UU\|AA\|D.\) '
+		then
+			# For now contents of conflicted files are not validated. It's probably not necessary to implement.
+			if [ "$(printf '%s' "$stripped_line" | awk '{printf NF}')" -ne 1 ]
+			then
+				printf 'Error in test: the file "%s" should not have content to check!\n' "$(printf '%s' "$stripped_line" | awk '{printf $1}')" 1>&3
+				return 1
+			fi
+		elif printf '%s' "$line" | grep -q '^\(!!\|??\| A\) '
+		then
+			if [ "$(printf '%s' "$stripped_line" | awk '{printf NF}')" -ne 2 ]
+			then
+				printf 'Error in test: the file "%s" should have 1 version of content to check!\n' "$(printf '%s' "$stripped_line" | awk '{printf $1}')" 1>&3
+				return 1
+			fi
+			assert_file_contents \
+				"$(printf '%s' "$stripped_line" | awk '{printf $1}')" \
+				"$(printf '%s' "$stripped_line" | awk '{printf $2}')"
+		elif printf '%s' "$line" | grep -q '^\(. \) '
+		then
+			if [ "$(printf '%s' "$stripped_line" | awk '{printf NF}')" -ne 2 ]
+			then
+				printf 'Error in test: the file "%s" should have 1 version of content to check!\n' "$(printf '%s' "$stripped_line" | awk '{printf $1}')" 1>&3
+				return 1
+			fi
+			assert_file_contents \
+				"$(printf '%s' "$stripped_line" | awk '{printf $1}')" \
+				"$(printf '%s' "$stripped_line" | awk '{printf $2}')" \
+				"$(printf '%s' "$stripped_line" | awk '{printf $2}')"
+		else
+			if [ "$(printf '%s' "$stripped_line" | awk '{printf NF}')" -ne 3 ]
+			then
+				printf 'Error in test: the file "%s" should have 2 versions of content to check!\n' "$(printf '%s' "$stripped_line" | awk '{printf $1}')" 1>&3
+				return 1
+			fi
+			assert_file_contents \
+				"$(printf '%s' "$stripped_line" | awk '{printf $1}')" \
+				"$(printf '%s' "$stripped_line" | awk '{printf $2}')" \
+				"$(printf '%s' "$stripped_line" | awk '{printf $3}')"
+		fi
+	done
+}
+
 assert_stash_count() { # expected
 	value_for_assert="$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)"
 	if [ "$value_for_assert" -ne "$1" ]

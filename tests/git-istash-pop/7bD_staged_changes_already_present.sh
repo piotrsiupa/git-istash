@@ -16,11 +16,10 @@ correct_head_hash="$(git rev-parse HEAD)"
 printf 'xxx\n' >aaa
 git add aaa
 assert_exit_code 1 git istash pop 1
-assert_all_files 'aaa|ignored'
-assert_tracked_files 'aaa'
-assert_status 'M  aaa'
-assert_file_contents aaa 'xxx' 'xxx'
-assert_file_contents ignored 'ignored'
+assert_files '
+M  aaa		xxx
+!! ignored	ignored
+'
 assert_stash_count 1
 assert_log_length 2
 assert_branch_count 1
