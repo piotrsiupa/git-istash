@@ -16,11 +16,10 @@ printf '#!/usr/bin/env sh\nexit 1\n' >.git/hooks/pre-rebase
 chmod +x .git/hooks/pre-rebase
 correct_head_hash="$(git rev-parse HEAD)"
 assert_exit_code 1 git istash pop
-assert_all_files 'aaa|ignored'
-assert_tracked_files 'aaa'
-assert_status ''
-assert_file_contents aaa 'ddd' 'ddd'
-assert_file_contents ignored 'ignored'
+assert_files '
+   aaa		ddd
+!! ignored	ignored
+'
 assert_stash_count 1
 assert_log_length 3
 assert_branch_count 1

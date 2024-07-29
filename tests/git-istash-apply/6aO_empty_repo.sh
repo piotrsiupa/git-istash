@@ -7,9 +7,9 @@ printf 'ignored\n' >>.git/info/exclude
 git switch --orphan ooo
 
 assert_exit_code 1 git istash apply
-assert_all_files 'ignored'
-assert_status ''
-assert_file_contents ignored 'ignored'
+assert_files '
+!! ignored	ignored
+'
 assert_stash_count 0
 assert_head_name '~ooo'
 assert_data_files 'none'
@@ -19,10 +19,10 @@ printf 'ddd\n' >aaa
 git add aaa
 printf 'eee\n' >aaa
 assert_exit_code 1 git istash apply
-assert_all_files 'aaa|ignored'
-assert_status 'AM aaa'
-assert_file_contents aaa 'eee' 'ddd'
-assert_file_contents ignored 'ignored'
+assert_files '
+AM aaa		eee	ddd
+!! ignored	ignored
+'
 assert_stash_count 0
 assert_branch_count 0
 assert_head_name '~ooo'

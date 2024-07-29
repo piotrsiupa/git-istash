@@ -13,10 +13,10 @@ git commit -am 'Changed aaa'
 correct_head_hash="$(git rev-parse HEAD)"
 assert_exit_code 2 capture_outputs git istash apply
 assert_conflict_message git istash apply
-assert_all_files 'aaa|ignored'
-assert_tracked_files 'aaa'
-assert_status 'UU aaa'
-assert_file_contents ignored 'ignored'
+assert_files '
+UU aaa		ddd|bbb
+!! ignored	ignored
+'
 assert_stash_count 1
 assert_branch_count 1
 assert_data_files 'apply'
@@ -28,10 +28,10 @@ git add aaa
 mv .git/ISTASH_TARGET .git/ISTASH_TARGET~
 printf 'fa4e08a58\n' >.git/ISTASH_TARGET
 assert_exit_code 1 git istash apply --continue
-assert_all_files 'aaa|ignored'
-assert_tracked_files 'aaa'
-assert_status 'M  aaa'
-assert_file_contents ignored 'ignored'
+assert_files '
+M  aaa		eee
+!! ignored	ignored
+'
 assert_stash_count 1
 assert_branch_count 1
 assert_head_hash "$correct_head_hash2"
@@ -40,11 +40,10 @@ assert_rebase y
 
 mv .git/ISTASH_TARGET~ .git/ISTASH_TARGET
 assert_exit_code 0 git istash apply --continue
-assert_all_files 'aaa|ignored'
-assert_tracked_files 'aaa'
-assert_status ' M aaa'
-assert_file_contents aaa 'eee' 'ddd'
-assert_file_contents ignored 'ignored'
+assert_files '
+ M aaa		eee	ddd
+!! ignored	ignored
+'
 assert_stash_count 1
 assert_log_length 3
 assert_branch_count 1

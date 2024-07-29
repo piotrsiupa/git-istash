@@ -16,10 +16,10 @@ assert_stash_count 0
 git switch --orphan ooo
 
 assert_exit_code 0 git istash apply later
-assert_all_files 'aaa|ignored'
-assert_status '?? aaa'
-assert_file_contents aaa 'ccc'
-assert_file_contents ignored 'ignored'
+assert_files '
+?? aaa		ccc
+!! ignored	ignored
+'
 assert_stash_count 0
 assert_branch_count 3
 assert_head_name '~ooo'
