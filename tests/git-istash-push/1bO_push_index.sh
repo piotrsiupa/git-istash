@@ -5,9 +5,9 @@ git switch --orphan ooo
 printf 'bbb\n' >aaa
 git add aaa
 assert_exit_code 0 git istash push
-assert_all_files 'ignored'
-assert_status ''
-assert_file_contents ignored 'ignored'
+assert_files '
+!! ignored	ignored
+'
 assert_stash_count 1
 assert_branch_count 1
 assert_head_name '~ooo'
@@ -17,11 +17,10 @@ assert_rebase n
 git switch master
 
 assert_exit_code 0 git stash pop --index
-assert_all_files 'aaa|ignored'
-assert_tracked_files ''
-assert_status 'A  aaa'
-assert_file_contents aaa 'bbb' 'bbb'
-assert_file_contents ignored 'ignored'
+assert_files '
+A  aaa		bbb
+!! ignored	ignored
+'
 assert_stash_count 0
 assert_log_length 1
 assert_branch_count 1
