@@ -16,6 +16,7 @@ print_help() {
 	printf '    -c, --color=when\t- Set color mode (always / never / auto).\n'
 	printf '        --raw-name\t- Print paths to test files instead of prettified names.\n'
 	printf '    -l, --limit=number\t- Set maximum number of tests to be run. (It pairs well\n\t\t\t  with "--failed" to e.g. rerun the first failed test.)\n'
+	printf '    -p, --print-paths\t- Instead of running tests, print their paths and exit.\n\t\t\t  (The paths are relative to the directory "tests".)\n'
 	printf '\n'
 	printf 'Filters:\n'
 	printf 'You can specify one or more filters in the command call. '
@@ -29,7 +30,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'test script version 1.1.0\n'
+	printf 'test script version 1.2.0\n'
 }
 
 print_color_code() { # code
@@ -154,6 +155,10 @@ run_test() { # test_name
 	fi
 }
 run_tests() {
+	if [ -z "$tests" ]
+	then
+		return 0
+	fi
 	if printf '' | sed --unbuffered 's/^/x/' 1>/dev/null 2>&1
 	then
 		sed_call='sed --unbuffered'
@@ -193,37 +198,45 @@ print_summary() {
 	print_centered 'Results' '='
 	print_color_code '\033[22m'
 	printf '\n'
-	i=0
-	printf '%s\n' "$tests" | xargs -rn1 -- dirname | uniq -c | awk '{$1=$1;print}' \
-	| while read -r category
-	do
-		i=$((i + 1))
-		total_in_category="$(printf '%s\n' "$category" | cut -d' ' -f1)"
-		passed_in_category="$(printf '%s' "$passed_tests" | head -n $i | tail -n 1)"
-		printf '%s: ' "$(printf '%s' "$category" | cut -d' ' -f2)"
-		if [ "$passed_in_category" -eq "$total_in_category" ]
-		then
-			print_color_code '\033[1;32;4m'
-			if [ "$total_in_category" -eq 1 ]
+	if [ -n "$tests" ]
+	then
+		i=0
+		printf '%s\n' "$tests" | xargs -rn1 -- dirname | uniq -c | awk '{$1=$1;print}' \
+		| while read -r category
+		do
+			i=$((i + 1))
+			total_in_category="$(printf '%s\n' "$category" | cut -d' ' -f1)"
+			passed_in_category="$(printf '%s' "$passed_tests" | head -n $i | tail -n 1)"
+			printf '%s: ' "$(printf '%s' "$category" | cut -d' ' -f2)"
+			if [ "$passed_in_category" -eq "$total_in_category" ]
 			then
-				printf 'Passed the test.'
+				print_color_code '\033[1;32;4m'
+				if [ "$total_in_category" -eq 1 ]
+				then
+					printf 'Passed the test.'
+				else
+					printf 'Passed all %i tests.' "$total_in_category"
+				fi
 			else
-				printf 'Passed all %i tests.' "$total_in_category"
+				print_color_code '\033[1;31;4m'
+				if [ "$total_in_category" -eq 1 ]
+				then
+					printf 'Failed the test.'
+				else
+					printf 'Passed %i out of %i tests.' "$passed_in_category" "$total_in_category"
+				fi
 			fi
-		else
-			print_color_code '\033[1;31;4m'
-			if [ "$total_in_category" -eq 1 ]
-			then
-				printf 'Failed the test.'
-			else
-				printf 'Passed %i out of %i tests.' "$passed_in_category" "$total_in_category"
-			fi
-		fi
-		print_color_code '\033[0m'
-		printf '\n'
-	done
+			print_color_code '\033[0m'
+			printf '\n'
+		done
+	fi
 	passed_tests=$(($(printf '%s' "$passed_tests" | tr '\n' '+')))
-	total_tests="$(printf '%s\n' "$tests" | wc -l)"
+	if [ -z "$tests" ]
+	then
+		total_tests=0
+	else
+		total_tests="$(printf '%s\n' "$tests" | wc -l)"
+	fi
 	if [ "$total_tests" -ne 0 ]
 	then
 		if [ "$passed_tests" -eq "$total_tests" ]
@@ -252,7 +265,7 @@ print_summary() {
 	printf '\n'
 }
 
-getopt_result="$(getopt -o'hfdqc:l:' --long='help,version,failed,debug,quiet,color:,raw,raw-name,file-name,limit:' -n"$(basename "$0")" -- "$@")"
+getopt_result="$(getopt -o'hfdqc:l:p' --long='help,version,failed,debug,quiet,color:,raw,raw-name,file-name,limit:,print-paths' -n"$(basename "$0")" -- "$@")"
 eval set -- "$getopt_result"
 only_failed=n
 debug_mode=n
@@ -260,6 +273,7 @@ quiet_mode=n
 use_color='auto'
 raw_name=n
 test_limit=0
+print_paths=n
 while true
 do
 	case "$1" in
@@ -309,6 +323,9 @@ do
 			exit 1
 		fi
 		;;
+	-p|--print-paths)
+		print_paths=y
+		;;
 	--)
 		shift
 		break
@@ -329,7 +346,12 @@ fi
 normalize_filter_entry() { # filter_entry
 	if [ -f "$1" ]
 	then
-		printf '%s' "$1" | sed 's;^.*/\([^/]\+/[^/]\+\)\.sh$;\1;'
+		printf '%s' "$1" \
+		| sed -e 's;^.*/\([^/]\+/[^/]\+\)$;\1;' \
+			-e 's;^[^/]\+$;./&;' \
+			-e "s;^\\./;$(basename "$(pwd)")/;" \
+			-e 's/\.sh$//' \
+			-e 's/^/^/'
 	else
 		printf '%s' "$1"
 	fi
@@ -348,11 +370,17 @@ else
 fi
 
 cd "$(dirname "$0")"
+tests="$(find_tests "$filter")"
+if [ "$print_paths" = y ]
+then
+	printf '%s' "$tests" | xargs -- printf '%s.sh\n'
+	exit 0
+fi
+
 cd '../bin'
 PATH="$(pwd):$PATH"
 cd "$OLDPWD"
 export PATH
-tests="$(find_tests "$filter")"
 run_tests
 print_summary
 [ "$total_tests" -ne 0 ] && [ "$passed_tests" -eq "$total_tests" ]

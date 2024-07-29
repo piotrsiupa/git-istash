@@ -23,16 +23,15 @@ correct_head_hash="$(git rev-parse HEAD)"
 cd xxx
 assert_exit_code 0 git istash apply
 cd ..
-assert_all_files 'aaa|ignored|xxx/aaa|xxx/zzz|yyy/aaa|yyy/zzz|zzz'
-assert_tracked_files 'aaa|xxx/aaa|yyy/aaa'
-assert_status 'MM aaa|MM xxx/aaa|MM yyy/aaa|?? xxx/zzz|?? yyy/zzz|?? zzz'
-assert_file_contents aaa 'ccc0' 'bbb0'
-assert_file_contents xxx/aaa 'ccc1' 'bbb1'
-assert_file_contents yyy/aaa 'ccc2' 'bbb2'
-assert_file_contents zzz 'zzz0'
-assert_file_contents xxx/zzz 'zzz1'
-assert_file_contents yyy/zzz 'zzz2'
-assert_file_contents ignored 'ignored'
+assert_files '
+MM aaa		ccc0	bbb0
+MM xxx/aaa	ccc1	bbb1
+MM yyy/aaa	ccc2	bbb2
+?? zzz		zzz0
+?? xxx/zzz	zzz1
+?? yyy/zzz	zzz2
+!! ignored	ignored
+'
 assert_stash_count 1
 assert_log_length 2
 assert_branch_count 1

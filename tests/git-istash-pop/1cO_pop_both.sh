@@ -8,10 +8,10 @@ git stash push
 git switch --orphan ooo
 
 assert_exit_code 0 git istash pop
-assert_all_files 'aaa|ignored'
-assert_status 'AM aaa'
-assert_file_contents aaa 'ccc' 'bbb'
-assert_file_contents ignored 'ignored'
+assert_files '
+AM aaa		ccc	bbb
+!! ignored	ignored
+'
 assert_stash_count 0
 assert_branch_count 1
 assert_head_name '~ooo'

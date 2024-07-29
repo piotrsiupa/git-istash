@@ -26,10 +26,12 @@ cd xxx
 assert_exit_code 2 capture_outputs git istash pop
 cd ..
 assert_conflict_message git istash pop
-assert_all_files 'aaa|ignored|xxx/aaa|yyy/aaa'
-assert_tracked_files ''
-assert_status 'DU aaa|DU xxx/aaa|DU yyy/aaa'
-assert_file_contents ignored 'ignored'
+assert_files '
+DU aaa		bbb0
+DU xxx/aaa	bbb1
+DU yyy/aaa	bbb2
+!! ignored	ignored
+'
 assert_stash_count 1
 assert_branch_count 2
 assert_data_files 'pop'
@@ -43,10 +45,15 @@ cd xxx
 assert_exit_code 2 capture_outputs git istash pop --continue
 cd ..
 assert_conflict_message git istash pop --continue
-assert_all_files 'aaa|ignored|xxx/aaa|xxx/zzz|yyy/aaa|yyy/zzz|zzz'
-assert_tracked_files 'aaa|xxx/aaa|yyy/aaa'
-assert_status 'UU aaa|UU xxx/aaa|A  xxx/zzz|UU yyy/aaa|A  yyy/zzz|A  zzz'
-assert_file_contents ignored 'ignored'
+assert_files '
+UU aaa		eee0|ccc0
+UU xxx/aaa	eee1|ccc1
+UU yyy/aaa	eee2|ccc2
+A  zzz		zzz0
+A  xxx/zzz	zzz1
+A  yyy/zzz	zzz2
+!! ignored	ignored
+'
 assert_stash_count 1
 assert_branch_count 2
 assert_data_files 'pop'
@@ -62,15 +69,15 @@ git add aaa xxx/aaa yyy/aaa zzz xxx/zzz yyy/zzz
 cd xxx
 assert_exit_code 0 git istash pop --continue
 cd ..
-assert_all_files 'aaa|ignored|xxx/aaa|xxx/zzz|yyy/aaa|yyy/zzz|zzz'
-assert_status 'AM aaa|AM xxx/aaa|AM yyy/aaa|?? xxx/zzz|?? yyy/zzz|?? zzz'
-assert_file_contents aaa 'fff0' 'eee0'
-assert_file_contents xxx/aaa 'fff1' 'eee1'
-assert_file_contents yyy/aaa 'fff2' 'eee2'
-assert_file_contents zzz 'xxx0'
-assert_file_contents xxx/zzz 'xxx1'
-assert_file_contents yyy/zzz 'xxx2'
-assert_file_contents ignored 'ignored'
+assert_files '
+AM aaa		fff0	eee0
+AM xxx/aaa	fff1	eee1
+AM yyy/aaa	fff2	eee2
+?? zzz		xxx0
+?? xxx/zzz	xxx1
+?? yyy/zzz	xxx2
+!! ignored	ignored
+'
 assert_stash_count 0
 assert_branch_count 1
 assert_head_name '~ooo'
