@@ -18,7 +18,7 @@ correct_head_hash="$(git rev-parse HEAD)"
 assert_exit_code 2 capture_outputs git istash pop
 assert_conflict_message git istash pop
 assert_files '
-UU aaa
+UU aaa		ddd|bbb
 !! ignored	ignored
 '
 assert_stash_count 1
@@ -30,7 +30,7 @@ printf 'eee\n' >aaa
 assert_exit_code 2 capture_outputs git istash pop --continue
 assert_conflict_message git istash pop
 assert_files '
-UU aaa
+UU aaa		eee
 !! ignored	ignored
 '
 assert_stash_count 1
@@ -42,7 +42,7 @@ git add aaa
 assert_exit_code 2 capture_outputs git istash pop --continue
 assert_conflict_message git istash pop --continue
 assert_files '
-UU aaa
+UU aaa		eee|ccc
 !! ignored	ignored
 '
 assert_stash_count 1
@@ -54,7 +54,7 @@ printf 'fff\n' >aaa
 assert_exit_code 2 capture_outputs git istash pop --continue
 assert_conflict_message git istash pop --continue
 assert_files '
-UU aaa
+UU aaa		fff
 !! ignored	ignored
 '
 assert_stash_count 1

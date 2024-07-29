@@ -13,7 +13,7 @@ git commit -am 'Changed aaa'
 assert_exit_code 2 capture_outputs git istash pop
 assert_conflict_message git istash pop
 assert_files '
-UU aaa
+UU aaa		ddd|bbb
 !! ignored	ignored
 '
 assert_stash_count 1

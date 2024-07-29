@@ -18,6 +18,8 @@ fi
 set -e
 
 # Setting up the test repository
+export GIT_CONFIG_SYSTEM=/dev/null
+export GIT_CONFIG_GLOBAL=/dev/null
 git init --initial-branch=master
 git config --local user.email 'test@localhost'
 git config --local user.name 'test'
@@ -117,18 +119,49 @@ assert_status() { # expected
 
 assert_file_contents() { # file expected_current [expected_staged]
 	value_for_assert="$(cat "$1")"
-	if [ "$value_for_assert" != "$2" ]
+	if printf '%s' "$2" | grep -q '|'
 	then
-		printf 'Expected content of file "%s" to be "%s" but it is "%s"!\n' "$1" "$2" "$value_for_assert" 1>&3
-		return 1
-	fi
-	if [ $# -eq 3 ]
-	then
-		value_for_assert="$(git show ":$1")"
-		if [ "$value_for_assert" != "$3" ]
+		ours_expected_contents="$(printf '%s' "$2" | cut -d'|' -f1)"
+		theirs_expected_contents="$(printf '%s' "$2" | cut -d'|' -f2)"
+		if [ "$(printf '%s\n' "$value_for_assert" | grep -c '^=\{7\}')" -ne 1 ]
 		then
-			printf 'Expected staged content of file "%s" to be "%s" but it is "%s"!\n' "$1" "$3" "$value_for_assert" 1>&3
+			printf 'Expected file "%s" contain exactly 1 conflict!\n' "$1" 1>&3
 			return 1
+		fi
+		if ! printf '%s\n' "$value_for_assert" | head -n1 | grep -q '^<\{7\} HEAD' || ! printf '%s\n' "$value_for_assert" | tail -n1 | grep -q '^>\{7\} '
+		then
+			printf 'Expected file "%s" to be comprised entirely from a conflict!\n' "$1" 1>&3
+			return 1
+		fi
+		sub_value_for_assert="$(printf '%s\n' "$value_for_assert" | tail -n+2 | sed '/^=\{7\}/ q' | head -n-1)"
+		if [ "$sub_value_for_assert" != "$ours_expected_contents" ]
+		then
+			printf 'Expected the HEAD side of the conflict in "%s" to be "%s" but it is "%s"!\n' "$1" "$ours_expected_contents" "$sub_value_for_assert" 1>&3
+			return 1
+		fi
+		sub_value_for_assert="$(printf '%s\n' "$value_for_assert" | head -n-1 | sed -n '/^=\{7\}/,$ p ' | tail -n+2)"
+		if [ "$sub_value_for_assert" != "$theirs_expected_contents" ]
+		then
+			printf 'Expected the stash side of the conflict in "%s" to be "%s" but it is "%s"!\n' "$1" "$theirs_expected_contents" "$sub_value_for_assert" 1>&3
+			return 1
+		fi
+		unset sub_value_for_assert
+		unset ours_expected_contents
+		unset theirs_expected_contents
+	else
+		if [ "$value_for_assert" != "$2" ]
+		then
+			printf 'Expected content of file "%s" to be "%s" but it is "%s"!\n' "$1" "$2" "$value_for_assert" 1>&3
+			return 1
+		fi
+		if [ $# -eq 3 ]
+		then
+			value_for_assert="$(git show ":$1")"
+			if [ "$value_for_assert" != "$3" ]
+			then
+				printf 'Expected staged content of file "%s" to be "%s" but it is "%s"!\n' "$1" "$3" "$value_for_assert" 1>&3
+				return 1
+			fi
 		fi
 	fi
 	unset value_for_assert
@@ -143,35 +176,24 @@ assert_files() { # expected_files (see one of the tests as an example)
 	| while IFS= read -r line
 	do
 		stripped_line="$(printf '%s' "$line" | cut -c4-)"
-		if printf '%s' "$line" | grep -q '^\(UU\|AA\|D.\) '
-		then
-			# For now contents of conflicted files are not validated. It's probably not necessary to implement.
-			if [ "$(printf '%s' "$stripped_line" | awk '{printf NF}')" -ne 1 ]
-			then
-				printf 'Error in test: the file "%s" should not have content to check!\n' "$(printf '%s' "$stripped_line" | awk '{printf $1}')" 1>&3
-				return 1
-			fi
-		elif printf '%s' "$line" | grep -q '^\(!!\|??\| A\) '
+		if printf '%s' "$line" | grep -q '^\(UU\|!!\|??\|.A\|D.\|. \) '
 		then
 			if [ "$(printf '%s' "$stripped_line" | awk '{printf NF}')" -ne 2 ]
 			then
 				printf 'Error in test: the file "%s" should have 1 version of content to check!\n' "$(printf '%s' "$stripped_line" | awk '{printf $1}')" 1>&3
 				return 1
 			fi
-			assert_file_contents \
-				"$(printf '%s' "$stripped_line" | awk '{printf $1}')" \
-				"$(printf '%s' "$stripped_line" | awk '{printf $2}')"
-		elif printf '%s' "$line" | grep -q '^\(. \) '
-		then
-			if [ "$(printf '%s' "$stripped_line" | awk '{printf NF}')" -ne 2 ]
+			if printf '%s' "$line" | grep -q '^\(. \) '
 			then
-				printf 'Error in test: the file "%s" should have 1 version of content to check!\n' "$(printf '%s' "$stripped_line" | awk '{printf $1}')" 1>&3
-				return 1
+				assert_file_contents \
+					"$(printf '%s' "$stripped_line" | awk '{printf $1}')" \
+					"$(printf '%s' "$stripped_line" | awk '{printf $2}')" \
+					"$(printf '%s' "$stripped_line" | awk '{printf $2}')"
+			else
+				assert_file_contents \
+					"$(printf '%s' "$stripped_line" | awk '{printf $1}')" \
+					"$(printf '%s' "$stripped_line" | awk '{printf $2}')"
 			fi
-			assert_file_contents \
-				"$(printf '%s' "$stripped_line" | awk '{printf $1}')" \
-				"$(printf '%s' "$stripped_line" | awk '{printf $2}')" \
-				"$(printf '%s' "$stripped_line" | awk '{printf $2}')"
 		else
 			if [ "$(printf '%s' "$stripped_line" | awk '{printf NF}')" -ne 3 ]
 			then

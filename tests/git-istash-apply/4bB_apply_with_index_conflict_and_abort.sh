@@ -15,7 +15,7 @@ correct_head_hash="$(git rev-parse HEAD)"
 assert_exit_code 2 capture_outputs git istash apply
 assert_conflict_message git istash apply
 assert_files '
-UU aaa
+UU aaa		ddd|bbb
 !! ignored	ignored
 '
 assert_stash_count 1

@@ -19,7 +19,7 @@ correct_head_hash="$(git rev-parse HEAD)"
 assert_exit_code 2 capture_outputs git istash pop
 assert_conflict_message git istash pop
 assert_files '
-UU aaa
+UU aaa		ddd|bbb
    zzz		yyy
 !! ignored	ignored
 '
@@ -33,8 +33,8 @@ git add aaa
 assert_exit_code 2 capture_outputs git istash pop --continue
 assert_conflict_message git istash pop --continue
 assert_files '
-UU aaa
-AA zzz
+UU aaa		eee|ccc
+AA zzz		yyy|zzz
 !! ignored	ignored
 '
 assert_stash_count 1

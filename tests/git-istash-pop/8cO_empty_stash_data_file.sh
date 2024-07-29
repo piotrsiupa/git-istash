@@ -12,7 +12,7 @@ git switch --orphan ooo
 assert_exit_code 2 capture_outputs git istash pop
 assert_conflict_message git istash pop
 assert_files '
-DU aaa
+DU aaa		bbb
 !! ignored	ignored
 '
 assert_stash_count 1

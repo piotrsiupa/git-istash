@@ -27,9 +27,9 @@ assert_exit_code 2 capture_outputs git istash pop
 cd ..
 assert_conflict_message git istash pop
 assert_files '
-DU aaa
-DU xxx/aaa
-DU yyy/aaa
+DU aaa		bbb0
+DU xxx/aaa	bbb1
+DU yyy/aaa	bbb2
 !! ignored	ignored
 '
 assert_stash_count 1
@@ -46,9 +46,9 @@ assert_exit_code 2 capture_outputs git istash pop --continue
 cd ..
 assert_conflict_message git istash pop --continue
 assert_files '
-UU aaa
-UU xxx/aaa
-UU yyy/aaa
+UU aaa		eee0|ccc0
+UU xxx/aaa	eee1|ccc1
+UU yyy/aaa	eee2|ccc2
 A  zzz		zzz0
 A  xxx/zzz	zzz1
 A  yyy/zzz	zzz2
