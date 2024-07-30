@@ -5,7 +5,7 @@ git add aaa
 git commit -m 'Added aaa'
 
 printf 'bbb\n' >aaa
-correct_head_hash="$(git rev-parse HEAD)"
+correct_head_hash="$(git rev-parse 'HEAD')"
 assert_exit_code 0 git istash push
 assert_files '
    aaa		aaa

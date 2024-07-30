@@ -8,7 +8,7 @@ printf 'bbb\n' >aaa
 git add aaa
 printf 'ccc\n' >aaa
 printf 'ddd\n' >ddd
-correct_head_hash="$(git rev-parse HEAD)"
+correct_head_hash="$(git rev-parse 'HEAD')"
 assert_exit_code 0 git istash push --no-include-untracked
 assert_files '
    aaa		aaa

@@ -15,7 +15,7 @@ assert_rebase n
 
 git switch -d HEAD
 
-correct_head_hash="$(git rev-parse HEAD)"
+correct_head_hash="$(git rev-parse 'HEAD')"
 printf 'bbb\n' >aaa
 assert_exit_code 0 git stash push
 assert_files '

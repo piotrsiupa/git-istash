@@ -20,7 +20,7 @@ printf 'zzz2\n' >yyy/zzz
 
 git switch -d HEAD
 
-correct_head_hash="$(git rev-parse HEAD)"
+correct_head_hash="$(git rev-parse 'HEAD')"
 cd xxx
 assert_exit_code 0 git stash push -u
 cd ..

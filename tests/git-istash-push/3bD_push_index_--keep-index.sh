@@ -8,7 +8,7 @@ git switch -d HEAD
 
 printf 'bbb\n' >aaa
 git add aaa
-correct_head_hash="$(git rev-parse HEAD)"
+correct_head_hash="$(git rev-parse 'HEAD')"
 assert_exit_code 0 git istash push --keep-index
 assert_files '
 M  aaa		bbb
