@@ -30,6 +30,14 @@ assert_files '
    yyy/aaa	aaa2
 !! ignored	ignored
 '
+assert_stash 0 '' '' '
+MM aaa		ccc0	bbb0
+MM xxx/aaa	ccc1	bbb1
+MM yyy/aaa	ccc2	bbb2
+?? zzz		zzz0
+?? xxx/zzz	zzz1
+?? yyy/zzz	zzz2
+'
 assert_stash_count 1
 assert_log_length 2
 assert_branch_count 1

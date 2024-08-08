@@ -12,6 +12,9 @@ A  aaa		bbb
 ?? ddd		ddd
 !! ignored	ignored
 '
+assert_stash 0 'ooo' '' '
+AM aaa		ccc	bbb
+'
 assert_stash_count 1
 assert_branch_count 1
 assert_head_name '~ooo'

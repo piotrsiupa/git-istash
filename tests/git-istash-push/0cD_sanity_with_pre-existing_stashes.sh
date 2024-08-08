@@ -30,6 +30,9 @@ assert_files '
    aaa		aaa
 !! ignored	ignored
 '
+assert_stash 0 '' '' '
+ M aaa		bbb	aaa
+'
 assert_stash_count 3
 assert_log_length 2
 assert_branch_count 1

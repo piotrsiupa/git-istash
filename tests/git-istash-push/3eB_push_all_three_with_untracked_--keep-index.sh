@@ -14,6 +14,10 @@ assert_files '
 M  aaa		bbb
 !! ignored	ignored
 '
+assert_stash 0 'master' '' '
+MM aaa		ccc	bbb
+?? ddd		ddd
+'
 assert_stash_count 1
 assert_log_length 2
 assert_branch_count 1

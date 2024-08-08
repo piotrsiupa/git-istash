@@ -11,6 +11,10 @@ assert_files '
 A  aaa		bbb
 !! ignored	ignored
 '
+assert_stash 0 'ooo' '' '
+AM aaa		ccc	bbb
+?? ddd		ddd
+'
 assert_stash_count 1
 assert_branch_count 1
 assert_head_name '~ooo'

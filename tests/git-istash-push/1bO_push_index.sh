@@ -8,6 +8,9 @@ assert_exit_code 0 git istash push
 assert_files '
 !! ignored	ignored
 '
+assert_stash 0 'ooo' '' '
+A  aaa		bbb
+'
 assert_stash_count 1
 assert_branch_count 1
 assert_head_name '~ooo'
