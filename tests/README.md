@@ -21,6 +21,11 @@ A helper file with utility functions for implementing tests.
 This script is **not** intended to be used outside of tests.
 It should be sourced at the beginning of each test file.
 
+### All other scripts
+
+At some point `commons.sh` has got too long and it was split into multiple files.
+They are sourced by `commons.sh` and they should be considered part of it.
+
 
 # Tests
 

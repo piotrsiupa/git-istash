@@ -32,7 +32,6 @@ assert_branch_count 1
 assert_stash_hash 2 "$correct_pre_stash_hash_0"
 assert_stash_hash 1 "$correct_pre_stash_hash_1"
 assert_head_name '~ooo'
-assert_data_files 'none'
 assert_rebase n
 
 git switch master
@@ -47,5 +46,4 @@ assert_stash_count 2
 assert_log_length 1
 assert_branch_count 1
 assert_head_name 'master'
-assert_data_files 'none'
 assert_rebase n

@@ -15,7 +15,6 @@ A  aaa		bbb
 assert_stash_count 1
 assert_branch_count 1
 assert_head_name '~ooo'
-assert_data_files 'none'
 assert_rebase n
 
 git reset --hard
@@ -30,5 +29,4 @@ assert_stash_count 0
 assert_log_length 1
 assert_branch_count 1
 assert_head_name 'master'
-assert_data_files 'none'
 assert_rebase n

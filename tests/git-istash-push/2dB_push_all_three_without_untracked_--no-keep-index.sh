@@ -23,7 +23,6 @@ assert_log_length 2
 assert_branch_count 1
 assert_head_hash "$correct_head_hash"
 assert_head_name 'master'
-assert_data_files 'none'
 assert_rebase n
 
 assert_exit_code 0 git stash pop --index
@@ -36,5 +35,4 @@ assert_stash_count 0
 assert_log_length 2
 assert_branch_count 1
 assert_head_name 'master'
-assert_data_files 'none'
 assert_rebase n

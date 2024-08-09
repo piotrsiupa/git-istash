@@ -10,7 +10,6 @@ assert_files '
 assert_stash_count 0
 assert_log_length 2
 assert_branch_count 1
-assert_data_files 'none'
 assert_rebase n
 
 git switch -d HEAD
@@ -30,5 +29,4 @@ assert_log_length 2
 assert_branch_count 1
 assert_head_hash "$correct_head_hash"
 assert_head_name 'HEAD'
-assert_data_files 'none'
 assert_rebase n

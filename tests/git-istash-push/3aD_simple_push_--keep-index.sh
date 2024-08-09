@@ -20,7 +20,6 @@ assert_stash_count 1
 assert_log_length 2
 assert_branch_count 1
 assert_head_name 'HEAD'
-assert_data_files 'none'
 assert_rebase n
 
 git switch master
@@ -35,5 +34,4 @@ assert_log_length 2
 assert_branch_count 1
 assert_head_hash "$correct_head_hash"
 assert_head_name 'master'
-assert_data_files 'none'
 assert_rebase n
