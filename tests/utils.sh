@@ -42,14 +42,14 @@ command_to_string() { # command [arguments...]
 	printf '"%s"' "$*"
 }
 
-_sanitize_for_bre() { # string
+sanitize_for_bre() { # string
 	printf '%s' "$1" | sed 's/[.*[\^$]/\&/g'
 }
 
-_make_stash_name_regex() { # stash_name
+make_stash_name_regex() { # stash_name
 	if [ -n "$1" ]
 	then
-		_sanitize_for_bre "$1"
+		sanitize_for_bre "$1"
 	else
 		printf '%s' '(no branch)'
 	fi

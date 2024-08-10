@@ -49,17 +49,17 @@ assert_stash_structure() { # stash_num expected_to_have_untracked
 	unset value_for_assert
 }
 
-_make_parent_summary_regex() { # stash_num
-	_sanitize_for_bre "$(git rev-list --no-commit-header --format='%h %s' --max-count=1 "stash@{$1}~")"
+make_parent_summary_regex() { # stash_num
+	sanitize_for_bre "$(git rev-list --no-commit-header --format='%h %s' --max-count=1 "stash@{$1}~")"
 }
 
 assert_stash_top_message() { # stash_num expected_branch_name expeted_stash_name
 	value_for_assert="$(git rev-list --format=%B --max-count=1 --no-commit-header "stash@{$1}")"
 	if [ -z "$3" ]
 	then
-		expected_value_regex="WIP on $(_make_stash_name_regex "$2"): $(_make_parent_summary_regex "$1")"
+		expected_value_regex="WIP on $(make_stash_name_regex "$2"): $(make_parent_summary_regex "$1")"
 	else
-		expected_value_regex="On $(_make_stash_name_regex "$2"): $(_sanitize_for_bre "$3")$"
+		expected_value_regex="On $(make_stash_name_regex "$2"): $(sanitize_for_bre "$3")$"
 	fi
 	if printf '%s\n' "$value_for_assert" | grep -xvq "$expected_value_regex"
 	then
@@ -74,7 +74,7 @@ assert_stash_top_message() { # stash_num expected_branch_name expeted_stash_name
 
 assert_stash_index_message() { # stash_num expected_branch_name
 	value_for_assert="$(git rev-list --format=%B --max-count=1 --no-commit-header "stash@{$1}^2")"
-	expected_value_regex="index on $(_make_stash_name_regex "$2"): $(_make_parent_summary_regex "$1")"
+	expected_value_regex="index on $(make_stash_name_regex "$2"): $(make_parent_summary_regex "$1")"
 	if printf '%s\n' "$value_for_assert" | grep -xvq "$expected_value_regex"
 	then
 		printf 'The message on the stash commit with index is different than expected!\n' 1>&3
@@ -87,7 +87,7 @@ assert_stash_index_message() { # stash_num expected_branch_name
 
 assert_stash_untracked_message() { # stash_num expected_branch_name
 	value_for_assert="$(git rev-list --format=%B --max-count=1 --no-commit-header "stash@{$1}^3")"
-	expected_value_regex="untracked files on $(_make_stash_name_regex "$2"): $(_make_parent_summary_regex "$1")"
+	expected_value_regex="untracked files on $(make_stash_name_regex "$2"): $(make_parent_summary_regex "$1")"
 	if printf '%s\n' "$value_for_assert" | grep -xvq "$expected_value_regex"
 	then
 		printf 'The message on the stash commit with untracked files is different than expected!\n' 1>&3
