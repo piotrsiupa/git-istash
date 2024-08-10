@@ -154,6 +154,20 @@ run_test() { # test_name
 		return 1
 	fi
 }
+update_current_category() { # test_name
+	current_category="$(dirname "$1")"
+	if [ "$current_category" != "$previous_category" ]
+	then
+		previous_category="$current_category"
+		{
+			print_color_code '\033[1m'
+			print_centered "$current_category" '-'
+			print_color_code '\033[22m'
+			printf '\n'
+		} 1>&4
+		printf '%s\n' "$current_category"
+	fi
+}
 run_tests() {
 	if [ -z "$tests" ]
 	then
@@ -172,18 +186,7 @@ run_tests() {
 		printf '%s\n' "$tests" \
 		| while read -r test_name
 		do
-			current_category="$(dirname "$test_name")"
-			if [ "$current_category" != "$previous_category" ]
-			then
-				previous_category="$current_category"
-				{
-					print_color_code '\033[1m'
-					print_centered "$current_category" '-'
-					print_color_code '\033[22m'
-					printf '\n'
-				} 1>&4
-				printf '%s\n' "$current_category"
-			fi
+			update_current_category "$test_name"
 			if run_test "$test_name" 1>&4
 			then
 				printf '%s\n' "$current_category"
