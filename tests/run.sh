@@ -184,10 +184,10 @@ run_tests() {
 	exec 4>&1
 	passed_tests="$(
 		previous_category=''
-		if [ "$jobs_num" -eq 1 ]
+		printf '%s\n' "$tests" \
+		| if [ "$jobs_num" -eq 1 ]
 		then
-			printf '%s\n' "$tests" \
-			| while read -r test_name
+			while read -r test_name
 			do
 				update_current_category "$test_name"
 				if run_test "$test_name" 1>&4
@@ -198,8 +198,7 @@ run_tests() {
 		else
 			running_tests_count=0
 			running_tests_data=''
-			printf '%s\n' "$tests" \
-			| while true
+			while true
 			do
 				while [ $running_tests_count -ne "$jobs_num" ]
 				do
