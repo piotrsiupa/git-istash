@@ -17,6 +17,7 @@ print_help() {
 	printf '        --raw-name\t- Print paths to test files instead of prettified names.\n'
 	printf '    -l, --limit=number\t- Set maximum number of tests to be run. (It pairs well\n\t\t\t  with "--failed" to e.g. rerun the first failed test.)\n'
 	printf '    -p, --print-paths\t- Instead of running tests, print their paths and exit.\n\t\t\t  (The paths are relative to the directory "tests".)\n'
+	printf '    -j, --jobs=N\t- Run N tests in parallel. (default is sequentially)\n\t\t\t  N=0 uses all available processing units. ("nproc")\n'
 	printf '\n'
 	printf 'Filters:\n'
 	printf 'You can specify one or more filters in the command call. '
@@ -30,7 +31,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'test script version 1.2.0\n'
+	printf 'test script version 1.3.0\n'
 }
 
 print_color_code() { # code
@@ -154,6 +155,20 @@ run_test() { # test_name
 		return 1
 	fi
 }
+update_current_category() { # test_name
+	current_category="$(dirname "$1")"
+	if [ "$current_category" != "$previous_category" ]
+	then
+		previous_category="$current_category"
+		{
+			print_color_code '\033[1m'
+			print_centered "$current_category" '-'
+			print_color_code '\033[22m'
+			printf '\n'
+		} 1>&4
+		printf '%s\n' "$current_category"
+	fi
+}
 run_tests() {
 	if [ -z "$tests" ]
 	then
@@ -170,25 +185,51 @@ run_tests() {
 	passed_tests="$(
 		previous_category=''
 		printf '%s\n' "$tests" \
-		| while read -r test_name
-		do
-			current_category="$(dirname "$test_name")"
-			if [ "$current_category" != "$previous_category" ]
-			then
-				previous_category="$current_category"
-				{
-					print_color_code '\033[1m'
-					print_centered "$current_category" '-'
-					print_color_code '\033[22m'
-					printf '\n'
-				} 1>&4
-				printf '%s\n' "$current_category"
-			fi
-			if run_test "$test_name" 1>&4
-			then
-				printf '%s\n' "$current_category"
-			fi
-		done | uniq -c | awk '{print $1 - 1}'
+		| if [ "$jobs_num" -eq 1 ]
+		then
+			while read -r test_name
+			do
+				update_current_category "$test_name"
+				if run_test "$test_name" 1>&4
+				then
+					printf '%s\n' "$current_category"
+				fi
+			done
+		else
+			running_tests_count=0
+			running_tests_data=''
+			while true
+			do
+				while [ $running_tests_count -ne "$jobs_num" ]
+				do
+					if ! read -r test_name
+					then
+						break
+					fi
+					result_file="$(mktemp)"
+					{ run_test "$test_name" && printf '0\n' || printf '1\n' ; } 1>"$result_file" 2>&1 &
+					running_tests_count=$((running_tests_count + 1))
+					running_tests_data="$(printf '%s\n%i %s %s' "$running_tests_data" $! "$result_file" "$test_name" | sed '/^\s*$/ d')"
+				done
+				update_current_category "$(printf '%s\n' "$running_tests_data" | head -n1 | cut -d' ' -f3-)"
+				wait "$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f1)"
+				result_file="$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f2)"
+				head -n-1 "$result_file" | grep '^\t' 1>&2 || true
+				head -n-1 "$result_file" | grep -v '^\t' 1>&4
+				if [ "$(tail -n1 "$result_file")" = '0' ]
+				then
+					printf '%s\n' "$current_category"
+				fi
+				rm -f "$result_file"
+				running_tests_count=$((running_tests_count - 1))
+				running_tests_data="$(printf '%s\n' "$running_tests_data" | tail -n+2)"
+				if [ $running_tests_count -eq 0 ]
+				then
+					break
+				fi
+			done
+		fi \
+		| uniq -c | awk '{print $1 - 1}'
 	)"
 	exec 4>&-
 }
@@ -230,11 +271,12 @@ print_summary() {
 			printf '\n'
 		done
 	fi
-	passed_tests=$(($(printf '%s' "$passed_tests" | tr '\n' '+')))
 	if [ -z "$tests" ]
 	then
+		passed_tests=0
 		total_tests=0
 	else
+		passed_tests=$(($(printf '%s' "$passed_tests" | tr '\n' '+')))
 		total_tests="$(printf '%s\n' "$tests" | wc -l)"
 	fi
 	if [ "$total_tests" -ne 0 ]
@@ -265,7 +307,7 @@ print_summary() {
 	printf '\n'
 }
 
-getopt_result="$(getopt -o'hfdqc:l:p' --long='help,version,failed,debug,quiet,color:,raw,raw-name,file-name,limit:,print-paths' -n"$(basename "$0")" -- "$@")"
+getopt_result="$(getopt -o'hfdqc:l:pj:' --long='help,version,failed,debug,quiet,color:,raw,raw-name,file-name,limit:,print-paths,jobs:' -n"$(basename "$0")" -- "$@")"
 eval set -- "$getopt_result"
 only_failed=n
 debug_mode=n
@@ -274,6 +316,7 @@ use_color='auto'
 raw_name=n
 test_limit=0
 print_paths=n
+jobs_num=1
 while true
 do
 	case "$1" in
@@ -325,6 +368,21 @@ do
 		;;
 	-p|--print-paths)
 		print_paths=y
+		;;
+	-j|--jobs)
+		shift
+		if [ "$1" -eq "$1" ] 2>/dev/null && [ "$1" -ge 0 ]
+		then
+			if [ "$1" -eq 0 ]
+			then
+				jobs_num="$(nproc)"
+			else
+				jobs_num="$1"
+			fi
+		else
+			printf '"%s" is not a valid number of tests (a non-negative integer).\n' "$1" 1>&2
+			exit 1
+		fi
 		;;
 	--)
 		shift
