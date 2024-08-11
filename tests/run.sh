@@ -208,14 +208,15 @@ run_tests() {
 						break
 					fi
 					result_file="$(mktemp)"
-					{ run_test "$test_name" && printf '0\n' || printf '1\n' ; } >"$result_file" &
+					{ run_test "$test_name" && printf '0\n' || printf '1\n' ; } 1>"$result_file" 2>&1 &
 					running_tests_count=$((running_tests_count + 1))
 					running_tests_data="$(printf '%s\n%i %s %s' "$running_tests_data" $! "$result_file" "$test_name" | sed '/^\s*$/ d')"
 				done
 				update_current_category "$(printf '%s\n' "$running_tests_data" | head -n1 | cut -d' ' -f3-)"
 				wait "$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f1)"
 				result_file="$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f2)"
-				head -n-1 "$result_file" 1>&4
+				head -n-1 "$result_file" | grep '^\t' 1>&2
+				head -n-1 "$result_file" | grep -v '^\t' 1>&4
 				if [ "$(tail -n1 "$result_file")" = '0' ]
 				then
 					printf '%s\n' "$current_category"
