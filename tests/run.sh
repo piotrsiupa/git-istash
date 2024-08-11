@@ -201,7 +201,7 @@ run_tests() {
 			printf '%s\n' "$tests" \
 			| while true
 			do
-				while [ $running_tests_count -ne $jobs_num ]
+				while [ $running_tests_count -ne "$jobs_num" ]
 				do
 					if ! read -r test_name
 					then
@@ -272,11 +272,12 @@ print_summary() {
 			printf '\n'
 		done
 	fi
-	passed_tests=$(($(printf '%s' "$passed_tests" | tr '\n' '+')))
 	if [ -z "$tests" ]
 	then
+		passed_tests=0
 		total_tests=0
 	else
+		passed_tests=$(($(printf '%s' "$passed_tests" | tr '\n' '+')))
 		total_tests="$(printf '%s\n' "$tests" | wc -l)"
 	fi
 	if [ "$total_tests" -ne 0 ]
