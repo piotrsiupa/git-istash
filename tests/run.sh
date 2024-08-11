@@ -215,7 +215,7 @@ run_tests() {
 				update_current_category "$(printf '%s\n' "$running_tests_data" | head -n1 | cut -d' ' -f3-)"
 				wait "$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f1)"
 				result_file="$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f2)"
-				head -n-1 "$result_file" | grep '^\t' 1>&2
+				head -n-1 "$result_file" | grep '^\t' 1>&2 || true
 				head -n-1 "$result_file" | grep -v '^\t' 1>&4
 				if [ "$(tail -n1 "$result_file")" = '0' ]
 				then
