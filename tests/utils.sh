@@ -43,7 +43,7 @@ command_to_string() { # command [arguments...]
 }
 
 sanitize_for_bre() { # string
-	printf '%s' "$1" | sed 's/[.*[\^$]/\&/g'
+	printf '%s' "$1" | sed 's/[.*[\^$]/\\&/g'
 }
 
 make_stash_name_regex() { # stash_name

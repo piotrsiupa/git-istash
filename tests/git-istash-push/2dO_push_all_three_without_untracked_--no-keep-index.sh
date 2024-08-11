@@ -6,12 +6,12 @@ printf 'bbb\n' >aaa
 git add aaa
 printf 'ccc\n' >aaa
 printf 'ddd\n' >ddd
-assert_exit_code 0 git istash push --no-include-untracked --no-keep-index
+assert_exit_code 0 git istash push --no-include-untracked --no-keep-index -m 'a stash name'
 assert_files '
 ?? ddd		ddd
 !! ignored	ignored
 '
-assert_stash 0 'ooo' '' '
+assert_stash 0 'ooo' 'a stash name' '
 AM aaa		ccc	bbb
 '
 assert_stash_count 1

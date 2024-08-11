@@ -4,12 +4,12 @@ git switch --orphan ooo
 
 printf 'bbb\n' >aaa
 git add aaa
-assert_exit_code 0 git istash push --keep-index
+assert_exit_code 0 git istash push --keep-index -m 'just a name'
 assert_files '
 A  aaa		bbb
 !! ignored	ignored
 '
-assert_stash 0 'ooo' '' '
+assert_stash 0 'ooo' 'just a name' '
 A  aaa		bbb
 '
 assert_stash_count 1

@@ -17,13 +17,15 @@ printf 'bbb\n' >aaa
 git add aaa
 printf 'ccc\n' >aaa
 printf 'ddd\n' >ddd
-assert_exit_code 0 git istash push --no-keep-index
+#shellcheck disable=SC2016
+assert_exit_code 0 git istash push --no-keep-index --message 'name with fancy characters %^&*@^*($!(@!$41:{}:">?[.'
 assert_files '
    aaa		aaa
 ?? ddd		ddd
 !! ignored	ignored
 '
-assert_stash 0 'master' '' '
+#shellcheck disable=SC2016
+assert_stash 0 'master' 'name with fancy characters %^&*@^*($!(@!$41:{}:">?[.' '
 MM aaa		ccc	bbb
 '
 assert_stash_count 3

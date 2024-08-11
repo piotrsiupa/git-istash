@@ -24,12 +24,12 @@ correct_pre_stash_hash_0="$(git rev-parse 'stash@{1}')"
 correct_pre_stash_hash_1="$(git rev-parse 'stash@{0}')"
 correct_head_hash="$(git rev-parse 'HEAD')"
 printf 'bbb\n' >aaa
-assert_exit_code 0 git stash push
+assert_exit_code 0 git stash push -m 'some name'
 assert_files '
    aaa		aaa
 !! ignored	ignored
 '
-assert_stash 0 '' '' '
+assert_stash 0 '' 'some name' '
  M aaa		bbb	aaa
 '
 assert_stash_count 3

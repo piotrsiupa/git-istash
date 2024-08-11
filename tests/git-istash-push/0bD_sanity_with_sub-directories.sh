@@ -22,7 +22,7 @@ git switch -d HEAD
 
 correct_head_hash="$(git rev-parse 'HEAD')"
 cd xxx
-assert_exit_code 0 git stash push -u
+assert_exit_code 0 git stash push -u -m 'name'
 cd ..
 assert_files '
    aaa		aaa0
@@ -30,7 +30,7 @@ assert_files '
    yyy/aaa	aaa2
 !! ignored	ignored
 '
-assert_stash 0 '' '' '
+assert_stash 0 '' 'name' '
 MM aaa		ccc0	bbb0
 MM xxx/aaa	ccc1	bbb1
 MM yyy/aaa	ccc2	bbb2

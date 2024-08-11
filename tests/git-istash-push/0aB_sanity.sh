@@ -15,12 +15,12 @@ assert_rebase n
 
 correct_head_hash="$(git rev-parse 'HEAD')"
 printf 'bbb\n' >aaa
-assert_exit_code 0 git stash push
+assert_exit_code 0 git stash push --message 'name'
 assert_files '
    aaa		aaa
 !! ignored	ignored
 '
-assert_stash 0 'master' '' '
+assert_stash 0 'master' 'name' '
  M aaa		bbb	aaa
 '
 assert_stash_count 1

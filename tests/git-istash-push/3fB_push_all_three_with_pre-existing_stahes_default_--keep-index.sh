@@ -17,13 +17,13 @@ printf 'bbb\n' >aaa
 git add aaa
 printf 'ccc\n' >aaa
 printf 'ddd\n' >ddd
-assert_exit_code 0 git istash push --keep-index
+assert_exit_code 0 git istash push --keep-index --message='the new stash'
 assert_files '
 M  aaa		bbb
 ?? ddd		ddd
 !! ignored	ignored
 '
-assert_stash 0 'master' '' '
+assert_stash 0 'master' 'the new stash' '
 MM aaa		ccc	bbb
 '
 assert_stash_count 3

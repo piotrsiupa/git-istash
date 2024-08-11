@@ -15,7 +15,7 @@ printf 'zzz2\n' >yyy/zzz
 git switch --orphan ooo
 
 cd xxx
-if git stash push -u
+if git stash push -u --message 'some name'
 then
 	# This doesn't work in normal `git stash`
 	exit 1

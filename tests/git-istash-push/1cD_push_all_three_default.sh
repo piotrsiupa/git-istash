@@ -11,13 +11,13 @@ git add aaa
 printf 'ccc\n' >aaa
 printf 'ddd\n' >ddd
 correct_head_hash="$(git rev-parse 'HEAD')"
-assert_exit_code 0 git istash push
+assert_exit_code 0 git istash push --message 'name'
 assert_files '
    aaa		aaa
 ?? ddd		ddd
 !! ignored	ignored
 '
-assert_stash 0 '' '' '
+assert_stash 0 '' 'name' '
 MM aaa		ccc	bbb
 '
 assert_stash_count 1

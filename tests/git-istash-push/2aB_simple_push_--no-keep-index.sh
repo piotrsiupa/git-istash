@@ -6,12 +6,12 @@ git commit -m 'Added aaa'
 
 printf 'bbb\n' >aaa
 correct_head_hash="$(git rev-parse 'HEAD')"
-assert_exit_code 0 git istash push --no-keep-index
+assert_exit_code 0 git istash push --no-keep-index -m'some stash name'
 assert_files '
    aaa		aaa
 !! ignored	ignored
 '
-assert_stash 0 'master' '' '
+assert_stash 0 'master' 'some stash name' '
  M aaa		bbb	aaa
 '
 assert_stash_count 1

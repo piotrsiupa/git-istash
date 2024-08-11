@@ -19,12 +19,12 @@ printf 'bbb\n' >aaa
 git add aaa
 printf 'ccc\n' >aaa
 printf 'ddd\n' >ddd
-assert_exit_code 0 git istash push
+assert_exit_code 0 git istash push --message='some fancy name'
 assert_files '
 ?? ddd		ddd
 !! ignored	ignored
 '
-assert_stash 0 'ooo' '' '
+assert_stash 0 'ooo' 'some fancy name' '
 AM aaa		ccc	bbb
 '
 assert_stash_count 3

@@ -9,12 +9,12 @@ git add aaa
 printf 'ccc\n' >aaa
 printf 'ddd\n' >ddd
 correct_head_hash="$(git rev-parse 'HEAD')"
-assert_exit_code 0 git istash push -u --no-keep-index
+assert_exit_code 0 git istash push -u --no-keep-index -m 'a name with weird characters $%@*^&Q$*)(:><">{":.;['
 assert_files '
    aaa		aaa
 !! ignored	ignored
 '
-assert_stash 0 'master' '' '
+assert_stash 0 'master' 'a name with weird characters $%@*^&Q$*)(:><">{":.;[' '
 MM aaa		ccc	bbb
 ?? ddd		ddd
 '

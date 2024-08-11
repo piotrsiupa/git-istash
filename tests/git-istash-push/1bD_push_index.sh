@@ -9,12 +9,12 @@ git switch -d HEAD
 printf 'bbb\n' >aaa
 git add aaa
 correct_head_hash="$(git rev-parse 'HEAD')"
-assert_exit_code 0 git istash push
+assert_exit_code 0 git istash push -m 'new stash'
 assert_files '
    aaa		aaa
 !! ignored	ignored
 '
-assert_stash 0 '' '' '
+assert_stash 0 '' 'new stash' '
 M  aaa		bbb
 '
 assert_stash_count 1
