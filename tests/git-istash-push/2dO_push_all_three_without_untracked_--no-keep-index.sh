@@ -14,6 +14,7 @@ assert_files '
 assert_stash 0 'ooo' 'a stash name' '
 AM aaa		ccc	bbb
 '
+assert_stash_base 0 '' 'ooo'
 assert_stash_count 1
 assert_branch_count 1
 assert_head_name '~ooo'

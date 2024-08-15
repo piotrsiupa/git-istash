@@ -26,6 +26,7 @@ M  aaa		bbb
 assert_stash 0 'master' 'the new stash' '
 MM aaa		ccc	bbb
 '
+assert_stash_base 0 'HEAD'
 assert_stash_count 3
 assert_log_length 2
 assert_branch_count 1

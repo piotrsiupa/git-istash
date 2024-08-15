@@ -27,6 +27,7 @@ assert_files '
 assert_stash 0 'ooo' 'some fancy name' '
 AM aaa		ccc	bbb
 '
+assert_stash_base 0 '' 'ooo'
 assert_stash_count 3
 assert_branch_count 1
 assert_stash_hash 2 "$correct_pre_stash_hash_0"

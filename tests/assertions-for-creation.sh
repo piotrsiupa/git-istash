@@ -57,6 +57,7 @@ assert_stash_index_message() { # stash_num expected_branch_name
 	expected_value_regex="index on $(make_stash_name_regex "$2"): $(make_parent_summary_regex "$1")"
 	! printf '%s\n' "$value_for_assert" | grep -xvq "$expected_value_regex" ||
 		fail 'The message on the stash commit with index is different than expected!\n(It'\''s "%s".)\n(It should match "%s".)\n' "$value_for_assert" "$expected_value_regex"
+	unset expected_value_regex
 	unset value_for_assert
 }
 
@@ -65,6 +66,7 @@ assert_stash_untracked_message() { # stash_num expected_branch_name
 	expected_value_regex="untracked files on $(make_stash_name_regex "$2"): $(make_parent_summary_regex "$1")"
 	! printf '%s\n' "$value_for_assert" | grep -xvq "$expected_value_regex" ||
 		fail 'The message on the stash commit with untracked files is different than expected!\n(It'\''s "%s".)\n(It should match "%s".)\n' "$value_for_assert" "$expected_value_regex"
+	unset expected_value_regex
 	unset value_for_assert
 }
 
@@ -168,4 +170,34 @@ assert_stash() { # stash_num expected_branch_name expected_stash_name expected_f
 	assert_stash_messages "$1" "$2" "$expect_untracked" "$3"
 	assert_stash_files "$1" "$expect_untracked" "$4"
 	unset expect_untracked
+}
+
+assert_stash_base() { # stash_num expected_base [expected_branch_name]
+	git rev-parse --verify "stash@{$1}{commit}" 1>/dev/null ||
+		fail 'There is no stash number %i!\n' "$1"
+	if [ -n "$2" ]
+	then
+		value_for_assert="$(git rev-parse "stash@{$1}^1")"
+		expected_value="$(git rev-parse "$2")" ||
+			fail 'There is no commit "%s"!\n' "$2"
+		test "$value_for_assert" = "$expected_value" ||
+			if [ "$expected_value" = "$2" ]
+			then
+				fail 'Expected the base of the "stash@{%i}" to be "%s" but it is "%s"!\n' "$1" "$expected_value" "$value_for_assert"
+			else
+				fail 'Expected the base of the "stash@{%i}" to be "%s" ("%s") but it is "%s"!\n' "$1" "$2" "$expected_value" "$value_for_assert"
+			fi
+		unset value_for_assert
+		unset expected_value
+	else
+		value_for_assert="$(git rev-list --no-walk --count "stash@{$1}^1^@")"
+		test "$value_for_assert" -eq 0 ||
+			fail '"%s" should have no parents but it has %i!\n' "stash@{$1}" "$value_for_assert"
+		value_for_assert="$(git rev-list --format=%B --max-count=1 --no-commit-header "stash@{$1}^1")"
+		expected_value_regex="Base commit for stash entry on an orphan branch \"$(sanitize_for_bre "$3")\""
+		! printf '%s\n' "$value_for_assert" | grep -xvq "$expected_value_regex" ||
+			fail 'The message on the stash commit with untracked files is different than expected!\n(It'\''s "%s".)\n(It should match "%s".)\n' "$value_for_assert" "$expected_value_regex"
+		unset expected_value_regex
+		unset value_for_assert
+	fi
 }

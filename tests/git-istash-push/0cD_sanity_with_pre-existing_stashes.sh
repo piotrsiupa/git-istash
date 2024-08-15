@@ -32,6 +32,7 @@ assert_files '
 assert_stash 0 '' 'some name' '
  M aaa		bbb	aaa
 '
+assert_stash_base 0 'HEAD'
 assert_stash_count 3
 assert_log_length 2
 assert_branch_count 1
