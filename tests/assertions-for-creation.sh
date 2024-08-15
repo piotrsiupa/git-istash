@@ -8,11 +8,8 @@ fi
 
 
 assert_stash_structure() { # stash_num expected_to_have_untracked
-	if ! git rev-parse --quiet --verify "stash@{$1}^{commit}" 1>/dev/null
-	then
-		printf '"%s" is not a valid commit!\n' "stash@{$1}" 1>&3
-		return 1
-	fi
+	git rev-parse --quiet --verify "stash@{$1}^{commit}" 1>/dev/null ||
+		fail '"%s" is not a valid commit!\n' "stash@{$1}"
 	if [ "$2" = y ]
 	then
 		expected_value=3
@@ -20,31 +17,19 @@ assert_stash_structure() { # stash_num expected_to_have_untracked
 		expected_value=2
 	fi
 	value_for_assert="$(git rev-list --no-walk --count "stash@{$1}^@")"
-	if [ "$value_for_assert" -ne "$expected_value" ]
-	then
-		printf '"%s" should have %i parents but it has %i!\n' "stash@{$1}" "$expected_value" "$value_for_assert" 1>&3
-		return 1
-	fi
+	test "$value_for_assert" -eq "$expected_value" ||
+		fail '"%s" should have %i parents but it has %i!\n' "stash@{$1}" "$expected_value" "$value_for_assert"
 	value_for_assert="$(git rev-list --no-walk --count "stash@{$1}^2^@")"
-	if [ "$value_for_assert" -ne 1 ]
-	then
-		printf '"%s" should have 1 parent but it has %i!\n' "stash@{$1}^2" "$value_for_assert" 1>&3
-		return 1
-	fi
+	test "$value_for_assert" -eq 1 ||
+		fail '"%s" should have 1 parent but it has %i!\n' "stash@{$1}^2" "$value_for_assert"
 	if [ "$2" = y ]
 	then
 		value_for_assert="$(git rev-list --no-walk --count "stash@{$1}^3^@")"
-		if [ "$value_for_assert" -ne 0 ]
-		then
-			printf '"%s" should have 0 parents but it has %i!\n' "stash@{$1}^2" "$value_for_assert" 1>&3
-			return 1
-		fi
+		test "$value_for_assert" -eq 0 ||
+			fail '"%s" should have 0 parents but it has %i!\n' "stash@{$1}^2" "$value_for_assert"
 	fi
-	if [ "$(git rev-parse "stash@{$1}^1")" != "$(git rev-parse "stash@{$1}^2^1")" ]
-	then
-		printf '"%s" and "%s" are different commits!\n' "stash@{$1}^1" "stash@{$1}^2^1" 1>&3
-		return 1
-	fi
+	test "$(git rev-parse "stash@{$1}^1")" = "$(git rev-parse "stash@{$1}^2^1")" ||
+		fail '"%s" and "%s" are different commits!\n' "stash@{$1}^1" "stash@{$1}^2^1"
 	unset expected_value
 	unset value_for_assert
 }
@@ -59,15 +44,10 @@ assert_stash_top_message() { # stash_num expected_branch_name expeted_stash_name
 	then
 		expected_value_regex="WIP on $(make_stash_name_regex "$2"): $(make_parent_summary_regex "$1")"
 	else
-		expected_value_regex="On $(make_stash_name_regex "$2"): $(sanitize_for_bre "$3")$"
+		expected_value_regex="On $(make_stash_name_regex "$2"): $(sanitize_for_bre "$3")"
 	fi
-	if printf '%s\n' "$value_for_assert" | grep -xvq "$expected_value_regex"
-	then
-		printf 'The message on the top stash commit is different than expected!\n' 1>&3
-		printf '(It'\''s "%s".)\n' "$value_for_assert" 1>&3
-		printf '(It should match "%s".)\n' "$expected_value_regex" 1>&3
-		return 1
-	fi
+	! printf '%s\n' "$value_for_assert" | grep -xvq "$expected_value_regex" ||
+		fail 'The message on the top stash commit is different than expected!\n(It'\''s "%s".)\n(It should match "%s".)\n' "$value_for_assert" "$expected_value_regex"
 	unset expected_value_regex
 	unset value_for_assert
 }
@@ -75,26 +55,16 @@ assert_stash_top_message() { # stash_num expected_branch_name expeted_stash_name
 assert_stash_index_message() { # stash_num expected_branch_name
 	value_for_assert="$(git rev-list --format=%B --max-count=1 --no-commit-header "stash@{$1}^2")"
 	expected_value_regex="index on $(make_stash_name_regex "$2"): $(make_parent_summary_regex "$1")"
-	if printf '%s\n' "$value_for_assert" | grep -xvq "$expected_value_regex"
-	then
-		printf 'The message on the stash commit with index is different than expected!\n' 1>&3
-		printf '(It'\''s "%s".)\n' "$value_for_assert" 1>&3
-		printf '(It should match "%s".)\n' "$expected_value_regex" 1>&3
-		return 1
-	fi
+	! printf '%s\n' "$value_for_assert" | grep -xvq "$expected_value_regex" ||
+		fail 'The message on the stash commit with index is different than expected!\n(It'\''s "%s".)\n(It should match "%s".)\n' "$value_for_assert" "$expected_value_regex"
 	unset value_for_assert
 }
 
 assert_stash_untracked_message() { # stash_num expected_branch_name
 	value_for_assert="$(git rev-list --format=%B --max-count=1 --no-commit-header "stash@{$1}^3")"
 	expected_value_regex="untracked files on $(make_stash_name_regex "$2"): $(make_parent_summary_regex "$1")"
-	if printf '%s\n' "$value_for_assert" | grep -xvq "$expected_value_regex"
-	then
-		printf 'The message on the stash commit with untracked files is different than expected!\n' 1>&3
-		printf '(It'\''s "%s".)\n' "$value_for_assert" 1>&3
-		printf '(It should match "%s".)\n' "$expected_value_regex" 1>&3
-		return 1
-	fi
+	! printf '%s\n' "$value_for_assert" | grep -xvq "$expected_value_regex" ||
+		fail 'The message on the stash commit with untracked files is different than expected!\n(It'\''s "%s".)\n(It should match "%s".)\n' "$value_for_assert" "$expected_value_regex"
 	unset value_for_assert
 }
 
@@ -110,11 +80,8 @@ assert_stash_messages() { # stash_num expected_branch_name expect_untracked expe
 assert_stash_commit_files() { # commit expected_files
 	value_for_assert="$(git ls-tree --name-only --full-tree -r "$1")"
 	expected_value="$(printf '%s\n' "$2" | awk '{print $1}')"
-	if [ "$value_for_assert" != "$expected_value" ]
-	then
-		printf 'Expected all files in "%s" to be "%s" but they are "%s"!\n' "$1" "$expected_value" "$value_for_assert" 1>&3
-		return 1
-	fi
+	test "$value_for_assert" = "$expected_value" ||
+		fail 'Expected all files in "%s" to be "%s" but they are "%s"!\n' "$1" "$expected_value" "$value_for_assert"
 	unset value_for_assert
 	unset expected_value
 }
@@ -130,11 +97,8 @@ assert_stash_commit_files_with_content() { # commit expected_files
 	do
 		value_for_assert="$(git show "$1:$(printf '%s' "$line" | awk '{print $1}')")"
 		expected_value="$(printf '%s' "$line" | awk '{print $2}')"
-		if [ "$value_for_assert" != "$expected_value" ]
-		then
-			printf 'Expected content of file "%s" in "%s" to be "%s" but it is "%s"!\n' "$(printf '%s' "$line" | awk '{print $1}')" "$1" "$expected_value" "$value_for_assert" 1>&3
-			return 1
-		fi
+		test "$value_for_assert" = "$expected_value" ||
+			fail 'Expected content of file "%s" in "%s" to be "%s" but it is "%s"!\n' "$(printf '%s' "$line" | awk '{print $1}')" "$1" "$expected_value" "$value_for_assert"
 	done
 	unset value_for_assert
 	unset expected_value

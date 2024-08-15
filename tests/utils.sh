@@ -7,6 +7,12 @@ then
 fi
 
 
+fail() { # printf_arguments...
+	#shellcheck disable=SC2059
+	printf "$@" 1>&3
+	return 1
+}
+
 capture_outputs() { # command [arguments...]
 	stdout_file="$(mktemp)"
 	stderr_file="$(mktemp)"

@@ -11,27 +11,15 @@ assert_data_file() { # is_expected data_point_name
 	file_path_for_assert=".git/ISTASH_$2"
 	if [ "$1" = n ]
 	then
-		if [ -e "$file_path_for_assert" ]
-		then
-			printf 'Expected the file "%s" to NOT be present!\n' "$file_path_for_assert" 1>&3
-			return 1
-		fi
+		test ! -e "$file_path_for_assert" ||
+			fail 'Expected the file "%s" to NOT be present!\n' "$file_path_for_assert"
 	else
-		if [ ! -e "$file_path_for_assert" ]
-		then
-			printf 'Expected the file "%s" to be present!\n' "$file_path_for_assert" 1>&3
-			return 1
-		fi
-		if [ ! -f "$file_path_for_assert" ]
-		then
-			printf 'Expected "%s" to be a file!\n' "$file_path_for_assert" 1>&3
-			return 1
-		fi
-		if [ "$(wc -l "$file_path_for_assert" | awk '{print $1}')" -ne 1 ]
-		then
-			printf 'Expected the file "%s" to have 1 line!\n' "$file_path_for_assert" 1>&3
-			return 1
-		fi
+		test -e "$file_path_for_assert" ||
+			fail 'Expected the file "%s" to be present!\n' "$file_path_for_assert"
+		test -f "$file_path_for_assert" ||
+			fail 'Expected "%s" to be a file!\n' "$file_path_for_assert"
+		test "$(wc -l "$file_path_for_assert" | awk '{print $1}')" -eq 1 ||
+			fail 'Expected the file "%s" to have 1 line!\n' "$file_path_for_assert"
 	fi
 	unset file_path_for_assert
 }
