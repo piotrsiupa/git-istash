@@ -121,6 +121,10 @@ assert_stash_commit_files() { # commit expected_files
 
 assert_stash_commit_files_with_content() { # commit expected_files
 	assert_stash_commit_files "$@"
+	if [ -z "$2" ]
+	then
+		return 0
+	fi
 	printf '%s\n' "$2" \
 	| while read -r line
 	do
