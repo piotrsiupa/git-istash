@@ -112,7 +112,7 @@ assert_stash_files() { # stash_num expect_untracked expected_files
 			printf '%s\n' "$expected_files" \
 			| while IFS= read -r line
 			do
-				if printf '%s' "$line" | grep -vq '^?? '
+				if printf '%s' "$line" | grep -vq '^\(??\|D.\|.D\) '
 				then
 					printf '%s' "$line" | cut -c4- | awk '{print $1,$2}'
 				fi
@@ -132,10 +132,10 @@ assert_stash_files() { # stash_num expect_untracked expected_files
 			printf '%s\n' "$expected_files" \
 			| while IFS= read -r line
 			do
-				if printf '%s' "$line" | grep -q '^[ AM][^ ] '
+				if printf '%s' "$line" | grep -q '^[ AM][^ D] '
 				then
 					printf '%s' "$line" | cut -c4- | awk '{print $1,$3}'
-				elif printf '%s' "$line" | grep -q '^[ AM][ ] '
+				elif printf '%s' "$line" | grep -q '^[ AM][ D] '
 				then
 					printf '%s' "$line" | cut -c4- | awk '{print $1,$2}'
 				fi

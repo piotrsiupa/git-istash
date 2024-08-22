@@ -49,7 +49,12 @@ assert_status() { # expected
 }
 
 assert_file_contents() { # file expected_current [expected_staged]
-	value_for_assert="$(cat "$1")"
+	if [ -n "$2" ]
+	then
+		value_for_assert="$(cat "$1")"
+	else
+		value_for_assert=''
+	fi
 	if printf '%s' "$2" | grep -q '|'
 	then
 		ours_expected_contents="$(printf '%s' "$2" | cut -d'|' -f1)"
@@ -84,14 +89,18 @@ assert_file_contents() { # file expected_current [expected_staged]
 
 assert_files() { # expected_files (see one of the tests as an example)
 	expected_files="$(printf '%s\n' "$1" | grep -v '^\s*$' | sed 's/^\(...\)\(.*\)$/\2\1/' | sort | sed 's/^\(.*\)\(...\)$/\2\1/')"
-	assert_all_files "$(printf '%s\n' "$expected_files" | sed 's/^...\(\S\+\)\(\s.*\)\?$/\1/' | head -c-1 | tr '\n' '|')"
-	assert_tracked_files "$(printf '%s\n' "$expected_files" | grep -v '^\(!!\|??\|^A[^A]\|^ A\|^D.\) ' | sed 's/^...\(\S\+\)\(\s.*\)\?$/\1/' | head -c-1 | tr '\n' '|')"
+	assert_all_files "$(printf '%s\n' "$expected_files" | grep -v '^\(D \|.D\) ' | sed 's/^...\(\S\+\)\(\s.*\)\?$/\1/' | head -c-1 | tr '\n' '|')"
+	assert_tracked_files "$(printf '%s\n' "$expected_files" | grep -v '^\(!!\|??\|A[^A]\| A\|DU\) ' | sed 's/^...\(\S\+\)\(\s.*\)\?$/\1/' | head -c-1 | tr '\n' '|')"
 	assert_status "$({ printf '%s\n' "$expected_files" | grep -v '^\(??\) ' ; printf '%s\n' "$expected_files" | grep '^\(??\) ' ; } | grep -v '^\(  \|!!\) ' | sed 's/^\(...\S\+\)\(\s.*\)\?$/\1/' | head -c-1 | tr '\n' '|')"
 	printf '%s\n' "$expected_files" \
 	| while IFS= read -r line
 	do
 		stripped_line="$(printf '%s' "$line" | cut -c4-)"
-		if printf '%s' "$line" | grep -q '^\(UU\|!!\|??\|.A\|D.\|. \) '
+		if printf '%s' "$line" | grep -q '^D  '
+		then
+			test "$(printf '%s' "$stripped_line" | awk '{printf NF}')" -eq 1 ||
+				fail 'Error in test: the file "%s" should have 0 versions of content to check!\n' "$(printf '%s' "$stripped_line" | awk '{printf $1}')"
+		elif printf '%s' "$line" | grep -q '^\([UD]U\|!!\|??\|.[ AD]\) '
 		then
 			test "$(printf '%s' "$stripped_line" | awk '{printf NF}')" -eq 2 ||
 				fail 'Error in test: the file "%s" should have 1 version of content to check!\n' "$(printf '%s' "$stripped_line" | awk '{printf $1}')"
@@ -100,6 +109,12 @@ assert_files() { # expected_files (see one of the tests as an example)
 				assert_file_contents \
 					"$(printf '%s' "$stripped_line" | awk '{printf $1}')" \
 					"$(printf '%s' "$stripped_line" | awk '{printf $2}')" \
+					"$(printf '%s' "$stripped_line" | awk '{printf $2}')"
+			elif printf '%s' "$line" | grep -q '^\(.D\) '
+			then
+				assert_file_contents \
+					"$(printf '%s' "$stripped_line" | awk '{printf $1}')" \
+					'' \
 					"$(printf '%s' "$stripped_line" | awk '{printf $2}')"
 			else
 				assert_file_contents \
