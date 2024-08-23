@@ -84,76 +84,103 @@ find_tests() { # pattern
 }
 
 run_test() { # test_name
-	cleanup_test "$1"
-	create_test_dir "$1" 1>/dev/null
-	exec 5>&1
-	test_passed="$(
-		exec 3>&2
-		{
+	error_count=0
+	PARAMETERS_FILE="$(mktemp)"
+	export PARAMETERS_FILE
+	for i in $(seq 1 1000)
+	do
+		ROTATE_PARAMETER=y
+		export ROTATE_PARAMETER
+		cleanup_test "$1"
+		create_test_dir "$1" 1>/dev/null
+		exec 5>&1
+		test_passed="$(
+			exec 3>&2
 			{
-				export WAS_IT_CALLED_FROM_RUN_SH='indeed'
-				if ! cd "$(get_test_dir "$1")"
-				then
-					printf '0' 1>&5
-				elif [ "$debug_mode" = n ]
-				then
-					if sh "../$(basename "$(get_test_script "$1")")" 1>/dev/null 2>&1
+				{
+					export WAS_IT_CALLED_FROM_RUN_SH='indeed'
+					if ! cd "$(get_test_dir "$1")"
 					then
-						printf y 1>&5
-					else
-						printf n 1>&5
-					fi
-				else
-					{
-						if sh "../$(basename "$(get_test_script "$1")")"
+						printf '0' 1>&5
+					elif [ "$debug_mode" = n ]
+					then
+						if sh "../$(basename "$(get_test_script "$1")")" 1>/dev/null 2>&1
 						then
 							printf y 1>&5
 						else
 							printf n 1>&5
-						fi 6>&2 2>&1 1>&6 6>&- \
-						| if [ "$use_color" = y ]
-						then
-							$sed_call 's/^.*$/\t'"$esc_char"'[31m&'"$esc_char"'[39m/'
-						else
-							$sed_call 's/^/\t/'
 						fi
-					} 6>&2 2>&1 1>&6 6>&- | $sed_call 's/^/\t/'
-				fi 6>&5 5>&1 1>&6 6>&-
-			} 6>&3 3>&1 1>&6 6>&- \
-			| if [ "$use_color" = y ]
-			then
-				$sed_call 's/^.*$/\t'"$esc_char"'[1;31mFailed assertion:'"$esc_char"'[22m &'"$esc_char"'[39m/'
-			else
-				$sed_call 's/^/\tFailed assertion: /'
-			fi
-		} 6>&3 3>&1 1>&6 6>&-
-		exec 3>&-
-	)"
-	exec 5>&-
-	if [ "$raw_name" = n ]
-	then
-		display_name="\"$(printf '%s' "$1" | tr '_' ' ')\""
-	else
-		display_name="$(dirname "$0")/$1.sh"
-	fi
-	if [ "$test_passed" = y ]
-	then
-		if [ "$quiet_mode" = n ]
+					else
+						{
+							if sh "../$(basename "$(get_test_script "$1")")"
+							then
+								printf y 1>&5
+							else
+								printf n 1>&5
+							fi 6>&2 2>&1 1>&6 6>&- \
+							| if [ "$use_color" = y ]
+							then
+								$sed_call 's/^.*$/\t'"$esc_char"'[31m&'"$esc_char"'[39m/'
+							else
+								$sed_call 's/^/\t/'
+							fi
+						} 6>&2 2>&1 1>&6 6>&- | $sed_call 's/^/\t/'
+					fi 6>&5 5>&1 1>&6 6>&-
+				} 6>&3 3>&1 1>&6 6>&- \
+				| if [ "$use_color" = y ]
+				then
+					$sed_call 's/^.*$/\t'"$esc_char"'[1;31mFailed assertion:'"$esc_char"'[22m &'"$esc_char"'[39m/'
+				else
+					$sed_call 's/^/\tFailed assertion: /'
+				fi
+			} 6>&3 3>&1 1>&6 6>&-
+			exec 3>&-
+		)"
+		exec 5>&-
+		if [ "$raw_name" = n ]
 		then
-			print_color_code '\033[0;1;32m'
-			printf 'PASSED - %s' "$display_name"
-			print_color_code '\033[22;39m'
-			printf '\n'
+			display_name="\"$(printf '%s' "$1" | tr '_' ' ')\""
+		else
+			display_name="$(dirname "$0")/$1.sh"
 		fi
-		cleanup_test "$1"
-		return 0
-	else
-		print_color_code '\033[0;1;31m'
-		printf 'FAILED - %s' "$display_name"
-		print_color_code '\033[22;39m'
-		printf ' (the result is kept)\n'
-		return 1
-	fi
+		if [ -n "$(cat "$PARAMETERS_FILE")" ]
+		then
+			display_name="$display_name ($(awk '{print $2}' "$PARAMETERS_FILE" | sed 's/$/, /' | head -c-3 | tr -d '\n'))"
+		fi
+		if [ "$test_passed" = y ]
+		then
+			if [ "$quiet_mode" = n ]
+			then
+				print_color_code '\033[0;1;32m'
+				printf 'PASSED - %s' "$display_name"
+				print_color_code '\033[22;39m'
+				printf '\n'
+			fi
+			cleanup_test "$1"
+		else
+			print_color_code '\033[0;1;31m'
+			printf 'FAILED - %s' "$display_name"
+			print_color_code '\033[22;39m'
+			printf ' (the result is kept)\n'
+			error_count=$((error_count + 1))
+		fi
+		if [ -n "$(cat "$PARAMETERS_FILE")" ]
+		then
+			test_dir="$(get_test_dir "$1")"
+			parametrized_test_dir="${test_dir}__$(awk '{print $2}' "$PARAMETERS_FILE" | head -c-1 | tr '\n' '_')"
+			rm -rf "$parametrized_test_dir"
+			if [ -e "$test_dir" ]
+			then
+				mv "$test_dir" "$parametrized_test_dir"
+			fi
+		fi
+		if [ -z "$(awk '$2 != $3 { print 1 }' "$PARAMETERS_FILE")" ]
+		then
+			break
+		fi
+	done
+	rm "$PARAMETERS_FILE"
+	test "$error_count" -eq 0
 }
 update_current_category() { # test_name
 	current_category="$(dirname "$1")"
