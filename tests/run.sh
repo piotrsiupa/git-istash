@@ -14,7 +14,7 @@ print_help() {
 	printf '    -d, --debug\t\t- Print outputs of all commands in run in the tests.\n'
 	printf '    -q, --quiet\t\t- Don'\''t print summaries for passed tests.\n'
 	printf '    -c, --color=when\t- Set color mode (always / never / auto).\n'
-	printf '        --raw-name\t- Print paths to test files instead of prettified names.\n'
+	printf '    -r, --raw-name\t- Print paths to test files instead of prettified names.\n'
 	printf '    -l, --limit=number\t- Set maximum number of tests to be run. (It pairs well\n\t\t\t  with "--failed" to e.g. rerun the first failed test.)\n'
 	printf '    -p, --print-paths\t- Instead of running tests, print their paths and exit.\n\t\t\t  (The paths are relative to the directory "tests".)\n'
 	printf '    -j, --jobs=N\t- Run N tests in parallel. (default is sequentially)\n\t\t\t  N=0 uses all available processing units. ("nproc")\n'
@@ -241,8 +241,16 @@ run_tests() {
 				update_current_category "$(printf '%s\n' "$running_tests_data" | head -n1 | cut -d' ' -f3-)"
 				wait "$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f1)"
 				result_file="$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f2)"
-				head -n-1 "$result_file" | grep '^\t' 1>&2 || true
-				head -n-1 "$result_file" | grep -v '^\t' 1>&4
+				head -n-1 "$result_file" \
+				| while IFS= read -r line
+				do
+					if printf '%s' "$line" | grep -q '^\t'
+					then
+						printf '%s\n' "$line" 1>&2
+					else
+						printf '%s\n' "$line" 1>&4
+					fi
+				done
 				if [ "$(tail -n1 "$result_file")" = '0' ]
 				then
 					printf '%s\n' "$current_category"
@@ -334,7 +342,7 @@ print_summary() {
 	printf '\n'
 }
 
-getopt_result="$(getopt -o'hfdqc:l:pj:' --long='help,version,failed,debug,quiet,color:,raw,raw-name,file-name,limit:,print-paths,jobs:' -n"$(basename "$0")" -- "$@")"
+getopt_result="$(getopt -o'hfdqc:rl:pj:' --long='help,version,failed,debug,quiet,color:,raw,raw-name,file-name,limit:,print-paths,jobs:' -n"$(basename "$0")" -- "$@")"
 eval set -- "$getopt_result"
 only_failed=n
 debug_mode=n
@@ -380,7 +388,7 @@ do
 			exit 1
 		fi
 		;;
-	--raw|--raw-name|--file-name)
+	-r|--raw|--raw-name|--file-name)
 		raw_name=y
 		;;
 	-l|--limit)
