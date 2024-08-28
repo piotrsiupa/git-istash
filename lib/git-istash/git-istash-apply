@@ -296,7 +296,7 @@ do_apply() { # args...
 	fi
 }
 
-getopt_result="$(getopt -o'hc' --long='continue,abort,called-from-pop' -n"$(basename "$0")" -- "$@")"
+getopt_result="$(getopt -o'hc' --long='continue,abort,called-from-pop' -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 continue_set=n
 abort_set=n

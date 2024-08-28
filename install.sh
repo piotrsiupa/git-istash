@@ -413,7 +413,7 @@ do_the_install_thing() {
 	fi
 }
 
-getopt_result="$(getopt -o'hgc:C:u' --long='help,version,global,custom-dir:,create-dir:,uninstall,debug' -n"$(basename "$0")" -- "$@")"
+getopt_result="$(getopt -o'hgc:C:u' --long='help,version,global,custom-dir:,create-dir:,uninstall,debug' -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 global=n
 uninstall=n

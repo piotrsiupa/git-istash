@@ -342,7 +342,7 @@ print_summary() {
 	printf '\n'
 }
 
-getopt_result="$(getopt -o'hfdqc:rl:pj:' --long='help,version,failed,debug,quiet,color:,raw,raw-name,file-name,limit:,print-paths,jobs:' -n"$(basename "$0")" -- "$@")"
+getopt_result="$(getopt -o'hfdqc:rl:pj:' --long='help,version,failed,debug,quiet,color:,raw,raw-name,file-name,limit:,print-paths,jobs:' -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 only_failed=n
 debug_mode=n

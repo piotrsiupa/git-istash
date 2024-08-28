@@ -35,7 +35,7 @@ run_shellcheck() {
 	printf 'All %i files are correct.\n' "$(list_files | wc -l)"
 }
 
-getopt_result="$(getopt -o'hs' --long='help,skip-tests,version' -n"$(basename "$0")" -- "$@")"
+getopt_result="$(getopt -o'hs' --long='help,skip-tests,version' -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 skip_tests=n
 while true
