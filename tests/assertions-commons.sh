@@ -88,7 +88,7 @@ assert_file_contents() { # file expected_current [expected_staged]
 }
 
 assert_files() { # expected_files (see one of the tests as an example)
-	expected_files="$(printf '%s\n' "$1" | grep -v '^\s*$' | sed 's/^\(...\)\(.*\)$/\2\1/' | sort | sed 's/^\(.*\)\(...\)$/\2\1/')"
+	expected_files="$(printf '%s\n' "$1" | sed 's/^\t\+//' | grep -v '^\s*$' | sed 's/^\(...\)\(.*\)$/\2\1/' | sort | sed 's/^\(.*\)\(...\)$/\2\1/')"
 	assert_all_files "$(printf '%s\n' "$expected_files" | grep -v '^\(D \|.D\) ' | sed 's/^...\(\S\+\)\(\s.*\)\?$/\1/' | head -c-1 | tr '\n' '|')"
 	assert_tracked_files "$(printf '%s\n' "$expected_files" | grep -v '^\(!!\|??\|A[^A]\| A\|DU\) ' | sed 's/^...\(\S\+\)\(\s.*\)\?$/\1/' | head -c-1 | tr '\n' '|')"
 	assert_status "$({ printf '%s\n' "$expected_files" | grep -v '^\(??\) ' ; printf '%s\n' "$expected_files" | grep '^\(??\) ' ; } | grep -v '^\(  \|!!\) ' | sed 's/^\(...\S\+\)\(\s.*\)\?$/\1/' | head -c-1 | tr '\n' '|')"
@@ -140,10 +140,19 @@ assert_stash_count() { # expected
 }
 
 assert_log_length() { # expected
-	value_for_assert="$(git rev-list --count HEAD)"
-	test "$value_for_assert" -eq "$1" ||
-		fail 'Expected lenght of HEAD'\''s history to be %i but it is %i!\n' "$1" "$value_for_assert"
-	unset value_for_assert
+	if [ "$1" -ne 0 ]
+	then
+		value_for_assert="$(git rev-list --count 'HEAD')"
+		test "$value_for_assert" -eq "$1" ||
+			fail 'Expected lenght of HEAD'\''s history to be %i but it is %i!\n' "$1" "$value_for_assert"
+		unset value_for_assert
+	else
+		! git rev-parse --verify HEAD 2>/dev/null ||
+		{
+			value_for_assert="$(git rev-list --count 'HEAD')"
+			fail 'Expected lenght of HEAD'\''s history to be 0 but it is %i!\n' "$value_for_assert"
+		}
+	fi
 }
 
 assert_branch_count() { # expected
@@ -154,7 +163,7 @@ assert_branch_count() { # expected
 }
 
 assert_head_hash() { # expected
-	value_for_assert="$(git rev-parse HEAD)"
+	value_for_assert="$(get_head_hash)"
 	test "$value_for_assert" = "$1" ||
 		fail 'Expected HEAD to be at %s but it is at %s!\n' "$1" "$value_for_assert"
 	unset value_for_assert
@@ -204,4 +213,41 @@ assert_rebase() { # expected_in_progress
 		test ! -e ".git/rebase-apply" && test ! -e ".git/rebase-merge" ||
 			fail 'Expected rebase to NOT be in progress!\n'
 	fi
+}
+
+assert_files_H() { # expected_files [expected_files_for_orphan]
+	if ! IS_HEAD_ORPHAN || [ $# -lt 2 ]
+	then
+		assert_files "$1"
+	else
+		assert_files "$2"
+	fi
+}
+assert_log_length_H() { # expected_for_not_orphan
+	if IS_HEAD_ORPHAN
+	then
+		set -- 0
+	fi
+	assert_log_length "$1"
+}
+assert_branch_count_H() { # expected_for_not_orphan
+	if IS_HEAD_ORPHAN
+	then
+		set -- $(($1 + 1))
+	fi
+	assert_branch_count "$1"
+}
+assert_head_hash_H() { # expected_for_not_orphan
+	value_for_assert="$(get_head_hash_H)"
+	test "$value_for_assert" = "$1" ||
+		fail 'Expected HEAD to be at %s but it is at %s!\n' "$1" "$value_for_assert"
+	unset value_for_assert
+}
+assert_head_name_H() {
+	case "$HEAD_TYPE" in
+		'BRANCH') assert_head_name 'master' ;;
+		'DETACH') assert_head_name 'HEAD' ;;
+		'ORPHAN') assert_head_name '~ooo' ;;
+		*) fail 'Unknown HEAD type "%s"!' "$HEAD_TYPE" ;;
+	esac
 }

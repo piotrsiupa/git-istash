@@ -53,12 +53,27 @@ sanitize_for_bre() { # string
 }
 
 make_stash_name_regex() { # stash_name
-	if [ -n "$1" ]
+	if [ "$(printf '%s' "$1" | cut -c1)" = '~' ]
+	then
+		sanitize_for_bre "$(printf '%s' "$1" | cut -c2-)"
+	elif [ "$1" != 'HEAD' ]
 	then
 		sanitize_for_bre "$1"
 	else
-		printf '%s' '(no branch)'
+		printf '(no branch)'
 	fi
+}
+
+get_head_hash() {
+	git rev-parse 'HEAD'
+}
+
+get_stash_hash() { # stash_num
+	if [ $# -eq 0 ]
+	then
+		set -- 0
+	fi
+	git rev-parse "stash@{$1}"
 }
 
 # This makes the test be called multiple times with the variable from the 1st argument having each of the values from the remaining arguments.
@@ -102,4 +117,38 @@ PARAMETRIZE() { # name values...
 	unset PARAM_NAME
 	unset CUR_VAL
 	unset LAST_VAL
+}
+
+# It calls "PARAMETRIZE" with the name "HEAD_TYPE" and possible values "BRANCH", "DETACH" and "ORPHAN".
+# There is a bunch of functions in this and other files that use the variable "HEAD_TYPE". (They always have suffix "_H".)
+# (See also the function below this one.)
+PARAMETRIZE_HEAD_TYPE() { # values...
+	! printf '%s\n' "$@" | grep -vxq "BRANCH\|DETACH\|ORPHAN" ||
+		fail '"HEAD_TYPE" can be only "BRANCH", "DETACH" or "ORPHAN"!\n'
+	PARAMETRIZE 'HEAD_TYPE' "$@"
+}
+IS_HEAD_BRANCH() {
+	test "$HEAD_TYPE" = 'BRANCH'
+}
+IS_HEAD_DETACHED() {
+	test "$HEAD_TYPE" = 'DETACH'
+}
+IS_HEAD_ORPHAN() {
+	test "$HEAD_TYPE" = 'ORPHAN'
+}
+SWITCH_HEAD_TYPE() {
+	case "$HEAD_TYPE" in
+		'BRANCH') ;;
+		'DETACH') git switch --detach 'HEAD' ;;
+		'ORPHAN') git switch --orphan 'ooo' ;;
+	esac
+}
+RESTORE_HEAD_TYPE() {
+	git switch 'master'
+}
+get_head_hash_H() {
+	if ! IS_HEAD_ORPHAN
+	then
+		get_head_hash
+	fi
 }

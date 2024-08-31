@@ -107,7 +107,7 @@ assert_stash_commit_files_with_content() { # commit expected_files
 }
 
 assert_stash_files() { # stash_num expect_untracked expected_files
-	expected_files="$(printf '%s\n' "$3" | grep -v '^\s*$' | sed 's/^\(...\)\(.*\)$/\2\1/' | sort | sed 's/^\(.*\)\(...\)$/\2\1/')"
+	expected_files="$(printf '%s\n' "$3" | sed 's/^\t\+//' | grep -v '^\s*$' | sed 's/^\(...\)\(.*\)$/\2\1/' | sort | sed 's/^\(.*\)\(...\)$/\2\1/')"
 	assert_stash_commit_files_with_content "stash@{$1}" "$(
 			printf '%s\n' "$expected_files" \
 			| while IFS= read -r line
@@ -160,7 +160,7 @@ assert_stash_files() { # stash_num expect_untracked expected_files
 }
 
 assert_stash() { # stash_num expected_branch_name expected_stash_name expected_files
-	if printf '%s\n' "$4" | grep -q '^?? '
+	if printf '%s\n' "$4" | sed 's/^\t\+//' | grep -q '^?? '
 	then
 		expect_untracked=y
 	else
@@ -172,10 +172,10 @@ assert_stash() { # stash_num expected_branch_name expected_stash_name expected_f
 	unset expect_untracked
 }
 
-assert_stash_base() { # stash_num expected_base [expected_branch_name]
+assert_stash_base() { # stash_num expected_base
 	git rev-parse --verify "stash@{$1}{commit}" 1>/dev/null ||
 		fail 'There is no stash number %i!\n' "$1"
-	if [ -n "$2" ]
+	if [ "$(printf '%s' "$2" | cut -c1)" != '~' ]
 	then
 		value_for_assert="$(git rev-parse "stash@{$1}^1")"
 		expected_value="$(git rev-parse "$2")" ||
@@ -194,10 +194,27 @@ assert_stash_base() { # stash_num expected_base [expected_branch_name]
 		test "$value_for_assert" -eq 0 ||
 			fail '"%s" should have no parents but it has %i!\n' "stash@{$1}" "$value_for_assert"
 		value_for_assert="$(git rev-list --format=%B --max-count=1 --no-commit-header "stash@{$1}^1")"
-		expected_value_regex="Base commit for stash entry on an orphan branch \"$(sanitize_for_bre "$3")\""
+		expected_value_regex="Base commit for stash entry on an orphan branch \"$(sanitize_for_bre "$(printf '%s' "$2" | cut -c2-)")\""
 		! printf '%s\n' "$value_for_assert" | grep -xvq "$expected_value_regex" ||
 			fail 'The message on the stash commit with untracked files is different than expected!\n(It'\''s "%s".)\n(It should match "%s".)\n' "$value_for_assert" "$expected_value_regex"
 		unset expected_value_regex
 		unset value_for_assert
+	fi
+}
+
+assert_stash_H() { # stash_num expected_stash_name expected_files [expected_files_for_orphan]
+	case "$HEAD_TYPE" in
+		'BRANCH') assert_stash "$1" 'master' "$2" "$3" ;;
+		'DETACH') assert_stash "$1" 'HEAD' "$2" "$3" ;;
+		'ORPHAN') if [ $# -lt 4 ] ; then assert_stash "$1" '~ooo' "$2" "$3" ; else assert_stash "$1" '~ooo' "$2" "$4" ; fi ;;
+		*) fail 'Unknown HEAD type "%s"!' "$HEAD_TYPE" ;;
+	esac
+}
+assert_stash_base_H() { # stash_num expected_base_for_not_orphan
+	if ! IS_HEAD_ORPHAN
+	then
+		assert_stash_base "$1" "$2"
+	else
+		assert_stash_base "$1" '~ooo'
 	fi
 }

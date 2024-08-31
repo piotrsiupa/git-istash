@@ -1,0 +1,36 @@
+. "$(dirname "$0")/../commons.sh" 1>/dev/null
+
+PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
+
+git branch wrong_branch
+
+printf 'aaa\n' >aaa
+git add aaa
+git commit -m 'Added aaa'
+
+printf 'bbb\n' >aaa
+git stash push
+
+printf 'ccc\n' >aaa
+git commit -am 'Changed aaa'
+
+SWITCH_HEAD_TYPE
+
+assert_exit_code 2 capture_outputs git istash pop
+assert_conflict_message git istash pop
+assert_files_H '
+UU aaa		ccc|bbb
+!! ignored	ignored
+' '
+DU aaa		bbb
+!! ignored	ignored
+'
+assert_stash_count 1
+assert_data_files 'pop'
+assert_rebase y
+
+printf 'ddd\n' >aaa
+git add aaa
+printf 'wrong_branch\n' >'.git/ISTASH_TARGET'
+assert_exit_code 1 git istash pop --continue
+assert_file_contents ignored 'ignored'
