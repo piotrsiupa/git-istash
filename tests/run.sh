@@ -21,7 +21,7 @@ print_help() {
 	printf '\n'
 	printf 'Filters:\n'
 	printf 'You can specify one or more filters in the command call. '
-	printf 'The filters are BRE\nregexps that match test names that should be run. '
+	printf 'The filters are ERE\nregexps that match test names that should be run. '
 	printf '(A test name is the name of\nthe inluding the sub-directory but without the file extension.) '
 	printf 'A test will be\nrun if it matches any of the filters. '
 	printf 'If there are no filters, all tests are\nrun. '
@@ -65,8 +65,8 @@ create_test_dir() { # test_name
 
 find_tests() { # pattern
 	find . -mindepth 2 -maxdepth 2 -type f -name '*.sh' \
-	| sed 's;^\./\(.*\)\.sh$;\1;' \
-	| grep "$1" \
+	| sed -E 's;^\./(.*)\.sh$;\1;' \
+	| grep -E "$1" \
 	| while read -r test_name
 	do
 		if [ "$only_failed" = n ] || [ -d "$(get_test_dir "$test_name")" ]
@@ -120,18 +120,18 @@ run_test() { # test_name
 							fi 6>&2 2>&1 1>&6 6>&- \
 							| if [ "$use_color" = y ]
 							then
-								$sed_call 's/^.*$/\t'"$esc_char"'[31m&'"$esc_char"'[39m/'
+								$sed_call -E 's/^.*$/\t'"$esc_char"'[31m&'"$esc_char"'[39m/'
 							else
-								$sed_call 's/^/\t/'
+								$sed_call -E 's/^/\t/'
 							fi
-						} 6>&2 2>&1 1>&6 6>&- | $sed_call 's/^/\t/'
+						} 6>&2 2>&1 1>&6 6>&- | $sed_call -E 's/^/\t/'
 					fi 6>&5 5>&1 1>&6 6>&-
 				} 6>&3 3>&1 1>&6 6>&- \
 				| if [ "$use_color" = y ]
 				then
-					$sed_call 's/^.*$/\t'"$esc_char"'[1;31mFailed assertion:'"$esc_char"'[22m &'"$esc_char"'[39m/'
+					$sed_call -E 's/^.*$/\t'"$esc_char"'[1;31mFailed assertion:'"$esc_char"'[22m &'"$esc_char"'[39m/'
 				else
-					$sed_call 's/^/\tFailed assertion: /'
+					$sed_call -E 's/^/\tFailed assertion: /'
 				fi
 			} 6>&3 3>&1 1>&6 6>&-
 			exec 3>&-
@@ -145,7 +145,7 @@ run_test() { # test_name
 		fi
 		if [ -n "$(cat "$PARAMETERS_FILE")" ]
 		then
-			display_name="$display_name ($(awk '{print $2}' "$PARAMETERS_FILE" | sed 's/$/, /' | head -c-3 | tr -d '\n'))"
+			display_name="$display_name ($(awk '{print $2}' "$PARAMETERS_FILE" | sed -E 's/$/, /' | head -c-3 | tr -d '\n'))"
 		fi
 		if [ "$test_passed" = y ]
 		then
@@ -201,7 +201,7 @@ run_tests() {
 	then
 		return 0
 	fi
-	if printf '' | sed --unbuffered 's/^/x/' 1>/dev/null 2>&1
+	if printf '' | sed --unbuffered -E 's/^/x/' 1>/dev/null 2>&1
 	then
 		sed_call='sed --unbuffered'
 	else
@@ -236,7 +236,7 @@ run_tests() {
 					result_file="$(mktemp)"
 					{ run_test "$test_name" && printf '0\n' || printf '1\n' ; } 1>"$result_file" 2>&1 &
 					running_tests_count=$((running_tests_count + 1))
-					running_tests_data="$(printf '%s\n%i %s %s' "$running_tests_data" $! "$result_file" "$test_name" | sed '/^\s*$/ d')"
+					running_tests_data="$(printf '%s\n%i %s %s' "$running_tests_data" $! "$result_file" "$test_name" | sed -E '/^\s*$/ d')"
 				done
 				update_current_category "$(printf '%s\n' "$running_tests_data" | head -n1 | cut -d' ' -f3-)"
 				wait "$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f1)"
@@ -244,7 +244,7 @@ run_tests() {
 				head -n-1 "$result_file" \
 				| while IFS= read -r line
 				do
-					if printf '%s' "$line" | grep -q '^\t'
+					if printf '%s' "$line" | grep -qE '^\t'
 					then
 						printf '%s\n' "$line" 1>&2
 					else
@@ -374,13 +374,13 @@ do
 		;;
 	-c|--color)
 		shift
-		if printf '%s' "$1" | grep -ixq 'auto\|default'
+		if printf '%s' "$1" | grep -ixqE 'auto|default'
 		then
 			use_color='auto'
-		elif printf '%s' "$1" | grep -ixq 'y\|yes\|always\|true\|1'
+		elif printf '%s' "$1" | grep -ixqE 'y|yes|always|true|1'
 		then
 			use_color=y
-		elif printf '%s' "$1" | grep -ixq 'n\|no\|never\|false\|0'
+		elif printf '%s' "$1" | grep -ixqE 'n|no|never|false|0'
 		then
 			use_color=n
 		else
@@ -440,11 +440,11 @@ normalize_filter_entry() { # filter_entry
 	if [ -f "$1" ]
 	then
 		printf '%s' "$1" \
-		| sed -e 's;^.*/\([^/]\+/[^/]\+\)$;\1;' \
-			-e 's;^[^/]\+$;./&;' \
+		| sed -E -e 's;^.*/([^/]+/[^/]+)$;\1;' \
+			-e 's;^[^/]+$;./&;' \
 			-e "s;^\\./;$(basename "$(pwd)")/;" \
 			-e 's/\.sh$//' \
-			-e 's/^/^/'
+			-e 's/^/^/' -e 's/$/$/'
 	else
 		printf '%s' "$1"
 	fi
@@ -453,11 +453,11 @@ if [ $# -eq 0 ]
 then
 	filter=''
 else
-	filter="\\($(normalize_filter_entry "$1")\\)"
+	filter="($(normalize_filter_entry "$1"))"
 	shift
 	while [ $# -ne 0 ]
 	do
-		filter="$filter\\|\\($(normalize_filter_entry "$1")\\)"
+		filter="$filter|($(normalize_filter_entry "$1"))"
 		shift
 	done
 fi

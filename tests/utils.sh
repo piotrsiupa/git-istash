@@ -48,19 +48,19 @@ command_to_string() { # command [arguments...]
 	printf '"%s"' "$*"
 }
 
-sanitize_for_bre() { # string
-	printf '%s' "$1" | sed 's/[.*[\^$]/\\&/g'
+sanitize_for_ere() { # string
+	printf '%s' "$1" | sed -E 's/[.[\()*+?{|^$]/\\&/g'
 }
 
 make_stash_name_regex() { # stash_name
 	if [ "$(printf '%s' "$1" | cut -c1)" = '~' ]
 	then
-		sanitize_for_bre "$(printf '%s' "$1" | cut -c2-)"
+		sanitize_for_ere "$(printf '%s' "$1" | cut -c2-)"
 	elif [ "$1" != 'HEAD' ]
 	then
-		sanitize_for_bre "$1"
+		sanitize_for_ere "$1"
 	else
-		printf '(no branch)'
+		printf '\(no branch\)'
 	fi
 }
 
@@ -84,7 +84,7 @@ PARAMETRIZE() { # name values...
 	shift
 	CUR_VAL="$(awk '$1 == "'"$PARAM_NAME"'" { print $2 }' "$PARAMETERS_FILE")"
 	LAST_VAL="$(awk '$1 == "'"$PARAM_NAME"'" { print $3 }' "$PARAMETERS_FILE")"
-	sed -i "/^$PARAM_NAME\\>/ d" "$PARAMETERS_FILE"
+	sed -iE "/^$PARAM_NAME\\>/ d" "$PARAMETERS_FILE"
 	if [ "$CUR_VAL" = "$LAST_VAL" ]
 	then
 		if [ -z "$LAST_VAL" ] || [ "$ROTATE_PARAMETER" = y ]
@@ -123,7 +123,7 @@ PARAMETRIZE() { # name values...
 # There is a bunch of functions in this and other files that use the variable "HEAD_TYPE". (They always have suffix "_H".)
 # (See also the function below this one.)
 PARAMETRIZE_HEAD_TYPE() { # values...
-	! printf '%s\n' "$@" | grep -vxq "BRANCH\|DETACH\|ORPHAN" ||
+	! printf '%s\n' "$@" | grep -vxqE "BRANCH|DETACH|ORPHAN" ||
 		fail '"HEAD_TYPE" can be only "BRANCH", "DETACH" or "ORPHAN"!\n'
 	PARAMETRIZE 'HEAD_TYPE' "$@"
 }

@@ -9,11 +9,11 @@ fi
 
 category="$(basename "$(dirname "$OLDPWD")")"
 . ./assertions-commons.sh
-if printf '%s' "$category" | grep -xq 'git-istash-\(apply\|pop\)'
+if printf '%s' "$category" | grep -xqE 'git-istash-(apply|pop)'
 then
 	. ./assertions-for-applying.sh
 fi
-if printf '%s' "$category" | grep -xq 'git-istash-push'
+if printf '%s' "$category" | grep -xqE 'git-istash-push'
 then
 	. ./assertions-for-creation.sh
 fi

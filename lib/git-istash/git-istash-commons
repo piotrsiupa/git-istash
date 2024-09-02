@@ -93,14 +93,14 @@ find_stash() { # [arg]
 		else
 			stash=$(($(git rev-list --walk-reflogs --count --ignore-missing refs/stash) + $1))
 		fi
-	elif printf '%s' "$1" | grep -xq 'stash\^{/.*}'
+	elif printf '%s' "$1" | grep -xqE 'stash\^\{/.*\}'
 	then
-		stash_text="$(printf '%s' "$1" | sed 's/^stash\^{\/\(.*\)}$/\1/')"
+		stash_text="$(printf '%s' "$1" | sed -E 's/^stash\^\{\/(.*)\}$/\1/')"
 		stash_hash="$(git rev-list --walk-reflogs --grep-reflog="$stash_text" --ignore-missing refs/stash | head -n1)"
 		stash="$(($(git rev-list --walk-reflogs refs/stash | grep -Fxn "$stash_hash" | cut -d: -f1) - 1))"
-	elif printf '%s' "$1" | grep -xq 'stash@{[0-9]\+}'
+	elif printf '%s' "$1" | grep -xqE 'stash@\{[0-9]+\}'
 	then
-		stash="$(printf '%s' "$1" | sed 's/^stash@{\(.*\)}$/\1/')"
+		stash="$(printf '%s' "$1" | sed -E 's/^stash@\{(.*)\}$/\1/')"
 	else
 		stash="$1"
 	fi
@@ -136,15 +136,15 @@ check_stash() { # stash
 		return 1
 	fi
 	correct_commit_msgs=0
-	if [ "$parents_num" -eq 3 ] && git rev-list --format='%B' --max-count=1 "$stash_commit^3" | head -n 2 | tail -n 1 | grep -q '^untracked files on .\+:'
+	if [ "$parents_num" -eq 3 ] && git rev-list --format='%B' --max-count=1 "$stash_commit^3" | head -n 2 | tail -n 1 | grep -qE '^untracked files on .+:'
 	then
 		correct_commit_msgs=$((correct_commit_msgs + 1))
 	fi
-	if git rev-list --format='%B' --max-count=1 "$stash_commit^2" | head -n 2 | tail -n 1 | grep -q '^index on .\+:'
+	if git rev-list --format='%B' --max-count=1 "$stash_commit^2" | head -n 2 | tail -n 1 | grep -qE '^index on .+:'
 	then
 		correct_commit_msgs=$((correct_commit_msgs + 1))
 	fi
-	if git rev-list --format='%B' --max-count=1 "$stash_commit" | head -n 2 | tail -n 1 | grep -q '^\(WIP on\|On\) .\+:'
+	if git rev-list --format='%B' --max-count=1 "$stash_commit" | head -n 2 | tail -n 1 | grep -qE '^(WIP on|On) .+:'
 	then
 		correct_commit_msgs=$((correct_commit_msgs + 1))
 	fi
@@ -179,5 +179,5 @@ find_current_branch() {
 }
 
 are_there_conflicts() {
-	git status --porcelain | grep -q '^.U\|^U.'
+	git status --porcelain | grep -qE '^.U|^U.'
 }

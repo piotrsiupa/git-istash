@@ -35,7 +35,7 @@ assert_stash_structure() { # stash_num expected_to_have_untracked
 }
 
 make_parent_summary_regex() { # stash_num
-	sanitize_for_bre "$(git rev-list --no-commit-header --format='%h %s' --max-count=1 "stash@{$1}~")"
+	sanitize_for_ere "$(git rev-list --no-commit-header --format='%h %s' --max-count=1 "stash@{$1}~")"
 }
 
 assert_stash_top_message() { # stash_num expected_branch_name expeted_stash_name
@@ -44,9 +44,9 @@ assert_stash_top_message() { # stash_num expected_branch_name expeted_stash_name
 	then
 		expected_value_regex="WIP on $(make_stash_name_regex "$2"): $(make_parent_summary_regex "$1")"
 	else
-		expected_value_regex="On $(make_stash_name_regex "$2"): $(sanitize_for_bre "$3")"
+		expected_value_regex="On $(make_stash_name_regex "$2"): $(sanitize_for_ere "$3")"
 	fi
-	! printf '%s\n' "$value_for_assert" | grep -xvq "$expected_value_regex" ||
+	! printf '%s\n' "$value_for_assert" | grep -xvqE "$expected_value_regex" ||
 		fail 'The message on the top stash commit is different than expected!\n(It'\''s "%s".)\n(It should match "%s".)\n' "$value_for_assert" "$expected_value_regex"
 	unset expected_value_regex
 	unset value_for_assert
@@ -55,7 +55,7 @@ assert_stash_top_message() { # stash_num expected_branch_name expeted_stash_name
 assert_stash_index_message() { # stash_num expected_branch_name
 	value_for_assert="$(git rev-list --format=%B --max-count=1 --no-commit-header "stash@{$1}^2")"
 	expected_value_regex="index on $(make_stash_name_regex "$2"): $(make_parent_summary_regex "$1")"
-	! printf '%s\n' "$value_for_assert" | grep -xvq "$expected_value_regex" ||
+	! printf '%s\n' "$value_for_assert" | grep -xvqE "$expected_value_regex" ||
 		fail 'The message on the stash commit with index is different than expected!\n(It'\''s "%s".)\n(It should match "%s".)\n' "$value_for_assert" "$expected_value_regex"
 	unset expected_value_regex
 	unset value_for_assert
@@ -64,7 +64,7 @@ assert_stash_index_message() { # stash_num expected_branch_name
 assert_stash_untracked_message() { # stash_num expected_branch_name
 	value_for_assert="$(git rev-list --format=%B --max-count=1 --no-commit-header "stash@{$1}^3")"
 	expected_value_regex="untracked files on $(make_stash_name_regex "$2"): $(make_parent_summary_regex "$1")"
-	! printf '%s\n' "$value_for_assert" | grep -xvq "$expected_value_regex" ||
+	! printf '%s\n' "$value_for_assert" | grep -xvqE "$expected_value_regex" ||
 		fail 'The message on the stash commit with untracked files is different than expected!\n(It'\''s "%s".)\n(It should match "%s".)\n' "$value_for_assert" "$expected_value_regex"
 	unset expected_value_regex
 	unset value_for_assert
@@ -107,12 +107,12 @@ assert_stash_commit_files_with_content() { # commit expected_files
 }
 
 assert_stash_files() { # stash_num expect_untracked expected_files
-	expected_files="$(printf '%s\n' "$3" | sed 's/^\t\+//' | grep -v '^\s*$' | sed 's/^\(...\)\(.*\)$/\2\1/' | sort | sed 's/^\(.*\)\(...\)$/\2\1/')"
+	expected_files="$(printf '%s\n' "$3" | sed -E 's/^\t+//' | grep -vE '^\s*$' | sed -E 's/^(...)(.*)$/\2\1/' | sort | sed -E 's/^(.*)(...)$/\2\1/')"
 	assert_stash_commit_files_with_content "stash@{$1}" "$(
 			printf '%s\n' "$expected_files" \
 			| while IFS= read -r line
 			do
-				if printf '%s' "$line" | grep -vq '^\(??\|D.\|.D\) '
+				if printf '%s' "$line" | grep -vqE '^(\?\?|D.|.D) '
 				then
 					printf '%s' "$line" | cut -c4- | awk '{print $1,$2}'
 				fi
@@ -122,7 +122,7 @@ assert_stash_files() { # stash_num expect_untracked expected_files
 			printf '%s\n' "$expected_files" \
 			| while IFS= read -r line
 			do
-				if printf '%s' "$line" | grep -vq '^\(??\|A.\|.A\) '
+				if printf '%s' "$line" | grep -vqE '^(\?\?|A.|.A) '
 				then
 					printf '%s' "$line" | cut -c4- | awk '{print $1}'
 				fi
@@ -132,10 +132,10 @@ assert_stash_files() { # stash_num expect_untracked expected_files
 			printf '%s\n' "$expected_files" \
 			| while IFS= read -r line
 			do
-				if printf '%s' "$line" | grep -q '^[ AM][^ D] '
+				if printf '%s' "$line" | grep -qE '^([ AM][^ D]) '
 				then
 					printf '%s' "$line" | cut -c4- | awk '{print $1,$3}'
-				elif printf '%s' "$line" | grep -q '^[ AM][ D] '
+				elif printf '%s' "$line" | grep -qE '^([ AM][ D]) '
 				then
 					printf '%s' "$line" | cut -c4- | awk '{print $1,$2}'
 				fi
@@ -150,7 +150,7 @@ assert_stash_files() { # stash_num expect_untracked expected_files
 			printf '%s\n' "$expected_files" \
 			| while IFS= read -r line
 			do
-				if printf '%s' "$line" | grep -q '^?? '
+				if printf '%s' "$line" | grep -qE '^\?\? '
 				then
 					printf '%s' "$line" | cut -c4- | awk '{print $1,$2}'
 				fi
@@ -160,7 +160,7 @@ assert_stash_files() { # stash_num expect_untracked expected_files
 }
 
 assert_stash() { # stash_num expected_branch_name expected_stash_name expected_files
-	if printf '%s\n' "$4" | sed 's/^\t\+//' | grep -q '^?? '
+	if printf '%s\n' "$4" | sed -E 's/^\t+//' | grep -qE '^\?\? '
 	then
 		expect_untracked=y
 	else
@@ -194,8 +194,8 @@ assert_stash_base() { # stash_num expected_base
 		test "$value_for_assert" -eq 0 ||
 			fail '"%s" should have no parents but it has %i!\n' "stash@{$1}" "$value_for_assert"
 		value_for_assert="$(git rev-list --format=%B --max-count=1 --no-commit-header "stash@{$1}^1")"
-		expected_value_regex="Base commit for stash entry on an orphan branch \"$(sanitize_for_bre "$(printf '%s' "$2" | cut -c2-)")\""
-		! printf '%s\n' "$value_for_assert" | grep -xvq "$expected_value_regex" ||
+		expected_value_regex="Base commit for stash entry on an orphan branch \"$(sanitize_for_ere "$(printf '%s' "$2" | cut -c2-)")\""
+		! printf '%s\n' "$value_for_assert" | grep -xvqE "$expected_value_regex" ||
 			fail 'The message on the stash commit with untracked files is different than expected!\n(It'\''s "%s".)\n(It should match "%s".)\n' "$value_for_assert" "$expected_value_regex"
 		unset expected_value_regex
 		unset value_for_assert

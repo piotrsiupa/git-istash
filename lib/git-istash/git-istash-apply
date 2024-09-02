@@ -39,7 +39,7 @@ load_data() {
 		return 1
 	fi
 	current_branch="$(cat "$target_data_file")"
-	if printf '%s' "$current_branch" | grep -q '^~'
+	if printf '%s' "$current_branch" | grep -qE '^~'
 	then
 		current_branch="$(printf '%s' "$current_branch" | cut -c2-)"
 		curr_branch_type='orphan'
