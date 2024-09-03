@@ -2,10 +2,12 @@
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 
+__test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
 git add aaa
 git commit -m 'added aaa'
 
+__test_section__ 'Create stash'
 printf 'bbb\n' >aaa
 git add aaa
 printf 'ccc\n' >aaa
@@ -14,6 +16,7 @@ assert_branch_count 1
 
 SWITCH_HEAD_TYPE
 
+__test_section__ 'Apply stash'
 correct_head_hash="$(get_head_hash_H)"
 printf 'xxx\n' >aaa
 git add aaa

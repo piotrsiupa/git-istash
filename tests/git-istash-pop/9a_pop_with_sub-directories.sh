@@ -2,6 +2,7 @@
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 
+__test_section__ 'Create stash'
 mkdir xxx yyy
 printf 'aaa0\n' >aaa
 printf 'aaa1\n' >xxx/aaa
@@ -17,6 +18,7 @@ git stash push -u
 
 SWITCH_HEAD_TYPE
 
+__test_section__ 'Pop stash'
 correct_head_hash="$(get_head_hash_H)"
 mkdir xxx
 cd xxx

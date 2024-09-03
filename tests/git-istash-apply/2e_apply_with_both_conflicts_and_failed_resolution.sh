@@ -2,20 +2,24 @@
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 
+__test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
 git add aaa
 git commit -m 'Added aaa'
 
+__test_section__ 'Create stash'
 printf 'bbb\n' >aaa
 git add aaa
 printf 'ccc\n' >aaa
 git stash push
 
+__test_section__ 'Create conflict'
 printf 'ddd\n' >aaa
 git commit -am 'Changed aaa'
 
 SWITCH_HEAD_TYPE
 
+__test_section__ 'Apply stash'
 correct_head_hash="$(get_head_hash_H)"
 assert_exit_code 2 capture_outputs git istash apply
 assert_conflict_message git istash apply
@@ -31,6 +35,7 @@ assert_branch_count_H 1
 assert_data_files 'apply'
 assert_rebase y
 
+__test_section__ 'Continue applying stash (0)'
 printf 'eee\n' >aaa
 assert_exit_code 2 capture_outputs git istash apply --continue
 assert_conflict_message git istash apply
@@ -46,6 +51,7 @@ assert_branch_count_H 1
 assert_data_files 'apply'
 assert_rebase y
 
+__test_section__ 'Continue applying stash (1)'
 git add aaa
 assert_exit_code 2 capture_outputs git istash apply --continue
 assert_conflict_message git istash apply --continue
@@ -58,6 +64,7 @@ assert_branch_count_H 1
 assert_data_files 'apply'
 assert_rebase y
 
+__test_section__ 'Continue applying stash (2)'
 printf 'fff\n' >aaa
 assert_exit_code 2 capture_outputs git istash apply --continue
 assert_conflict_message git istash apply --continue
@@ -70,6 +77,7 @@ assert_branch_count_H 1
 assert_data_files 'apply'
 assert_rebase y
 
+__test_section__ 'Continue applying stash (3)'
 git add aaa
 assert_exit_code 0 git istash apply --continue
 assert_files_H '

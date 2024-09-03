@@ -2,6 +2,7 @@
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 
+__test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
 git add aaa
 git commit -m 'Added aaa'
@@ -22,6 +23,7 @@ assert_rebase n
 
 SWITCH_HEAD_TYPE
 
+__test_section__ 'Create stash'
 correct_pre_stash_hash_0="$(git rev-parse 'stash@{1}')"
 correct_pre_stash_hash_1="$(git rev-parse 'stash@{0}')"
 correct_head_hash="$(get_head_hash_H)"

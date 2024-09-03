@@ -4,6 +4,7 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 
 SWITCH_HEAD_TYPE
 
+__test_section__ 'Create stash'
 printf 'bbb\n' >aaa
 git add aaa
 correct_head_hash="$(get_head_hash_H)"
@@ -26,6 +27,7 @@ assert_rebase n
 git reset --hard
 RESTORE_HEAD_TYPE
 
+__test_section__ 'Pop stash'
 assert_exit_code 0 git stash pop --index
 assert_files '
 A  aaa			bbb

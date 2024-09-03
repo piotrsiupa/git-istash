@@ -7,6 +7,13 @@ then
 fi
 
 
+# This serves both as a pseudo-comment in test code to make it easier to understand and as a way to more easily find where a test failed.
+# These names are not displayed during a normal run of a test but the name of the current section is included in the failure message.
+# (Multi-line names are not allowed.)
+__test_section__() { # section_name
+	printf -- '-%s\n' "$1" 1>&4
+}
+
 fail() { # printf_arguments...
 	#shellcheck disable=SC2059
 	printf "$@" 1>&3

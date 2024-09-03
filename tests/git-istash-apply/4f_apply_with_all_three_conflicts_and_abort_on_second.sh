@@ -2,16 +2,19 @@
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 
+__test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
 git add aaa
 git commit -m 'Added aaa'
 
+__test_section__ 'Create stash'
 printf 'bbb\n' >aaa
 git add aaa
 printf 'ccc\n' >aaa
 printf 'zzz\n' >zzz
 git stash push -u
 
+__test_section__ 'Create conflict'
 printf 'ddd\n' >aaa
 printf 'yyy\n' >zzz
 git add aaa zzz
@@ -19,6 +22,7 @@ git commit -m 'Changed aaa & added zzz'
 
 SWITCH_HEAD_TYPE
 
+__test_section__ 'Apply stash'
 correct_head_hash="$(get_head_hash_H)"
 assert_exit_code 2 capture_outputs git istash apply
 assert_conflict_message git istash apply
@@ -32,6 +36,7 @@ assert_branch_count_H 1
 assert_data_files 'apply'
 assert_rebase y
 
+__test_section__ 'Continue applying stash'
 printf 'eee\n' >aaa
 git add aaa
 assert_exit_code 2 capture_outputs git istash apply --continue
@@ -46,6 +51,7 @@ assert_branch_count_H 1
 assert_data_files 'apply'
 assert_rebase y
 
+__test_section__ 'Abort applying stash'
 assert_exit_code 0 git istash apply --abort
 assert_files_H '
    aaa		ddd

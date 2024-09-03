@@ -2,6 +2,7 @@
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 
+__test_section__ 'Create stash'
 printf 'aaa\n' >aaa
 git add aaa
 printf 'bbb\n' >aaa
@@ -9,6 +10,7 @@ git stash push -m 'the stash'
 
 SWITCH_HEAD_TYPE
 
+__test_section__ 'Pop stash'
 correct_head_hash="$(get_head_hash_H)"
 printf 'xxx\n' >xxx
 git add xxx

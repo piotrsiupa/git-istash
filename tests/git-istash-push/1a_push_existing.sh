@@ -2,6 +2,7 @@
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 
+__test_section__ 'Prepare repository'
 printf 'aaa1\n' >aaa
 printf 'bbb1\n' >bbb
 printf 'ccc1\n' >ccc
@@ -11,6 +12,7 @@ git commit -m 'Added aaa, bbb, ccc & ddd'
 
 SWITCH_HEAD_TYPE
 
+__test_section__ 'Create stash'
 printf 'aaa2\n' >aaa
 printf 'bbb2\n' >bbb
 git add aaa bbb
@@ -40,6 +42,7 @@ assert_rebase n
 
 RESTORE_HEAD_TYPE
 
+__test_section__ 'Pop stash'
 assert_exit_code 0 git stash pop --index
 assert_files '
 M  aaa			aaa2

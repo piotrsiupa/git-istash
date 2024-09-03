@@ -4,12 +4,14 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 
 exit 0  #TODO the test is disabled because `git stash` has a bug(?) and doesn't create the stash correctly in this case. (`git stash` is planned to not be used internally in `git istash` in the future.)
 
+__test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
 git add aaa
 git commit -m 'Added aaa'
 
 SWITCH_HEAD_TYPE
 
+__test_section__ 'Create stash'
 git rm aaa
 printf 'bbb\n' >aaa
 correct_head_hash="$(get_head_hash_H)"
@@ -33,6 +35,7 @@ assert_rebase n
 git reset --hard
 RESTORE_HEAD_TYPE
 
+__test_section__ 'Pop stash'
 assert_exit_code 0 git stash pop --index
 assert_files '
 D  aaa

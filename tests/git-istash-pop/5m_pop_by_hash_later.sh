@@ -2,11 +2,13 @@
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 
+__test_section__ 'Create earlier stash'
 printf 'aaa\n' >aaa
 git stash push -u -m 'earlier stash entry'
 git stash drop
 git reset --hard
 
+__test_section__ 'Create later stash'
 printf 'bbb\n' >bbb
 git stash push -u -m 'later stash entry'
 later_stash_hash="$(git rev-parse stash)"
@@ -17,6 +19,7 @@ assert_stash_count 0
 
 SWITCH_HEAD_TYPE
 
+__test_section__ 'Pop stash'
 correct_head_hash="$(get_head_hash_H)"
 assert_exit_code 1 git istash pop "$later_stash_hash"
 assert_files_H '

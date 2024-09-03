@@ -2,9 +2,11 @@
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 
+__test_section__ 'Create pre-existing stash (0)'
 printf 'xxx\n' >aaa
 git stash push -um 'pre-existing stash 0'
 
+__test_section__ 'Create pre-existing stash (1)'
 printf 'yyy\n' >aaa
 git add aaa
 printf 'zzz\n' >aaa
@@ -14,6 +16,7 @@ assert_stash_count 2
 
 SWITCH_HEAD_TYPE
 
+__test_section__ 'Create stash'
 correct_pre_stash_hash_0="$(get_stash_hash 1)"
 correct_pre_stash_hash_1="$(get_stash_hash 0)"
 correct_head_hash="$(get_head_hash_H)"
@@ -41,6 +44,7 @@ assert_rebase n
 
 RESTORE_HEAD_TYPE
 
+__test_section__ 'Pop stash'
 assert_exit_code 0 git stash pop --index
 assert_files '
 AM aaa		bbb	aaa

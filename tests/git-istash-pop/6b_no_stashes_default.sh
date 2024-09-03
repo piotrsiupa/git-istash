@@ -4,6 +4,7 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 
 SWITCH_HEAD_TYPE
 
+__test_section__ 'Pop stash (without changes)'
 correct_head_hash="$(get_head_hash_H)"
 assert_exit_code 1 git istash pop
 assert_files_H '
@@ -16,6 +17,7 @@ assert_head_name_H
 assert_data_files 'none'
 assert_rebase n
 
+__test_section__ 'Pop stash (with changes)'
 printf 'aaa\n' >aaa
 git add aaa
 printf 'bbb\n' >aaa

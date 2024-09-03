@@ -2,17 +2,20 @@
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 
+__test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
 printf 'bbb\n' >bbb
 git add aaa bbb
 git commit -m 'Added aaa & bbb'
 
+__test_section__ 'Create stash'
 git rm aaa
 rm bbb
 git stash push
 
 SWITCH_HEAD_TYPE
 
+__test_section__ 'Pop stash'
 correct_head_hash="$(get_head_hash_H)"
 assert_exit_code 0 git istash pop
 assert_files_H '

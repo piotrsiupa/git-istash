@@ -2,6 +2,7 @@
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 
+__test_section__ 'Prepare repository'
 mkdir xxx yyy
 printf 'aaa0\n' >aaa
 printf 'aaa1\n' >xxx/aaa
@@ -11,6 +12,7 @@ git commit -m 'Added aaa'
 
 SWITCH_HEAD_TYPE
 
+__test_section__ 'Create stash'
 correct_head_hash="$(get_head_hash_H)"
 mkdir -p xxx yyy
 printf 'bbb0\n' >aaa

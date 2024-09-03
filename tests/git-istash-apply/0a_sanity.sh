@@ -2,6 +2,7 @@
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 
+__test_section__ 'Prepare repository'
 if ! IS_HEAD_ORPHAN
 then
 	printf 'aaa\n' >aaa
@@ -18,6 +19,7 @@ then
 	assert_rebase n
 fi
 
+__test_section__ 'Create stash'
 printf 'bbb\n' >aaa
 git add aaa
 git stash push
@@ -40,6 +42,7 @@ assert_rebase n
 
 SWITCH_HEAD_TYPE
 
+__test_section__ 'Apply stash'
 correct_head_hash="$(get_head_hash_H)"
 assert_exit_code 0 git stash apply --index
 assert_files_H '

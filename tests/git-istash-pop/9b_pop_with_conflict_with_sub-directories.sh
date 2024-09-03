@@ -2,6 +2,7 @@
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 
+__test_section__ 'Prepare repository'
 mkdir xxx yyy
 printf 'aaa0\n' >aaa
 printf 'aaa1\n' >xxx/aaa
@@ -9,6 +10,7 @@ printf 'aaa2\n' >yyy/aaa
 git add aaa xxx/aaa yyy/aaa
 git commit -m 'Added aaa'
 
+__test_section__ 'Create stash'
 printf 'bbb0\n' >aaa
 printf 'bbb1\n' >xxx/aaa
 printf 'bbb2\n' >yyy/aaa
@@ -21,6 +23,7 @@ printf 'zzz1\n' >xxx/zzz
 printf 'zzz2\n' >yyy/zzz
 git stash push -u
 
+__test_section__ 'Create conflict'
 printf 'ddd0\n' >aaa
 printf 'ddd1\n' >xxx/aaa
 printf 'ddd2\n' >yyy/aaa
@@ -32,6 +35,7 @@ git commit -m 'Changed aaa & added zzz'
 
 SWITCH_HEAD_TYPE
 
+__test_section__ 'Pop stash'
 correct_head_hash="$(get_head_hash_H)"
 mkdir -p xxx
 cd xxx
@@ -57,6 +61,7 @@ assert_branch_count_H 1
 assert_data_files 'pop'
 assert_rebase y
 
+__test_section__ 'Continue popping stash (0)'
 printf 'eee0\n' >aaa
 printf 'eee1\n' >xxx/aaa
 printf 'eee2\n' >yyy/aaa
@@ -87,6 +92,7 @@ assert_branch_count_H 1
 assert_data_files 'pop'
 assert_rebase y
 
+__test_section__ 'Continue popping stash (1)'
 printf 'fff0\n' >aaa
 printf 'fff1\n' >xxx/aaa
 printf 'fff2\n' >yyy/aaa

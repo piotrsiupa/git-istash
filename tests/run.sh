@@ -93,30 +93,30 @@ run_test() { # test_name
 		export ROTATE_PARAMETER
 		cleanup_test "$1"
 		create_test_dir "$1" 1>/dev/null
-		exec 5>&1
-		test_passed="$(
+		exec 4>&1
+		test_result="$(
 			exec 3>&2
 			{
 				{
 					export WAS_IT_CALLED_FROM_RUN_SH='indeed'
 					if ! cd "$(get_test_dir "$1")"
 					then
-						printf '0' 1>&5
+						printf '0' 1>&4
 					elif [ "$debug_mode" = n ]
 					then
 						if sh "../$(basename "$(get_test_script "$1")")" 1>/dev/null 2>&1
 						then
-							printf y 1>&5
+							printf y 1>&4
 						else
-							printf n 1>&5
+							printf n 1>&4
 						fi
 					else
 						{
 							if sh "../$(basename "$(get_test_script "$1")")"
 							then
-								printf y 1>&5
+								printf y 1>&4
 							else
-								printf n 1>&5
+								printf n 1>&4
 							fi 6>&2 2>&1 1>&6 6>&- \
 							| if [ "$use_color" = y ]
 							then
@@ -125,7 +125,7 @@ run_test() { # test_name
 								$sed_call -E 's/^/\t/'
 							fi
 						} 6>&2 2>&1 1>&6 6>&- | $sed_call -E 's/^/\t/'
-					fi 6>&5 5>&1 1>&6 6>&-
+					fi 6>&4 4>&1 1>&6 6>&-
 				} 6>&3 3>&1 1>&6 6>&- \
 				| if [ "$use_color" = y ]
 				then
@@ -136,7 +136,7 @@ run_test() { # test_name
 			} 6>&3 3>&1 1>&6 6>&-
 			exec 3>&-
 		)"
-		exec 5>&-
+		exec 4>&-
 		if [ "$raw_name" = n ]
 		then
 			display_name="\"$(printf '%s' "$1" | tr '_' ' ')\""
@@ -147,6 +147,7 @@ run_test() { # test_name
 		then
 			display_name="$display_name ($(awk '{print $2}' "$PARAMETERS_FILE" | sed -E 's/$/, /' | head -c-3 | tr -d '\n'))"
 		fi
+		test_passed="$(printf '%s\n' "$test_result" | grep -Ev '^-')"
 		if [ "$test_passed" = y ]
 		then
 			if [ "$quiet_mode" = n ]
@@ -160,6 +161,15 @@ run_test() { # test_name
 		else
 			print_color_code '\033[0;1;31m'
 			printf 'FAILED - %s' "$display_name"
+			current_section="$(printf '%s\n' "$test_result" | grep -E '^-' | tail -n1 | cut -c2-)"
+			if [ -n "$current_section" ]
+			then
+				printf ' ('
+				print_color_code '\033[22m'
+				printf '%s' "$current_section"
+				print_color_code '\033[1m'
+				printf ')'
+			fi
 			print_color_code '\033[22;39m'
 			printf ' (the result is kept)\n'
 			error_count=$((error_count + 1))
@@ -192,7 +202,7 @@ update_current_category() { # test_name
 			print_centered "$current_category" '-'
 			print_color_code '\033[22m'
 			printf '\n'
-		} 1>&4
+		} 1>&5
 		printf '%s\n' "$current_category"
 	fi
 }
@@ -208,7 +218,7 @@ run_tests() {
 		sed_call='sed'
 	fi
 	esc_char="$(printf '\033')"
-	exec 4>&1
+	exec 5>&1
 	passed_tests="$(
 		previous_category=''
 		printf '%s\n' "$tests" \
@@ -217,7 +227,7 @@ run_tests() {
 			while read -r test_name
 			do
 				update_current_category "$test_name"
-				if run_test "$test_name" 1>&4
+				if run_test "$test_name" 1>&5
 				then
 					printf '%s\n' "$current_category"
 				fi
@@ -248,7 +258,7 @@ run_tests() {
 					then
 						printf '%s\n' "$line" 1>&2
 					else
-						printf '%s\n' "$line" 1>&4
+						printf '%s\n' "$line" 1>&5
 					fi
 				done
 				if [ "$(tail -n1 "$result_file")" = '0' ]
@@ -266,7 +276,7 @@ run_tests() {
 		fi \
 		| uniq -c | awk '{print $1 - 1}'
 	)"
-	exec 4>&-
+	exec 5>&-
 }
 
 print_summary() {

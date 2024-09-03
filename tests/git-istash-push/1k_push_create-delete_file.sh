@@ -6,6 +6,7 @@ exit 0  #TODO the test is disabled because `git stash` has a bug(?) and doesn't 
 
 SWITCH_HEAD_TYPE
 
+__test_section__ 'Create stash'
 printf 'aaa\n' >aaa
 git add aaa
 rm aaa
@@ -29,6 +30,7 @@ assert_rebase n
 
 RESTORE_HEAD_TYPE
 
+__test_section__ 'Pop stash'
 assert_exit_code 0 git stash pop --index
 assert_files '
 AD aaa			aaa
