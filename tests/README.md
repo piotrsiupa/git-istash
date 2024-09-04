@@ -4,7 +4,7 @@ The most notable files (the ones executed by hand) are `run.sh` and `shellcheck.
 
 # Scripts
 
-## `run.sh`
+## `run.sh` (or `windows-run.bat` for Windows)
 
 The script that runs all the tests placed in this directory.
 Executing it without parameters will run all the tests.
@@ -77,4 +77,4 @@ Generally these prefixes work as follows:
     - `1` - pushing without additional options.
     - `2` - pushing with `--no-keep-index`.
     - `3` - pushing with `--keep-index`.
-- The second character is a lowercase letter that with tandem with the digit acts as an ID of the test in the current directory.
+- The second character is an uppercase letter that with tandem with the digit acts as an ID of the test in the current directory.
