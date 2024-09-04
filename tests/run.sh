@@ -83,7 +83,7 @@ find_tests() { # pattern
 	fi
 }
 
-run_test() { # test_name
+run_test() ( # test_name
 	error_count=0
 	PARAMETERS_FILE="$(mktemp)"
 	export PARAMETERS_FILE
@@ -147,19 +147,46 @@ run_test() { # test_name
 		then
 			display_name="$display_name ($(awk '{print $2}' "$PARAMETERS_FILE" | sed -E 's/$/, /' | head -c-3 | tr -d '\n'))"
 		fi
-		test_passed="$(printf '%s\n' "$test_result" | grep -Ev '^-')"
+		test_passed="$(printf '%s\n' "$test_result" | grep -Ev '^[-+]')"
+		known_failure_reason="$(printf '%s' "$test_result" | grep -E '^\+')"
 		if [ "$test_passed" = y ]
 		then
-			if [ "$quiet_mode" = n ]
+			if [ "$quiet_mode" = n ] || [ -n "$known_failure_reason" ]
 			then
-				print_color_code '\033[0;1;32m'
+				if [ -z "$known_failure_reason" ]
+				then
+					print_color_code '\033[0;1;32m'
+				else
+					error_count=$((error_count + 1))
+					print_color_code '\033[0;1;31m'
+					printf '%s\n' "$known_failure_reason" | cut -c2- \
+					| if [ "$use_color" = y ]
+					then
+						sed -E 's/^.*$/\tKnown failure:'"$esc_char"'[22m &'"$esc_char"'[1m/'
+					else
+						sed -E 's/^/\tKnown failure: /'
+					fi
+				fi
 				printf 'PASSED - %s' "$display_name"
 				print_color_code '\033[22;39m'
 				printf '\n'
 			fi
 			cleanup_test "$1"
 		else
-			print_color_code '\033[0;1;31m'
+			if [ -z "$known_failure_reason" ]
+			then
+				error_count=$((error_count + 1))
+				print_color_code '\033[0;1;31m'
+			else
+				print_color_code '\033[0;1;33m'
+				printf '%s\n' "$known_failure_reason" | cut -c2- \
+				| if [ "$use_color" = y ]
+				then
+					sed -E 's/^.*$/\tKnown failure:'"$esc_char"'[22m &'"$esc_char"'[1m/'
+				else
+					sed -E 's/^/\tKnown failure: /'
+				fi
+			fi
 			printf 'FAILED - %s' "$display_name"
 			current_section="$(printf '%s\n' "$test_result" | grep -E '^-' | tail -n1 | cut -c2-)"
 			if [ -n "$current_section" ]
@@ -171,8 +198,13 @@ run_test() { # test_name
 				printf ')'
 			fi
 			print_color_code '\033[22;39m'
-			printf ' (the result is kept)\n'
-			error_count=$((error_count + 1))
+			if [ -z "$known_failure_reason" ]
+			then
+				printf ' (the result is kept)'
+			else
+				cleanup_test "$1"
+			fi
+			printf '\n'
 		fi
 		if [ -n "$(cat "$PARAMETERS_FILE")" ]
 		then
@@ -191,7 +223,7 @@ run_test() { # test_name
 	done
 	rm "$PARAMETERS_FILE"
 	test "$error_count" -eq 0
-}
+)
 update_current_category() { # test_name
 	current_category="$(dirname "$1")"
 	if [ "$current_category" != "$previous_category" ]

@@ -2,7 +2,7 @@
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 
-exit 0 #XXX it doesn't work due to a bug in the current implementation of `git stash` (which is still used by `git istash` intenally)
+known_failure 'a confirmed bug in "git stash"'
 
 SWITCH_HEAD_TYPE
 

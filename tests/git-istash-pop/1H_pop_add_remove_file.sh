@@ -2,7 +2,7 @@
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 
-exit 0  #TODO the test is disabled because `git stash` has a bug(?) and doesn't create the stash correctly in this case
+known_failure 'an apparent bug in "git stash"'
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa

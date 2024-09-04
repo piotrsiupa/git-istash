@@ -20,6 +20,11 @@ fail() { # printf_arguments...
 	return 1
 }
 
+# Tests with known failures fail when they succeed and succeed when they fail.
+known_failure() { # reason
+	printf -- '%s\n' "$1" | sed -E 's/^/+/' 1>&4
+}
+
 capture_outputs() { # command [arguments...]
 	stdout_file="$(mktemp)"
 	stderr_file="$(mktemp)"
