@@ -143,9 +143,11 @@ run_test() ( # test_name
 		else
 			display_name="$(dirname "$0")/$1.sh"
 		fi
-		if [ -n "$(cat "$PARAMETERS_FILE")" ]
+		if [ -z "$(cat "$PARAMETERS_FILE")" ]
 		then
-			display_name="$display_name ($(awk '{print $2}' "$PARAMETERS_FILE" | sed -E 's/$/, /' | head -c-3 | tr -d '\n'))"
+			parameters_string=''
+		else
+			parameters_string="$(awk '{print $2}' "$PARAMETERS_FILE" | sed -E 's/$/, /' | head -c-3 | tr -d '\n')"
 		fi
 		test_passed="$(printf '%s\n' "$test_result" | grep -Ev '^[-+]')"
 		known_failure_reason="$(printf '%s' "$test_result" | grep -E '^\+')"
@@ -167,7 +169,12 @@ run_test() ( # test_name
 						sed -E 's/^/\tKnown failure: /'
 					fi
 				fi
-				printf 'PASSED - %s' "$display_name"
+				if [ -z "$parameters_string" ]
+				then
+					printf 'PASSED - %s' "$display_name"
+				else
+					printf '    (%s)' "$parameters_string"
+				fi
 				print_color_code '\033[22;39m'
 				printf '\n'
 			fi
@@ -187,7 +194,12 @@ run_test() ( # test_name
 					sed -E 's/^/\tKnown failure: /'
 				fi
 			fi
-			printf 'FAILED - %s' "$display_name"
+			if [ -z "$parameters_string" ]
+			then
+				printf 'FAILED - %s' "$display_name"
+			else
+				printf '    (%s)' "$parameters_string"
+			fi
 			current_section="$(printf '%s\n' "$test_result" | grep -E '^-' | tail -n1 | cut -c2-)"
 			if [ -n "$current_section" ]
 			then
@@ -206,7 +218,7 @@ run_test() ( # test_name
 			fi
 			printf '\n'
 		fi
-		if [ -n "$(cat "$PARAMETERS_FILE")" ]
+		if [ -n "$parameters_string" ]
 		then
 			test_dir="$(get_test_dir "$1")"
 			parametrized_test_dir="${test_dir}__$(awk '{print $2}' "$PARAMETERS_FILE" | head -c-1 | tr '\n' '_')"
@@ -222,7 +234,26 @@ run_test() ( # test_name
 		fi
 	done
 	rm "$PARAMETERS_FILE"
-	test "$error_count" -eq 0
+	if [ "$error_count" -eq 0 ]
+	then
+		if [ -n "$parameters_string" ] && [ "$quiet_mode" = n ]
+		then
+			print_color_code '\033[0;1;32m'
+			printf 'PASSED - %s' "$display_name"
+			print_color_code '\033[22;39m'
+			printf '\n'
+		fi
+		return 0
+	else
+		if [ -n "$parameters_string" ]
+		then
+			print_color_code '\033[0;1;31m'
+			printf 'FAILED - %s' "$display_name"
+			print_color_code '\033[22;39m'
+			printf '\n'
+		fi
+		return 1
+	fi
 )
 update_current_category() { # test_name
 	current_category="$(dirname "$1")"
