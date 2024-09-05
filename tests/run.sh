@@ -13,6 +13,7 @@ print_help() {
 	printf '    -f, --failed\t- Rerun only the tests that failed the last time when\n\t\t\t  they were run. (Check the presence of the test dir.)\n'
 	printf '    -d, --debug\t\t- Print outputs of all commands in run in the tests.\n'
 	printf '    -q, --quiet\t\t- Don'\''t print summaries for passed tests.\n'
+	printf '    -v, --verbose\t- Show each set of parameters even of if passes.\n'
 	printf '    -c, --color=when\t- Set color mode (always / never / auto).\n'
 	printf '    -r, --raw-name\t- Print paths to test files instead of prettified names.\n'
 	printf '    -l, --limit=number\t- Set maximum number of tests to be run. (It pairs well\n\t\t\t  with "--failed" to e.g. rerun the first failed test.)\n'
@@ -151,16 +152,54 @@ run_test() ( # test_name
 		fi
 		test_passed="$(printf '%s\n' "$test_result" | grep -Ev '^[-+]')"
 		known_failure_reason="$(printf '%s' "$test_result" | grep -E '^\+')"
-		if [ "$test_passed" = y ]
+		test_result_is_correct=n
+		if [ -z "$known_failure_reason" ] && [ "$test_passed" = y ]
 		then
-			if [ "$quiet_mode" = n ] || [ -n "$known_failure_reason" ]
+			test_result_is_correct=y
+		fi
+		if [ -n "$known_failure_reason" ] && [ "$test_passed" = n ]
+		then
+			test_result_is_correct=y
+		fi
+		if [ "$test_result_is_correct" = n ]
+		then
+			error_count=$((error_count + 1))
+		fi
+		if [ -z "$parameters_string" ] || [ "$test_result_is_correct" = n ] || [ "$verbose_mode" = y ]
+		then
+			if [ "$test_passed" = y ]
 			then
+				if [ "$quiet_mode" = n ] || [ -n "$known_failure_reason" ]
+				then
+					if [ -z "$known_failure_reason" ]
+					then
+						print_color_code '\033[0;1;32m'
+					else
+						print_color_code '\033[0;1;31m'
+						printf '%s\n' "$known_failure_reason" | cut -c2- \
+						| if [ "$use_color" = y ]
+						then
+							sed -E 's/^.*$/\tKnown failure:'"$esc_char"'[22m &'"$esc_char"'[1m/'
+						else
+							sed -E 's/^/\tKnown failure: /'
+						fi
+					fi
+					if [ -z "$parameters_string" ]
+					then
+						printf 'PASSED - %s' "$display_name"
+					else
+						printf '    (%s)' "$parameters_string"
+					fi
+					print_color_code '\033[22;39m'
+					printf '\n'
+				fi
+				cleanup_test "$1"
+			else
 				if [ -z "$known_failure_reason" ]
 				then
-					print_color_code '\033[0;1;32m'
-				else
-					error_count=$((error_count + 1))
 					print_color_code '\033[0;1;31m'
+				else
+					print_color_code '\033[0;1;33m'
 					printf '%s\n' "$known_failure_reason" | cut -c2- \
 					| if [ "$use_color" = y ]
 					then
@@ -171,52 +210,28 @@ run_test() ( # test_name
 				fi
 				if [ -z "$parameters_string" ]
 				then
-					printf 'PASSED - %s' "$display_name"
+					printf 'FAILED - %s' "$display_name"
 				else
 					printf '    (%s)' "$parameters_string"
 				fi
+				current_section="$(printf '%s\n' "$test_result" | grep -E '^-' | tail -n1 | cut -c2-)"
+				if [ -n "$current_section" ]
+				then
+					printf ' ('
+					print_color_code '\033[22m'
+					printf '%s' "$current_section"
+					print_color_code '\033[1m'
+					printf ')'
+				fi
 				print_color_code '\033[22;39m'
+				if [ -z "$known_failure_reason" ]
+				then
+					printf ' (the result is kept)'
+				else
+					cleanup_test "$1"
+				fi
 				printf '\n'
 			fi
-			cleanup_test "$1"
-		else
-			if [ -z "$known_failure_reason" ]
-			then
-				error_count=$((error_count + 1))
-				print_color_code '\033[0;1;31m'
-			else
-				print_color_code '\033[0;1;33m'
-				printf '%s\n' "$known_failure_reason" | cut -c2- \
-				| if [ "$use_color" = y ]
-				then
-					sed -E 's/^.*$/\tKnown failure:'"$esc_char"'[22m &'"$esc_char"'[1m/'
-				else
-					sed -E 's/^/\tKnown failure: /'
-				fi
-			fi
-			if [ -z "$parameters_string" ]
-			then
-				printf 'FAILED - %s' "$display_name"
-			else
-				printf '    (%s)' "$parameters_string"
-			fi
-			current_section="$(printf '%s\n' "$test_result" | grep -E '^-' | tail -n1 | cut -c2-)"
-			if [ -n "$current_section" ]
-			then
-				printf ' ('
-				print_color_code '\033[22m'
-				printf '%s' "$current_section"
-				print_color_code '\033[1m'
-				printf ')'
-			fi
-			print_color_code '\033[22;39m'
-			if [ -z "$known_failure_reason" ]
-			then
-				printf ' (the result is kept)'
-			else
-				cleanup_test "$1"
-			fi
-			printf '\n'
 		fi
 		if [ -n "$parameters_string" ]
 		then
@@ -415,11 +430,12 @@ print_summary() {
 	printf '\n'
 }
 
-getopt_result="$(getopt -o'hfdqc:rl:pj:' --long='help,version,failed,debug,quiet,color:,raw,raw-name,file-name,limit:,print-paths,jobs:' -n"$(basename "$0")" -ssh -- "$@")"
+getopt_result="$(getopt -o'hfdqvc:rl:pj:' --long='help,version,failed,debug,quiet,verbose,color:,raw,raw-name,file-name,limit:,print-paths,jobs:' -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 only_failed=n
 debug_mode=n
 quiet_mode=n
+verbose_mode=n
 use_color='auto'
 raw_name=n
 test_limit=0
@@ -444,6 +460,9 @@ do
 		;;
 	-q|--quiet)
 		quiet_mode=y
+		;;
+	-v|--verbose)
+		verbose_mode=y
 		;;
 	-c|--color)
 		shift
@@ -507,6 +526,11 @@ then
 	else
 		use_color=n
 	fi
+fi
+if [ "$quiet_mode" = y ] && [ "$verbose_mode" = y ]
+then
+	printf 'Options "--quiet" and "--verbose" are incompatible.\n' 1>&2
+	exit 1
 fi
 
 normalize_filter_entry() { # filter_entry
