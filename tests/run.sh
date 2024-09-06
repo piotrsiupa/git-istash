@@ -88,15 +88,16 @@ run_test() ( # test_name
 	error_count=0
 	PARAMETERS_FILE="$(mktemp)"
 	export PARAMETERS_FILE
+	output_file="$(mktemp)"
 	for i in $(seq 1 1000)
 	do
 		ROTATE_PARAMETER=y
 		export ROTATE_PARAMETER
 		cleanup_test "$1"
 		create_test_dir "$1" 1>/dev/null
-		exec 4>&1
+		exec 4>"$output_file"
 		test_result="$(
-			exec 3>&2
+			exec 3>&4
 			{
 				{
 					export WAS_IT_CALLED_FROM_RUN_SH='indeed'
@@ -134,7 +135,7 @@ run_test() ( # test_name
 				else
 					$sed_call -E 's/^/\tFailed assertion: /'
 				fi
-			} 6>&3 3>&1 1>&6 6>&-
+			} 6>&3 3>&1 1>&6 6>&- 2>&4
 			exec 3>&-
 		)"
 		exec 4>&-
@@ -167,6 +168,15 @@ run_test() ( # test_name
 		fi
 		if [ -z "$parameters_string" ] || [ "$test_result_is_correct" = n ] || [ "$verbose_mode" = y ]
 		then
+			while IFS= read -r line
+			do
+				if printf '%s' "$line" | grep -qE '^\t'
+				then
+					printf '%s\n' "$line" 1>&2
+				else
+					printf '%s\n' "$line"
+				fi
+			done <"$output_file"
 			if [ "$test_passed" = y ]
 			then
 				if [ "$quiet_mode" = n ] || [ -n "$known_failure_reason" ]
@@ -175,14 +185,16 @@ run_test() ( # test_name
 					then
 						print_color_code '\033[0;1;32m'
 					else
-						print_color_code '\033[0;1;31m'
+						print_color_code '\033[0;1;31m' 1>&2
 						printf '%s\n' "$known_failure_reason" | cut -c2- \
 						| if [ "$use_color" = y ]
 						then
 							sed -E 's/^.*$/\tKnown failure:'"$esc_char"'[22m &'"$esc_char"'[1m/'
 						else
 							sed -E 's/^/\tKnown failure: /'
-						fi
+						fi 1>&2
+						print_color_code '\033[22;39m' 1>&2
+						print_color_code '\033[0;1;31m'
 					fi
 					if [ -z "$parameters_string" ]
 					then
@@ -199,14 +211,16 @@ run_test() ( # test_name
 				then
 					print_color_code '\033[0;1;31m'
 				else
-					print_color_code '\033[0;1;33m'
+					print_color_code '\033[0;1;33m' 1>&2
 					printf '%s\n' "$known_failure_reason" | cut -c2- \
 					| if [ "$use_color" = y ]
 					then
 						sed -E 's/^.*$/\tKnown failure:'"$esc_char"'[22m &'"$esc_char"'[1m/'
 					else
 						sed -E 's/^/\tKnown failure: /'
-					fi
+					fi 1>&2
+					print_color_code '\033[22;39m' 1>&2
+					print_color_code '\033[0;1;33m'
 				fi
 				if [ -z "$parameters_string" ]
 				then
@@ -248,7 +262,8 @@ run_test() ( # test_name
 			break
 		fi
 	done
-	rm "$PARAMETERS_FILE"
+	rm -f "$output_file"
+	rm -f "$PARAMETERS_FILE"
 	if [ "$error_count" -eq 0 ]
 	then
 		if [ -n "$parameters_string" ] && [ "$quiet_mode" = n ]
