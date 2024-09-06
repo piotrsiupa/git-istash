@@ -129,12 +129,7 @@ run_test() ( # test_name
 						} 6>&2 2>&1 1>&6 6>&- | $sed_call -E 's/^/\t/'
 					fi 6>&4 4>&1 1>&6 6>&-
 				} 6>&3 3>&1 1>&6 6>&- \
-				| if [ "$use_color" = y ]
-				then
-					$sed_call -E 's/^.*$/\t'"$esc_char"'[1;31mFailed assertion:'"$esc_char"'[22m &'"$esc_char"'[39m/'
-				else
-					$sed_call -E 's/^/\tFailed assertion: /'
-				fi
+				| $sed_call -E 's/^/\tFailed assertion: /'
 			} 6>&3 3>&1 1>&6 6>&- 2>&4
 			exec 3>&-
 		)"
@@ -168,7 +163,18 @@ run_test() ( # test_name
 		fi
 		if [ -z "$parameters_string" ] || [ "$test_result_is_correct" = n ] || [ "$verbose_mode" = y ]
 		then
-			while IFS= read -r line
+			if [ "$use_color" = y ]
+			then
+				if [ "$test_result_is_correct" = y ]
+				then
+					sed -E 's/^\t(Failed assertion:)(.*)$/\t'"$esc_char"'[1;33m\1'"$esc_char"'[22m\2'"$esc_char"'[39m/'
+				else
+					sed -E 's/^\t(Failed assertion:)(.*)$/\t'"$esc_char"'[1;31m\1'"$esc_char"'[22m\2'"$esc_char"'[39m/'
+				fi
+			else
+				cat
+			fi <"$output_file" \
+			| while IFS= read -r line
 			do
 				if printf '%s' "$line" | grep -qE '^\t'
 				then
@@ -176,7 +182,7 @@ run_test() ( # test_name
 				else
 					printf '%s\n' "$line"
 				fi
-			done <"$output_file"
+			done
 			if [ "$test_passed" = y ]
 			then
 				if [ "$quiet_mode" = n ] || [ -n "$known_failure_reason" ]
@@ -196,11 +202,21 @@ run_test() ( # test_name
 						print_color_code '\033[22;39m' 1>&2
 						print_color_code '\033[0;1;31m'
 					fi
-					if [ -z "$parameters_string" ]
+					if [ "$test_result_is_correct" = y ]
 					then
-						printf 'PASSED - %s' "$display_name"
+						if [ -z "$parameters_string" ]
+						then
+							printf 'PASSED - %s' "$display_name"
+						else
+							printf '    PASSED: (%s)' "$parameters_string"
+						fi
 					else
-						printf '    (%s)' "$parameters_string"
+						if [ -z "$parameters_string" ]
+						then
+							printf 'UNEXPECTEDLY PASSED - %s' "$display_name"
+						else
+							printf '    UNEXPECTEDLY PASSED: (%s)' "$parameters_string"
+						fi
 					fi
 					print_color_code '\033[22;39m'
 					printf '\n'
@@ -222,11 +238,21 @@ run_test() ( # test_name
 					print_color_code '\033[22;39m' 1>&2
 					print_color_code '\033[0;1;33m'
 				fi
-				if [ -z "$parameters_string" ]
+				if [ "$test_result_is_correct" = y ]
 				then
-					printf 'FAILED - %s' "$display_name"
+					if [ -z "$parameters_string" ]
+					then
+						printf 'EXPECTEDLY FAILED - %s' "$display_name"
+					else
+						printf '    EXPECTEDLY FAILED: (%s)' "$parameters_string"
+					fi
 				else
-					printf '    (%s)' "$parameters_string"
+					if [ -z "$parameters_string" ]
+					then
+						printf 'FAILED - %s' "$display_name"
+					else
+						printf '    FAILED: (%s)' "$parameters_string"
+					fi
 				fi
 				current_section="$(printf '%s\n' "$test_result" | grep -E '^-' | tail -n1 | cut -c2-)"
 				if [ -n "$current_section" ]
