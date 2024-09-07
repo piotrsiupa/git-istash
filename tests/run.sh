@@ -35,11 +35,11 @@ print_version() {
 	printf 'test script version 1.3.0\n'
 }
 
-print_color_code() { # code
+printf_color_code() { # code_for_printf...
 	if [ "$use_color" = y ]
 	then
 		#shellcheck disable=SC2059
-		printf "$1"
+		printf "$@"
 	fi
 }
 print_centered() { # text character
@@ -84,7 +84,137 @@ find_tests() { # pattern
 	fi
 }
 
+do_run_test() { # test_name
+	exec 3>&4
+	{
+		{
+			export WAS_IT_CALLED_FROM_RUN_SH='indeed'
+			if ! cd "$(get_test_dir "$1")"
+			then
+				printf '0' 1>&4
+			elif [ "$debug_mode" = n ]
+			then
+				if sh "../$(basename "$(get_test_script "$1")")" 1>/dev/null 2>&1
+				then
+					printf y 1>&4
+				else
+					printf n 1>&4
+				fi
+			else
+				{
+					if sh "../$(basename "$(get_test_script "$1")")"
+					then
+						printf y 1>&4
+					else
+						printf n 1>&4
+					fi 6>&2 2>&1 1>&6 6>&- \
+					| if [ "$use_color" = y ]
+					then
+						$sed_call -E 's/^.*$/\t'"$esc_char"'[31m&'"$esc_char"'[39m/'
+					else
+						$sed_call -E 's/^/\t/'
+					fi
+				} 6>&2 2>&1 1>&6 6>&- | $sed_call -E 's/^/\t/'
+			fi 6>&4 4>&1 1>&6 6>&-
+		} 6>&3 3>&1 1>&6 6>&- \
+		| $sed_call -E 's/^/\tFailed assertion: /'
+	} 6>&3 3>&1 1>&6 6>&- 2>&4
+	exec 3>&-
+}
+
+get_test_result_color() { # test_passed test_result_is_correct
+	if [ "$test_result_is_correct" = n ]
+	then
+		printf '31'
+	elif [ "$test_passed" = y ]
+	then
+		printf '32'
+	else
+		printf '33'
+	fi
+}
+
+get_result_status() { # test_passed test_result_is_correct
+	if [ "$test_passed" = y ]
+	then
+		if [ "$test_result_is_correct" = y ]
+		then
+			printf 'PASSED'
+		else
+			printf 'UNEXPECTEDLY PASSED'
+		fi
+	else
+		if [ "$test_result_is_correct" = y ]
+		then
+			printf 'EXPECTEDLY FAILED'
+		else
+			printf 'FAILED'
+		fi
+	fi
+}
+
+print_test_result() {
+	test_result_color="$(get_test_result_color "$test_passed" "$test_result_is_correct")"
+	if [ "$test_result_is_correct" = n ] || [ "$verbose_mode" = y ]
+	then
+		if [ "$use_color" = y ]
+		then
+			failed_assertion_color="$(test "$test_result_is_correct" = y && printf '33' || printf '31')"
+			sed -E 's/^\t(Failed assertion:)(.*)$/\t'"$esc_char"'[1;'"$failed_assertion_color"'m\1'"$esc_char"'[22m\2'"$esc_char"'[39m/'
+		else
+			cat
+		fi <"$output_file" \
+		| while IFS= read -r line
+		do
+			if printf '%s' "$line" | grep -qE '^\t'
+			then
+				printf '%s\n' "$line" 1>&2
+			else
+				printf '%s\n' "$line"
+			fi
+		done
+		if [ -n "$known_failure_reason" ]
+		then
+			printf_color_code '\033[0;1;%im' "$test_result_color" 1>&2
+			printf '%s\n' "$known_failure_reason" | cut -c2- \
+			| if [ "$use_color" = y ]
+			then
+				sed -E 's/^.*$/\tKnown failure:'"$esc_char"'[22m &'"$esc_char"'[1m/'
+			else
+				sed -E 's/^/\tKnown failure: /'
+			fi 1>&2
+			printf_color_code '\033[22;39m' 1>&2
+		fi
+	fi
+	printf_color_code '\033[0;1;%im' "$test_result_color"
+	if [ -z "$parameters_string" ]
+	then
+		printf '%s - %s' "$(get_result_status "$test_passed" "$test_result_is_correct")" "$display_name"
+	else
+		printf '    %s: (%s)' "$(get_result_status "$test_passed" "$test_result_is_correct")" "$parameters_string"
+	fi
+	if [ "$test_passed" = n ]
+	then
+		current_section="$(printf '%s\n' "$test_result" | grep -E '^-' | tail -n1 | cut -c2-)"
+		if [ -n "$current_section" ]
+		then
+			printf ' ('
+			printf_color_code '\033[22m'
+			printf '%s' "$current_section"
+			printf_color_code '\033[1m'
+			printf ')'
+		fi
+	fi
+	printf_color_code '\033[22;39m'
+	if [ "$test_passed" = n ] && [ -z "$known_failure_reason" ]
+	then
+		printf ' (the result is kept)'
+	fi
+	printf '\n'
+}
+
 run_test() ( # test_name
+	failed_count=0
 	error_count=0
 	PARAMETERS_FILE="$(mktemp)"
 	export PARAMETERS_FILE
@@ -97,41 +227,7 @@ run_test() ( # test_name
 		create_test_dir "$1" 1>/dev/null
 		exec 4>"$output_file"
 		test_result="$(
-			exec 3>&4
-			{
-				{
-					export WAS_IT_CALLED_FROM_RUN_SH='indeed'
-					if ! cd "$(get_test_dir "$1")"
-					then
-						printf '0' 1>&4
-					elif [ "$debug_mode" = n ]
-					then
-						if sh "../$(basename "$(get_test_script "$1")")" 1>/dev/null 2>&1
-						then
-							printf y 1>&4
-						else
-							printf n 1>&4
-						fi
-					else
-						{
-							if sh "../$(basename "$(get_test_script "$1")")"
-							then
-								printf y 1>&4
-							else
-								printf n 1>&4
-							fi 6>&2 2>&1 1>&6 6>&- \
-							| if [ "$use_color" = y ]
-							then
-								$sed_call -E 's/^.*$/\t'"$esc_char"'[31m&'"$esc_char"'[39m/'
-							else
-								$sed_call -E 's/^/\t/'
-							fi
-						} 6>&2 2>&1 1>&6 6>&- | $sed_call -E 's/^/\t/'
-					fi 6>&4 4>&1 1>&6 6>&-
-				} 6>&3 3>&1 1>&6 6>&- \
-				| $sed_call -E 's/^/\tFailed assertion: /'
-			} 6>&3 3>&1 1>&6 6>&- 2>&4
-			exec 3>&-
+			do_run_test "$1"
 		)"
 		exec 4>&-
 		if [ "$raw_name" = n ]
@@ -147,131 +243,28 @@ run_test() ( # test_name
 			parameters_string="$(awk '{print $2}' "$PARAMETERS_FILE" | sed -E 's/$/, /' | head -c-3 | tr -d '\n')"
 		fi
 		test_passed="$(printf '%s\n' "$test_result" | grep -Ev '^[-+]')"
-		known_failure_reason="$(printf '%s' "$test_result" | grep -E '^\+')"
-		test_result_is_correct=n
-		if [ -z "$known_failure_reason" ] && [ "$test_passed" = y ]
+		if [ "$test_passed" = n ]
 		then
-			test_result_is_correct=y
+			failed_count=$((failed_count + 1))
 		fi
-		if [ -n "$known_failure_reason" ] && [ "$test_passed" = n ]
+		known_failure_reason="$(printf '%s' "$test_result" | grep -E '^\+')"
+		if { [ -z "$known_failure_reason" ] && [ "$test_passed" = y ] ; } || { [ -n "$known_failure_reason" ] && [ "$test_passed" = n ] ; }
 		then
 			test_result_is_correct=y
+		else
+			test_result_is_correct=n
 		fi
 		if [ "$test_result_is_correct" = n ]
 		then
 			error_count=$((error_count + 1))
 		fi
-		if [ -z "$parameters_string" ] || [ "$test_result_is_correct" = n ] || [ "$verbose_mode" = y ]
+		if { [ -z "$parameters_string" ] || [ "$test_result_is_correct" = n ] || [ "$verbose_mode" = y ] ; } && { [ "$test_result_is_correct" = n ] || [ "$quiet_mode" = n ] ; }
 		then
-			if [ "$use_color" = y ]
-			then
-				if [ "$test_result_is_correct" = y ]
-				then
-					sed -E 's/^\t(Failed assertion:)(.*)$/\t'"$esc_char"'[1;33m\1'"$esc_char"'[22m\2'"$esc_char"'[39m/'
-				else
-					sed -E 's/^\t(Failed assertion:)(.*)$/\t'"$esc_char"'[1;31m\1'"$esc_char"'[22m\2'"$esc_char"'[39m/'
-				fi
-			else
-				cat
-			fi <"$output_file" \
-			| while IFS= read -r line
-			do
-				if printf '%s' "$line" | grep -qE '^\t'
-				then
-					printf '%s\n' "$line" 1>&2
-				else
-					printf '%s\n' "$line"
-				fi
-			done
-			if [ "$test_passed" = y ]
-			then
-				if [ "$quiet_mode" = n ] || [ -n "$known_failure_reason" ]
-				then
-					if [ -z "$known_failure_reason" ]
-					then
-						print_color_code '\033[0;1;32m'
-					else
-						print_color_code '\033[0;1;31m' 1>&2
-						printf '%s\n' "$known_failure_reason" | cut -c2- \
-						| if [ "$use_color" = y ]
-						then
-							sed -E 's/^.*$/\tKnown failure:'"$esc_char"'[22m &'"$esc_char"'[1m/'
-						else
-							sed -E 's/^/\tKnown failure: /'
-						fi 1>&2
-						print_color_code '\033[22;39m' 1>&2
-						print_color_code '\033[0;1;31m'
-					fi
-					if [ "$test_result_is_correct" = y ]
-					then
-						if [ -z "$parameters_string" ]
-						then
-							printf 'PASSED - %s' "$display_name"
-						else
-							printf '    PASSED: (%s)' "$parameters_string"
-						fi
-					else
-						if [ -z "$parameters_string" ]
-						then
-							printf 'UNEXPECTEDLY PASSED - %s' "$display_name"
-						else
-							printf '    UNEXPECTEDLY PASSED: (%s)' "$parameters_string"
-						fi
-					fi
-					print_color_code '\033[22;39m'
-					printf '\n'
-				fi
-				cleanup_test "$1"
-			else
-				if [ -z "$known_failure_reason" ]
-				then
-					print_color_code '\033[0;1;31m'
-				else
-					print_color_code '\033[0;1;33m' 1>&2
-					printf '%s\n' "$known_failure_reason" | cut -c2- \
-					| if [ "$use_color" = y ]
-					then
-						sed -E 's/^.*$/\tKnown failure:'"$esc_char"'[22m &'"$esc_char"'[1m/'
-					else
-						sed -E 's/^/\tKnown failure: /'
-					fi 1>&2
-					print_color_code '\033[22;39m' 1>&2
-					print_color_code '\033[0;1;33m'
-				fi
-				if [ "$test_result_is_correct" = y ]
-				then
-					if [ -z "$parameters_string" ]
-					then
-						printf 'EXPECTEDLY FAILED - %s' "$display_name"
-					else
-						printf '    EXPECTEDLY FAILED: (%s)' "$parameters_string"
-					fi
-				else
-					if [ -z "$parameters_string" ]
-					then
-						printf 'FAILED - %s' "$display_name"
-					else
-						printf '    FAILED: (%s)' "$parameters_string"
-					fi
-				fi
-				current_section="$(printf '%s\n' "$test_result" | grep -E '^-' | tail -n1 | cut -c2-)"
-				if [ -n "$current_section" ]
-				then
-					printf ' ('
-					print_color_code '\033[22m'
-					printf '%s' "$current_section"
-					print_color_code '\033[1m'
-					printf ')'
-				fi
-				print_color_code '\033[22;39m'
-				if [ -z "$known_failure_reason" ]
-				then
-					printf ' (the result is kept)'
-				else
-					cleanup_test "$1"
-				fi
-				printf '\n'
-			fi
+			print_test_result
+		fi
+		if [ "$test_passed" = y ] || [ -n "$known_failure_reason" ]
+		then
+			cleanup_test "$1"
 		fi
 		if [ -n "$parameters_string" ]
 		then
@@ -290,26 +283,16 @@ run_test() ( # test_name
 	done
 	rm -f "$output_file"
 	rm -f "$PARAMETERS_FILE"
-	if [ "$error_count" -eq 0 ]
+	if [ -n "$parameters_string" ] && { [ "$error_count" -ne 0 ] || [ "$quiet_mode" = n ] ; }
 	then
-		if [ -n "$parameters_string" ] && [ "$quiet_mode" = n ]
-		then
-			print_color_code '\033[0;1;32m'
-			printf 'PASSED - %s' "$display_name"
-			print_color_code '\033[22;39m'
-			printf '\n'
-		fi
-		return 0
-	else
-		if [ -n "$parameters_string" ]
-		then
-			print_color_code '\033[0;1;31m'
-			printf 'FAILED - %s' "$display_name"
-			print_color_code '\033[22;39m'
-			printf '\n'
-		fi
-		return 1
+		test_passed="$(test "$failed_count" -eq 0 && printf 'y' || printf 'n')"
+		test_result_is_correct="$(test "$error_count" -eq 0 && printf 'y' || printf 'n')"
+		printf_color_code '\033[0;1;%im' "$(get_test_result_color "$test_passed" "$test_result_is_correct")"
+		printf '%s - %s' "$(get_result_status "$test_passed" "$test_result_is_correct")" "$display_name"
+		printf_color_code '\033[22;39m'
+		printf '\n'
 	fi
+	test "$error_count" -eq 0
 )
 update_current_category() { # test_name
 	current_category="$(dirname "$1")"
@@ -317,9 +300,9 @@ update_current_category() { # test_name
 	then
 		previous_category="$current_category"
 		{
-			print_color_code '\033[1m'
+			printf_color_code '\033[1m'
 			print_centered "$current_category" '-'
-			print_color_code '\033[22m'
+			printf_color_code '\033[22m'
 			printf '\n'
 		} 1>&5
 		printf '%s\n' "$current_category"
@@ -399,9 +382,9 @@ run_tests() {
 }
 
 print_summary() {
-	print_color_code '\033[1m'
+	printf_color_code '\033[1m'
 	print_centered 'Results' '='
-	print_color_code '\033[22m'
+	printf_color_code '\033[22m'
 	printf '\n'
 	if [ -n "$tests" ]
 	then
@@ -415,7 +398,7 @@ print_summary() {
 			printf '%s: ' "$(printf '%s' "$category" | cut -d' ' -f2)"
 			if [ "$passed_in_category" -eq "$total_in_category" ]
 			then
-				print_color_code '\033[1;32;4m'
+				printf_color_code '\033[1;32;4m'
 				if [ "$total_in_category" -eq 1 ]
 				then
 					printf 'Passed the test.'
@@ -423,7 +406,7 @@ print_summary() {
 					printf 'Passed all %i tests.' "$total_in_category"
 				fi
 			else
-				print_color_code '\033[1;31;4m'
+				printf_color_code '\033[1;31;4m'
 				if [ "$total_in_category" -eq 1 ]
 				then
 					printf 'Failed the test.'
@@ -431,7 +414,7 @@ print_summary() {
 					printf 'Passed %i out of %i tests.' "$passed_in_category" "$total_in_category"
 				fi
 			fi
-			print_color_code '\033[0m'
+			printf_color_code '\033[0m'
 			printf '\n'
 		done
 	fi
@@ -447,7 +430,7 @@ print_summary() {
 	then
 		if [ "$passed_tests" -eq "$total_tests" ]
 		then
-			print_color_code '\033[42;1;37;4m'
+			printf_color_code '\033[42;1;37;4m'
 			if [ "$total_tests" -eq 1 ]
 			then
 				printf 'Passed the test.'
@@ -455,7 +438,7 @@ print_summary() {
 				printf 'Passed all %i tests.' "$total_tests"
 			fi
 		else
-			print_color_code '\033[41;30;4m'
+			printf_color_code '\033[41;30;4m'
 			if [ "$total_tests" -eq 1 ]
 			then
 				printf 'Failed the test.'
@@ -464,10 +447,10 @@ print_summary() {
 			fi
 		fi
 	else
-		print_color_code '\033[43;1;33;4m'
+		printf_color_code '\033[43;1;33;4m'
 		printf 'No matching tests were found!'
 	fi
-	print_color_code '\033[0m'
+	printf_color_code '\033[0m'
 	printf '\n'
 }
 
