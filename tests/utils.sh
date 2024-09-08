@@ -17,7 +17,7 @@ __test_section__() { # section_name
 fail() { # printf_arguments...
 	#shellcheck disable=SC2059
 	printf "$@" 1>&3
-	return 1
+	exit 1
 }
 
 # Tests with known failures fail when they succeed and succeed when they fail.
@@ -27,7 +27,7 @@ known_failure() { # reason
 
 skip_silently() {
 	printf '?' 1>&4
-	return 1
+	exit 1
 }
 
 capture_outputs() { # command [arguments...]
