@@ -1,6 +1,7 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
+PARAMETRIZE_KEEP_INDEX
 
 SWITCH_HEAD_TYPE
 
@@ -10,11 +11,20 @@ git add aaa
 printf 'bbb\n' >aaa
 printf 'ddd\n' >ddd
 correct_head_hash="$(get_head_hash_H)"
-assert_exit_code 0 git istash push --message 'name'
-assert_files_H '
-?? ddd		ddd
-!! ignored	ignored
-'
+assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS --message 'name'
+if ! IS_KEEP_INDEX_ON
+then
+	assert_files_H '
+	?? ddd		ddd
+	!! ignored	ignored
+	'
+else
+	assert_files_H '
+	A  aaa			aaa
+	?? ddd		ddd
+	!! ignored	ignored
+	'
+fi
 assert_stash_H 0 'name' '
 AM aaa		bbb	aaa
 '
@@ -26,6 +36,7 @@ assert_head_hash_H "$correct_head_hash"
 assert_head_name_H
 assert_rebase n
 
+git reset --hard
 RESTORE_HEAD_TYPE
 
 __test_section__ 'Pop stash'

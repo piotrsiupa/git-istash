@@ -1,0 +1,94 @@
+#!/usr/bin/env sh
+
+if [ "$WAS_IT_CALLED_FROM_COMMONS_SH" != 'affirmative' ]
+then
+	printf 'This script is intended only to be used by "commons.sh"!\n' 1>&2
+	exit 1
+fi
+
+
+# This serves both as a pseudo-comment in test code to make it easier to understand and as a way to more easily find where a test failed.
+# These names are not displayed during a normal run of a test but the name of the current section is included in the failure message.
+# (Multi-line names are not allowed.)
+__test_section__() { # section_name
+	printf -- '-%s\n' "$1" 1>&4
+}
+
+fail() { # printf_arguments...
+	#shellcheck disable=SC2059
+	printf "$@" 1>&3
+	exit 1
+}
+
+# Tests with known failures fail when they succeed and succeed when they fail.
+known_failure() { # reason
+	printf -- '%s\n' "$1" | sed -E 's/^/+/' 1>&4
+}
+
+skip_silently() {
+	printf '?' 1>&4
+	exit 1
+}
+
+capture_outputs() { # command [arguments...]
+	stdout_file="$(mktemp)"
+	stderr_file="$(mktemp)"
+	exec 7>&1
+	error_code="$(
+		set +e
+		{
+			{
+				{
+					"$@" 8>&2 2>&1 1>&8 8>&-
+					printf '%i\n' $? 1>&7
+				} | tee "$stderr_file"
+			} 8>&2 2>&1 1>&8 8>&- | tee "$stdout_file"
+		} 8>&7 7>&1 1>&8 8>&-
+	)"
+	exec 7>&-
+	#shellcheck disable=SC2034
+	stdout="$(cat "$stdout_file")"
+	rm "$stdout_file"
+	unset stdout_file
+	#shellcheck disable=SC2034
+	stderr="$(cat "$stderr_file")"
+	rm "$stderr_file"
+	unset stderr_file
+	return "$error_code"
+}
+
+command_to_string() { # command [arguments...]
+	if [ "$1" = 'capture_outputs' ]
+	then
+		shift
+	fi
+	printf '"%s"' "$*"
+}
+
+sanitize_for_ere() { # string
+	printf '%s' "$1" | sed -E 's/[.[\()*+?{|^$]/\\&/g'
+}
+
+make_stash_name_regex() { # stash_name
+	if [ "$(printf '%s' "$1" | cut -c1)" = '~' ]
+	then
+		sanitize_for_ere "$(printf '%s' "$1" | cut -c2-)"
+	elif [ "$1" != 'HEAD' ]
+	then
+		sanitize_for_ere "$1"
+	else
+		printf '\(no branch\)'
+	fi
+}
+
+get_head_hash() {
+	git rev-parse 'HEAD'
+}
+
+get_stash_hash() { # stash_num
+	if [ $# -eq 0 ]
+	then
+		set -- 0
+	fi
+	git rev-parse "stash@{$1}"
+}

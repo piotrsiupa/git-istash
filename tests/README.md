@@ -74,7 +74,5 @@ Generally these prefixes work as follows:
     - `9` - Popping/Applying with sub-directories in the repository and when the working directory is not the repository's root.
   - For `git-istash-push` the categories are:
     - `0` - Sanity tests that don't use git commands from this repository.
-    - `1` - pushing without additional options.
-    - `2` - pushing with `--no-keep-index`.
-    - `3` - pushing with `--keep-index`.
+    - `1` - Normal tests.
 - The second character is an uppercase letter that with tandem with the digit acts as an ID of the test in the current directory.
