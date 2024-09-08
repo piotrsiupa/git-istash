@@ -25,6 +25,11 @@ known_failure() { # reason
 	printf -- '%s\n' "$1" | sed -E 's/^/+/' 1>&4
 }
 
+skip_silently() {
+	printf '?' 1>&4
+	return 1
+}
+
 capture_outputs() { # command [arguments...]
 	stdout_file="$(mktemp)"
 	stderr_file="$(mktemp)"
@@ -129,6 +134,33 @@ PARAMETRIZE() { # name values...
 	unset PARAM_NAME
 	unset CUR_VAL
 	unset LAST_VAL
+}
+# The condition is "eval"ed.
+# If it's true, the function behaves like "PARAMETRIZE".
+# If it's false, it's like there were never a parameter here.
+PARAMETRIZE_COND() { # condition name values...
+	CONDITION="$1"
+	shift
+	PARAMETRIZE "$@"
+	if eval ! "$CONDITION"
+	then
+		CUR_VAL="$(awk '$1 == "'"$1"'" { print $2 }' "$PARAMETERS_FILE")"
+		if [ "$CUR_VAL" = "$2" ]
+		then
+			TMP_FILE="$(mktemp)"
+			{
+				sed -En '/^'"$1"'/ p' "$PARAMETERS_FILE"
+				sed -E '/^'"$1"'/ d' "$PARAMETERS_FILE"
+			} >"$TMP_FILE"
+			mv "$TMP_FILE" "$PARAMETERS_FILE"
+			unset TMP_FILE
+			unset "$1"
+		else
+			skip_silently
+		fi
+		unset CUR_VAL
+	fi
+	unset CONDITION
 }
 
 # It calls "PARAMETRIZE" with the name "HEAD_TYPE" and possible values "BRANCH", "DETACH" and "ORPHAN".

@@ -219,8 +219,11 @@ run_test() ( # test_name
 	PARAMETERS_FILE="$(mktemp)"
 	export PARAMETERS_FILE
 	output_file="$(mktemp)"
-	for i in $(seq 1 1000)
+	parametrized_run_cap=100
+	for i in $(seq 1 $parametrized_run_cap)
 	do
+		sed -iE '/^--------$/ d' "$PARAMETERS_FILE"
+		printf -- '--------\n' >>"$PARAMETERS_FILE"
 		ROTATE_PARAMETER=y
 		export ROTATE_PARAMETER
 		cleanup_test "$1"
@@ -230,57 +233,70 @@ run_test() ( # test_name
 			do_run_test "$1"
 		)"
 		exec 4>&-
-		if [ "$raw_name" = n ]
+		if ! printf '%s\n' "$test_result" | grep -qE '^\?'
 		then
-			display_name="\"$(printf '%s' "$1" | tr '_' ' ')\""
-		else
-			display_name="$(dirname "$0")/$1.sh"
-		fi
-		if [ -z "$(cat "$PARAMETERS_FILE")" ]
-		then
-			parameters_string=''
-		else
-			parameters_string="$(awk '{print $2}' "$PARAMETERS_FILE" | sed -E 's/$/, /' | head -c-3 | tr -d '\n')"
-		fi
-		test_passed="$(printf '%s\n' "$test_result" | grep -Ev '^[-+]')"
-		if [ "$test_passed" = n ]
-		then
-			failed_count=$((failed_count + 1))
-		fi
-		known_failure_reason="$(printf '%s' "$test_result" | grep -E '^\+')"
-		if { [ -z "$known_failure_reason" ] && [ "$test_passed" = y ] ; } || { [ -n "$known_failure_reason" ] && [ "$test_passed" = n ] ; }
-		then
-			test_result_is_correct=y
-		else
-			test_result_is_correct=n
-		fi
-		if [ "$test_result_is_correct" = n ]
-		then
-			error_count=$((error_count + 1))
-		fi
-		if { [ -z "$parameters_string" ] || [ "$test_result_is_correct" = n ] || [ "$verbose_mode" = y ] ; } && { [ "$test_result_is_correct" = n ] || [ "$quiet_mode" = n ] ; }
-		then
-			print_test_result
-		fi
-		if [ "$test_passed" = y ] || [ -n "$known_failure_reason" ]
-		then
-			cleanup_test "$1"
-		fi
-		if [ -n "$parameters_string" ]
-		then
-			test_dir="$(get_test_dir "$1")"
-			parametrized_test_dir="${test_dir}__$(awk '{print $2}' "$PARAMETERS_FILE" | head -c-1 | tr '\n' '_')"
-			rm -rf "$parametrized_test_dir"
-			if [ -e "$test_dir" ]
+			if [ "$raw_name" = n ]
 			then
-				mv "$test_dir" "$parametrized_test_dir"
+				display_name="\"$(printf '%s' "$1" | tr '_' ' ')\""
+			else
+				display_name="$(dirname "$0")/$1.sh"
+			fi
+			if [ -z "$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | tail -n+2)" ]
+			then
+				parameters_string=''
+			else
+				parameters_string="$(awk 'x{print $2} /^--------$/{x=1}' "$PARAMETERS_FILE" | sed -E 's/$/, /' | head -c-3 | tr -d '\n')"
+			fi
+			test_passed="$(printf '%s\n' "$test_result" | grep -Ev '^[-+]')"
+			if [ "$test_passed" = n ]
+			then
+				failed_count=$((failed_count + 1))
+			fi
+			known_failure_reason="$(printf '%s' "$test_result" | grep -E '^\+')"
+			if { [ -z "$known_failure_reason" ] && [ "$test_passed" = y ] ; } || { [ -n "$known_failure_reason" ] && [ "$test_passed" = n ] ; }
+			then
+				test_result_is_correct=y
+			else
+				test_result_is_correct=n
+			fi
+			if [ "$test_result_is_correct" = n ]
+			then
+				error_count=$((error_count + 1))
+			fi
+			if { [ -z "$parameters_string" ] || [ "$test_result_is_correct" = n ] || [ "$verbose_mode" = y ] ; } && { [ "$test_result_is_correct" = n ] || [ "$quiet_mode" = n ] ; }
+			then
+				print_test_result
+			fi
+			if [ "$test_passed" = y ] || [ -n "$known_failure_reason" ]
+			then
+				cleanup_test "$1"
+			fi
+			if [ -n "$parameters_string" ]
+			then
+				test_dir="$(get_test_dir "$1")"
+				parametrized_test_dir="${test_dir}__$(awk 'x{print $2} /^--------$/{x=1}' "$PARAMETERS_FILE" | head -c-1 | tr '\n' '_')"
+				rm -rf "$parametrized_test_dir"
+				if [ -e "$test_dir" ]
+				then
+					mv "$test_dir" "$parametrized_test_dir"
+				fi
 			fi
 		fi
 		if [ -z "$(awk '$2 != $3 { print 1 }' "$PARAMETERS_FILE")" ]
 		then
+			i=x
 			break
 		fi
 	done
+	if [ $i != x ]
+	then
+		failed_count=$((failed_count + 1))
+		error_count=$((error_count + 1))
+		printf_color_code '\033[0;1;31m'
+		printf '    TOO MANY PARAMETRIZED RUNS (The cap is %i.)' "$parametrized_run_cap"
+		printf_color_code '\033[22;39m'
+		printf '\n'
+	fi
 	rm -f "$output_file"
 	rm -f "$PARAMETERS_FILE"
 	if [ -n "$parameters_string" ] && { [ "$error_count" -ne 0 ] || [ "$quiet_mode" = n ] ; }
