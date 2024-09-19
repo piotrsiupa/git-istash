@@ -30,7 +30,7 @@ They are sourced by `commons.sh` and they should be considered part of it.
 
 # Tests
 
-Each test is a shell script saved in a `*.sh` file, in a sub-directory (named the same after the test category - usually the tested command).
+Each test is a shell script saved in a `*.sh` file, in a sub-directory (named the same after the test category).
 The file patch relative to the directory `tests` but without the extension is the name of the test.
 
 Tests are scripts that return an exit code `0` if the tests passed and non-`0` otherwise.
@@ -76,3 +76,4 @@ Generally these prefixes work as follows:
     - `0` - Sanity tests that don't use git commands from this repository.
     - `1` - Normal tests.
 - The second character is an uppercase letter that with tandem with the digit acts as an ID of the test in the current directory.
+  (In some cases, when there is a lot if tests in a category, there are 2 letters instead of one.)

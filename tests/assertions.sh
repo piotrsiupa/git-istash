@@ -7,14 +7,8 @@ then
 fi
 
 
-category="$(basename "$(dirname "$OLDPWD")")"
 . ./assertions-commons.sh
-if printf '%s' "$category" | grep -xqE 'git-istash-(apply|pop)'
-then
-	. ./assertions-for-applying.sh
-fi
-if printf '%s' "$category" | grep -xqE 'git-istash-push'
-then
-	. ./assertions-for-creation.sh
-fi
-unset category
+case "$(basename "$(dirname "$OLDPWD")")" in
+	applying) . ./assertions-for-applying.sh ;;
+	creation) . ./assertions-for-creation.sh ;;
+esac

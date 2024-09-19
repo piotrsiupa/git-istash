@@ -223,7 +223,6 @@ run_test() ( # test_name
 	parametrized_run_cap=100
 	for i in $(seq 1 $parametrized_run_cap)
 	do
-		test_count=$((test_count + 1))
 		sed -iE '/^--------$/ d' "$PARAMETERS_FILE"
 		printf -- '--------\n' >>"$PARAMETERS_FILE"
 		ROTATE_PARAMETER=y
@@ -237,6 +236,7 @@ run_test() ( # test_name
 		exec 4>&-
 		if ! printf '%s\n' "$test_result" | grep -qE '^\?'
 		then
+			test_count=$((test_count + 1))
 			if [ "$raw_name" = n ]
 			then
 				display_name="\"$(printf '%s' "$1" | tr '_' ' ')\""

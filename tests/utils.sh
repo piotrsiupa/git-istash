@@ -7,11 +7,9 @@ then
 fi
 
 
-category="$(basename "$(dirname "$OLDPWD")")"
 . ./utils-commons.sh
 . ./utils-parametrization.sh
-if printf '%s' "$category" | grep -xqE 'git-istash-push'
-then
-	. ./utils-for-creation.sh
-fi
-unset category
+case "$(basename "$(dirname "$OLDPWD")")" in
+	applying) . ./utils-for-applying.sh ;;
+	creation) . ./utils-for-creation.sh ;;
+esac
