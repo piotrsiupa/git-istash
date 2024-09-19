@@ -13,15 +13,16 @@ print_help() {
 	printf '    -f, --failed\t- Rerun only the tests that failed the last time when\n\t\t\t  they were run. (Check the presence of the test dir.)\n'
 	printf '    -d, --debug\t\t- Print outputs of all commands in run in the tests.\n'
 	printf '    -q, --quiet\t\t- Don'\''t print summaries for passed tests.\n'
+	printf '    -v, --verbose\t- Show each set of parameters even of if passes.\n'
 	printf '    -c, --color=when\t- Set color mode (always / never / auto).\n'
-	printf '        --raw-name\t- Print paths to test files instead of prettified names.\n'
+	printf '    -r, --raw-name\t- Print paths to test files instead of prettified names.\n'
 	printf '    -l, --limit=number\t- Set maximum number of tests to be run. (It pairs well\n\t\t\t  with "--failed" to e.g. rerun the first failed test.)\n'
 	printf '    -p, --print-paths\t- Instead of running tests, print their paths and exit.\n\t\t\t  (The paths are relative to the directory "tests".)\n'
 	printf '    -j, --jobs=N\t- Run N tests in parallel. (default is sequentially)\n\t\t\t  N=0 uses all available processing units. ("nproc")\n'
 	printf '\n'
 	printf 'Filters:\n'
 	printf 'You can specify one or more filters in the command call. '
-	printf 'The filters are BRE\nregexps that match test names that should be run. '
+	printf 'The filters are ERE\nregexps that match test names that should be run. '
 	printf '(A test name is the name of\nthe inluding the sub-directory but without the file extension.) '
 	printf 'A test will be\nrun if it matches any of the filters. '
 	printf 'If there are no filters, all tests are\nrun. '
@@ -34,11 +35,11 @@ print_version() {
 	printf 'test script version 1.3.0\n'
 }
 
-print_color_code() { # code
+printf_color_code() { # code_for_printf...
 	if [ "$use_color" = y ]
 	then
 		#shellcheck disable=SC2059
-		printf "$1"
+		printf "$@"
 	fi
 }
 print_centered() { # text character
@@ -65,8 +66,8 @@ create_test_dir() { # test_name
 
 find_tests() { # pattern
 	find . -mindepth 2 -maxdepth 2 -type f -name '*.sh' \
-	| sed 's;^\./\(.*\)\.sh$;\1;' \
-	| grep "$1" \
+	| sed -E 's;^\./(.*)\.sh$;\1;' \
+	| grep -E "$1" \
 	| while read -r test_name
 	do
 		if [ "$only_failed" = n ] || [ -d "$(get_test_dir "$test_name")" ]
@@ -83,89 +84,245 @@ find_tests() { # pattern
 	fi
 }
 
-run_test() { # test_name
-	cleanup_test "$1"
-	create_test_dir "$1" 1>/dev/null
-	exec 5>&1
-	test_passed="$(
-		exec 3>&2
+do_run_test() { # test_name
+	exec 3>&4
+	{
 		{
-			{
-				export WAS_IT_CALLED_FROM_RUN_SH='indeed'
-				if ! cd "$(get_test_dir "$1")"
-				then
-					printf '0' 1>&5
-				elif [ "$debug_mode" = n ]
-				then
-					if sh "../$(basename "$(get_test_script "$1")")" 1>/dev/null 2>&1
-					then
-						printf y 1>&5
-					else
-						printf n 1>&5
-					fi
-				else
-					{
-						if sh "../$(basename "$(get_test_script "$1")")"
-						then
-							printf y 1>&5
-						else
-							printf n 1>&5
-						fi 6>&2 2>&1 1>&6 6>&- \
-						| if [ "$use_color" = y ]
-						then
-							$sed_call 's/^.*$/\t'"$esc_char"'[31m&'"$esc_char"'[39m/'
-						else
-							$sed_call 's/^/\t/'
-						fi
-					} 6>&2 2>&1 1>&6 6>&- | $sed_call 's/^/\t/'
-				fi 6>&5 5>&1 1>&6 6>&-
-			} 6>&3 3>&1 1>&6 6>&- \
-			| if [ "$use_color" = y ]
+			export WAS_IT_CALLED_FROM_RUN_SH='indeed'
+			if ! cd "$(get_test_dir "$1")"
 			then
-				$sed_call 's/^.*$/\t'"$esc_char"'[1;31mFailed assertion:'"$esc_char"'[22m &'"$esc_char"'[39m/'
+				printf '0' 1>&4
+			elif [ "$debug_mode" = n ]
+			then
+				if sh "../$(basename "$(get_test_script "$1")")" 1>/dev/null 2>&1
+				then
+					printf y 1>&4
+				else
+					printf n 1>&4
+				fi
 			else
-				$sed_call 's/^/\tFailed assertion: /'
-			fi
-		} 6>&3 3>&1 1>&6 6>&-
-		exec 3>&-
-	)"
-	exec 5>&-
-	if [ "$raw_name" = n ]
+				{
+					if sh "../$(basename "$(get_test_script "$1")")"
+					then
+						printf y 1>&4
+					else
+						printf n 1>&4
+					fi 6>&2 2>&1 1>&6 6>&- \
+					| if [ "$use_color" = y ]
+					then
+						$sed_call -E 's/^.*$/\t'"$esc_char"'[31m&'"$esc_char"'[39m/'
+					else
+						$sed_call -E 's/^/\t/'
+					fi
+				} 6>&2 2>&1 1>&6 6>&- | $sed_call -E 's/^/\t/'
+			fi 6>&4 4>&1 1>&6 6>&-
+		} 6>&3 3>&1 1>&6 6>&- \
+		| $sed_call -E 's/^/\tFailed assertion: /'
+	} 6>&3 3>&1 1>&6 6>&- 2>&4
+	exec 3>&-
+}
+
+get_test_result_color() { # test_passed test_result_is_correct
+	if [ "$test_result_is_correct" = n ]
 	then
-		display_name="\"$(printf '%s' "$1" | tr '_' ' ')\""
-	else
-		display_name="$(dirname "$0")/$1.sh"
-	fi
-	if [ "$test_passed" = y ]
+		printf '31'
+	elif [ "$test_passed" = y ]
 	then
-		if [ "$quiet_mode" = n ]
-		then
-			print_color_code '\033[0;1;32m'
-			printf 'PASSED - %s' "$display_name"
-			print_color_code '\033[22;39m'
-			printf '\n'
-		fi
-		cleanup_test "$1"
-		return 0
+		printf '32'
 	else
-		print_color_code '\033[0;1;31m'
-		printf 'FAILED - %s' "$display_name"
-		print_color_code '\033[22;39m'
-		printf ' (the result is kept)\n'
-		return 1
+		printf '33'
 	fi
 }
+
+get_result_status() { # test_passed test_result_is_correct
+	if [ "$test_passed" = y ]
+	then
+		if [ "$test_result_is_correct" = y ]
+		then
+			printf 'PASSED'
+		else
+			printf 'UNEXPECTEDLY PASSED'
+		fi
+	else
+		if [ "$test_result_is_correct" = y ]
+		then
+			printf 'EXPECTEDLY FAILED'
+		else
+			printf 'FAILED'
+		fi
+	fi
+}
+
+print_test_result() {
+	test_result_color="$(get_test_result_color "$test_passed" "$test_result_is_correct")"
+	if [ "$test_result_is_correct" = n ] || [ "$verbose_mode" = y ]
+	then
+		if [ "$use_color" = y ]
+		then
+			failed_assertion_color="$(test "$test_result_is_correct" = y && printf '33' || printf '31')"
+			sed -E 's/^\t(Failed assertion:)(.*)$/\t'"$esc_char"'[1;'"$failed_assertion_color"'m\1'"$esc_char"'[22m\2'"$esc_char"'[39m/'
+		else
+			cat
+		fi <"$output_file" \
+		| while IFS= read -r line
+		do
+			if printf '%s' "$line" | grep -qE '^\t'
+			then
+				printf '%s\n' "$line" 1>&2
+			else
+				printf '%s\n' "$line"
+			fi
+		done
+		if [ -n "$known_failure_reason" ]
+		then
+			printf_color_code '\033[0;1;%im' "$test_result_color" 1>&2
+			printf '%s\n' "$known_failure_reason" | cut -c2- \
+			| if [ "$use_color" = y ]
+			then
+				sed -E 's/^.*$/\tKnown failure:'"$esc_char"'[22m &'"$esc_char"'[1m/'
+			else
+				sed -E 's/^/\tKnown failure: /'
+			fi 1>&2
+			printf_color_code '\033[22;39m' 1>&2
+		fi
+	fi
+	printf_color_code '\033[0;1;%im' "$test_result_color"
+	if [ -z "$parameters_string" ]
+	then
+		printf '%s - %s' "$(get_result_status "$test_passed" "$test_result_is_correct")" "$display_name"
+	else
+		printf '    %s: (%s)' "$(get_result_status "$test_passed" "$test_result_is_correct")" "$parameters_string"
+	fi
+	if [ "$test_passed" = n ]
+	then
+		current_section="$(printf '%s\n' "$test_result" | grep -E '^-' | tail -n1 | cut -c2-)"
+		if [ -n "$current_section" ]
+		then
+			printf ' ('
+			printf_color_code '\033[22m'
+			printf '%s' "$current_section"
+			printf_color_code '\033[1m'
+			printf ')'
+		fi
+	fi
+	printf_color_code '\033[22;39m'
+	if [ "$test_passed" = n ] && [ -z "$known_failure_reason" ]
+	then
+		printf ' (the result is kept)'
+	fi
+	printf '\n'
+}
+
+run_test() ( # test_name
+	test_count=0
+	failed_count=0
+	error_count=0
+	PARAMETERS_FILE="$(mktemp)"
+	export PARAMETERS_FILE
+	output_file="$(mktemp)"
+	parametrized_run_cap=100
+	for i in $(seq 1 $parametrized_run_cap)
+	do
+		sed -iE '/^--------$/ d' "$PARAMETERS_FILE"
+		printf -- '--------\n' >>"$PARAMETERS_FILE"
+		ROTATE_PARAMETER=y
+		export ROTATE_PARAMETER
+		cleanup_test "$1"
+		create_test_dir "$1" 1>/dev/null
+		exec 4>"$output_file"
+		test_result="$(
+			do_run_test "$1"
+		)"
+		exec 4>&-
+		if ! printf '%s\n' "$test_result" | grep -qE '^\?'
+		then
+			test_count=$((test_count + 1))
+			if [ "$raw_name" = n ]
+			then
+				display_name="\"$(printf '%s' "$1" | tr '_' ' ')\""
+			else
+				display_name="$(dirname "$0")/$1.sh"
+			fi
+			if [ -z "$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | tail -n+2)" ]
+			then
+				parameters_string=''
+			else
+				parameters_string="$(awk 'x{print $2} /^--------$/{x=1}' "$PARAMETERS_FILE" | sed -E 's/$/, /' | head -c-3 | tr -d '\n')"
+			fi
+			test_passed="$(printf '%s\n' "$test_result" | grep -Ev '^[-+]')"
+			if [ "$test_passed" = n ]
+			then
+				failed_count=$((failed_count + 1))
+			fi
+			known_failure_reason="$(printf '%s' "$test_result" | grep -E '^\+')"
+			if { [ -z "$known_failure_reason" ] && [ "$test_passed" = y ] ; } || { [ -n "$known_failure_reason" ] && [ "$test_passed" = n ] ; }
+			then
+				test_result_is_correct=y
+			else
+				test_result_is_correct=n
+			fi
+			if [ "$test_result_is_correct" = n ]
+			then
+				error_count=$((error_count + 1))
+			fi
+			if { [ -z "$parameters_string" ] || [ "$test_result_is_correct" = n ] || [ "$verbose_mode" = y ] ; } && { [ "$test_result_is_correct" = n ] || [ "$quiet_mode" = n ] ; }
+			then
+				print_test_result
+			fi
+			if [ "$test_passed" = y ] || [ -n "$known_failure_reason" ]
+			then
+				cleanup_test "$1"
+			fi
+			if [ -n "$parameters_string" ]
+			then
+				test_dir="$(get_test_dir "$1")"
+				parametrized_test_dir="${test_dir}__$(awk 'x{print $2} /^--------$/{x=1}' "$PARAMETERS_FILE" | head -c-1 | tr '\n' '_')"
+				rm -rf "$parametrized_test_dir"
+				if [ -e "$test_dir" ]
+				then
+					mv "$test_dir" "$parametrized_test_dir"
+				fi
+			fi
+		fi
+		if [ -z "$(awk '$2 != $3 { print 1 }' "$PARAMETERS_FILE")" ]
+		then
+			i=x
+			break
+		fi
+	done
+	if [ $i != x ]
+	then
+		failed_count=$((failed_count + 1))
+		error_count=$((error_count + 1))
+		printf_color_code '\033[0;1;31m'
+		printf '    TOO MANY PARAMETRIZED RUNS (The cap is %i.)' "$parametrized_run_cap"
+		printf_color_code '\033[22;39m'
+		printf '\n'
+	fi
+	rm -f "$output_file"
+	rm -f "$PARAMETERS_FILE"
+	if [ $test_count -ge 2 ] && { [ "$error_count" -ne 0 ] || [ "$quiet_mode" = n ] ; }
+	then
+		test_passed="$(test "$failed_count" -eq 0 && printf 'y' || printf 'n')"
+		test_result_is_correct="$(test "$error_count" -eq 0 && printf 'y' || printf 'n')"
+		printf_color_code '\033[0;1;%im' "$(get_test_result_color "$test_passed" "$test_result_is_correct")"
+		printf '%s - %s (%i/%i)' "$(get_result_status "$test_passed" "$test_result_is_correct")" "$display_name" $((test_count - error_count)) $test_count
+		printf_color_code '\033[22;39m'
+		printf '\n'
+	fi
+	test "$error_count" -eq 0
+)
 update_current_category() { # test_name
 	current_category="$(dirname "$1")"
 	if [ "$current_category" != "$previous_category" ]
 	then
 		previous_category="$current_category"
 		{
-			print_color_code '\033[1m'
+			printf_color_code '\033[1m'
 			print_centered "$current_category" '-'
-			print_color_code '\033[22m'
+			printf_color_code '\033[22m'
 			printf '\n'
-		} 1>&4
+		} 1>&5
 		printf '%s\n' "$current_category"
 	fi
 }
@@ -174,14 +331,14 @@ run_tests() {
 	then
 		return 0
 	fi
-	if printf '' | sed --unbuffered 's/^/x/' 1>/dev/null 2>&1
+	if printf '' | sed --unbuffered -E 's/^/x/' 1>/dev/null 2>&1
 	then
 		sed_call='sed --unbuffered'
 	else
 		sed_call='sed'
 	fi
 	esc_char="$(printf '\033')"
-	exec 4>&1
+	exec 5>&1
 	passed_tests="$(
 		previous_category=''
 		printf '%s\n' "$tests" \
@@ -190,7 +347,7 @@ run_tests() {
 			while read -r test_name
 			do
 				update_current_category "$test_name"
-				if run_test "$test_name" 1>&4
+				if run_test "$test_name" 1>&5
 				then
 					printf '%s\n' "$current_category"
 				fi
@@ -209,13 +366,21 @@ run_tests() {
 					result_file="$(mktemp)"
 					{ run_test "$test_name" && printf '0\n' || printf '1\n' ; } 1>"$result_file" 2>&1 &
 					running_tests_count=$((running_tests_count + 1))
-					running_tests_data="$(printf '%s\n%i %s %s' "$running_tests_data" $! "$result_file" "$test_name" | sed '/^\s*$/ d')"
+					running_tests_data="$(printf '%s\n%i %s %s' "$running_tests_data" $! "$result_file" "$test_name" | sed -E '/^\s*$/ d')"
 				done
 				update_current_category "$(printf '%s\n' "$running_tests_data" | head -n1 | cut -d' ' -f3-)"
 				wait "$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f1)"
 				result_file="$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f2)"
-				head -n-1 "$result_file" | grep '^\t' 1>&2 || true
-				head -n-1 "$result_file" | grep -v '^\t' 1>&4
+				head -n-1 "$result_file" \
+				| while IFS= read -r line
+				do
+					if printf '%s' "$line" | grep -qE '^\t'
+					then
+						printf '%s\n' "$line" 1>&2
+					else
+						printf '%s\n' "$line" 1>&5
+					fi
+				done
 				if [ "$(tail -n1 "$result_file")" = '0' ]
 				then
 					printf '%s\n' "$current_category"
@@ -231,13 +396,13 @@ run_tests() {
 		fi \
 		| uniq -c | awk '{print $1 - 1}'
 	)"
-	exec 4>&-
+	exec 5>&-
 }
 
 print_summary() {
-	print_color_code '\033[1m'
+	printf_color_code '\033[1m'
 	print_centered 'Results' '='
-	print_color_code '\033[22m'
+	printf_color_code '\033[22m'
 	printf '\n'
 	if [ -n "$tests" ]
 	then
@@ -251,7 +416,7 @@ print_summary() {
 			printf '%s: ' "$(printf '%s' "$category" | cut -d' ' -f2)"
 			if [ "$passed_in_category" -eq "$total_in_category" ]
 			then
-				print_color_code '\033[1;32;4m'
+				printf_color_code '\033[1;32;4m'
 				if [ "$total_in_category" -eq 1 ]
 				then
 					printf 'Passed the test.'
@@ -259,7 +424,7 @@ print_summary() {
 					printf 'Passed all %i tests.' "$total_in_category"
 				fi
 			else
-				print_color_code '\033[1;31;4m'
+				printf_color_code '\033[1;31;4m'
 				if [ "$total_in_category" -eq 1 ]
 				then
 					printf 'Failed the test.'
@@ -267,7 +432,7 @@ print_summary() {
 					printf 'Passed %i out of %i tests.' "$passed_in_category" "$total_in_category"
 				fi
 			fi
-			print_color_code '\033[0m'
+			printf_color_code '\033[0m'
 			printf '\n'
 		done
 	fi
@@ -283,7 +448,7 @@ print_summary() {
 	then
 		if [ "$passed_tests" -eq "$total_tests" ]
 		then
-			print_color_code '\033[42;1;37;4m'
+			printf_color_code '\033[42;1;37;4m'
 			if [ "$total_tests" -eq 1 ]
 			then
 				printf 'Passed the test.'
@@ -291,7 +456,7 @@ print_summary() {
 				printf 'Passed all %i tests.' "$total_tests"
 			fi
 		else
-			print_color_code '\033[41;30;4m'
+			printf_color_code '\033[41;30;4m'
 			if [ "$total_tests" -eq 1 ]
 			then
 				printf 'Failed the test.'
@@ -300,18 +465,19 @@ print_summary() {
 			fi
 		fi
 	else
-		print_color_code '\033[43;1;33;4m'
+		printf_color_code '\033[43;1;33;4m'
 		printf 'No matching tests were found!'
 	fi
-	print_color_code '\033[0m'
+	printf_color_code '\033[0m'
 	printf '\n'
 }
 
-getopt_result="$(getopt -o'hfdqc:l:pj:' --long='help,version,failed,debug,quiet,color:,raw,raw-name,file-name,limit:,print-paths,jobs:' -n"$(basename "$0")" -- "$@")"
+getopt_result="$(getopt -o'hfdqvc:rl:pj:' --long='help,version,failed,debug,quiet,verbose,color:,raw,raw-name,file-name,limit:,print-paths,jobs:' -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 only_failed=n
 debug_mode=n
 quiet_mode=n
+verbose_mode=n
 use_color='auto'
 raw_name=n
 test_limit=0
@@ -337,15 +503,18 @@ do
 	-q|--quiet)
 		quiet_mode=y
 		;;
+	-v|--verbose)
+		verbose_mode=y
+		;;
 	-c|--color)
 		shift
-		if printf '%s' "$1" | grep -ixq 'auto\|default'
+		if printf '%s' "$1" | grep -ixqE 'auto|default'
 		then
 			use_color='auto'
-		elif printf '%s' "$1" | grep -ixq 'y\|yes\|always\|true\|1'
+		elif printf '%s' "$1" | grep -ixqE 'y|yes|always|true|1'
 		then
 			use_color=y
-		elif printf '%s' "$1" | grep -ixq 'n\|no\|never\|false\|0'
+		elif printf '%s' "$1" | grep -ixqE 'n|no|never|false|0'
 		then
 			use_color=n
 		else
@@ -353,7 +522,7 @@ do
 			exit 1
 		fi
 		;;
-	--raw|--raw-name|--file-name)
+	-r|--raw|--raw-name|--file-name)
 		raw_name=y
 		;;
 	-l|--limit)
@@ -400,16 +569,21 @@ then
 		use_color=n
 	fi
 fi
+if [ "$quiet_mode" = y ] && [ "$verbose_mode" = y ]
+then
+	printf 'Options "--quiet" and "--verbose" are incompatible.\n' 1>&2
+	exit 1
+fi
 
 normalize_filter_entry() { # filter_entry
 	if [ -f "$1" ]
 	then
 		printf '%s' "$1" \
-		| sed -e 's;^.*/\([^/]\+/[^/]\+\)$;\1;' \
-			-e 's;^[^/]\+$;./&;' \
+		| sed -E -e 's;^.*/([^/]+/[^/]+)$;\1;' \
+			-e 's;^[^/]+$;./&;' \
 			-e "s;^\\./;$(basename "$(pwd)")/;" \
 			-e 's/\.sh$//' \
-			-e 's/^/^/'
+			-e 's/^/^/' -e 's/$/$/'
 	else
 		printf '%s' "$1"
 	fi
@@ -418,11 +592,11 @@ if [ $# -eq 0 ]
 then
 	filter=''
 else
-	filter="\\($(normalize_filter_entry "$1")\\)"
+	filter="($(normalize_filter_entry "$1"))"
 	shift
 	while [ $# -ne 0 ]
 	do
-		filter="$filter\\|\\($(normalize_filter_entry "$1")\\)"
+		filter="$filter|($(normalize_filter_entry "$1"))"
 		shift
 	done
 fi

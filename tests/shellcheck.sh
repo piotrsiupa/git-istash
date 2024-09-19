@@ -30,12 +30,12 @@ list_files() {
 }
 
 run_shellcheck() {
-	test_dirs="$(find tests -mindepth 1 -maxdepth 1 -type d -print0 | xargs -r0n1 basename | sed 's;^;tests/;' | tr '\n' ':')"  # Not a clean solution but `shellcheck` doesn't support anything better.
+	test_dirs="$(find tests -mindepth 1 -maxdepth 1 -type d -print0 | xargs -r0n1 basename | sed -E 's;^;tests/;' | tr '\n' ':')"  # Not a clean solution but `shellcheck` doesn't support anything better.
 	list_files | xargs -- shellcheck --shell=sh --source-path="${test_dirs}tests:lib/git-istash"
 	printf 'All %i files are correct.\n' "$(list_files | wc -l)"
 }
 
-getopt_result="$(getopt -o'hs' --long='help,skip-tests,version' -n"$(basename "$0")" -- "$@")"
+getopt_result="$(getopt -o'hs' --long='help,skip-tests,version' -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 skip_tests=n
 while true

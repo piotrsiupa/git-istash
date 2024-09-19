@@ -18,7 +18,10 @@ assert_exit_code() { # expected_code command [arguments...]
 	unset exit_code_for_assert
 }
 
-assert_conflict_message() { # git command subcommand [arguments...]
+#shellcheck disable=SC2120
+assert_conflict_message() {
+	#shellcheck disable=SC2154
+	eval set -- "$last_command"
 	#shellcheck disable=SC2154
 	test "$(printf '%s' "$stderr" | tail -n4)" = "
 hint: Disregard all hints above about using \"git rebase\".
@@ -55,20 +58,20 @@ assert_file_contents() { # file expected_current [expected_staged]
 	else
 		value_for_assert=''
 	fi
-	if printf '%s' "$2" | grep -q '|'
+	if printf '%s' "$2" | grep -qE '\|'
 	then
 		ours_expected_contents="$(printf '%s' "$2" | cut -d'|' -f1)"
 		theirs_expected_contents="$(printf '%s' "$2" | cut -d'|' -f2)"
-		test "$(printf '%s\n' "$value_for_assert" | grep -c '^=\{7\}')" -eq 1 ||
+		test "$(printf '%s\n' "$value_for_assert" | grep -cE '^={7}')" -eq 1 ||
 			fail 'Expected file "%s" contain exactly 1 conflict!\n' "$1"
 		#shellcheck disable=SC2015
-		printf '%s\n' "$value_for_assert" | head -n1 | grep -q '^<\{7\} HEAD' \
-		&& printf '%s\n' "$value_for_assert" | tail -n1 | grep -q '^>\{7\} ' ||
+		printf '%s\n' "$value_for_assert" | head -n1 | grep -qE '^<{7} HEAD' \
+		&& printf '%s\n' "$value_for_assert" | tail -n1 | grep -qE '^>{7} ' ||
 			fail 'Expected file "%s" to be comprised entirely from a conflict!\n' "$1"
-		sub_value_for_assert="$(printf '%s\n' "$value_for_assert" | tail -n+2 | sed '/^=\{7\}/ q' | head -n-1)"
+		sub_value_for_assert="$(printf '%s\n' "$value_for_assert" | tail -n+2 | sed -E '/^={7}/ q' | head -n-1)"
 		test "$sub_value_for_assert" = "$ours_expected_contents" ||
 			fail 'Expected the HEAD side of the conflict in "%s" to be "%s" but it is "%s"!\n' "$1" "$ours_expected_contents" "$sub_value_for_assert"
-		sub_value_for_assert="$(printf '%s\n' "$value_for_assert" | head -n-1 | sed -n '/^=\{7\}/,$ p ' | tail -n+2)"
+		sub_value_for_assert="$(printf '%s\n' "$value_for_assert" | head -n-1 | sed -nE '/^={7}/,$ p ' | tail -n+2)"
 		test "$sub_value_for_assert" = "$theirs_expected_contents" ||
 			fail 'Expected the stash side of the conflict in "%s" to be "%s" but it is "%s"!\n' "$1" "$theirs_expected_contents" "$sub_value_for_assert"
 		unset sub_value_for_assert
@@ -88,29 +91,29 @@ assert_file_contents() { # file expected_current [expected_staged]
 }
 
 assert_files() { # expected_files (see one of the tests as an example)
-	expected_files="$(printf '%s\n' "$1" | grep -v '^\s*$' | sed 's/^\(...\)\(.*\)$/\2\1/' | sort | sed 's/^\(.*\)\(...\)$/\2\1/')"
-	assert_all_files "$(printf '%s\n' "$expected_files" | grep -v '^\(D \|.D\) ' | sed 's/^...\(\S\+\)\(\s.*\)\?$/\1/' | head -c-1 | tr '\n' '|')"
-	assert_tracked_files "$(printf '%s\n' "$expected_files" | grep -v '^\(!!\|??\|A[^A]\| A\|DU\) ' | sed 's/^...\(\S\+\)\(\s.*\)\?$/\1/' | head -c-1 | tr '\n' '|')"
-	assert_status "$({ printf '%s\n' "$expected_files" | grep -v '^\(??\) ' ; printf '%s\n' "$expected_files" | grep '^\(??\) ' ; } | grep -v '^\(  \|!!\) ' | sed 's/^\(...\S\+\)\(\s.*\)\?$/\1/' | head -c-1 | tr '\n' '|')"
+	expected_files="$(printf '%s\n' "$1" | sed -E 's/^\t+//' | grep -vE '^\s*$' | sed -E 's/^(...)(.*)$/\2\1/' | sort | sed -E 's/^(.*)(...)$/\2\1/')"
+	assert_all_files "$(printf '%s\n' "$expected_files" | grep -vE '^(D |.D) ' | sed -E 's/^...(\S+)(\s.*)?$/\1/' | head -c-1 | tr '\n' '|')"
+	assert_tracked_files "$(printf '%s\n' "$expected_files" | grep -vE '^(!!|\?\?|A[^A]| A|DU) ' | sed -E 's/^...(\S+)(\s.*)?$/\1/' | head -c-1 | tr '\n' '|')"
+	assert_status "$({ printf '%s\n' "$expected_files" | grep -vE '^(\?\?) ' ; printf '%s\n' "$expected_files" | grep -E '^(\?\?) ' ; } | grep -vE '^(  |!!) ' | sed -E 's/^(...\S+)(\s.*)?$/\1/' | head -c-1 | tr '\n' '|')"
 	printf '%s\n' "$expected_files" \
 	| while IFS= read -r line
 	do
 		stripped_line="$(printf '%s' "$line" | cut -c4-)"
-		if printf '%s' "$line" | grep -q '^D  '
+		if printf '%s' "$line" | grep -qE '^(D ) '
 		then
 			test "$(printf '%s' "$stripped_line" | awk '{printf NF}')" -eq 1 ||
 				fail 'Error in test: the file "%s" should have 0 versions of content to check!\n' "$(printf '%s' "$stripped_line" | awk '{printf $1}')"
-		elif printf '%s' "$line" | grep -q '^\([UD]U\|!!\|??\|.[ AD]\) '
+		elif printf '%s' "$line" | grep -qE '^([UD]U|!!|\?\?|.[ AD]) '
 		then
 			test "$(printf '%s' "$stripped_line" | awk '{printf NF}')" -eq 2 ||
 				fail 'Error in test: the file "%s" should have 1 version of content to check!\n' "$(printf '%s' "$stripped_line" | awk '{printf $1}')"
-			if printf '%s' "$line" | grep -q '^\(. \) '
+			if printf '%s' "$line" | grep -qE '^(. ) '
 			then
 				assert_file_contents \
 					"$(printf '%s' "$stripped_line" | awk '{printf $1}')" \
 					"$(printf '%s' "$stripped_line" | awk '{printf $2}')" \
 					"$(printf '%s' "$stripped_line" | awk '{printf $2}')"
-			elif printf '%s' "$line" | grep -q '^\(.D\) '
+			elif printf '%s' "$line" | grep -qE '^(.D) '
 			then
 				assert_file_contents \
 					"$(printf '%s' "$stripped_line" | awk '{printf $1}')" \
@@ -140,10 +143,19 @@ assert_stash_count() { # expected
 }
 
 assert_log_length() { # expected
-	value_for_assert="$(git rev-list --count HEAD)"
-	test "$value_for_assert" -eq "$1" ||
-		fail 'Expected lenght of HEAD'\''s history to be %i but it is %i!\n' "$1" "$value_for_assert"
-	unset value_for_assert
+	if [ "$1" -ne 0 ]
+	then
+		value_for_assert="$(git rev-list --count 'HEAD')"
+		test "$value_for_assert" -eq "$1" ||
+			fail 'Expected lenght of HEAD'\''s history to be %i but it is %i!\n' "$1" "$value_for_assert"
+		unset value_for_assert
+	else
+		! git rev-parse --verify HEAD 2>/dev/null ||
+		{
+			value_for_assert="$(git rev-list --count 'HEAD')"
+			fail 'Expected lenght of HEAD'\''s history to be 0 but it is %i!\n' "$value_for_assert"
+		}
+	fi
 }
 
 assert_branch_count() { # expected
@@ -154,7 +166,7 @@ assert_branch_count() { # expected
 }
 
 assert_head_hash() { # expected
-	value_for_assert="$(git rev-parse HEAD)"
+	value_for_assert="$(get_head_hash)"
 	test "$value_for_assert" = "$1" ||
 		fail 'Expected HEAD to be at %s but it is at %s!\n' "$1" "$value_for_assert"
 	unset value_for_assert
@@ -168,7 +180,7 @@ assert_stash_hash() { # stash_num expected
 }
 
 assert_head_name() { # expected
-	if printf '%s' "$1" | grep -q '^~'
+	if printf '%s' "$1" | grep -qE '^~'
 	then
 		set -- "$(printf '%s' "$1" | cut -c2-)"
 		! git rev-parse HEAD 1>/dev/null 2>&1 ||
@@ -204,4 +216,41 @@ assert_rebase() { # expected_in_progress
 		test ! -e ".git/rebase-apply" && test ! -e ".git/rebase-merge" ||
 			fail 'Expected rebase to NOT be in progress!\n'
 	fi
+}
+
+assert_files_H() { # expected_files [expected_files_for_orphan]
+	if ! IS_HEAD_ORPHAN || [ $# -lt 2 ]
+	then
+		assert_files "$1"
+	else
+		assert_files "$2"
+	fi
+}
+assert_log_length_H() { # expected_for_not_orphan
+	if IS_HEAD_ORPHAN
+	then
+		set -- 0
+	fi
+	assert_log_length "$1"
+}
+assert_branch_count_H() { # expected_for_not_orphan
+	if IS_HEAD_ORPHAN
+	then
+		set -- $(($1 + 1))
+	fi
+	assert_branch_count "$1"
+}
+assert_head_hash_H() { # expected_for_not_orphan
+	value_for_assert="$(get_head_hash_H)"
+	test "$value_for_assert" = "$1" ||
+		fail 'Expected HEAD to be at %s but it is at %s!\n' "$1" "$value_for_assert"
+	unset value_for_assert
+}
+assert_head_name_H() {
+	case "$HEAD_TYPE" in
+		'BRANCH') assert_head_name 'master' ;;
+		'DETACH') assert_head_name 'HEAD' ;;
+		'ORPHAN') assert_head_name '~ooo' ;;
+		*) fail 'Unknown HEAD type "%s"!' "$HEAD_TYPE" ;;
+	esac
 }

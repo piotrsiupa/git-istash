@@ -39,7 +39,7 @@ load_data() {
 		return 1
 	fi
 	current_branch="$(cat "$target_data_file")"
-	if printf '%s' "$current_branch" | grep -q '^~'
+	if printf '%s' "$current_branch" | grep -qE '^~'
 	then
 		current_branch="$(printf '%s' "$current_branch" | cut -c2-)"
 		curr_branch_type='orphan'
@@ -296,7 +296,7 @@ do_apply() { # args...
 	fi
 }
 
-getopt_result="$(getopt -o'hc' --long='continue,abort,called-from-pop' -n"$(basename "$0")" -- "$@")"
+getopt_result="$(getopt -o'hc' --long='continue,abort,called-from-pop' -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 continue_set=n
 abort_set=n

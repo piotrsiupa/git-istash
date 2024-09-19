@@ -1,13 +1,14 @@
 This directory contain tests and related scripts.
-The most notable files are `run.sh` and `shellcheck.sh`.
+The most notable files (the ones executed by hand) are `run.sh` and `shellcheck.sh`.
 
 
 # Scripts
 
-## `run.sh`
+## `run.sh` (or `windows-run.bat` for Windows)
 
 The script that runs all the tests placed in this directory.
 Executing it without parameters will run all the tests.
+There are also filtering and formatting options.
 (For more information, run `run.sh --help`.)
 
 ## `shellcheck.sh`
@@ -29,7 +30,7 @@ They are sourced by `commons.sh` and they should be considered part of it.
 
 # Tests
 
-Each test is a shell script saved in a `*.sh` file, in a sub-directory (named the same after the tested command).
+Each test is a shell script saved in a `*.sh` file, in a sub-directory (named the same after the test category).
 The file patch relative to the directory `tests` but without the extension is the name of the test.
 
 Tests are scripts that return an exit code `0` if the tests passed and non-`0` otherwise.
@@ -41,20 +42,21 @@ To run a test, use the script `run.sh` which will create and initialize a new Gi
 
 Each test starts by sourcing `commons.sh`.
 After that there are some normal shell commands to set up the test scenario, usually involving a lot of calls of `git`.
-Finally, the tested command is called, which is followed by a bunch of assertions.
+Finally, the tested command is called, which is followed by a bunch of assertions which call a function `fail` if they didn't pass.
 (Sometimes, in more complex scenarios, some of these steps repeat a few times.)
+(If a test didn't call `fail` and returned non-0, it's still considered failed but there will be no error message. In such cases, use the option `-d` for `run.sh`.)
 
-To fully understand a test, you need to read through `commons.sh` which sets up a test repository and contain the code for all the assertions (among other things).
+To fully understand a test, you need to read through [`commons.sh`](tests/commons.sh) which sets up a test repository and contain the code for all the assertions (among other things).
 
 ## Naming convention
 
-`run.sh` don't care about tests names beside the extension, but they are also some conventions that serve to simplify sorting, filtering and handling the tests files in general.
+`run.sh` doesn't care about tests names beside the extension, but they are also some conventions that serve to simplify sorting, filtering and handling the tests files in general.
 
 Also, note that tests should not use any funny characters that would mess up shell commands and have all spaces replaced by `_`.
-(`_` are converted back to ` ` when pretty printing the tests names, and `/` are converted to ` -> `.)
+(`_` are converted back to ` ` when pretty printing the tests names, and the `/` is converted to ` -> `.)
 
 ### Prefix
-Each test has 2-character or 3-character prefix followed by a `_`.
+Each test has 2-character prefix followed by a `_`.
 Generally these prefixes work as follows:
 - The first character is a digit representing the general category of the test.
   - For `git-istash` the categories are:
@@ -72,11 +74,6 @@ Generally these prefixes work as follows:
     - `9` - Popping/Applying with sub-directories in the repository and when the working directory is not the repository's root.
   - For `git-istash-push` the categories are:
     - `0` - Sanity tests that don't use git commands from this repository.
-    - `1` - pushing without additional options.
-    - `2` - pushing with `--no-keep-index`.
-    - `3` - pushing with `--keep-index`.
-- The second character is a lowercase letter that with tandem with the digit acts as an ID of the test in the current directory.
-- The third character (which is skipped for the tests in the directory `git-istash`) is an uppercase letter and it describes the state of Git `HEAD` on which the test is performed:
-  - `B` - `HEAD` points to a normal Git branch.
-  - `D` - `HEAD` is detached (it only points to a commit hash).
-  - `O` - `HEAD` doesn't exist because the operation is performed on a freshly created orphan branch.
+    - `1` - Normal tests.
+- The second character is an uppercase letter that with tandem with the digit acts as an ID of the test in the current directory.
+  (In some cases, when there is a lot if tests in a category, there are 2 letters instead of one.)

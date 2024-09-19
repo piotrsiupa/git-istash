@@ -12,7 +12,7 @@ then
 fi
 
 # Note that this script sets terminal to exit upon encountering any error.
-# Note that the arguments of these functions are not thoroughly validated. Familiarize yourself with them before trying to use them. (Read through the entire tree of sourced scripts.)
+# Note that the arguments of these functions are not thoroughly validated. Familiarize yourself with them before trying to use them. (Read through the entire tree of sourced scripts. This basically equates to all the scripts in this directory (no subdirs) excluding `run.sh`.)
 # Note that streams 4..8 are used by scripts (here and in `run.sh`) and they shouldn't be touched. (Stream 3 is used to print assertion errors and you can write to it.)
 
 set -e
