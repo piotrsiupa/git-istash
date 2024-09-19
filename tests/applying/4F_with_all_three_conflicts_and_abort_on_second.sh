@@ -26,7 +26,7 @@ SWITCH_HEAD_TYPE
 __test_section__ "$CAP_OPERATION stash"
 correct_head_hash="$(get_head_hash_H)"
 assert_exit_code 2 capture_outputs git istash "$OPERATION"
-assert_conflict_message git istash "$OPERATION"
+assert_conflict_message
 assert_files_H '
 UU aaa		ddd|bbb
    zzz		yyy
@@ -41,7 +41,7 @@ __test_section__ "Continue $OPERATION stash"
 printf 'eee\n' >aaa
 git add aaa
 assert_exit_code 2 capture_outputs git istash "$OPERATION" --continue
-assert_conflict_message git istash "$OPERATION" --continue
+assert_conflict_message
 assert_files_H '
 UU aaa		eee|ccc
 AA zzz		yyy|zzz

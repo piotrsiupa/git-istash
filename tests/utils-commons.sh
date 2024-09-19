@@ -54,6 +54,13 @@ capture_outputs() { # command [arguments...]
 	stderr="$(cat "$stderr_file")"
 	rm "$stderr_file"
 	unset stderr_file
+	last_command=''
+	while [ $# -ne 0 ]
+	do
+		last_command="$last_command '$(printf '%s' "$1" | sed "s/'/'\\\\''/g")'"
+		shift
+	done
+	last_command="$(printf '%s' "$last_command" | tail -c+2)"
 	return "$error_code"
 }
 

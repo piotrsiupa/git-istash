@@ -42,7 +42,7 @@ mkdir -p xxx
 cd xxx
 assert_exit_code 2 capture_outputs git istash "$OPERATION"
 cd ..
-assert_conflict_message git istash "$OPERATION"
+assert_conflict_message
 assert_files_H '
 UU aaa		ddd0|bbb0
 UU xxx/aaa	ddd1|bbb1
@@ -70,7 +70,7 @@ git add aaa xxx/aaa yyy/aaa
 cd xxx
 assert_exit_code 2 capture_outputs git istash "$OPERATION" --continue
 cd ..
-assert_conflict_message git istash "$OPERATION" --continue
+assert_conflict_message
 assert_files_H '
 UU aaa		eee0|ccc0
 UU xxx/aaa	eee1|ccc1

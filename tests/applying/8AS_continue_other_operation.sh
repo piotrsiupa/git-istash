@@ -21,7 +21,7 @@ SWITCH_HEAD_TYPE
 __test_section__ "$CAP_OTHER_OPERATION stash"
 correct_head_hash="$(get_head_hash_H)"
 assert_exit_code 2 capture_outputs git istash $OTHER_OPERATION
-assert_conflict_message git istash $OTHER_OPERATION
+assert_conflict_message
 assert_files_H '
 UU aaa		ccc|bbb
 !! ignored	ignored

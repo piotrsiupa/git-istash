@@ -21,7 +21,7 @@ SWITCH_HEAD_TYPE
 __test_section__ 'Pop stash'
 correct_head_hash="$(get_head_hash_H)"
 assert_exit_code 2 capture_outputs git istash pop
-assert_conflict_message git istash pop
+assert_conflict_message
 assert_files_H '
 UU aaa		ccc|bbb
 !! ignored	ignored

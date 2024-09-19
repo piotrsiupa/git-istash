@@ -23,7 +23,7 @@ SWITCH_HEAD_TYPE
 __test_section__ "$CAP_OPERATION stash"
 correct_head_hash="$(get_head_hash_H)"
 assert_exit_code 2 capture_outputs git istash "$OPERATION"
-assert_conflict_message git istash "$OPERATION"
+assert_conflict_message
 assert_files_H '
 UU aaa		ddd|bbb
 !! ignored	ignored
@@ -39,7 +39,7 @@ assert_rebase y
 __test_section__ "Continue $OPERATION stash (0)"
 printf 'eee\n' >aaa
 assert_exit_code 2 capture_outputs git istash "$OPERATION" --continue
-assert_conflict_message git istash "$OPERATION"
+assert_conflict_message
 assert_files_H '
 UU aaa		eee
 !! ignored	ignored
@@ -55,7 +55,7 @@ assert_rebase y
 __test_section__ "Continue $OPERATION stash (1)"
 git add aaa
 assert_exit_code 2 capture_outputs git istash "$OPERATION" --continue
-assert_conflict_message git istash "$OPERATION" --continue
+assert_conflict_message
 assert_files_H '
 UU aaa		eee|ccc
 !! ignored	ignored
@@ -68,7 +68,7 @@ assert_rebase y
 __test_section__ "Continue $OPERATION stash (2)"
 printf 'fff\n' >aaa
 assert_exit_code 2 capture_outputs git istash "$OPERATION" --continue
-assert_conflict_message git istash "$OPERATION" --continue
+assert_conflict_message
 assert_files_H '
 UU aaa		fff
 !! ignored	ignored

@@ -18,7 +18,10 @@ assert_exit_code() { # expected_code command [arguments...]
 	unset exit_code_for_assert
 }
 
-assert_conflict_message() { # git command subcommand [arguments...]
+#shellcheck disable=SC2120
+assert_conflict_message() {
+	#shellcheck disable=SC2154
+	eval set -- "$last_command"
 	#shellcheck disable=SC2154
 	test "$(printf '%s' "$stderr" | tail -n4)" = "
 hint: Disregard all hints above about using \"git rebase\".
