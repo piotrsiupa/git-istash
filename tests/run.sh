@@ -214,6 +214,7 @@ print_test_result() {
 }
 
 run_test() ( # test_name
+	test_count=0
 	failed_count=0
 	error_count=0
 	PARAMETERS_FILE="$(mktemp)"
@@ -222,6 +223,7 @@ run_test() ( # test_name
 	parametrized_run_cap=100
 	for i in $(seq 1 $parametrized_run_cap)
 	do
+		test_count=$((test_count + 1))
 		sed -iE '/^--------$/ d' "$PARAMETERS_FILE"
 		printf -- '--------\n' >>"$PARAMETERS_FILE"
 		ROTATE_PARAMETER=y
@@ -299,12 +301,12 @@ run_test() ( # test_name
 	fi
 	rm -f "$output_file"
 	rm -f "$PARAMETERS_FILE"
-	if [ -n "$parameters_string" ] && { [ "$error_count" -ne 0 ] || [ "$quiet_mode" = n ] ; }
+	if [ $test_count -ge 2 ] && { [ "$error_count" -ne 0 ] || [ "$quiet_mode" = n ] ; }
 	then
 		test_passed="$(test "$failed_count" -eq 0 && printf 'y' || printf 'n')"
 		test_result_is_correct="$(test "$error_count" -eq 0 && printf 'y' || printf 'n')"
 		printf_color_code '\033[0;1;%im' "$(get_test_result_color "$test_passed" "$test_result_is_correct")"
-		printf '%s - %s' "$(get_result_status "$test_passed" "$test_result_is_correct")" "$display_name"
+		printf '%s - %s (%i/%i)' "$(get_result_status "$test_passed" "$test_result_is_correct")" "$display_name" $((test_count - error_count)) $test_count
 		printf_color_code '\033[22;39m'
 		printf '\n'
 	fi
