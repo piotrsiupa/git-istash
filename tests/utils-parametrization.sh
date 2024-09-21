@@ -25,21 +25,19 @@ PARAMETRIZE() { # name values...
 		if [ -z "$LAST_VAL" ]
 		then
 			ROTATE_PARAMETER=n
-		else
-			ROTATE_PARAMETER=y
 		fi
 	else
-		while [ "$CUR_VAL" != "$1" ] && [ $# -ne 0 ]
-		do
-			shift
-			continue
-		done
 		if [ "$ROTATE_PARAMETER" = y ]
 		then
+			while [ "$CUR_VAL" != "$1" ] && [ $# -ne 0 ]
+			do
+				shift
+				continue
+			done
 			shift
 			CUR_VAL="$1"
+			ROTATE_PARAMETER=n
 		fi
-		ROTATE_PARAMETER=n
 	fi
 	shift $(($# - 1))
 	LAST_VAL="$1"
