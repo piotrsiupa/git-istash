@@ -112,7 +112,7 @@ assert_stash_files() { # stash_num expect_untracked expected_files
 			printf '%s\n' "$expected_files" \
 			| while IFS= read -r line
 			do
-				if printf '%s' "$line" | grep -vqE '^(\?\?|D.|.D) '
+				if printf '%s' "$line" | grep -vqE '^(\?\?|!!|D.|.D) '
 				then
 					printf '%s' "$line" | cut -c4- | awk '{print $1,$2}'
 				fi
@@ -122,7 +122,7 @@ assert_stash_files() { # stash_num expect_untracked expected_files
 			printf '%s\n' "$expected_files" \
 			| while IFS= read -r line
 			do
-				if printf '%s' "$line" | grep -vqE '^(\?\?|A.|.A) '
+				if printf '%s' "$line" | grep -vqE '^(\?\?|!!|A.|.A) '
 				then
 					printf '%s' "$line" | cut -c4- | awk '{print $1}'
 				fi
@@ -150,7 +150,7 @@ assert_stash_files() { # stash_num expect_untracked expected_files
 			printf '%s\n' "$expected_files" \
 			| while IFS= read -r line
 			do
-				if printf '%s' "$line" | grep -qE '^\?\? '
+				if printf '%s' "$line" | grep -qE '^(\?\?|!!) '
 				then
 					printf '%s' "$line" | cut -c4- | awk '{print $1,$2}'
 				fi
@@ -160,7 +160,7 @@ assert_stash_files() { # stash_num expect_untracked expected_files
 }
 
 assert_stash() { # stash_num expected_branch_name expected_stash_name expected_files
-	if printf '%s\n' "$4" | sed -E 's/^\t+//' | grep -qE '^\?\? '
+	if printf '%s\n' "$4" | sed -E 's/^\t+//' | grep -qE '^(\?\?|!!) '
 	then
 		expect_untracked=y
 	else

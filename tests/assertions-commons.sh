@@ -98,6 +98,10 @@ assert_files() { # expected_files (see one of the tests as an example)
 	printf '%s\n' "$expected_files" \
 	| while IFS= read -r line
 	do
+		if [ -z "$line" ]
+		then
+			continue
+		fi
 		stripped_line="$(printf '%s' "$line" | cut -c4-)"
 		if printf '%s' "$line" | grep -qE '^(D ) '
 		then
