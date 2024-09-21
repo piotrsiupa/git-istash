@@ -2,6 +2,7 @@
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_KEEP_INDEX
+PARAMETRIZE 'UNTRACKED_FLAG' '-u' '--include-untracked'
 
 if IS_KEEP_INDEX_ON
 then
@@ -13,7 +14,7 @@ SWITCH_HEAD_TYPE
 __test_section__ 'Create stash'
 printf 'ddd\n' >ddd
 correct_head_hash="$(get_head_hash_H)"
-assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS -u --message='stash message'
+assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS "$UNTRACKED_FLAG" --message='stash message'
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_H '
