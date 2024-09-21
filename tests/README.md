@@ -8,6 +8,7 @@ The most notable files (the ones executed by hand) are `run.sh` and `shellcheck.
 
 The script that runs all the tests placed in this directory.
 Executing it without parameters will run all the tests.
+(Although, you probably want to add an option `-j0`.)
 There are also filtering and formatting options.
 (For more information, run `run.sh --help`.)
 
