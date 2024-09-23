@@ -19,13 +19,13 @@ print_version() {
 }
 
 list_files() {
-	find bin -type f ! -name '.*'
-	find lib -type f ! -name '.*'
-	find . -maxdepth 1 -type f -name '*.sh' | cut -c3-
-	find tests -maxdepth 1 -type f -name '*.sh'
+	find bin -type f ! -name '.*' | sort
+	find lib -type f ! -name '.*' | sort
+	find . -maxdepth 1 -type f -name '*.sh' | cut -c3- | sort
+	find tests -maxdepth 1 -type f -name '*.sh' | sort
 	if [ "$skip_tests" = n ]
 	then
-		find tests -mindepth 2 -maxdepth 2 -type f -name '*.sh'
+		find tests -mindepth 2 -maxdepth 2 -type f -name '*.sh' | sort
 	fi
 }
 
