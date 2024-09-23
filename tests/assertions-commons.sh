@@ -78,14 +78,19 @@ assert_file_contents() { # file expected_current [expected_staged]
 		unset ours_expected_contents
 		unset theirs_expected_contents
 	else
-		test "$value_for_assert" = "$2" ||
-			fail 'Expected content of file "%s" to be "%s" but it is "%s"!\n' "$1" "$2" "$value_for_assert"
+		#shellcheck disable=SC2059
+		expected_contents="$(printf "$2")"
+		test "$value_for_assert" = "$expected_contents" ||
+			fail 'Expected content of file "%s" to be "%s" but it is "%s"!\n' "$1" "$expected_contents" "$value_for_assert"
 		if [ $# -eq 3 ]
 		then
 			value_for_assert="$(git show ":$1")"
-			test "$value_for_assert" = "$3" ||
-				fail 'Expected staged content of file "%s" to be "%s" but it is "%s"!\n' "$1" "$3" "$value_for_assert"
+			#shellcheck disable=SC2059
+			expected_contents="$(printf "$3")"
+			test "$value_for_assert" = "$expected_contents" ||
+				fail 'Expected staged content of file "%s" to be "%s" but it is "%s"!\n' "$1" "$expected_contents" "$value_for_assert"
 		fi
+		unset expected_contents
 	fi
 	unset value_for_assert
 }

@@ -23,3 +23,6 @@ PARAMETRIZE_KEEP_INDEX() {
 IS_KEEP_INDEX_ON() {
 	printf '%s' "$KEEP_INDEX" | grep -Eq '^YES-'
 }
+IS_KEEP_INDEX_OFF() {
+	printf '%s' "$KEEP_INDEX" | grep -Eq '^NO-'
+}

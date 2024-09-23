@@ -80,8 +80,8 @@ assert_stash_messages() { # stash_num expected_branch_name expect_untracked expe
 }
 
 assert_stash_commit_files() { # commit expected_files
-	value_for_assert="$(git ls-tree --name-only --full-tree -r "$1")"
-	expected_value="$(printf '%s\n' "$2" | awk '{print $1}')"
+	value_for_assert="$(git ls-tree --name-only --full-tree -r "$1" | tr '\n' '|' | sed -E 's/.$//')"
+	expected_value="$(printf '%s\n' "$2" | awk '{print $1}' | tr '\n' '|' | sed -E 's/.$//')"
 	test "$value_for_assert" = "$expected_value" ||
 		fail 'Expected all files in "%s" to be "%s" but they are "%s"!\n' "$1" "$expected_value" "$value_for_assert"
 	unset value_for_assert
@@ -98,7 +98,8 @@ assert_stash_commit_files_with_content() { # commit expected_files
 	| while read -r line
 	do
 		value_for_assert="$(git show "$1:$(printf '%s' "$line" | awk '{print $1}')")"
-		expected_value="$(printf '%s' "$line" | awk '{print $2}')"
+		#shellcheck disable=SC2059
+		expected_value="$(printf "$(printf '%s' "$line" | awk '{print $2}')")"
 		test "$value_for_assert" = "$expected_value" ||
 			fail 'Expected content of file "%s" in "%s" to be "%s" but it is "%s"!\n' "$(printf '%s' "$line" | awk '{print $1}')" "$1" "$expected_value" "$value_for_assert"
 	done
