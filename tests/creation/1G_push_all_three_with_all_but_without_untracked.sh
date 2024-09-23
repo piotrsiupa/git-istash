@@ -3,9 +3,8 @@
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE 'ALL_FLAG' '-a' '--all'
-PARAMETRIZE 'UNTRACKED_FLAG' '-u' '--include-untracked'
 
-known_failure 'The flag "-u" in "git stash" seems to override "-a" while I would like it to be additive.'
+known_failure 'The flag "--no-include-untracked" in "git stash" seems to override "-a" while I would like it to be additive.'
 
 SWITCH_HEAD_TYPE
 
@@ -15,19 +14,20 @@ git add aaa
 printf 'bbb\n' >aaa
 printf 'ddd\n' >ddd
 correct_head_hash="$(get_head_hash_H)"
-assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS "$ALL_FLAG" "$UNTRACKED_FLAG" --message 'name of the new stash'
+assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS "$ALL_FLAG" --no-include-untracked --message 'name of the new stash'
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_H '
+	?? ddd		ddd
 	'
 else
 	assert_files_H '
 	A  aaa			aaa
+	?? ddd		ddd
 	'
 fi
 assert_stash_H 0 'name of the new stash' '
 AM aaa		bbb	aaa
-?? ddd		ddd
 !! ignored	ignored
 '
 assert_stash_base_H 0 'HEAD'
