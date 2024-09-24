@@ -3,11 +3,11 @@
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_KEEP_INDEX
 
+correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
 __test_section__ 'Create stash'
 printf 'ddd\n' >ddd
-correct_head_hash="$(get_head_hash_H)"
 assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS -m 'description'
 if ! IS_KEEP_INDEX_ON
 then

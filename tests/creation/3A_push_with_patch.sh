@@ -11,6 +11,7 @@ printf 'bbb\nbbb\n' >bbb
 git add aaa bbb
 git commit -m 'Added aaa & bbb'
 
+correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
 __test_section__ 'Create stash'
@@ -18,7 +19,6 @@ printf 'xxx\naaa\naaa\nxxx\n' >aaa
 git add aaa
 printf 'yyy\naaa\naaa\nyyy\n' >aaa
 printf 'zzz\nbbb\nbbb\nzzz\n' >bbb
-correct_head_hash="$(get_head_hash_H)"
 printf 's y n s n y ' | tr ' ' '\n' >.git/answers_for_patch
 assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS --patch --message 'some nice stash name' <.git/answers_for_patch
 if IS_KEEP_INDEX_OFF
@@ -60,5 +60,6 @@ MM aaa		yyy\naaa\naaa\nxxx	xxx\naaa\naaa\nxxx
 assert_stash_count 0
 assert_log_length 2
 assert_branch_count 1
+assert_head_hash "$correct_head_hash"
 assert_head_name 'master'
 assert_rebase n

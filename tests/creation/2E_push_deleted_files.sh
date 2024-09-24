@@ -10,6 +10,7 @@ printf 'ccc\n' >ccc
 git add aaa bbb ccc
 git commit -m 'Added aaa, bbb & ccc'
 
+correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
 __test_section__ 'Create stash'
@@ -19,7 +20,6 @@ printf 'ddd\n' >ccc
 git add ccc
 rm ccc
 printf 'ddd\n' >ddd
-correct_head_hash="$(get_head_hash_H)"
 assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS --message 'mesanmge'
 if ! IS_KEEP_INDEX_ON
 then
@@ -67,5 +67,6 @@ MD ccc			ddd
 assert_stash_count 0
 assert_log_length 2
 assert_branch_count 1
+assert_head_hash "$correct_head_hash"
 assert_head_name 'master'
 assert_rebase n

@@ -9,12 +9,12 @@ printf 'bbb\nbbb\n' >bbb
 git add aaa bbb
 git commit -m 'Added aaa & bbb'
 
+correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
 __test_section__ 'Create stash'
 printf 'yyy\naaa\naaa\nyyy\n' >aaa
 printf 'zzz\nbbb\nbbb\nzzz\n' >bbb
-correct_head_hash="$(get_head_hash_H)"
 printf 'q ' | tr ' ' '\n' >.git/answers_for_patch
 assert_exit_code 1 git istash push $KEEP_INDEX_FLAGS --patch --message 'some nice stash name' <.git/answers_for_patch
 assert_files_H '

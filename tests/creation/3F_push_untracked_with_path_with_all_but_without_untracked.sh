@@ -6,12 +6,12 @@ PARAMETRIZE 'ALL_FLAG' '-a' '--all'
 
 known_failure 'Default implementation of "git stash" doesn'\''t allow stashing untracked files.'
 
+correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
 __test_section__ 'Create stash'
 printf 'aaa\n' >aaa
 printf 'bbb\n' >bbb
-correct_head_hash="$(get_head_hash_H)"
 printf 'y ' | tr ' ' '\n' >.git/answers_for_patch
 assert_exit_code 0 git istash push --patch $KEEP_INDEX_FLAGS "$ALL_FLAG" --no-include-untracked <.git/answers_for_patch
 assert_files_H '
@@ -25,6 +25,7 @@ assert_stash_base_H 0 'HEAD'
 assert_stash_count 1
 assert_log_length_H 1
 assert_branch_count 1
+assert_head_hash_H "$correct_head_hash"
 assert_head_name_H
 assert_rebase n
 

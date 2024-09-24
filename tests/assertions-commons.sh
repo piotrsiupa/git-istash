@@ -250,10 +250,13 @@ assert_branch_count_H() { # expected_for_not_orphan
 	assert_branch_count "$1"
 }
 assert_head_hash_H() { # expected_for_not_orphan
-	value_for_assert="$(get_head_hash_H)"
-	test "$value_for_assert" = "$1" ||
-		fail 'Expected HEAD to be at %s but it is at %s!\n' "$1" "$value_for_assert"
-	unset value_for_assert
+	if ! IS_HEAD_ORPHAN
+	then
+		value_for_assert="$(get_head_hash)"
+		test "$value_for_assert" = "$1" ||
+			fail 'Expected HEAD to be at %s but it is at %s!\n' "$1" "$value_for_assert"
+		unset value_for_assert
+	fi
 }
 assert_head_name_H() {
 	case "$HEAD_TYPE" in

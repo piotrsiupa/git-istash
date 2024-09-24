@@ -6,6 +6,7 @@ PARAMETRIZE 'ALL_FLAG' '-a' '--all'
 
 known_failure 'The flag "--no-include-untracked" in "git stash" seems to override "-a" while I would like it to be additive.'
 
+correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
 __test_section__ 'Create stash'
@@ -13,7 +14,6 @@ printf 'aaa\n' >aaa
 git add aaa
 printf 'bbb\n' >aaa
 printf 'ddd\n' >ddd
-correct_head_hash="$(get_head_hash_H)"
 assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS "$ALL_FLAG" --no-include-untracked --message 'name of the new stash'
 if ! IS_KEEP_INDEX_ON
 then
@@ -51,5 +51,6 @@ AM aaa		bbb	aaa
 assert_stash_count 0
 assert_log_length 1
 assert_branch_count 1
+assert_head_hash "$correct_head_hash"
 assert_head_name 'master'
 assert_rebase n

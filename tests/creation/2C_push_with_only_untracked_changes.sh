@@ -9,11 +9,11 @@ then
 	known_failure 'a confirmed bug in "git stash"'
 fi
 
+correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
 __test_section__ 'Create stash'
 printf 'ddd\n' >ddd
-correct_head_hash="$(get_head_hash_H)"
 assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS "$UNTRACKED_FLAG" --message='stash message'
 if ! IS_KEEP_INDEX_ON
 then
@@ -48,5 +48,6 @@ assert_files '
 assert_stash_count 0
 assert_log_length 1
 assert_branch_count 1
+assert_head_hash "$correct_head_hash"
 assert_head_name 'master'
 assert_rebase n
