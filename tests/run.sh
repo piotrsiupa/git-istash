@@ -220,8 +220,9 @@ run_test() ( # test_name
 	PARAMETERS_FILE="$(mktemp)"
 	export PARAMETERS_FILE
 	output_file="$(mktemp)"
-	parametrized_run_cap=100
-	for i in $(seq 1 $parametrized_run_cap)
+	parametrized_run_cap=256
+	iteration_cap=$((parametrized_run_cap * 8))
+	for i in $(seq 1 $iteration_cap)
 	do
 		sed -iE '/^--------$/ d' "$PARAMETERS_FILE"
 		printf -- '--------\n' >>"$PARAMETERS_FILE"
@@ -292,13 +293,24 @@ run_test() ( # test_name
 			i=x
 			break
 		fi
+		if [ $test_count -eq $parametrized_run_cap ]
+		then
+			failed_count=$((failed_count + 1))
+			error_count=$((error_count + 1))
+			printf_color_code '\033[0;1;31m'
+			printf '    TOO MANY PARAMETRIZED RUNS (The cap is %i.)' "$parametrized_run_cap"
+			printf_color_code '\033[22;39m'
+			printf '\n'
+			i=x
+			break
+		fi
 	done
 	if [ $i != x ]
 	then
 		failed_count=$((failed_count + 1))
 		error_count=$((error_count + 1))
 		printf_color_code '\033[0;1;31m'
-		printf '    TOO MANY PARAMETRIZED RUNS (The cap is %i.)' "$parametrized_run_cap"
+		printf '    TOO MANY ITERATIONS (The cap is %i.)' "$iteration_cap"
 		printf_color_code '\033[22;39m'
 		printf '\n'
 	fi
