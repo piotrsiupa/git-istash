@@ -281,8 +281,11 @@ run_test() ( # test_name
 				if [ -e "$test_dir" ]
 				then
 					mv "$test_dir" "$parametrized_test_dir"
+					mkdir "$test_dir"
 				fi
 			fi
+		else
+			cleanup_test "$1"
 		fi
 		if [ -z "$(awk '$2 != $3 { print 1 }' "$PARAMETERS_FILE")" ]
 		then
