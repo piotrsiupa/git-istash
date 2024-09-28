@@ -24,10 +24,12 @@ assert_exit_code 2 capture_outputs git istash $OTHER_OPERATION
 assert_conflict_message
 assert_files_H '
 UU aaa		ccc|bbb
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 ' '
 DU aaa		bbb
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 1
 assert_branch_count_H 1
@@ -42,10 +44,12 @@ mv .git/ISTASH_TARGET .git/ISTASH_TARGET~
 assert_exit_code 1 git istash "$OPERATION" --continue
 assert_files_H '
 M  aaa		ddd
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 ' '
 A  aaa		ddd
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 1
 assert_branch_count_H 1
@@ -57,10 +61,12 @@ mv .git/ISTASH_TARGET~ .git/ISTASH_TARGET
 assert_exit_code 0 git istash $OTHER_OPERATION --continue
 assert_files_H '
  M aaa		ddd	ccc
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 ' '
 ?? aaa		ddd
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 if IS_APPLY
 then

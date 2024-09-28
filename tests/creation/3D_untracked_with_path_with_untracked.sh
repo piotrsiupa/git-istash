@@ -16,7 +16,8 @@ printf 'y n ' | tr ' ' '\n' >.git/answers_for_patch
 assert_exit_code 0 git istash push --patch $KEEP_INDEX_FLAGS "$UNTRACKED_FLAG" <.git/answers_for_patch
 assert_files_H '
 ?? bbb		bbb
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_H 0 '' '
 ?? aaa		aaa
@@ -37,7 +38,8 @@ assert_exit_code 0 git stash pop --index
 assert_files '
 ?? aaa		aaa
 ?? bbb		bbb
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 0
 assert_log_length 1

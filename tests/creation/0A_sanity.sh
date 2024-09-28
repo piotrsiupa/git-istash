@@ -8,7 +8,8 @@ git add aaa
 git commit -m 'Added aaa'
 assert_files '
    aaa		aaa
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 0
 assert_log_length 2
@@ -25,7 +26,8 @@ then
 	assert_exit_code 0 git stash push
 	assert_files_H '
 	   aaa		aaa
-	!! ignored	ignored
+	!! ignored0	ignored0
+	!! ignored1	ignored1
 	'
 	assert_stash_H 0 '' '
 	 M aaa		bbb	aaa

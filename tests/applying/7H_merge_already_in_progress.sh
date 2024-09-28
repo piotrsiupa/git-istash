@@ -24,7 +24,8 @@ __test_section__ 'Merge branch'
 git merge branch1 --no-ff --no-commit
 assert_files_H '
    aaa		aaa
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 1
 assert_log_length_H 2
@@ -37,7 +38,8 @@ correct_head_hash="$(get_head_hash_H)"
 assert_exit_code 1 git istash "$OPERATION"
 assert_files_H '
    aaa		aaa
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 1
 assert_log_length_H 2

@@ -14,7 +14,8 @@ printf 'zzz\n' >aaa
 git stash push -m 'pre-existing stash 1'
 assert_files '
    aaa		aaa
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 2
 assert_log_length 2
@@ -33,7 +34,8 @@ then
 	assert_exit_code 0 git stash push -m 'some name'
 	assert_files_H '
 	   aaa		aaa
-	!! ignored	ignored
+	!! ignored0	ignored0
+	!! ignored1	ignored1
 	'
 	assert_stash_H 0 'some name' '
 	 M aaa		bbb	aaa

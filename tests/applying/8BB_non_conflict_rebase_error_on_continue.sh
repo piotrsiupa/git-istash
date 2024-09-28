@@ -23,10 +23,12 @@ assert_exit_code 2 capture_outputs git istash "$OPERATION"
 assert_conflict_message
 assert_files_H '
 UU aaa		ccc|bbb
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 ' '
 DU aaa		bbb
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 1
 assert_data_files "$OPERATION"
@@ -39,10 +41,12 @@ rm -rf '.git/rebase-apply' '.git/rebase-merge'
 assert_exit_code 1 git istash "$OPERATION" --continue
 assert_files_H '
 M  aaa		ddd
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 ' '
 A  aaa		ddd
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 1
 assert_head_name 'HEAD'

@@ -25,10 +25,12 @@ assert_exit_code 2 capture_outputs git istash "$OPERATION"
 assert_conflict_message
 assert_files_H '
 UU aaa		ccc|bbb
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 ' '
 DU aaa		bbb
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 1
 assert_data_files "$OPERATION"
@@ -39,4 +41,5 @@ printf 'ddd\n' >aaa
 git add aaa
 printf 'wrong_branch\n' >'.git/ISTASH_TARGET'
 assert_exit_code 1 git istash "$OPERATION" --continue
-assert_file_contents ignored 'ignored'
+assert_file_contents ignored0 'ignored0'
+assert_file_contents ignored1 'ignored1'

@@ -30,13 +30,15 @@ if ! IS_KEEP_INDEX_ON
 then
 	assert_files_H '
 	?? ddd		ddd
-	!! ignored	ignored
+	!! ignored0	ignored0
+	!! ignored1	ignored1
 	'
 else
 	assert_files_H '
 	A  aaa			aaa
 	?? ddd		ddd
-	!! ignored	ignored
+	!! ignored0	ignored0
+	!! ignored1	ignored1
 	'
 fi
 assert_stash_H 0 '' '
@@ -60,7 +62,8 @@ assert_exit_code 0 git stash pop --index
 assert_files '
 AM aaa		bbb	aaa
 ?? ddd		ddd
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 2
 assert_log_length 1

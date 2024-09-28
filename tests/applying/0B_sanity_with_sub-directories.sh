@@ -42,7 +42,8 @@ MM yyy/aaa	ccc2	bbb2
 ?? zzz		zzz0
 ?? xxx/zzz	zzz1
 ?? yyy/zzz	zzz2
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 ' '
 AM aaa		ccc0	bbb0
 AM xxx/aaa	ccc1	bbb1
@@ -50,7 +51,8 @@ AM yyy/aaa	ccc2	bbb2
 ?? zzz		zzz0
 ?? xxx/zzz	zzz1
 ?? yyy/zzz	zzz2
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count_O 1
 assert_log_length_H 2

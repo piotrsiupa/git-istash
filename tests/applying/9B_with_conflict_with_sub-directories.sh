@@ -50,12 +50,14 @@ UU yyy/aaa	ddd2|bbb2
    zzz		yyy0
    xxx/zzz	yyy1
    yyy/zzz	yyy2
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 ' '
 DU aaa		bbb0
 DU xxx/aaa	bbb1
 DU yyy/aaa	bbb2
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 1
 assert_branch_count_H 1
@@ -78,7 +80,8 @@ UU yyy/aaa	eee2|ccc2
 AA zzz		yyy0|zzz0
 AA xxx/zzz	yyy1|zzz1
 AA yyy/zzz	yyy2|zzz2
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 ' '
 UU aaa		eee0|ccc0
 UU xxx/aaa	eee1|ccc1
@@ -86,7 +89,8 @@ UU yyy/aaa	eee2|ccc2
 A  zzz		zzz0
 A  xxx/zzz	zzz1
 A  yyy/zzz	zzz2
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 1
 assert_branch_count_H 1
@@ -111,7 +115,8 @@ MM yyy/aaa	fff2	eee2
  M zzz		xxx0	yyy0
  M xxx/zzz	xxx1	yyy1
  M yyy/zzz	xxx2	yyy2
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 ' '
 AM aaa		fff0	eee0
 AM xxx/aaa	fff1	eee1
@@ -119,7 +124,8 @@ AM yyy/aaa	fff2	eee2
 ?? zzz		xxx0
 ?? xxx/zzz	xxx1
 ?? yyy/zzz	xxx2
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count_O 1
 assert_log_length_H 3

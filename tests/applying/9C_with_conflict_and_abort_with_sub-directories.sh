@@ -50,12 +50,14 @@ UU yyy/aaa	ddd2|bbb2
    zzz		yyy0
    xxx/zzz	yyy1
    yyy/zzz	yyy2
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 ' '
 DU aaa		bbb0
 DU xxx/aaa	bbb1
 DU yyy/aaa	bbb2
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 1
 assert_branch_count_H 1
@@ -77,9 +79,11 @@ assert_files_H '
    zzz		yyy0
    xxx/zzz	yyy1
    yyy/zzz	yyy2
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 ' '
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 1
 assert_log_length_H 3

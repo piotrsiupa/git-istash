@@ -16,7 +16,8 @@ assert_exit_code 1 git istash push --patch $KEEP_INDEX_FLAGS --no-include-untrac
 assert_files_H '
 ?? aaa		aaa
 ?? bbb		bbb
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 0
 assert_log_length_H 1

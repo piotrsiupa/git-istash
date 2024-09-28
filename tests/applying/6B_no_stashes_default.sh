@@ -9,7 +9,8 @@ __test_section__ "$CAP_OPERATION stash (without changes)"
 correct_head_hash="$(get_head_hash_H)"
 assert_exit_code 1 git istash "$OPERATION"
 assert_files_H '
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 0
 assert_log_length_H 1
@@ -25,7 +26,8 @@ printf 'bbb\n' >aaa
 assert_exit_code 1 git istash "$OPERATION"
 assert_files_H '
 AM aaa		bbb	aaa
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 0
 assert_log_length_H 1

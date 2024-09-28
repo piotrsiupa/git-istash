@@ -20,7 +20,8 @@ assert_exit_code 2 capture_outputs git istash "$OPERATION"
 assert_conflict_message
 assert_files_H '
 DU aaa		bbb
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 1
 assert_branch_count 2
@@ -34,4 +35,5 @@ printf 'zzz\n' >zzz
 git add zzz
 git commit --amend --no-edit -- zzz
 assert_exit_code 1 git istash "$OPERATION" --continue
-assert_file_contents ignored 'ignored'
+assert_file_contents ignored0 'ignored0'
+assert_file_contents ignored1 'ignored1'

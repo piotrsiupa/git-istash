@@ -24,10 +24,12 @@ assert_exit_code 2 capture_outputs git istash pop
 assert_conflict_message
 assert_files_H '
 UU aaa		ccc|bbb
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 ' '
 DU aaa		bbb
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 1
 assert_branch_count_H 1
@@ -47,10 +49,12 @@ git add aaa
 assert_exit_code 1 git istash "$OPERATION"
 assert_files_H '
 M  aaa		ddd
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 ' '
 A  aaa		ddd
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 1
 assert_branch_count_H 1
@@ -62,9 +66,11 @@ mv .git/ISTASH_TARGET~ .git/ISTASH_TARGET
 assert_exit_code 0 git istash pop --abort
 assert_files_H '
    aaa		ccc
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 ' '
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 1
 assert_log_length_H 3

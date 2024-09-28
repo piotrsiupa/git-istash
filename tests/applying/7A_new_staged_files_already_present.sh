@@ -18,7 +18,8 @@ git add xxx
 assert_exit_code 1 git istash "$OPERATION" 1
 assert_files_H '
 A  xxx		xxx
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 1
 assert_log_length_H 1

@@ -13,12 +13,14 @@ if ! IS_KEEP_INDEX_ON
 then
 	assert_files_H '
 	?? ddd		ddd
-	!! ignored	ignored
+	!! ignored0	ignored0
+	!! ignored1	ignored1
 	'
 else
 	assert_files_H '
 	?? ddd		ddd
-	!! ignored	ignored
+	!! ignored0	ignored0
+	!! ignored1	ignored1
 	'
 fi
 assert_stash_count 0

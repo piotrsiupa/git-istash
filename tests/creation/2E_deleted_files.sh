@@ -28,7 +28,8 @@ then
 	   bbb		bbb
 	   ccc		ccc
 	?? ddd		ddd
-	!! ignored	ignored
+	!! ignored0	ignored0
+	!! ignored1	ignored1
 	'
 else
 	assert_files_H '
@@ -36,7 +37,8 @@ else
 	   bbb		bbb
 	M  ccc			ddd
 	?? ddd		ddd
-	!! ignored	ignored
+	!! ignored0	ignored0
+	!! ignored1	ignored1
 	'
 fi
 assert_stash_H 0 'mesanmge' '
@@ -62,7 +64,8 @@ D  aaa
  D bbb			bbb
 MD ccc			ddd
 ?? ddd		ddd
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 0
 assert_log_length 2

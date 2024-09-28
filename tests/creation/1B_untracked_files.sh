@@ -13,12 +13,14 @@ assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS -m 'new stash'
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_H '
-	!! ignored	ignored
+	!! ignored0	ignored0
+	!! ignored1	ignored1
 	'
 else
 	assert_files_H '
 	A  aaa			bbb
-	!! ignored	ignored
+	!! ignored0	ignored0
+	!! ignored1	ignored1
 	'
 fi
 assert_stash_H 0 'new stash' '
@@ -39,7 +41,8 @@ __test_section__ 'Pop stash'
 assert_exit_code 0 git stash pop --index
 assert_files '
 A  aaa		bbb
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 0
 assert_log_length 1

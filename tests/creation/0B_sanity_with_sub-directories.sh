@@ -34,7 +34,8 @@ then
 	   aaa		aaa0
 	   xxx/aaa	aaa1
 	   yyy/aaa	aaa2
-	!! ignored	ignored
+	!! ignored0	ignored0
+	!! ignored1	ignored1
 	'
 	assert_stash_H 0 'name' '
 	MM aaa		ccc0	bbb0

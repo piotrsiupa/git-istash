@@ -25,7 +25,8 @@ fi
 assert_stash_H 0 'name of the new stash' '
 AM aaa		bbb	aaa
 ?? ddd		ddd
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_base_H 0 'HEAD'
 assert_stash_count 1
@@ -43,7 +44,8 @@ assert_exit_code 0 git stash pop --index
 assert_files '
 AM aaa		bbb	aaa
 ?? ddd		ddd
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 0
 assert_log_length 1

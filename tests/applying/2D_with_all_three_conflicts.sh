@@ -30,7 +30,8 @@ assert_conflict_message
 assert_files_H '
 UU aaa		ddd|bbb
    zzz		yyy
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 1
 assert_branch_count_H 1
@@ -45,7 +46,8 @@ assert_conflict_message
 assert_files_H '
 UU aaa		eee|ccc
 AA zzz		yyy|zzz
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 1
 assert_branch_count_H 1
@@ -60,7 +62,8 @@ assert_exit_code 0 git istash "$OPERATION" --continue
 assert_files_H '
 MM aaa		fff	eee
  M zzz		xxx	yyy
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count_O 1
 assert_log_length_H 3

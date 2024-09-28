@@ -24,11 +24,13 @@ assert_files_H '
    aaa		aaa
 AM bbb		ccc	bbb
 ?? ddd		ddd
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 ' '
 AM bbb		ccc	bbb
 ?? ddd		ddd
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count_O 1
 assert_log_length_H 2

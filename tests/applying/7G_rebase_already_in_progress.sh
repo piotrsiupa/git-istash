@@ -26,7 +26,8 @@ git rebase branch0 --exec='return 1' || true
 assert_files_H '
    aaa		aaa
    xxx		xxx
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 1
 assert_branch_count 2
@@ -39,7 +40,8 @@ assert_exit_code 1 git istash "$OPERATION"
 assert_files_H '
    aaa		aaa
    xxx		xxx
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 1
 assert_branch_count 2

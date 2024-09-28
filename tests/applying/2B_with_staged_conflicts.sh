@@ -25,10 +25,12 @@ assert_exit_code 2 capture_outputs git istash "$OPERATION"
 assert_conflict_message
 assert_files_H '
 UU aaa		ddd|bbb
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 ' '
 DU aaa		bbb
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 1
 assert_branch_count_H 1
@@ -41,10 +43,12 @@ git add aaa
 assert_exit_code 0 git istash "$OPERATION" --continue
 assert_files_H '
 M  aaa		eee
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 ' '
 A  aaa		eee
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count_O 1
 assert_log_length_H 3

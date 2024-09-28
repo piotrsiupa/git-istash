@@ -20,8 +20,9 @@ git config --local user.name 'test'
 
 git commit --allow-empty -m 'Initial commit'
 
-printf 'ignored\n' >>.git/info/exclude
-printf 'ignored\n' >ignored
+printf 'ignored?\n' >>.git/info/exclude
+printf 'ignored0\n' >ignored0
+printf 'ignored1\n' >ignored1
 
 #shellcheck disable=SC2164
 cd -

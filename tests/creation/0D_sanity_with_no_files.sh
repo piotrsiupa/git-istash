@@ -8,7 +8,8 @@ git add aaa
 git commit -m 'Added aaa'
 assert_files '
    aaa		aaa
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 0
 assert_log_length 2
@@ -27,7 +28,8 @@ then
 	assert_files_H '
 	   aaa		aaa
 	?? ddd		ddd
-	!! ignored	ignored
+	!! ignored0	ignored0
+	!! ignored1	ignored1
 	'
 	assert_stash_count 0
 	assert_log_length_H 2

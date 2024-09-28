@@ -11,7 +11,8 @@ then
 	git commit -m 'Added aaa'
 	assert_files '
 	   aaa		aaa
-	!! ignored	ignored
+	!! ignored0	ignored0
+	!! ignored1	ignored1
 	'
 	assert_stash_count 0
 	assert_log_length 2
@@ -26,9 +27,11 @@ git add aaa
 git stash push
 assert_files_H '
    aaa		aaa
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 ' '
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 1
 if ! IS_HEAD_ORPHAN
@@ -48,10 +51,12 @@ correct_head_hash="$(get_head_hash_H)"
 assert_exit_code 0 git stash "$OPERATION" --index
 assert_files_H '
 M  aaa		bbb
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 ' '
 A  aaa		bbb
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count_O 1
 assert_log_length_H 2

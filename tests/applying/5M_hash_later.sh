@@ -27,12 +27,14 @@ then
 	assert_exit_code 0 git istash apply "$later_stash_hash"
 	assert_files_H '
 	?? bbb		bbb
-	!! ignored	ignored
+	!! ignored0	ignored0
+	!! ignored1	ignored1
 	'
 else
 	assert_exit_code 1 git istash pop "$later_stash_hash"
 	assert_files_H '
-	!! ignored	ignored
+	!! ignored0	ignored0
+	!! ignored1	ignored1
 	'
 fi
 assert_stash_count 0

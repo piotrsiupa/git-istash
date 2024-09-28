@@ -20,7 +20,8 @@ correct_head_hash="$(get_head_hash_H)"
 assert_exit_code 0 git istash "$OPERATION" -- "-1"
 assert_files_H '
 ?? aaa		aaa
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count_O 2
 assert_log_length_H 1

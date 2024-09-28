@@ -26,13 +26,15 @@ then
 	assert_files_H '
 	 M aaa		yyy\naaa\naaa\nyyy	aaa\naaa
 	 M bbb		zzz\nbbb\nbbb\nzzz	bbb\nbbb
-	!! ignored	ignored
+	!! ignored0	ignored0
+	!! ignored1	ignored1
 	'
 else
 	assert_files_H '
 	MM aaa		yyy\naaa\naaa\nyyy	xxx\naaa\naaa\nxxx
 	 M bbb		zzz\nbbb\nbbb\nzzz	bbb\nbbb
-	!! ignored	ignored
+	!! ignored0	ignored0
+	!! ignored1	ignored1
 	'
 fi
 assert_stash_H 0 'some nice stash name' '
@@ -54,7 +56,8 @@ assert_exit_code 0 git stash pop --index
 assert_files '
 MM aaa		yyy\naaa\naaa\nxxx	xxx\naaa\naaa\nxxx
  M bbb		zzz\nbbb\nbbb\nzzz	bbb\nbbb
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 0
 assert_log_length 2

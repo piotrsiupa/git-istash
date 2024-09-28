@@ -20,7 +20,8 @@ assert_exit_code 1 git istash push $KEEP_INDEX_FLAGS --patch --message 'some nic
 assert_files_H '
  M aaa		yyy\naaa\naaa\nyyy	aaa\naaa
  M bbb		zzz\nbbb\nbbb\nzzz	bbb\nbbb
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count 0
 assert_log_length_H 2

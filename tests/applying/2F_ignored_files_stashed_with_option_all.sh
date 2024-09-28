@@ -13,10 +13,10 @@ printf 'bbb\n' >aaa
 git add aaa
 printf 'ccc\n' >aaa
 printf 'zzz\n' >zzz
-git stash push -ua
+git stash push -a
 
 __test_section__ 'Create "conflict"'
-printf 'different contents\n' >ignored
+printf 'different contents\n' >ignored0
 
 SWITCH_HEAD_TYPE
 
@@ -26,7 +26,8 @@ assert_exit_code 0 capture_outputs git istash "$OPERATION"
 assert_files_H '
 MM aaa		ccc	bbb
 ?? zzz		zzz
-!! ignored	ignored
+!! ignored0	ignored0
+!! ignored1	ignored1
 '
 assert_stash_count_O 1
 assert_log_length_H 2
