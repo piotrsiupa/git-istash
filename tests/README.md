@@ -78,5 +78,6 @@ Generally these prefixes work as follows:
     - `1` - Creating stashes with different flags.
     - `2` - Tricky cases.
     - `3` - Option `--patch`.
+    - `4` - Pathspecs.
 - The second character is an uppercase letter that with tandem with the digit acts as an ID of the test in the current directory.
   (In some cases, when there is a lot if tests in a category, there are 2 letters instead of one.)
