@@ -1,6 +1,8 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
+PARAMETRIZE_ALL 'DEFAULT'
+PARAMETRIZE_UNTRACKED 'DEFAULT'
 PARAMETRIZE_KEEP_INDEX
 
 known_failure 'The default implementation in "git stash" doesn'\''t allow continuing when no change is selected.'
@@ -20,7 +22,7 @@ git add aaa
 printf 'yyy\naaa\naaa\nyyy\n' >aaa
 printf 'zzz\nbbb\nbbb\nzzz\n' >bbb
 printf 'q ' | tr ' ' '\n' >.git/answers_for_patch
-assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS --patch --message 'some nice stash name' <.git/answers_for_patch
+assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS --patch --message 'some nice stash name' <.git/answers_for_patch
 if IS_KEEP_INDEX_OFF
 then
 	assert_files_H '

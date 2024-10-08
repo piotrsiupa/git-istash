@@ -1,6 +1,8 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
+PARAMETRIZE_ALL 'DEFAULT'
+PARAMETRIZE_UNTRACKED 'YES'
 PARAMETRIZE_KEEP_INDEX
 
 known_failure 'an inconsistency in how "git stash" works'
@@ -16,7 +18,7 @@ SWITCH_HEAD_TYPE
 __test_section__ 'Create stash'
 git rm aaa
 printf 'bbb\n' >aaa
-assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS -u --message 'mesanmge'
+assert_exit_code 0 git istash push $ALL_FLAGS $UNTRACKED_FLAGS $KEEP_INDEX_FLAGS --message 'mesanmge'
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_H '

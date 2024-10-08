@@ -74,6 +74,36 @@ PARAMETRIZE_COND() { # condition name values...
 	fi
 	unset CONDITION
 }
+# Before the values are passed to "PARAMETRIZE_COND", they are expanded using the map.
+# This is good to create wrapper funcitons to e.g. cover both spellings of option "-k" and "--keep-index" and have to specify only one parameter in the function call.
+# (If no key is passed, all values are used.)
+PARAMETRIZE_MAPPED() { # condition name map values...
+	CONDITION="$1"
+	NAME="$2"
+	#shellcheck disable=SC2020
+	MAP="$(printf '%s' "$3" | sed -E 's/\s+//g' | tr ':&|' '\t\t\n')"
+	shift 3
+	if [ $# -eq 0 ]
+	then
+		VALUES="$(printf '%s\n' "$MAP" | awk '{for (i = 2; i <= NF; i++) {print $i}}')"
+	else
+		VALUES=''
+		while [ $# -ne 0 ]
+		do
+			printf '%s\n' "$MAP" | grep -qE "^$1\\s" ||
+				fail 'Key "%s" cannot be found by "PARAMETRIZE_MAPPED"!\n' "$1"
+			VALUES="$VALUES$(printf '\n' ; printf '%s\n' "$MAP" | awk -v key="$1" '$1 == key {for (i = 2; i <= NF; i++) {print $i}}')"
+			shift
+		done
+	fi
+	VALUES="$(printf '%s\n' "$VALUES" | sed -E -e '/^\s*$/ d' -e "s/'/'\\\\''/g" -e "s/^/'/" -e "s/$/'/" | tr '\n' ' ')"
+	eval set -- "$VALUES"
+	PARAMETRIZE_COND "$CONDITION" "$NAME" "$@"
+	unset CONDITION
+	unset NAME
+	unset MAP
+	unset VALUES
+}
 
 # It calls "PARAMETRIZE" with the name "HEAD_TYPE" and possible values "BRANCH", "DETACH" and "ORPHAN".
 # There is a bunch of functions in this and other files that use the variable "HEAD_TYPE". (They always have suffix "_H".)

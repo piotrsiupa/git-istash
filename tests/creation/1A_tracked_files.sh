@@ -1,6 +1,8 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
+PARAMETRIZE_ALL 'DEFAULT'
+PARAMETRIZE_UNTRACKED 'DEFAULT'
 PARAMETRIZE_KEEP_INDEX
 
 __test_section__ 'Prepare repository'
@@ -20,7 +22,7 @@ printf 'bbb2\n' >bbb
 git add aaa bbb
 printf 'bbb3\n' >bbb
 printf 'ddd3\n' >ddd
-assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS
+assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_H '

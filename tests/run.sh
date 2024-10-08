@@ -220,7 +220,7 @@ run_test() ( # test_name
 	PARAMETERS_FILE="$(mktemp)"
 	export PARAMETERS_FILE
 	output_file="$(mktemp)"
-	parametrized_run_cap=256
+	parametrized_run_cap=1024
 	iteration_cap=$((parametrized_run_cap * 8))
 	for i in $(seq 1 $iteration_cap)
 	do

@@ -1,10 +1,11 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
+PARAMETRIZE_ALL 'YES'
+PARAMETRIZE_UNTRACKED 'NO'
 PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_PATHSPEC_STYLE
 PARAMETRIZE_OPTIONS_INDICATOR IS_PATHSPEC_IN_ARGS
-PARAMETRIZE 'ALL_FLAG' '-a' '--all'
 
 known_failure 'There is a bug in Git which makes it disregard pathspec for files in index.'
 known_failure 'The flag "--no-include-untracked" in "git stash" seems to override "-a" while I would like it to be additive.'
@@ -56,12 +57,12 @@ else
 fi
 if IS_PATHSPEC_IN_ARGS
 then
-	assert_exit_code 0 git istash push 'aaa0' $KEEP_INDEX_FLAGS "$ALL_FLAG" --no-include-untracked 'bbb?' -m 'new stash' $EOI '*7' '*ore?0' './?dd*'
+	assert_exit_code 0 git istash push 'aaa0' $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS 'bbb?' -m 'new stash' $EOI '*7' '*ore?0' './?dd*'
 elif IS_PATHSPEC_IN_STDIN
 then
-	assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS "$ALL_FLAG" --no-include-untracked -m 'new stash' $PATHSPEC_NULL_FLAG --pathspec-from-file=- <.git/pathspec_for_test
+	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS -m 'new stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test
 else
-	assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS "$ALL_FLAG" --no-include-untracked -m 'new stash' $PATHSPEC_NULL_FLAG --pathspec-from-file .git/pathspec_for_test
+	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS -m 'new stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
 fi
 if ! IS_KEEP_INDEX_ON
 then

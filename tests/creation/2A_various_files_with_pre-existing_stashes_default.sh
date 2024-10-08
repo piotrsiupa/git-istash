@@ -1,6 +1,8 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
+PARAMETRIZE_ALL 'DEFAULT'
+PARAMETRIZE_UNTRACKED 'DEFAULT'
 PARAMETRIZE_KEEP_INDEX
 
 __test_section__ 'Create pre-existing stash (0)'
@@ -25,7 +27,7 @@ printf 'aaa\n' >aaa
 git add aaa
 printf 'bbb\n' >aaa
 printf 'ddd\n' >ddd
-assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS
+assert_exit_code 0 git istash push $ALL_FLAGS $UNTRACKED_FLAGS $KEEP_INDEX_FLAGS
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_H '

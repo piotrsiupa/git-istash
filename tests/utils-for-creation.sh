@@ -7,8 +7,9 @@ then
 fi
 
 
-PARAMETRIZE_KEEP_INDEX() {
-	PARAMETRIZE 'KEEP_INDEX' 'INDEX-DEFAULT' 'INDEX-NO-LONG' 'INDEX-YES-SHORT' 'INDEX-YES-LONG'
+#shellcheck disable=SC2120
+PARAMETRIZE_KEEP_INDEX() { # keys
+	PARAMETRIZE_MAPPED true 'KEEP_INDEX' 'DEFAULT: INDEX-DEFAULT | NO: INDEX-NO-LONG | YES: INDEX-YES-SHORT & INDEX-YES-LONG' "$@"
 	#shellcheck disable=SC2034
 	case "$KEEP_INDEX" in
 		INDEX-DEFAULT) KEEP_INDEX_FLAGS='' ;;
@@ -22,6 +23,36 @@ IS_KEEP_INDEX_ON() {
 }
 IS_KEEP_INDEX_OFF() {
 	printf '%s' "$KEEP_INDEX" | grep -Eq '^INDEX-NO-'
+}
+
+PARAMETRIZE_ALL() { # keys
+	PARAMETRIZE_MAPPED true 'ALL' 'DEFAULT: ALL-DEFAULT | YES: ALL-YES-SHORT & ALL-YES-LONG' "$@"
+	#shellcheck disable=SC2034
+	case "$ALL" in
+		ALL-DEFAULT) ALL_FLAGS='' ;;
+		ALL-YES-SHORT) ALL_FLAGS='-a' ;;
+		ALL-YES-LONG) ALL_FLAGS='--all' ;;
+	esac
+}
+IS_ALL_ON() {
+	printf '%s' "$ALL" | grep -Eq '^ALL-YES-'
+}
+
+PARAMETRIZE_UNTRACKED() { # keys
+	PARAMETRIZE_MAPPED true 'UNTRACKED' 'DEFAULT: UNTR-DEFAULT | NO: UNTR-NO-LONG | YES: UNTR-YES-SHORT & UNTR-YES-LONG' "$@"
+	#shellcheck disable=SC2034
+	case "$UNTRACKED" in
+		UNTR-DEFAULT) UNTRACKED_FLAGS='' ;;
+		UNTR-NO-LONG) UNTRACKED_FLAGS='--no-include-untracked' ;;
+		UNTR-YES-SHORT) UNTRACKED_FLAGS='-u' ;;
+		UNTR-YES-LONG) UNTRACKED_FLAGS='--include-untracked' ;;
+	esac
+}
+IS_UNTRACKED_ON() {
+	printf '%s' "$UNTRACKED" | grep -Eq '^UNTR-YES-'
+}
+IS_UNTRACKED_OFF() {
+	printf '%s' "$UNTRACKED" | grep -Eq '^UNTR-NO-'
 }
 
 PARAMETRIZE_OPTIONS_INDICATOR() { # condition
@@ -44,9 +75,9 @@ PARAMETRIZE_PATHSPEC_STYLE() {
 	#shellcheck disable=SC2034
 	if ! IS_PATHSPEC_NULL_SEP
 	then
-		PATHSPEC_NULL_FLAG=''
+		PATHSPEC_NULL_FLAGS=''
 	else
-		PATHSPEC_NULL_FLAG='--pathspec-file-nul'
+		PATHSPEC_NULL_FLAGS='--pathspec-file-nul'
 	fi
 }
 IS_PATHSPEC_IN_ARGS() {
