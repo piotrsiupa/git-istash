@@ -2,7 +2,7 @@
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_ALL 'DEFAULT'
-PARAMETRIZE_UNTRACKED 'DEFAULT'
+PARAMETRIZE_UNTRACKED 'DEFAULT' 'NO'
 PARAMETRIZE_KEEP_INDEX
 
 known_failure 'Default implementation of "git stash" returns 0 after failing to create a stash.'

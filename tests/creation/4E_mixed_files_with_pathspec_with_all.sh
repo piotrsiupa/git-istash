@@ -2,12 +2,16 @@
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_ALL 'YES'
-PARAMETRIZE_UNTRACKED 'DEFAULT'
+PARAMETRIZE_UNTRACKED 'DEFAULT' 'YES'
 PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_PATHSPEC_STYLE
 PARAMETRIZE_OPTIONS_INDICATOR IS_PATHSPEC_IN_ARGS
 
 known_failure 'There is a bug in Git which makes it disregard pathspec for files in index.'
+if IS_UNTRACKED_ON
+then
+	known_failure 'The flag "-u" in "git stash" seems to override "-a" while I would like it to be additive.'
+fi
 if IS_KEEP_INDEX_ON
 then
 	known_failure 'It looks like in the standard "git stash" options "-k" and "-u" and alergic to each other.'
