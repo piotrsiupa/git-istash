@@ -325,7 +325,12 @@ run_test() ( # test_name
 		printf_color_code '\033[22;39m'
 		printf '\n'
 	fi
-	test "$error_count" -eq 0
+	if [ $test_count -eq 0 ]
+	then
+		return 123
+	else
+		test "$error_count" -eq 0
+	fi
 )
 update_current_category() { # test_name
 	current_category="$(dirname "$1")"
@@ -338,7 +343,7 @@ update_current_category() { # test_name
 			printf_color_code '\033[22m'
 			printf '\n'
 		} 1>&5
-		printf '%s\n' "$current_category"
+		printf '%s - passed\n%s - failed\n' "$current_category" "$current_category"
 	fi
 }
 run_tests() {
@@ -354,7 +359,7 @@ run_tests() {
 	fi
 	esc_char="$(printf '\033')"
 	exec 5>&1
-	passed_tests="$(
+	test_results="$(
 		previous_category=''
 		printf '%s\n' "$tests" \
 		| if [ "$jobs_num" -eq 1 ]
@@ -364,7 +369,10 @@ run_tests() {
 				update_current_category "$test_name"
 				if run_test "$test_name" 1>&5
 				then
-					printf '%s\n' "$current_category"
+					printf '%s - passed\n' "$current_category"
+				elif [ $? != '123' ]
+				then
+					printf '%s - failed\n' "$current_category"
 				fi
 			done
 		else
@@ -379,7 +387,7 @@ run_tests() {
 						break
 					fi
 					result_file="$(mktemp)"
-					{ run_test "$test_name" && printf '0\n' || printf '1\n' ; } 1>"$result_file" 2>&1 &
+					{ run_test "$test_name" && printf '0\n' || printf '%i\n' $? ; } 1>"$result_file" 2>&1 &
 					running_tests_count=$((running_tests_count + 1))
 					running_tests_data="$(printf '%s\n%i %s %s' "$running_tests_data" $! "$result_file" "$test_name" | sed -E '/^\s*$/ d')"
 				done
@@ -398,7 +406,10 @@ run_tests() {
 				done
 				if [ "$(tail -n1 "$result_file")" = '0' ]
 				then
-					printf '%s\n' "$current_category"
+					printf '%s - passed\n' "$current_category"
+				elif [ "$(tail -n1 "$result_file")" != '123' ]
+				then
+					printf '%s - failed\n' "$current_category"
 				fi
 				rm -f "$result_file"
 				running_tests_count=$((running_tests_count - 1))
@@ -409,7 +420,7 @@ run_tests() {
 				fi
 			done
 		fi \
-		| uniq -c | awk '{print $1 - 1}'
+		| sort | uniq -c | awk '{print $1 - 1}'
 	)"
 	exec 5>&-
 }
@@ -426,10 +437,12 @@ print_summary() {
 		| while read -r category
 		do
 			i=$((i + 1))
-			total_in_category="$(printf '%s\n' "$category" | cut -d' ' -f1)"
-			passed_in_category="$(printf '%s' "$passed_tests" | head -n $i | tail -n 1)"
+			failed_in_category="$(printf '%s' "$test_results" | head -n $i | tail -n 1)"
+			i=$((i + 1))
+			passed_in_category="$(printf '%s' "$test_results" | head -n $i | tail -n 1)"
+			total_in_category=$((failed_in_category + passed_in_category))
 			printf '%s: ' "$(printf '%s' "$category" | cut -d' ' -f2)"
-			if [ "$passed_in_category" -eq "$total_in_category" ]
+			if [ "$failed_in_category" -eq 0 ]
 			then
 				printf_color_code '\033[1;32;4m'
 				if [ "$total_in_category" -eq 1 ]
@@ -456,8 +469,8 @@ print_summary() {
 		passed_tests=0
 		total_tests=0
 	else
-		passed_tests=$(($(printf '%s' "$passed_tests" | tr '\n' '+')))
-		total_tests="$(printf '%s\n' "$tests" | wc -l)"
+		passed_tests=$(($(printf '%s\n' "$test_results" | sed -n 'n;p' | tr '\n' '+' | head -c-1)))
+		total_tests=$(($(printf '%s' "$test_results" | tr '\n' '+')))
 	fi
 	if [ "$total_tests" -ne 0 ]
 	then
