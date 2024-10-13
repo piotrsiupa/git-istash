@@ -30,6 +30,14 @@ skip_silently() {
 	exit 1
 }
 
+non_essential_test() {
+	#shellcheck disable=SC2154
+	if [ "$meticulousness" -le 0 ]
+	then
+		skip_silently
+	fi
+}
+
 capture_outputs() { # command [arguments...]
 	stdout_file="$(mktemp)"
 	stderr_file="$(mktemp)"

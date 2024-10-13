@@ -500,7 +500,7 @@ print_summary() {
 	printf '\n'
 }
 
-getopt_result="$(getopt -o'hfdqvc:rl:pj:' --long='help,version,failed,debug,quiet,verbose,color:,raw,raw-name,file-name,limit:,print-paths,jobs:' -n"$(basename "$0")" -ssh -- "$@")"
+getopt_result="$(getopt -o'hfdqvc:rl:pj:m:' --long='help,version,failed,debug,quiet,verbose,color:,raw,raw-name,file-name,limit:,print-paths,jobs:,meticulousness:' -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 only_failed=n
 debug_mode=n
@@ -511,6 +511,8 @@ raw_name=n
 test_limit=0
 print_paths=n
 jobs_num=1
+max_meticulousness=1
+meticulousness=1
 while true
 do
 	case "$1" in
@@ -581,6 +583,16 @@ do
 			exit 1
 		fi
 		;;
+	-m|--meticulousness)
+		shift
+		if [ "$1" -eq "$1" ] 2>/dev/null && [ "$1" -ge 0 ] && [ "$1" -le $max_meticulousness ]
+		then
+			meticulousness="$1"
+		else
+			printf '"%s" is not a valid value for meticulousness (0..%i).\n' "$1" $max_meticulousness 1>&2
+			exit 1
+		fi
+		;;
 	--)
 		shift
 		break
@@ -602,6 +614,7 @@ then
 	printf 'Options "--quiet" and "--verbose" are incompatible.\n' 1>&2
 	exit 1
 fi
+export meticulousness
 
 normalize_filter_entry() { # filter_entry
 	if [ -f "$1" ]
