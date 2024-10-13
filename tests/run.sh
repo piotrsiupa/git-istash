@@ -511,8 +511,8 @@ raw_name=n
 test_limit=0
 print_paths=n
 jobs_num=1
-max_meticulousness=2
-meticulousness=2
+max_meticulousness=3
+meticulousness=3
 while true
 do
 	case "$1" in

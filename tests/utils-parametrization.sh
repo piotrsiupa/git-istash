@@ -77,11 +77,17 @@ PARAMETRIZE_COND() { # condition name values...
 # Before the values are passed to "PARAMETRIZE_COND", they are expanded using the map.
 # This is good to create wrapper funcitons to e.g. cover both spellings of option "-k" and "--keep-index" and have to specify only one parameter in the function call.
 # (If no key is passed, all values are used.)
+# Level of meticulousness affects which variants are used or skipped.
 PARAMETRIZE_OPTION() { # condition name map values...
 	CONDITION="$1"
 	NAME="$2"
 	#shellcheck disable=SC2020
-	MAP="$(printf '%s' "$3" | sed -E 's/\s+//g' | tr ':&|' '\t\t\n')"
+	MAP="$(printf '%s' "$3" | sed -E 's/\s+//g' | tr ':&|' '  \n')"
+	#shellcheck disable=SC2154
+	if [ "$meticulousness" -le 2 ]
+	then
+		MAP="$(printf '%s' "$MAP" | awk '{print $1,$2}')"
+	fi
 	shift 3
 	if [ $# -eq 0 ]
 	then
