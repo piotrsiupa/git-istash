@@ -288,7 +288,7 @@ run_test() ( # test_name
 		else
 			cleanup_test "$1"
 		fi
-		if [ -z "$(awk '$2 != $3 { print 1 }' "$PARAMETERS_FILE")" ]
+		if { [ "$meticulousness" -le 1 ] && [ $test_count -ne 0 ] ; } || [ -z "$(awk '$2 != $3 { print 1 }' "$PARAMETERS_FILE")" ]
 		then
 			i=x
 			break
@@ -315,8 +315,7 @@ run_test() ( # test_name
 		printf '\n'
 	fi
 	rm -f "$output_file"
-	rm -f "$PARAMETERS_FILE"
-	if [ $test_count -ge 2 ] && { [ "$error_count" -ne 0 ] || [ "$quiet_mode" = n ] ; }
+	if { [ "$meticulousness" -le 1 ] && [ -n "$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | tail -n+2)" ] ; } || { [ $test_count -ge 2 ] && { [ "$error_count" -ne 0 ] || [ "$quiet_mode" = n ] ; } ; }
 	then
 		test_passed="$(test "$failed_count" -eq 0 && printf 'y' || printf 'n')"
 		test_result_is_correct="$(test "$error_count" -eq 0 && printf 'y' || printf 'n')"
@@ -325,6 +324,7 @@ run_test() ( # test_name
 		printf_color_code '\033[22;39m'
 		printf '\n'
 	fi
+	rm -f "$PARAMETERS_FILE"
 	if [ $test_count -eq 0 ]
 	then
 		return 123
@@ -511,8 +511,8 @@ raw_name=n
 test_limit=0
 print_paths=n
 jobs_num=1
-max_meticulousness=1
-meticulousness=1
+max_meticulousness=2
+meticulousness=2
 while true
 do
 	case "$1" in
