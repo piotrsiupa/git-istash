@@ -77,7 +77,7 @@ PARAMETRIZE_COND() { # condition name values...
 # Before the values are passed to "PARAMETRIZE_COND", they are expanded using the map.
 # This is good to create wrapper funcitons to e.g. cover both spellings of option "-k" and "--keep-index" and have to specify only one parameter in the function call.
 # (If no key is passed, all values are used.)
-PARAMETRIZE_MAPPED() { # condition name map values...
+PARAMETRIZE_OPTION() { # condition name map values...
 	CONDITION="$1"
 	NAME="$2"
 	#shellcheck disable=SC2020
@@ -91,7 +91,7 @@ PARAMETRIZE_MAPPED() { # condition name map values...
 		while [ $# -ne 0 ]
 		do
 			printf '%s\n' "$MAP" | grep -qE "^$1\\s" ||
-				fail 'Key "%s" cannot be found by "PARAMETRIZE_MAPPED"!\n' "$1"
+				fail 'Key "%s" cannot be found by "PARAMETRIZE_OPTION"!\n' "$1"
 			VALUES="$VALUES$(printf '\n' ; printf '%s\n' "$MAP" | awk -v key="$1" '$1 == key {for (i = 2; i <= NF; i++) {print $i}}')"
 			shift
 		done
