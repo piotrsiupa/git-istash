@@ -13,8 +13,8 @@ fi
 PARAMETRIZE() { # name values...
 	PARAM_NAME="$1"
 	shift
-	CUR_VAL="$(awk '$1 == "'"$PARAM_NAME"'" { print $2 }' "$PARAMETERS_FILE")"
-	LAST_VAL="$(awk '$1 == "'"$PARAM_NAME"'" { print $3 }' "$PARAMETERS_FILE")"
+	CUR_VAL="$(awk -v key="$PARAM_NAME" '$1 == key { print $2 }' "$PARAMETERS_FILE")"
+	LAST_VAL="$(awk -v key="$PARAM_NAME" '$1 == key { print $3 }' "$PARAMETERS_FILE")"
 	sed -iE "/^$PARAM_NAME\\>/ d" "$PARAMETERS_FILE"
 	if [ "$CUR_VAL" = "$LAST_VAL" ]
 	then
@@ -56,7 +56,7 @@ PARAMETRIZE_COND() { # condition name values...
 	PARAMETRIZE "$@"
 	if eval ! "$CONDITION"
 	then
-		CUR_VAL="$(awk '$1 == "'"$1"'" { print $2 }' "$PARAMETERS_FILE")"
+		CUR_VAL="$(awk -v key="$1" '$1 == key { print $2 }' "$PARAMETERS_FILE")"
 		if [ "$CUR_VAL" = "$2" ]
 		then
 			TMP_FILE="$(mktemp)"
@@ -83,12 +83,12 @@ PARAMETRIZE_OPTION() { # condition name map values...
 	NAME="$2"
 	#shellcheck disable=SC2020
 	MAP="$(printf '%s' "$3" | sed -E 's/\s+//g' | tr ':&|' '  \n')"
+	shift 3
 	#shellcheck disable=SC2154
 	if [ "$meticulousness" -le 2 ]
 	then
 		MAP="$(printf '%s' "$MAP" | awk '{print $1,$2}')"
 	fi
-	shift 3
 	if [ $# -eq 0 ]
 	then
 		VALUES="$(printf '%s\n' "$MAP" | awk '{for (i = 2; i <= NF; i++) {print $i}}')"
