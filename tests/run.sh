@@ -220,7 +220,7 @@ run_test() ( # test_name
 	PARAMETERS_FILE="$(mktemp)"
 	export PARAMETERS_FILE
 	output_file="$(mktemp)"
-	parametrized_run_cap=1024
+	parametrized_run_cap=2048
 	iteration_cap=$((parametrized_run_cap * 8))
 	for i in $(seq 1 $iteration_cap)
 	do
@@ -511,7 +511,7 @@ raw_name=n
 test_limit=0
 print_paths=n
 jobs_num=1
-max_meticulousness=4
+max_meticulousness=5
 meticulousness=3
 while true
 do
