@@ -1,5 +1,7 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
+non_essential_test
+
 PARAMETRIZE_HEAD_TYPE 'BRANCH'
 PARAMETRIZE_APPLY_POP
 

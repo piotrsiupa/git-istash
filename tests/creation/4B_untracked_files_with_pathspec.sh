@@ -1,10 +1,11 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
+PARAMETRIZE_ALL 'DEFAULT'
+PARAMETRIZE_UNTRACKED 'YES'
 PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_PATHSPEC_STYLE
 PARAMETRIZE_OPTIONS_INDICATOR IS_PATHSPEC_IN_ARGS
-PARAMETRIZE 'UNTRACKED_FLAG' '-u' '--include-untracked'
 
 if IS_KEEP_INDEX_ON
 then
@@ -38,12 +39,12 @@ else
 fi
 if IS_PATHSPEC_IN_ARGS
 then
-	assert_exit_code 0 git istash push 'aaa0' $KEEP_INDEX_FLAGS "$UNTRACKED_FLAG" 'bbb?' -m 'new stash' $EOI '*5' './?dd*'
+	assert_exit_code 0 git istash push 'aaa0' $KEEP_INDEX_FLAGS $UNTRACKED_FLAGS 'bbb?' $ALL_FLAGS -m 'new stash' $EOI '*5' './?dd*'
 elif IS_PATHSPEC_IN_STDIN
 then
-	assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS "$UNTRACKED_FLAG" -m 'new stash' $PATHSPEC_NULL_FLAG --pathspec-from-file=- <.git/pathspec_for_test
-else
-	assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS "$UNTRACKED_FLAG" -m 'new stash' $PATHSPEC_NULL_FLAG --pathspec-from-file .git/pathspec_for_test
+	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS -m 'new stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test
+else                                                                                     
+	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS -m 'new stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
 fi
 assert_files_H '
 ?? aaa1		xxx

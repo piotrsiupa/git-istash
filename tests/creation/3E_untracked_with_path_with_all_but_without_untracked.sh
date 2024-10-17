@@ -1,9 +1,11 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
+non_essential_test
+
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
+PARAMETRIZE_ALL 'YES'
+PARAMETRIZE_UNTRACKED 'NO'
 PARAMETRIZE_KEEP_INDEX
-PARAMETRIZE 'ALL_FLAG' '-a' '--all'
-PARAMETRIZE 'UNTRACKED_FLAG' '-u' '--include-untracked'
 
 known_failure 'Default implementation of "git stash" doesn'\''t allow stashing untracked files.'
 
@@ -13,13 +15,13 @@ SWITCH_HEAD_TYPE
 __test_section__ 'Create stash'
 printf 'aaa\n' >aaa
 printf 'bbb\n' >bbb
-printf 'y n y ' | tr ' ' '\n' >.git/answers_for_patch
-assert_exit_code 0 git istash push --patch $KEEP_INDEX_FLAGS "$ALL_FLAG" "$UNTRACKED_FLAG" <.git/answers_for_patch
+printf 'y ' | tr ' ' '\n' >.git/answers_for_patch
+assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS <.git/answers_for_patch
 assert_files_H '
+?? aaa		aaa
 ?? bbb		bbb
 '
 assert_stash_H 0 '' '
-?? aaa		aaa
 !! ignored0	ignored0
 !! ignored1	ignored1
 '

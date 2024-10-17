@@ -1,8 +1,9 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
+PARAMETRIZE_ALL 'YES'
+PARAMETRIZE_UNTRACKED 'NO'
 PARAMETRIZE_KEEP_INDEX
-PARAMETRIZE 'ALL_FLAG' '-a' '--all'
 
 known_failure 'The flag "--no-include-untracked" in "git stash" seems to override "-a" while I would like it to be additive.'
 
@@ -14,7 +15,7 @@ printf 'aaa\n' >aaa
 git add aaa
 printf 'bbb\n' >aaa
 printf 'ddd\n' >ddd
-assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS "$ALL_FLAG" --no-include-untracked --message 'name of the new stash'
+assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS --message 'name of the new stash'
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_H '

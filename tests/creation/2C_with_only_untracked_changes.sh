@@ -1,8 +1,11 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
+non_essential_test
+
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
+PARAMETRIZE_ALL 'DEFAULT'
+PARAMETRIZE_UNTRACKED 'YES'
 PARAMETRIZE_KEEP_INDEX
-PARAMETRIZE 'UNTRACKED_FLAG' '-u' '--include-untracked'
 
 if IS_KEEP_INDEX_ON
 then
@@ -14,7 +17,7 @@ SWITCH_HEAD_TYPE
 
 __test_section__ 'Create stash'
 printf 'ddd\n' >ddd
-assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS "$UNTRACKED_FLAG" --message='stash message'
+assert_exit_code 0 git istash push $ALL_FLAGS $KEEP_INDEX_FLAGS $UNTRACKED_FLAGS --message='stash message'
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_H '

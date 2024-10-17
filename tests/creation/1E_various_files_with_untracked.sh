@@ -1,8 +1,9 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
+PARAMETRIZE_ALL 'DEFAULT'
+PARAMETRIZE_UNTRACKED 'YES'
 PARAMETRIZE_KEEP_INDEX
-PARAMETRIZE 'UNTRACKED_FLAG' '-u' '--include-untracked'
 
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
@@ -12,7 +13,7 @@ printf 'aaa\n' >aaa
 git add aaa
 printf 'bbb\n' >aaa
 printf 'ddd\n' >ddd
-assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS "$UNTRACKED_FLAG" --message 'name of the new stash'
+assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS --message 'name of the new stash'
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_H '

@@ -31,15 +31,21 @@ hint: To abort and get back to the state before \"$1 $2 $3\", run \"$1 $2 $3 --a
 }
 
 _sort_repository_status() {
-	sed -E 's/^(...)(.*)$/\2 \1/' | sort | sed -E 's/^(.*) (...)$/\2\1/'
+	sed -E 's/^(...)(.*)$/\2 \1/' \
+	| sort \
+	| sed -E 's/^(.*) (...)$/\2\1/'
 }
 
 _convert_zero_separated_path_list() {
-	sed -E 's/$/\\n/g' | tr -d '\n' | tr '\0' '\n' | sed -E 's/\\n$//'
+	sed -E 's/$/\\n/g' \
+	| tr -d '\n' \
+	| tr '\0' '\n' \
+	| sed -E 's/\\n$//'
 }
 
 _prepare_path_list_for_assertion() {
-	tr '\n' '|' | sed -E 's/.$//'
+	tr '\n' '|' \
+	| sed -E 's/.$//'
 }
 
 assert_all_files() { # expected

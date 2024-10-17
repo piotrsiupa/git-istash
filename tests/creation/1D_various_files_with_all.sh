@@ -1,26 +1,38 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
+PARAMETRIZE_ALL 'YES'
+PARAMETRIZE_UNTRACKED 'DEFAULT' 'YES'
 PARAMETRIZE_KEEP_INDEX
-PARAMETRIZE 'UNTRACKED_FLAG' '-u' '--include-untracked'
 
-known_failure 'Default implementation of "git stash" doesn'\''t allow stashing untracked files.'
+if IS_UNTRACKED_ON
+then
+	known_failure 'The flag "-u" in "git stash" seems to override "-a" while I would like it to be additive.'
+fi
 
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
 __test_section__ 'Create stash'
 printf 'aaa\n' >aaa
-printf 'bbb\n' >bbb
-printf 'y n ' | tr ' ' '\n' >.git/answers_for_patch
-assert_exit_code 0 git istash push --patch $KEEP_INDEX_FLAGS "$UNTRACKED_FLAG" <.git/answers_for_patch
-assert_files_H '
-?? bbb		bbb
+git add aaa
+printf 'bbb\n' >aaa
+printf 'ddd\n' >ddd
+assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS --message 'name of the new stash'
+if ! IS_KEEP_INDEX_ON
+then
+	assert_files_H '
+	'
+else
+	assert_files_H '
+	A  aaa			aaa
+	'
+fi
+assert_stash_H 0 'name of the new stash' '
+AM aaa		bbb	aaa
+?? ddd		ddd
 !! ignored0	ignored0
 !! ignored1	ignored1
-'
-assert_stash_H 0 '' '
-?? aaa		aaa
 '
 assert_stash_base_H 0 'HEAD'
 assert_stash_count 1
@@ -36,8 +48,8 @@ RESTORE_HEAD_TYPE
 __test_section__ 'Pop stash'
 assert_exit_code 0 git stash pop --index
 assert_files '
-?? aaa		aaa
-?? bbb		bbb
+AM aaa		bbb	aaa
+?? ddd		ddd
 !! ignored0	ignored0
 !! ignored1	ignored1
 '

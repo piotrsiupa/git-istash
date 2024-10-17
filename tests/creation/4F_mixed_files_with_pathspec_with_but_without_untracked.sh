@@ -1,16 +1,16 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
+non_essential_test
+
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
+PARAMETRIZE_ALL 'YES'
+PARAMETRIZE_UNTRACKED 'NO'
 PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_PATHSPEC_STYLE
 PARAMETRIZE_OPTIONS_INDICATOR IS_PATHSPEC_IN_ARGS
-PARAMETRIZE 'ALL_FLAG' '-a' '--all'
 
 known_failure 'There is a bug in Git which makes it disregard pathspec for files in index.'
-if IS_KEEP_INDEX_ON
-then
-	known_failure 'It looks like in the standard "git stash" options "-k" and "-u" and alergic to each other.'
-fi
+known_failure 'The flag "--no-include-untracked" in "git stash" seems to override "-a" while I would like it to be additive.'
 if IS_OPTIONS_INDICATOR_ON
 then
 	known_failure 'Standard implementation of "git stash" does not adhere to the POSIX utility convention.'
@@ -53,18 +53,18 @@ git add aaa0 bbb3 ccc6 ddd9 eee12
 
 if ! IS_PATHSPEC_NULL_SEP
 then
-	printf 'aaa0 bbb? *7 c?c8 *ore?0 ./?dd* ' | tr ' ' '\n' >.git/pathspec_for_test
+	printf 'aaa0 bbb? *7 *ore?0 ./?dd* ' | tr ' ' '\n' >.git/pathspec_for_test
 else
-	printf 'aaa0 bbb? *7 c?c8 *ore?0 ./?dd* ' | tr ' ' '\0' >.git/pathspec_for_test
+	printf 'aaa0 bbb? *7 *ore?0 ./?dd* ' | tr ' ' '\0' >.git/pathspec_for_test
 fi
 if IS_PATHSPEC_IN_ARGS
 then
-	assert_exit_code 0 git istash push 'aaa0' $KEEP_INDEX_FLAGS "$ALL_FLAG" 'bbb?' -m 'new stash' $EOI '*7' 'c?c8' '*ore?0' './?dd*'
+	assert_exit_code 0 git istash push 'aaa0' $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS 'bbb?' -m 'new stash' $EOI '*7' '*ore?0' './?dd*'
 elif IS_PATHSPEC_IN_STDIN
 then
-	assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS "$ALL_FLAG" -m 'new stash' $PATHSPEC_NULL_FLAG --pathspec-from-file=- <.git/pathspec_for_test
+	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS -m 'new stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test
 else
-	assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS "$ALL_FLAG" -m 'new stash' $PATHSPEC_NULL_FLAG --pathspec-from-file .git/pathspec_for_test
+	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS -m 'new stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
 fi
 if ! IS_KEEP_INDEX_ON
 then
@@ -74,10 +74,13 @@ then
 	?? aaa2		yyy
 	   bbb3		xxx
 	   bbb4		xxx
+	?? bbb5		yyy
 	M  ccc6		yyy
 	   ccc7		xxx
+	?? ccc8		yyy
 	   ddd9		xxx
 	   ddd10	xxx
+	?? ddd11	yyy
 	M  eee12	yyy
 	 M eee13	yyy	xxx
 	?? eee14	yyy
@@ -90,10 +93,13 @@ else
 	?? aaa2		yyy
 	M  bbb3		yyy
 	   bbb4		xxx
+	?? bbb5		yyy
 	M  ccc6		yyy
 	   ccc7		xxx
+	?? ccc8		yyy
 	M  ddd9		yyy
 	   ddd10	xxx
+	?? ddd11	yyy
 	M  eee12	yyy
 	 M eee13	yyy	xxx
 	?? eee14	yyy
@@ -105,13 +111,10 @@ M  aaa0		yyy
    aaa1		xxx
 M  bbb3		yyy
  M bbb4		yyy	xxx
-?? bbb5		yyy
    ccc6		xxx
  M ccc7		yyy	xxx
-?? ccc8		yyy
 M  ddd9		yyy
  M ddd10	yyy	xxx
-?? ddd11	yyy
    eee12	xxx
    eee13	xxx
 !! ignored0	ignored0

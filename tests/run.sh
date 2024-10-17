@@ -19,6 +19,7 @@ print_help() {
 	printf '    -l, --limit=number\t- Set maximum number of tests to be run. (It pairs well\n\t\t\t  with "--failed" to e.g. rerun the first failed test.)\n'
 	printf '    -p, --print-paths\t- Instead of running tests, print their paths and exit.\n\t\t\t  (The paths are relative to the directory "tests".)\n'
 	printf '    -j, --jobs=N\t- Run N tests in parallel. (default is sequentially)\n\t\t\t  N=0 uses all available processing units. ("nproc")\n'
+	printf '    -m, --meticulous=N\t- Set how many tests will be run. Allowed values are\n\t\t\t  0..5 (default=3). (See the section "Meticulousness".)\n'
 	printf '\n'
 	printf 'Filters:\n'
 	printf 'You can specify one or more filters in the command call. '
@@ -29,6 +30,17 @@ print_help() {
 	printf 'This can be used to either list individual tests or choose some categories.\n'
 	printf '(See "README.md" in the test directory for more information about test names.)\n'
 	printf 'Paths to specific test files are also accepted.\n'
+	printf '\n'
+	printf 'Meticulousness:\n'
+	printf 'This controls the balance between the speed and how detailed the tests are.\n'
+	printf 'The exact metrics depend strongly on which specific tests are run.\n'
+	printf 'The levels are:\n'
+	printf '    0 - Most of the tests (marked as non-essential) are skipped. It can be used\n\tto check if the most important functionality is implemented but it'\''s\n\tnot very useful overall. (Extremely fast, though.)\n'
+	printf '    1 - Only the first set of parameters is run for each parametric test. Almost\n\tall tests are parametric so a lot is skipped but this should suffice to\n\tdo a quick test. It won'\''t catch most of the corner cases, though.\n'
+	printf '    2 - When an option has a few spellings (e.g. "-m" and "--message") only one\n\tof them will be tested. Beside that, other things from parametric tests\n\tare tested in all combinations, except not all the ways to specify\n\tpathspecs because there is a lot. (Null-separated stdin and non-null-\n\t-separated file are skipped but it probably should still test all\n\texecution paths.) This is relatively thorough and it should be enough\n\tfor testing on the fly, while writing code.\n'
+	printf '    3 - When an option has multiple spellings, all of them are tested but not\n\tnecessarily all combinations of spellings of different options.\n\tThis level should be run before every commit!\n'
+	printf '    4 - All combinations of parameters are run in parametric tests.\n\t(A bit of an overkill but it is run from time to time, just to be sure.)\n'
+	printf '    5 - All combinations of parameters are run in parametric tests plus non\n\tstandard versions of options are tested (e.g. "--mess" instead of\n\t"--message"). (It'\''s definitely an overkill and it takes really long.)\n'
 }
 
 print_version() {
@@ -220,7 +232,7 @@ run_test() ( # test_name
 	PARAMETERS_FILE="$(mktemp)"
 	export PARAMETERS_FILE
 	output_file="$(mktemp)"
-	parametrized_run_cap=256
+	parametrized_run_cap=2048
 	iteration_cap=$((parametrized_run_cap * 8))
 	for i in $(seq 1 $iteration_cap)
 	do
@@ -248,7 +260,7 @@ run_test() ( # test_name
 			then
 				parameters_string=''
 			else
-				parameters_string="$(awk 'x{print $2} /^--------$/{x=1}' "$PARAMETERS_FILE" | sed -E 's/$/, /' | head -c-3 | tr -d '\n')"
+				parameters_string="$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | tail -n+2 | sed '/^_/ d' | awk '{if (NF == 4) {print $4} else {print $2}}' | sed -E 's/$/, /' | head -c-3 | tr -d '\n')"
 			fi
 			test_passed="$(printf '%s\n' "$test_result" | grep -Ev '^[-+]')"
 			if [ "$test_passed" = n ]
@@ -288,7 +300,7 @@ run_test() ( # test_name
 		else
 			cleanup_test "$1"
 		fi
-		if [ -z "$(awk '$2 != $3 { print 1 }' "$PARAMETERS_FILE")" ]
+		if { [ "$meticulousness" -le 1 ] && [ $test_count -ne 0 ] ; } || [ -z "$(awk '$2 != $3 { print 1 }' "$PARAMETERS_FILE")" ]
 		then
 			i=x
 			break
@@ -315,8 +327,7 @@ run_test() ( # test_name
 		printf '\n'
 	fi
 	rm -f "$output_file"
-	rm -f "$PARAMETERS_FILE"
-	if [ $test_count -ge 2 ] && { [ "$error_count" -ne 0 ] || [ "$quiet_mode" = n ] ; }
+	if { [ "$meticulousness" -le 1 ] && [ -n "$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | tail -n+2)" ] ; } || { [ $test_count -ge 2 ] && { [ "$error_count" -ne 0 ] || [ "$quiet_mode" = n ] ; } ; }
 	then
 		test_passed="$(test "$failed_count" -eq 0 && printf 'y' || printf 'n')"
 		test_result_is_correct="$(test "$error_count" -eq 0 && printf 'y' || printf 'n')"
@@ -325,7 +336,13 @@ run_test() ( # test_name
 		printf_color_code '\033[22;39m'
 		printf '\n'
 	fi
-	test "$error_count" -eq 0
+	rm -f "$PARAMETERS_FILE"
+	if [ $test_count -eq 0 ]
+	then
+		return 123
+	else
+		test "$error_count" -eq 0
+	fi
 )
 update_current_category() { # test_name
 	current_category="$(dirname "$1")"
@@ -338,7 +355,7 @@ update_current_category() { # test_name
 			printf_color_code '\033[22m'
 			printf '\n'
 		} 1>&5
-		printf '%s\n' "$current_category"
+		printf '%s - passed\n%s - failed\n' "$current_category" "$current_category"
 	fi
 }
 run_tests() {
@@ -354,7 +371,7 @@ run_tests() {
 	fi
 	esc_char="$(printf '\033')"
 	exec 5>&1
-	passed_tests="$(
+	test_results="$(
 		previous_category=''
 		printf '%s\n' "$tests" \
 		| if [ "$jobs_num" -eq 1 ]
@@ -364,7 +381,10 @@ run_tests() {
 				update_current_category "$test_name"
 				if run_test "$test_name" 1>&5
 				then
-					printf '%s\n' "$current_category"
+					printf '%s - passed\n' "$current_category"
+				elif [ $? != '123' ]
+				then
+					printf '%s - failed\n' "$current_category"
 				fi
 			done
 		else
@@ -379,7 +399,7 @@ run_tests() {
 						break
 					fi
 					result_file="$(mktemp)"
-					{ run_test "$test_name" && printf '0\n' || printf '1\n' ; } 1>"$result_file" 2>&1 &
+					{ run_test "$test_name" && printf '0\n' || printf '%i\n' $? ; } 1>"$result_file" 2>&1 &
 					running_tests_count=$((running_tests_count + 1))
 					running_tests_data="$(printf '%s\n%i %s %s' "$running_tests_data" $! "$result_file" "$test_name" | sed -E '/^\s*$/ d')"
 				done
@@ -398,7 +418,10 @@ run_tests() {
 				done
 				if [ "$(tail -n1 "$result_file")" = '0' ]
 				then
-					printf '%s\n' "$current_category"
+					printf '%s - passed\n' "$current_category"
+				elif [ "$(tail -n1 "$result_file")" != '123' ]
+				then
+					printf '%s - failed\n' "$current_category"
 				fi
 				rm -f "$result_file"
 				running_tests_count=$((running_tests_count - 1))
@@ -409,7 +432,7 @@ run_tests() {
 				fi
 			done
 		fi \
-		| uniq -c | awk '{print $1 - 1}'
+		| sort | uniq -c | awk '{print $1 - 1}'
 	)"
 	exec 5>&-
 }
@@ -426,10 +449,12 @@ print_summary() {
 		| while read -r category
 		do
 			i=$((i + 1))
-			total_in_category="$(printf '%s\n' "$category" | cut -d' ' -f1)"
-			passed_in_category="$(printf '%s' "$passed_tests" | head -n $i | tail -n 1)"
+			failed_in_category="$(printf '%s' "$test_results" | head -n $i | tail -n 1)"
+			i=$((i + 1))
+			passed_in_category="$(printf '%s' "$test_results" | head -n $i | tail -n 1)"
+			total_in_category=$((failed_in_category + passed_in_category))
 			printf '%s: ' "$(printf '%s' "$category" | cut -d' ' -f2)"
-			if [ "$passed_in_category" -eq "$total_in_category" ]
+			if [ "$failed_in_category" -eq 0 ]
 			then
 				printf_color_code '\033[1;32;4m'
 				if [ "$total_in_category" -eq 1 ]
@@ -456,8 +481,8 @@ print_summary() {
 		passed_tests=0
 		total_tests=0
 	else
-		passed_tests=$(($(printf '%s' "$passed_tests" | tr '\n' '+')))
-		total_tests="$(printf '%s\n' "$tests" | wc -l)"
+		passed_tests=$(($(printf '%s\n' "$test_results" | sed -n 'n;p' | tr '\n' '+' | head -c-1)))
+		total_tests=$(($(printf '%s' "$test_results" | tr '\n' '+')))
 	fi
 	if [ "$total_tests" -ne 0 ]
 	then
@@ -487,7 +512,7 @@ print_summary() {
 	printf '\n'
 }
 
-getopt_result="$(getopt -o'hfdqvc:rl:pj:' --long='help,version,failed,debug,quiet,verbose,color:,raw,raw-name,file-name,limit:,print-paths,jobs:' -n"$(basename "$0")" -ssh -- "$@")"
+getopt_result="$(getopt -o'hfdqvc:rl:pj:m:' --long='help,version,failed,debug,quiet,verbose,color:,raw,raw-name,file-name,limit:,print-paths,jobs:,meticulousness:' -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 only_failed=n
 debug_mode=n
@@ -498,6 +523,8 @@ raw_name=n
 test_limit=0
 print_paths=n
 jobs_num=1
+max_meticulousness=5
+meticulousness=3
 while true
 do
 	case "$1" in
@@ -568,6 +595,16 @@ do
 			exit 1
 		fi
 		;;
+	-m|--meticulousness)
+		shift
+		if [ "$1" -eq "$1" ] 2>/dev/null && [ "$1" -ge 0 ] && [ "$1" -le $max_meticulousness ]
+		then
+			meticulousness="$1"
+		else
+			printf '"%s" is not a valid value for meticulousness (0..%i).\n' "$1" $max_meticulousness 1>&2
+			exit 1
+		fi
+		;;
 	--)
 		shift
 		break
@@ -589,6 +626,7 @@ then
 	printf 'Options "--quiet" and "--verbose" are incompatible.\n' 1>&2
 	exit 1
 fi
+export meticulousness
 
 normalize_filter_entry() { # filter_entry
 	if [ -f "$1" ]
