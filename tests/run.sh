@@ -248,7 +248,7 @@ run_test() ( # test_name
 			then
 				parameters_string=''
 			else
-				parameters_string="$(awk 'x{print $2} /^--------$/{x=1}' "$PARAMETERS_FILE" | sed -E 's/$/, /' | head -c-3 | tr -d '\n')"
+				parameters_string="$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | tail -n+2 | sed '/^_/ d' | awk '{if (NF == 4) {print $4} else {print $2}}' | sed -E 's/$/, /' | head -c-3 | tr -d '\n')"
 			fi
 			test_passed="$(printf '%s\n' "$test_result" | grep -Ev '^[-+]')"
 			if [ "$test_passed" = n ]
@@ -511,7 +511,7 @@ raw_name=n
 test_limit=0
 print_paths=n
 jobs_num=1
-max_meticulousness=3
+max_meticulousness=4
 meticulousness=3
 while true
 do
