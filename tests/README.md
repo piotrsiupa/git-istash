@@ -10,7 +10,7 @@ The script that runs all the tests placed in this directory.
 Executing it without parameters will run all the tests.
 (Although, you probably want to add an option `-j0`.)
 There are also filtering and formatting options.
-(For more information, run `run.sh --help`.)
+(For more information, run `run.sh --help`. Some options can improve the speed significantly.)
 
 ## `shellcheck.sh`
 
@@ -37,7 +37,7 @@ The file patch relative to the directory `tests` but without the extension is th
 Tests are scripts that return an exit code `0` if the tests passed and non-`0` otherwise.
 To run a test, use the script `run.sh` which will create and initialize a new Git repository in which the test can be safely run.
 *Running a test without `run.sh` may mess up files in the Git repository or in the current directory.*
-(There is some rudimentary protection from doing that in the `commons.sh`, but don't try regardless.)
+(There is some protection from doing that in the `commons.sh`, but don't try regardless.)
 
 ## Test script
 
