@@ -13,6 +13,7 @@ print_help() {
 	printf '    -f, --failed\t- Rerun only the tests that failed the last time when\n\t\t\t  they were run. (Check the presence of the test dir.)\n'
 	printf '    -d, --debug\t\t- Print outputs of all commands in run in the tests.\n'
 	printf '    -q, --quiet\t\t- Don'\''t print summaries for passed tests.\n'
+	printf '    -Q, --quieter\t- Don'\''t print summaries for known failures either.\n'
 	printf '    -v, --verbose\t- Show each set of parameters even of if passes.\n'
 	printf '    -c, --color=when\t- Set color mode (always / never / auto).\n'
 	printf '    -r, --raw-name\t- Print paths to test files instead of prettified names.\n'
@@ -278,7 +279,7 @@ run_test() ( # test_name
 			then
 				error_count=$((error_count + 1))
 			fi
-			if { [ -z "$parameters_string" ] || [ "$test_result_is_correct" = n ] || [ "$verbose_mode" = y ] ; } && { [ "$test_result_is_correct" = n ] || [ "$quiet_mode" = n ] ; }
+			if { [ -z "$parameters_string" ] || [ "$test_result_is_correct" = n ] || [ "$verbose_mode" = y ] ; } && { [ "$test_result_is_correct" = n ] || [ "$quiet_level" -eq 0 ] || { [ "$test_passed" = n ] && [ "$quiet_level" -eq 1 ] ; } ; }
 			then
 				print_test_result
 			fi
@@ -327,7 +328,7 @@ run_test() ( # test_name
 		printf '\n'
 	fi
 	rm -f "$output_file"
-	if { [ "$meticulousness" -le 1 ] && [ -n "$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | tail -n+2)" ] ; } || { [ $test_count -ge 2 ] && { [ "$error_count" -ne 0 ] || [ "$quiet_mode" = n ] ; } ; }
+	if { [ "$meticulousness" -le 1 ] && [ -n "$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | tail -n+2)" ] ; } || { [ $test_count -ge 2 ] && { [ "$error_count" -ne 0 ] || [ "$quiet_level" -eq 0 ] || { [ "$failed_count" -ne 0 ] && [ "$quiet_level" -eq 1 ] ; } ; } ; }
 	then
 		test_passed="$(test "$failed_count" -eq 0 && printf 'y' || printf 'n')"
 		test_result_is_correct="$(test "$error_count" -eq 0 && printf 'y' || printf 'n')"
@@ -512,11 +513,11 @@ print_summary() {
 	printf '\n'
 }
 
-getopt_result="$(getopt -o'hfdqvc:rl:pj:m:' --long='help,version,failed,debug,quiet,verbose,color:,raw,raw-name,file-name,limit:,print-paths,jobs:,meticulousness:' -n"$(basename "$0")" -ssh -- "$@")"
+getopt_result="$(getopt -o'hfdqQvc:rl:pj:m:' --long='help,version,failed,debug,quiet,quieter,verbose,color:,raw,raw-name,file-name,limit:,print-paths,jobs:,meticulousness:' -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 only_failed=n
 debug_mode=n
-quiet_mode=n
+quiet_level=0
 verbose_mode=n
 use_color='auto'
 raw_name=n
@@ -543,7 +544,10 @@ do
 		debug_mode=y
 		;;
 	-q|--quiet)
-		quiet_mode=y
+		quiet_level=1
+		;;
+	-Q|--quieter)
+		quiet_level=2
 		;;
 	-v|--verbose)
 		verbose_mode=y
@@ -621,7 +625,7 @@ then
 		use_color=n
 	fi
 fi
-if [ "$quiet_mode" = y ] && [ "$verbose_mode" = y ]
+if [ "$quiet_level" -ne 0 ] && [ "$verbose_mode" = y ]
 then
 	printf 'Options "--quiet" and "--verbose" are incompatible.\n' 1>&2
 	exit 1
