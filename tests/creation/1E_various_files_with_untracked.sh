@@ -13,7 +13,7 @@ printf 'aaa\n' >aaa
 git add aaa
 printf 'bbb\n' >aaa
 printf 'ddd\n' >ddd
-assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS --message 'name of the new stash'
+assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS --message 'name of this stash'
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_H '
@@ -27,7 +27,7 @@ else
 	!! ignored1	ignored1
 	'
 fi
-assert_stash_H 0 'name of the new stash' '
+assert_stash_H 0 'name of this stash' '
 AM aaa		bbb	aaa
 ?? ddd		ddd
 '

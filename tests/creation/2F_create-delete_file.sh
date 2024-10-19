@@ -17,7 +17,7 @@ printf 'aaa\n' >aaa
 git add aaa
 rm aaa
 printf 'ddd\n' >ddd
-assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS --message 'mesanmge'
+assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_H '
@@ -33,7 +33,7 @@ else
 	!! ignored1	ignored1
 	'
 fi
-assert_stash_H 0 'mesanmge' '
+assert_stash_H 0 '' '
 AD aaa			aaa
 '
 assert_stash_base_H 0 'HEAD'

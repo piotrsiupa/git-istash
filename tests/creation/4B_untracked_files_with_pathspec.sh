@@ -39,12 +39,12 @@ else
 fi
 if IS_PATHSPEC_IN_ARGS
 then
-	assert_exit_code 0 git istash push 'aaa0' $KEEP_INDEX_FLAGS $UNTRACKED_FLAGS 'bbb?' $ALL_FLAGS -m 'new stash' $EOI '*5' './?dd*'
+	assert_exit_code 0 git istash push 'aaa0' $KEEP_INDEX_FLAGS $UNTRACKED_FLAGS 'bbb?' $ALL_FLAGS -m 'a stash' $EOI '*5' './?dd*'
 elif IS_PATHSPEC_IN_STDIN
 then
-	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS -m 'new stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test
+	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS -m 'a stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test
 else                                                                                     
-	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS -m 'new stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
+	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS -m 'a stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
 fi
 assert_files_H '
 ?? aaa1		xxx
@@ -54,7 +54,7 @@ assert_files_H '
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
-assert_stash_H 0 'new stash' '
+assert_stash_H 0 'a stash' '
 ?? aaa0		xxx
 ?? bbb2		xxx
 ?? bbb3		xxx

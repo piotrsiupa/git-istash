@@ -20,7 +20,7 @@ SWITCH_HEAD_TYPE
 __test_section__ 'Create stash'
 git rm aaa
 printf 'bbb\n' >aaa
-assert_exit_code 0 git istash push $ALL_FLAGS $UNTRACKED_FLAGS $KEEP_INDEX_FLAGS --message 'mesanmge'
+assert_exit_code 0 git istash push $ALL_FLAGS $UNTRACKED_FLAGS $KEEP_INDEX_FLAGS --message 'stash, not a trash'
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_H '
@@ -35,7 +35,7 @@ else
 	!! ignored1	ignored1
 	'
 fi
-assert_stash_H 0 'mesanmge' '
+assert_stash_H 0 'stash, not a trash' '
 D  aaa
 ?? aaa		bbb
 '

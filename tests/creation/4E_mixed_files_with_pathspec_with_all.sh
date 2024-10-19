@@ -66,12 +66,12 @@ else
 fi
 if IS_PATHSPEC_IN_ARGS
 then
-	assert_exit_code 0 git istash push 'aaa0' $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS 'bbb?' -m 'new stash' $EOI '*7' 'c?c8' '*ore?0' './?dd*'
+	assert_exit_code 0 git istash push 'aaa0' $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS 'bbb?' -m 'mr. stash' $EOI '*7' 'c?c8' '*ore?0' './?dd*'
 elif IS_PATHSPEC_IN_STDIN
 then
-	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS -m 'new stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test
+	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS -m 'mr. stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test
 else
-	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS -m 'new stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
+	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS -m 'mr. stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
 fi
 if ! IS_KEEP_INDEX_ON
 then
@@ -107,7 +107,7 @@ else
 	!! ignored1	ignored1
 	'
 fi
-assert_stash_H 0 'new stash' '
+assert_stash_H 0 'mr. stash' '
 M  aaa0		yyy
    aaa1		xxx
 M  bbb3		yyy

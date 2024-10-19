@@ -16,12 +16,12 @@ __test_section__ 'Create stash'
 printf 'aaa\n' >aaa
 printf 'bbb\n' >bbb
 printf 'y ' | tr ' ' '\n' >.git/answers_for_patch
-assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS <.git/answers_for_patch
+assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS --message=message <.git/answers_for_patch
 assert_files_H '
 ?? aaa		aaa
 ?? bbb		bbb
 '
-assert_stash_H 0 '' '
+assert_stash_H 0 'message' '
 !! ignored0	ignored0
 !! ignored1	ignored1
 '

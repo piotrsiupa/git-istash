@@ -22,7 +22,7 @@ printf 'ddd\n' >ccc
 git add ccc
 rm ccc
 printf 'ddd\n' >ddd
-assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS --message 'mesanmge'
+assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS -mmsg
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_H '
@@ -43,7 +43,7 @@ else
 	!! ignored1	ignored1
 	'
 fi
-assert_stash_H 0 'mesanmge' '
+assert_stash_H 0 'msg' '
 D  aaa
  D bbb			bbb
 MD ccc			ddd
