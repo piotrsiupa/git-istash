@@ -14,9 +14,9 @@ print_help() {
 	printf '   or: git istash apply -h\n'
 	printf '\n'
 	printf 'Options:\n'
-	printf '    -h\t\t\t- Show this help text and exit.\n'
-	printf '    -c, --continue\t- Resume the previous operation.\n\t\t\t  (Conflicts need to be resolved before that.)\n'
 	printf '\t--abort\t\t- Abort the previous operation and return the repository\n\t\t\t  to the state before it started.\n'
+	printf '    -c, --continue\t- Resume the previous operation.\n\t\t\t  (Conflicts need to be resolved before that.)\n'
+	printf '    -h\t\t\t- Show this help text and exit.\n'
 }
 
 get_sub_command_name() { #
@@ -296,26 +296,26 @@ do_apply() { # args...
 	fi
 }
 
-getopt_result="$(getopt -o'hc' --long='continue,abort,called-from-pop' -n"$(basename "$0")" -ssh -- "$@")"
+getopt_result="$(getopt -o'ch' --long='abort,_called-from-pop,continue' -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
-continue_set=n
 abort_set=n
 is_pop=n
+continue_set=n
 while true
 do
 	case "$1" in
-	-h)
-		print_help
-		exit 0
+	--abort)
+		abort_set=y
+		;;
+	--_called-from-pop)
+		is_pop=y
 		;;
 	-c|--continue)
 		continue_set=y
 		;;
-	--abort)
-		abort_set=y
-		;;
-	--called-from-pop)
-		is_pop=y
+	-h)
+		print_help
+		exit 0
 		;;
 	--)
 		shift

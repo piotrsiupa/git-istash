@@ -9,18 +9,18 @@ print_help() {
 	printf '\n'
 	printf 'Options:\n'
 	printf '    -h, --help\t\t- Print this help message end exit.\n'
-	printf '\t--version\t- Print version information and exit.\n'
-	printf '    -f, --failed\t- Rerun only the tests that failed the last time when\n\t\t\t  they were run. (Check the presence of the test dir.)\n'
+	printf '    -c, --color=when\t- Set color mode (always / never / auto).\n'
 	printf '    -d, --debug\t\t- Print outputs of all commands in run in the tests.\n'
+	printf '    -f, --failed\t- Rerun only the tests that failed the last time when\n\t\t\t  they were run. (Check the presence of the test dir.)\n'
+	printf '    -j, --jobs=N\t- Run N tests in parallel. (default is sequentially)\n\t\t\t  N=0 uses all available processing units. ("nproc")\n'
+	printf '    -l, --limit=number\t- Set maximum number of tests to be run. (It pairs well\n\t\t\t  with "--failed" to e.g. rerun the first failed test.)\n'
+	printf '    -m, --meticulous=N\t- Set how many tests will be run. Allowed values are\n\t\t\t  0..5 (default=3). (See the section "Meticulousness".)\n'
+	printf '    -p, --print-paths\t- Instead of running tests, print their paths and exit.\n\t\t\t  (The paths are relative to the directory "tests".)\n'
 	printf '    -q, --quiet\t\t- Don'\''t print summaries for passed tests.\n'
 	printf '    -Q, --quieter\t- Don'\''t print summaries for known failures either.\n'
-	printf '    -v, --verbose\t- Show each set of parameters even of if passes.\n'
-	printf '    -c, --color=when\t- Set color mode (always / never / auto).\n'
 	printf '    -r, --raw-name\t- Print paths to test files instead of prettified names.\n'
-	printf '    -l, --limit=number\t- Set maximum number of tests to be run. (It pairs well\n\t\t\t  with "--failed" to e.g. rerun the first failed test.)\n'
-	printf '    -p, --print-paths\t- Instead of running tests, print their paths and exit.\n\t\t\t  (The paths are relative to the directory "tests".)\n'
-	printf '    -j, --jobs=N\t- Run N tests in parallel. (default is sequentially)\n\t\t\t  N=0 uses all available processing units. ("nproc")\n'
-	printf '    -m, --meticulous=N\t- Set how many tests will be run. Allowed values are\n\t\t\t  0..5 (default=3). (See the section "Meticulousness".)\n'
+	printf '    -v, --verbose\t- Show each set of parameters even of if passes.\n'
+	printf '\t--version\t- Print version information and exit.\n'
 	printf '\n'
 	printf 'Filters:\n'
 	printf 'You can specify one or more filters in the command call. '
@@ -513,7 +513,7 @@ print_summary() {
 	printf '\n'
 }
 
-getopt_result="$(getopt -o'hfdqQvc:rl:pj:m:' --long='help,version,failed,debug,quiet,quieter,verbose,color:,raw,raw-name,file-name,limit:,print-paths,jobs:,meticulousness:' -n"$(basename "$0")" -ssh -- "$@")"
+getopt_result="$(getopt -o'c:dfhj:l:m:pqQrv' --long='color:,debug,failed,file-name,help,jobs:,limit:,meticulousness:,print-paths,quiet,quieter,raw,raw-name,verbose,version' -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 only_failed=n
 debug_mode=n
@@ -529,29 +529,6 @@ meticulousness=3
 while true
 do
 	case "$1" in
-	-h|--help)
-		print_help
-		exit 0
-		;;
-	--version)
-		print_version
-		exit 0
-		;;
-	-f|--failed)
-		only_failed=y
-		;;
-	-d|--debug)
-		debug_mode=y
-		;;
-	-q|--quiet)
-		quiet_level=1
-		;;
-	-Q|--quieter)
-		quiet_level=2
-		;;
-	-v|--verbose)
-		verbose_mode=y
-		;;
 	-c|--color)
 		shift
 		if printf '%s' "$1" | grep -ixqE 'auto|default'
@@ -568,21 +545,15 @@ do
 			exit 1
 		fi
 		;;
-	-r|--raw|--raw-name|--file-name)
-		raw_name=y
+	-d|--debug)
+		debug_mode=y
 		;;
-	-l|--limit)
-		shift
-		if [ "$1" -eq "$1" ] 2>/dev/null && [ "$1" -ge 0 ]
-		then
-			test_limit="$1"
-		else
-			printf '"%s" is not a valid number of tests (a non-negative integer).\n' "$1" 1>&2
-			exit 1
-		fi
+	-f|--failed)
+		only_failed=y
 		;;
-	-p|--print-paths)
-		print_paths=y
+	-h|--help)
+		print_help
+		exit 0
 		;;
 	-j|--jobs)
 		shift
@@ -599,6 +570,16 @@ do
 			exit 1
 		fi
 		;;
+	-l|--limit)
+		shift
+		if [ "$1" -eq "$1" ] 2>/dev/null && [ "$1" -ge 0 ]
+		then
+			test_limit="$1"
+		else
+			printf '"%s" is not a valid number of tests (a non-negative integer).\n' "$1" 1>&2
+			exit 1
+		fi
+		;;
 	-m|--meticulousness)
 		shift
 		if [ "$1" -eq "$1" ] 2>/dev/null && [ "$1" -ge 0 ] && [ "$1" -le $max_meticulousness ]
@@ -608,6 +589,35 @@ do
 			printf '"%s" is not a valid value for meticulousness (0..%i).\n' "$1" $max_meticulousness 1>&2
 			exit 1
 		fi
+		;;
+	-p|--print-paths)
+		print_paths=y
+		;;
+	-q|--quiet)
+		if [ "$quiet_level" -eq 2 ]
+		then
+			printf 'Options "--quiet" and "--quiter" are incompatible.\n' 1>&2
+			exit 1
+		fi
+		quiet_level=1
+		;;
+	-Q|--quieter)
+		if [ "$quiet_level" -eq 1 ]
+		then
+			printf 'Options "--quiet" and "--quiter" are incompatible.\n' 1>&2
+			exit 1
+		fi
+		quiet_level=2
+		;;
+	-r|--raw|--raw-name|--file-name)
+		raw_name=y
+		;;
+	-v|--verbose)
+		verbose_mode=y
+		;;
+	--version)
+		print_version
+		exit 0
 		;;
 	--)
 		shift
