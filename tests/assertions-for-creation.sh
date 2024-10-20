@@ -180,6 +180,11 @@ assert_stash() { # stash_num expected_branch_name expected_stash_name expected_f
 	assert_stash_files "$1" "$expect_untracked" "$4"
 	unset expect_untracked
 }
+assert_stash_untracked() { # stash_num expected_branch_name expected_stash_name expected_files
+	assert_stash_structure "$1" y
+	assert_stash_messages "$1" "$2" y "$3"
+	assert_stash_files "$1" y "$4"
+}
 
 assert_stash_base() { # stash_num expected_base
 	git rev-parse --verify "stash@{$1}{commit}" 1>/dev/null ||
@@ -216,6 +221,14 @@ assert_stash_H() { # stash_num expected_stash_name expected_files [expected_file
 		'BRANCH') assert_stash "$1" 'master' "$2" "$3" ;;
 		'DETACH') assert_stash "$1" 'HEAD' "$2" "$3" ;;
 		'ORPHAN') if [ $# -lt 4 ] ; then assert_stash "$1" '~ooo' "$2" "$3" ; else assert_stash "$1" '~ooo' "$2" "$4" ; fi ;;
+		*) fail 'Unknown HEAD type "%s"!' "$HEAD_TYPE" ;;
+	esac
+}
+assert_stash_untracked_H() { # stash_num expected_stash_name expected_files [expected_files_for_orphan]
+	case "$HEAD_TYPE" in
+		'BRANCH') assert_stash_untracked "$1" 'master' "$2" "$3" ;;
+		'DETACH') assert_stash_untracked "$1" 'HEAD' "$2" "$3" ;;
+		'ORPHAN') if [ $# -lt 4 ] ; then assert_stash_untracked "$1" '~ooo' "$2" "$3" ; else assert_stash_untracked "$1" '~ooo' "$2" "$4" ; fi ;;
 		*) fail 'Unknown HEAD type "%s"!' "$HEAD_TYPE" ;;
 	esac
 }
