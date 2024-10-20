@@ -18,18 +18,10 @@ SWITCH_HEAD_TYPE
 __test_section__ 'Create stash'
 printf 'ddd\n' >ddd
 assert_exit_code 0 git istash push $ALL_FLAGS $KEEP_INDEX_FLAGS $UNTRACKED_FLAGS --message='stash message'
-if ! IS_KEEP_INDEX_ON
-then
-	assert_files_H '
-	!! ignored0	ignored0
-	!! ignored1	ignored1
-	'
-else
-	assert_files_H '
-	!! ignored0	ignored0
-	!! ignored1	ignored1
-	'
-fi
+assert_files_H '
+!! ignored0	ignored0
+!! ignored1	ignored1
+'
 assert_stash_H 0 'stash message' '
 ?? ddd		ddd
 '

@@ -1,8 +1,10 @@
 # `git istash` - Improved stash commands for Git
 
-Alternative Git command for handling stashes, without the arbitrary limitations of `git stash`.
+Alternative Git command for reliably handling stashes, without the arbitrary limitations and corner cases of `git stash`.
+([full-list-of-the-changes](#differences-from-the-official-git-stash))
 
 It is written entirely in POSIX (Portable Operating System Interface) shell script, making it compatible with basically every operating system (except Windows, but fortunately, Git for Windows can handle POSIX scripts on its own).
+
 
 
 ## Overview
@@ -19,6 +21,7 @@ In case of conflicts, instead of refusing and demanding to run it without `--ind
 After the conflicts are resolved, the commands can be resumed with `--continue`.
 Alternatively, `--abort` can be used to cancel the operation and return to the repository state before it started.  
 Because of the multi-stage conflict resolution, *the index saved to the stash entry will be preserved*.
+
 
 
 ## Installation
@@ -63,15 +66,51 @@ cd <path to repository in which to run the command>
 (On Windows, you need to use the wrapper script `run-git-bash.bat` in the second line.)
 
 
+
 ## License
 
 Contents of this repository are distributed under the MIT license. A full copy of it is available in the file [`LICENSE.txt`](LICENSE.txt).
+
+
+
+## Differences from the official `git stash`
+
+There are a few deliberate and planned divergences from the ways that the standard Git stash works.
+Most of the changes here, however, are bugs that were found during tests to be present in the standard implementation.
+
+### Main changes
+- There is no option `--index` for `apply` and `pop`.
+  Instead, those commands always behave as if that option were present.
+- The stash is being applied in stages (index, then tracked files and then untracked files), the same way as rebasing multiple commits applies these commits one by one in order.
+  This allows solving conflicts without sacrificing the information about the index.
+  (In case of a conflict, the process is stopped and it can be resumed after the problem is solves, just like `rebase` does.)
+
+### Fixed bugs
+- `push --keep-index` returns a non-0 exit code when there is no tracked files in the repository.
+  (It should be fixed in the standard command in Git `v2.46.1`.)
+- Untracked files are added to a new stash even with `--no-include-untracked` when they names are the same as names of files removed in index.
+  (According to the Git test suite this is an expected behavior.)
+- `push` loses the information about deletion of a file if it's a new file added to index.
+- `push --patch` returns 0 when stash has failed to be created (when there are no changes).
+- Option `--patch` doesn't allow stash with no changes selected even when there are changes in index. 
+- Option `--patch` with `--keep-index` doesn't keep the index.
+- Pathspecs are unable to find untracked files when the option `--keep-index` is specified.
+- `push` with a pathspec creates a stash even when it fails to match a file and returns a non-0 exit code.
+
+### Other things different in standard `stash` (that may or may not be considered bugs)
+- Options cannot follow non-option arguments (like they are allowed to in POSIX utilities).
+- Option `--no-include-untracked` overrides `--all` (while it should include only ignored files in such case).
+- Option `--patch` doesn't work with untracked files.
+- Options `--patch` and `--pathspec` are not allowed together.
+- Files in index are not affected by the pathspec.
+
 
 
 ## Current limitations
 
 - The script refuses to apply a stash when the working directory contains any changes.
   (Planned to be fixed soon.)
+
 
 
 ## Displaying help / additional information
@@ -165,6 +204,7 @@ git istash pop --continue
 ```
 
 After the whole operation is finished, the stashed index is restored and intact.
+
 
 
 ## Testing
