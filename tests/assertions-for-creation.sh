@@ -79,6 +79,20 @@ assert_stash_messages() { # stash_num expected_branch_name expect_untracked expe
 	fi
 }
 
+assert_stash_name() { # stash_num expected_branch_name expeted_stash_name
+	value_for_assert="$(git stash list | grep -E '^stash@\{'"$1"'\}:')"
+	if [ -z "$3" ]
+	then
+		expected_value_regex="stash@\\{$1\\}: WIP on $(make_stash_name_regex "$2"): $(make_parent_summary_regex "$1")"
+	else
+		expected_value_regex="stash@\\{$1\\}: On $(make_stash_name_regex "$2"): $(sanitize_for_ere "$3")"
+	fi
+	! printf '%s\n' "$value_for_assert" | grep -xvqE "$expected_value_regex" ||
+		fail 'The stash message is different than expected!\n(It'\''s "%s".)\n(It should match "%s".)\n' "$value_for_assert" "$expected_value_regex"
+	unset expected_value_regex
+	unset value_for_assert
+}
+
 assert_stash_commit_files() { # commit expected_files
 	value_for_assert="$(git ls-tree --name-only --full-tree -r -z "$1" | _convert_zero_separated_path_list | sort | _prepare_path_list_for_assertion)"
 	expected_value="$(printf '%s\n' "$2" | awk '{print $1}' | _prepare_path_list_for_assertion)"
@@ -177,6 +191,7 @@ assert_stash() { # stash_num expected_branch_name expected_stash_name expected_f
 	fi
 	assert_stash_structure "$1" "$expect_untracked"
 	assert_stash_messages "$1" "$2" "$expect_untracked" "$3"
+	assert_stash_name "$1" "$2" "$3"
 	assert_stash_files "$1" "$expect_untracked" "$4"
 	unset expect_untracked
 }
