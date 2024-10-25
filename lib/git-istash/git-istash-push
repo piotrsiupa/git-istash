@@ -9,32 +9,87 @@ print_help() {
 	printf '\n'
 	printf 'This is only a rudimentary help text. Prefer "git help istash" if available.\n'
 	printf '\n'
-	printf 'Usage: git istash push [-u | --include-untracked]\n'
+	printf 'Usage: git istash push\n'
 	printf '   or: git istash push -h\n'
 	printf '\n'
 	printf 'Options:\n'
 	printf '    -h\t\t\t- Show this help text and exit.\n'
-	printf '    -u, --include-untracked - Include untracked files.\n'
 }
 
-#TODO Do proper argument parsing (after they are no more just passed to `git stash`).
-if [ "$1" = '-h' ]
-then
-	print_help
-	exit 0
-fi
+get_branch_name() {
+	if [ "$curr_branch_type" != 'detached' ]
+	then
+		git branch --show-current
+	else
+		printf '(no branch)'
+	fi
+}
 
-cd "$(git rev-parse --show-toplevel)"
+make_stash_message() {
+	git rev-list --no-commit-header --format='%h %s' --max-count=1 HEAD
+}
 
-find_current_branch
-if [ "$curr_branch_type" = 'orphan' ]
-then
+commit_changes() {
+	stash_message="$(make_stash_message)"
+	branch_name="$(get_branch_name)"
+	git commit --message="index on $branch_name: $stash_message" --allow-empty
+	git add --update
+	git commit --message="WIP on $branch_name: $stash_message" --allow-empty
+}
+
+convert_commits_to_stash() {
+	stash_sha="$(git show -s --format=%B HEAD | git commit-tree 'HEAD^{tree}' -p HEAD~2 -p HEAD~1)"
+	git stash store "$stash_sha" --message="$(git show -s --format=%B "$stash_sha")"
+}
+
+restore_working_tree() {
+	git reset --hard HEAD~2
+}
+
+create_stash() {
+	commit_changes
+	convert_commits_to_stash
+	restore_working_tree
+}
+
+create_temporary_branch() {
 	git commit --message="Base commit for stash entry on an orphan branch \"$current_branch\"" --allow-empty --no-verify --only --
-fi
-git stash push "$@"
-if [ "$curr_branch_type" = 'orphan' ]
-then
+}
+
+remove_temporary_branch() {
 	git switch --detach HEAD
 	git branch --delete --force "$current_branch"
 	git switch --orphan "$current_branch"
-fi
+}
+
+do_push() {
+	find_current_branch
+	if [ "$curr_branch_type" = 'orphan' ]
+	then
+		create_temporary_branch
+		create_stash
+		remove_temporary_branch
+	else
+		create_stash
+	fi
+}
+
+getopt_result="$(getopt -o'h' --long='' -n"$(basename "$0")" -ssh -- "$@")"
+eval set -- "$getopt_result"
+while true
+do
+	case "$1" in
+	-h)
+		print_help
+		exit 0
+		;;
+	--)
+		shift
+		break
+		;;
+	esac
+	shift
+done
+
+cd "$(git rev-parse --show-toplevel)"
+do_push
