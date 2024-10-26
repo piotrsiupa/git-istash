@@ -14,27 +14,25 @@ print_help() {
 	printf '\n'
 	printf 'Options:\n'
 	printf '    -h\t\t\t- Show this help text and exit.\n'
-}
-
-get_branch_name() {
-	if [ "$curr_branch_type" != 'detached' ]
-	then
-		git branch --show-current
-	else
-		printf '(no branch)'
-	fi
-}
-
-make_stash_message() {
-	git rev-list --no-commit-header --format='%h %s' --max-count=1 HEAD
+	printf '    -m, --message=MSG\t- Set stash description.\n'
 }
 
 commit_changes() {
-	stash_message="$(make_stash_message)"
-	branch_name="$(get_branch_name)"
-	git commit --message="index on $branch_name: $stash_message" --allow-empty
+	default_message="$(git rev-list --no-commit-header --format='%h %s' --max-count=1 HEAD)"
+	if [ "$curr_branch_type" != 'detached' ]
+	then
+		branch_name_for_msg="$(git branch --show-current)"
+	else
+		branch_name_for_msg='(no branch)'
+	fi
+	git commit --message="index on $branch_name_for_msg: $default_message" --allow-empty
 	git add --update
-	git commit --message="WIP on $branch_name: $stash_message" --allow-empty
+	if [ -n "$message" ]
+	then
+		git commit --message="On $branch_name_for_msg: $message" --allow-empty
+	else
+		git commit --message="WIP on $branch_name_for_msg: $default_message" --allow-empty
+	fi
 }
 
 convert_commits_to_stash() {
@@ -74,14 +72,19 @@ do_push() {
 	fi
 }
 
-getopt_result="$(getopt -o'h' --long='' -n"$(basename "$0")" -ssh -- "$@")"
+getopt_result="$(getopt -o'hm:' --long='message:' -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
+message=''
 while true
 do
 	case "$1" in
 	-h)
 		print_help
 		exit 0
+		;;
+	-m|--message)
+		shift
+		message="$1"
 		;;
 	--)
 		shift
