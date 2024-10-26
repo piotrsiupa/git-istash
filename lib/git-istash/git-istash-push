@@ -14,6 +14,8 @@ print_help() {
 	printf '\n'
 	printf 'Options:\n'
 	printf '    -h\t\t\t- Show this help text and exit.\n'
+	printf '    -k, --keep-index\t- Left intact all changes already added to the index.\n'
+	printf '\t--no-keep-index\t- Cancel "--keep-index".\n'
 	printf '    -m, --message=MSG\t- Set stash description.\n'
 }
 
@@ -41,7 +43,13 @@ convert_commits_to_stash() {
 }
 
 restore_working_tree() {
-	git reset --hard HEAD~2
+	if [ "$keep_index" = n ]
+	then
+		git reset --hard HEAD~2
+	else
+		git reset --hard HEAD~1
+		git reset --soft HEAD~1
+	fi
 }
 
 create_stash() {
@@ -72,8 +80,9 @@ do_push() {
 	fi
 }
 
-getopt_result="$(getopt -o'hm:' --long='message:' -n"$(basename "$0")" -ssh -- "$@")"
+getopt_result="$(getopt -o'hkm:' --long='keep-index,no-keep-index,message:' -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
+keep_index=n
 message=''
 while true
 do
@@ -81,6 +90,12 @@ do
 	-h)
 		print_help
 		exit 0
+		;;
+	-k|--keep-index)
+		keep_index=y
+		;;
+	--no-keep-index)
+		keep_index=n
 		;;
 	-m|--message)
 		shift
