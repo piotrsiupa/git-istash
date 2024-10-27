@@ -5,11 +5,6 @@ PARAMETRIZE_ALL 'YES'
 PARAMETRIZE_UNTRACKED 'DEFAULT' 'YES'
 PARAMETRIZE_KEEP_INDEX
 
-if IS_UNTRACKED_ON
-then
-	known_failure 'The flag "-u" in "git stash" seems to override "-a" while I would like it to be additive.'
-fi
-
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 

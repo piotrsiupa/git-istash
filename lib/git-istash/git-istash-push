@@ -13,6 +13,7 @@ print_help() {
 	printf '   or: git istash push -h\n'
 	printf '\n'
 	printf 'Options:\n'
+	printf '    -a, --all\t\t- Stash and clean also untracked and ignored files.\n'
 	printf '    -h\t\t\t- Show this help text and exit.\n'
 	printf '    -k, --keep-index\t- Left intact all changes already added to the index.\n'
 	printf '\t--no-keep-index\t- Cancel "--keep-index".\n'
@@ -39,7 +40,12 @@ commit_changes() {
 	fi
 	if [ "$include_untracked" = y ]
 	then
-		git add --all
+		if [ "$include_ignored" = n ]
+		then
+			git add --all
+		else
+			git add --all --force
+		fi
 		git ls-tree -r HEAD --name-only -z | xargs -- git rm
 		git commit --message="untracked files on $branch_name_for_msg: $default_message" --allow-empty
 	fi
@@ -105,14 +111,22 @@ do_push() {
 	fi
 }
 
-getopt_result="$(getopt -o'hkm:u' --long='keep-index,no-keep-index,message:,include-untracked,no-include-untracked' -n"$(basename "$0")" -ssh -- "$@")"
+getopt_result="$(getopt -o'ahkm:u' --long='all,keep-index,no-keep-index,message:,include-untracked,no-include-untracked' -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
+include_ignored=n
 keep_index=n
 message=''
 include_untracked=d
 while true
 do
 	case "$1" in
+	-a|--all)
+		include_ignored=y
+		if [ "$include_untracked" = d ]
+		then
+			include_untracked=y
+		fi
+		;;
 	-h)
 		print_help
 		exit 0
