@@ -38,21 +38,24 @@ commit_changes() {
 	else
 		git commit --message="WIP on $branch_name_for_msg: $default_message" --allow-empty
 	fi
-	if [ "$include_untracked" = y ]
+	if [ "$include_ignored" = y ] || [ "$include_untracked" = y ]
 	then
-		if [ "$include_ignored" = n ]
+		if [ "$include_untracked" = n ]
+		then
+			git ls-files --exclude-standard --others --ignored -z | xargs -0 -- git add --force
+		elif [ "$include_ignored" = n ]
 		then
 			git add --all
 		else
 			git add --all --force
 		fi
-		git ls-tree -r HEAD --name-only -z | xargs -- git rm
+		git ls-tree -r HEAD --name-only -z | xargs -0 -- git rm
 		git commit --message="untracked files on $branch_name_for_msg: $default_message" --allow-empty
 	fi
 }
 
 tangle_stash() {
-	if [ "$include_untracked" = n ]
+	if [ "$include_ignored" = n ] && [ "$include_untracked" = n ]
 	then
 		stash_sha="$(git show -s --format=%B HEAD | git commit-tree 'HEAD^{tree}' -p HEAD~2 -p HEAD~1)"
 	else
@@ -63,7 +66,7 @@ tangle_stash() {
 }
 
 restore_working_tree() {
-	if [ "$include_untracked" = n ]
+	if [ "$include_ignored" = n ] && [ "$include_untracked" = n ]
 	then
 		if [ "$keep_index" = n ]
 		then

@@ -5,8 +5,6 @@ PARAMETRIZE_ALL 'YES'
 PARAMETRIZE_UNTRACKED 'NO'
 PARAMETRIZE_KEEP_INDEX
 
-known_failure 'The flag "--no-include-untracked" in "git stash" seems to override "-a" while I would like it to be additive.'
-
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
