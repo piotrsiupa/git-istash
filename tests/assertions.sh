@@ -10,5 +10,5 @@ fi
 . ./assertions-commons.sh
 case "$(basename "$(dirname "$OLDPWD")")" in
 	applying) . ./assertions-for-applying.sh ;;
-	creation) . ./assertions-for-creation.sh ;;
+	creating) . ./assertions-for-creating.sh ;;
 esac
