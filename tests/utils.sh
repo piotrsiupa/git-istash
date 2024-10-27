@@ -11,5 +11,5 @@ fi
 . ./utils-parametrization.sh
 case "$(basename "$(dirname "$OLDPWD")")" in
 	applying) . ./utils-for-applying.sh ;;
-	creation) . ./utils-for-creation.sh ;;
+	creating) . ./utils-for-creating.sh ;;
 esac
