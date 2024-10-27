@@ -17,6 +17,8 @@ print_help() {
 	printf '    -k, --keep-index\t- Left intact all changes already added to the index.\n'
 	printf '\t--no-keep-index\t- Cancel "--keep-index".\n'
 	printf '    -m, --message=MSG\t- Set stash description.\n'
+	printf '    -u, --include-untracked - Stash and clean also untracked files.\n'
+	printf '\t--no-include-untracked - Do not touch untracked files even with "--all".\n'
 }
 
 commit_changes() {
@@ -35,26 +37,49 @@ commit_changes() {
 	else
 		git commit --message="WIP on $branch_name_for_msg: $default_message" --allow-empty
 	fi
+	if [ "$include_untracked" = y ]
+	then
+		git add --all
+		git ls-tree -r HEAD --name-only -z | xargs -- git rm
+		git commit --message="untracked files on $branch_name_for_msg: $default_message" --allow-empty
+	fi
 }
 
-convert_commits_to_stash() {
-	stash_sha="$(git show -s --format=%B HEAD | git commit-tree 'HEAD^{tree}' -p HEAD~2 -p HEAD~1)"
+tangle_stash() {
+	if [ "$include_untracked" = n ]
+	then
+		stash_sha="$(git show -s --format=%B HEAD | git commit-tree 'HEAD^{tree}' -p HEAD~2 -p HEAD~1)"
+	else
+		untracked_sha="$(git show -s --format=%B HEAD | git commit-tree 'HEAD^{tree}')"
+		stash_sha="$(git show -s --format=%B HEAD~1 | git commit-tree 'HEAD~1^{tree}' -p HEAD~3 -p HEAD~2 -p "$untracked_sha")"
+	fi
 	git stash store "$stash_sha" --message="$(git show -s --format=%B "$stash_sha")"
 }
 
 restore_working_tree() {
-	if [ "$keep_index" = n ]
+	if [ "$include_untracked" = n ]
 	then
-		git reset --hard HEAD~2
+		if [ "$keep_index" = n ]
+		then
+			git reset --hard HEAD~2
+		else
+			git reset --hard HEAD~1
+			git reset --soft HEAD~1
+		fi
 	else
-		git reset --hard HEAD~1
-		git reset --soft HEAD~1
+		if [ "$keep_index" = n ]
+		then
+			git reset --hard HEAD~3
+		else
+			git reset --hard HEAD~2
+			git reset --soft HEAD~1
+		fi
 	fi
 }
 
 create_stash() {
 	commit_changes
-	convert_commits_to_stash
+	tangle_stash
 	restore_working_tree
 }
 
@@ -80,10 +105,11 @@ do_push() {
 	fi
 }
 
-getopt_result="$(getopt -o'hkm:' --long='keep-index,no-keep-index,message:' -n"$(basename "$0")" -ssh -- "$@")"
+getopt_result="$(getopt -o'hkm:u' --long='keep-index,no-keep-index,message:,include-untracked,no-include-untracked' -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 keep_index=n
 message=''
+include_untracked=d
 while true
 do
 	case "$1" in
@@ -101,6 +127,12 @@ do
 		shift
 		message="$1"
 		;;
+	-u|--include-untracked)
+		include_untracked=y
+		;;
+	--no-include-untracked)
+		include_untracked=n
+		;;
 	--)
 		shift
 		break
@@ -108,6 +140,10 @@ do
 	esac
 	shift
 done
+if [ "$include_untracked" = d ]
+then
+	include_untracked=n
+fi
 
 cd "$(git rev-parse --show-toplevel)"
 do_push
