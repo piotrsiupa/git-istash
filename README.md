@@ -103,6 +103,7 @@ Most of the changes here, however, are bugs that were found during tests to be p
 - Option `--patch` doesn't work with untracked files.
 - Options `--patch` and `--pathspec` are not allowed together.
 - Files in index are not affected by the pathspec.
+- Stash cannot be created on an orphan branch.
 
 
 
