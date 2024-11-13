@@ -52,21 +52,21 @@ _prepare_path_list_for_assertion() {
 assert_all_files() { # expected
 	value_for_assert="$(find . -type f ! -path './.git/*' -print0 | _convert_zero_separated_path_list | cut -c3- | sort | _prepare_path_list_for_assertion)"
 	test "$value_for_assert" = "$1" ||
-		fail 'Expected all files outside of ".git" to be "%s" but they are "%s"!\n' "$1" "$value_for_assert"
+		fail 'Expected all files outside of ".git" to be:\n"%s"\nbut they are:\n"%s"!\n' "$1" "$value_for_assert"
 	unset value_for_assert
 }
 
 assert_tracked_files() { # expected
 	value_for_assert="$(git ls-tree -r --name-only -z HEAD | _convert_zero_separated_path_list | sort | _prepare_path_list_for_assertion)"
 	test "$value_for_assert" = "$1" ||
-		fail 'Expected tracked files to be "%s" but they are "%s"!\n' "$1" "$value_for_assert"
+		fail 'Expected tracked files to be:\n"%s"\nbut they are:\n"%s"!\n' "$1" "$value_for_assert"
 	unset value_for_assert
 }
 
 assert_status() { # expected
 	value_for_assert="$(git status --porcelain -z --untracked-files=all --ignored | _convert_zero_separated_path_list | _sort_repository_status | _prepare_path_list_for_assertion)"
 	test "$value_for_assert" = "$1" ||
-		fail 'Expected repository status to be "%s" but it is "%s"!\n' "$1" "$value_for_assert"
+		fail 'Expected repository status to be:\n"%s"\nbut it is:\n"%s"!\n' "$1" "$value_for_assert"
 	unset value_for_assert
 }
 
@@ -90,10 +90,10 @@ assert_file_contents() { # file expected_current [expected_staged]
 			fail 'Expected file "'"$1"'" to be comprised entirely from a conflict!\n'
 		sub_value_for_assert="$(printf '%s\n' "$value_for_assert" | tail -n+2 | sed -E '/^={7}/ q' | head -n-1)"
 		test "$sub_value_for_assert" = "$ours_expected_contents" ||
-			fail 'Expected the HEAD side of the conflict in "'"$1"'" to be "%s" but it is "%s"!\n' "$ours_expected_contents" "$sub_value_for_assert"
+			fail 'Expected the HEAD side of the conflict in "'"$1"'" to be:\n"%s"\nbut it is:\n"%s"!\n' "$ours_expected_contents" "$sub_value_for_assert"
 		sub_value_for_assert="$(printf '%s\n' "$value_for_assert" | head -n-1 | sed -nE '/^={7}/,$ p ' | tail -n+2)"
 		test "$sub_value_for_assert" = "$theirs_expected_contents" ||
-			fail 'Expected the stash side of the conflict in "'"$1"'" to be "%s" but it is "%s"!\n' "$theirs_expected_contents" "$sub_value_for_assert"
+			fail 'Expected the stash side of the conflict in "'"$1"'" to be:\n"%s"\nbut it is:\n"%s"!\n' "$theirs_expected_contents" "$sub_value_for_assert"
 		unset sub_value_for_assert
 		unset ours_expected_contents
 		unset theirs_expected_contents
@@ -101,7 +101,7 @@ assert_file_contents() { # file expected_current [expected_staged]
 		#shellcheck disable=SC2059
 		expected_contents="$(printf "$2")"
 		test "$value_for_assert" = "$expected_contents" ||
-			fail 'Expected content of file "'"$1"'" to be "%s" but it is "%s"!\n' "$expected_contents" "$value_for_assert"
+			fail 'Expected content of file "'"$1"'" to be:\n"%s"\nbut it is:\n"%s"!\n' "$expected_contents" "$value_for_assert"
 		if [ $# -eq 3 ]
 		then
 			#shellcheck disable=SC2059
@@ -109,7 +109,7 @@ assert_file_contents() { # file expected_current [expected_staged]
 			#shellcheck disable=SC2059
 			expected_contents="$(printf "$3")"
 			test "$value_for_assert" = "$expected_contents" ||
-				fail 'Expected staged content of file "'"$1"'" to be "%s" but it is "%s"!\n' "$expected_contents" "$value_for_assert"
+				fail 'Expected staged content of file "'"$1"'" to be:\n"%s"\nbut it is:\n"%s"!\n' "$expected_contents" "$value_for_assert"
 		fi
 		unset expected_contents
 	fi

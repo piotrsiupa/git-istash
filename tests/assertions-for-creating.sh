@@ -97,7 +97,7 @@ assert_stash_commit_files() { # commit expected_files
 	value_for_assert="$(git ls-tree --name-only --full-tree -r -z "$1" | _convert_zero_separated_path_list | sort | _prepare_path_list_for_assertion)"
 	expected_value="$(printf '%s\n' "$2" | awk '{print $1}' | _prepare_path_list_for_assertion)"
 	test "$value_for_assert" = "$expected_value" ||
-		fail 'Expected all files in "%s" to be "%s" but they are "%s"!\n' "$1" "$expected_value" "$value_for_assert"
+		fail 'Expected all files in "%s" to be:\n"%s"\nbut they are:\n"%s"!\n' "$1" "$expected_value" "$value_for_assert"
 	unset value_for_assert
 	unset expected_value
 }
@@ -116,7 +116,7 @@ assert_stash_commit_files_with_content() { # commit expected_files
 		#shellcheck disable=SC2059
 		expected_value="$(printf "$(printf '%s' "$line" | awk '{print $2}')")"
 		test "$value_for_assert" = "$expected_value" ||
-			fail 'Expected content of file "'"$file_path_for_assertion"'" in "%s" to be "%s" but it is "%s"!\n' "$1" "$expected_value" "$value_for_assert"
+			fail 'Expected content of file "'"$file_path_for_assertion"'" in "%s" to be:\n"%s"\nbut it is:\n"%s"!\n' "$1" "$expected_value" "$value_for_assert"
 		unset file_path_for_assertion
 	done
 	unset value_for_assert
