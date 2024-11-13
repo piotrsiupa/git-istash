@@ -52,21 +52,21 @@ _prepare_path_list_for_assertion() {
 assert_all_files() { # expected
 	value_for_assert="$(find . -type f ! -path './.git/*' -print0 | _convert_zero_separated_path_list | cut -c3- | sort | _prepare_path_list_for_assertion)"
 	test "$value_for_assert" = "$1" ||
-		fail 'Expected all files outside of ".git" to be "'"$1"'" but they are "'"$value_for_assert"'"!\n'
+		fail 'Expected all files outside of ".git" to be "%s" but they are "%s"!\n' "$1" "$value_for_assert"
 	unset value_for_assert
 }
 
 assert_tracked_files() { # expected
 	value_for_assert="$(git ls-tree -r --name-only -z HEAD | _convert_zero_separated_path_list | sort | _prepare_path_list_for_assertion)"
 	test "$value_for_assert" = "$1" ||
-		fail 'Expected tracked files to be "'"$1"'" but they are "'"$value_for_assert"'"!\n'
+		fail 'Expected tracked files to be "%s" but they are "%s"!\n' "$1" "$value_for_assert"
 	unset value_for_assert
 }
 
 assert_status() { # expected
-	value_for_assert="$(git status --porcelain -z | _convert_zero_separated_path_list | _sort_repository_status | _prepare_path_list_for_assertion)"
+	value_for_assert="$(git status --porcelain -z --untracked-files=all --ignored | _convert_zero_separated_path_list | _sort_repository_status | _prepare_path_list_for_assertion)"
 	test "$value_for_assert" = "$1" ||
-		fail 'Expected repository status to be "'"$1"'" but it is "'"$value_for_assert"'"!\n'
+		fail 'Expected repository status to be "%s" but it is "%s"!\n' "$1" "$value_for_assert"
 	unset value_for_assert
 }
 
@@ -120,7 +120,7 @@ assert_files() { # expected_files (see one of the tests as an example)
 	expected_files="$(printf '%s\n' "$1" | sed -E 's/^\t+//' | grep -vE '^\s*$' | _sort_repository_status)"
 	assert_all_files "$(printf '%s\n' "$expected_files" | grep -vE '^(D |.D) ' | sed -E 's/^...(\S+)(\s.*)?$/\1/' | _prepare_path_list_for_assertion)"
 	assert_tracked_files "$(printf '%s\n' "$expected_files" | grep -vE '^(!!|\?\?|A[^A]| A|DU) ' | sed -E 's/^...(\S+)(\s.*)?$/\1/' | _prepare_path_list_for_assertion)"
-	assert_status "$(printf '%s\n' "$expected_files" | grep -vE '^(  |!!) ' | sed -E 's/^(...\S+)(\s.*)?$/\1/' | _prepare_path_list_for_assertion)"
+	assert_status "$(printf '%s\n' "$expected_files" | grep -vE '^(  ) ' | sed -E 's/^(...\S+)(\s.*)?$/\1/' | _prepare_path_list_for_assertion)"
 	printf '%s\n' "$expected_files" \
 	| while IFS= read -r line
 	do
