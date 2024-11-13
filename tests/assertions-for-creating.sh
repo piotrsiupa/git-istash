@@ -97,7 +97,7 @@ assert_stash_commit_files() { # commit expected_files
 	value_for_assert="$(git ls-tree --name-only --full-tree -r -z "$1" | _convert_zero_separated_path_list | sort | _prepare_path_list_for_assertion)"
 	expected_value="$(printf '%s\n' "$2" | awk '{print $1}' | _prepare_path_list_for_assertion)"
 	test "$value_for_assert" = "$expected_value" ||
-		fail 'Expected all files in "%s" to be "%s" but they are "%s"!\n' "$1" "$expected_value" "$value_for_assert"
+		fail 'Expected all files in "%s" to be:\n"%s"\nbut they are:\n"%s"!\n' "$1" "$expected_value" "$value_for_assert"
 	unset value_for_assert
 	unset expected_value
 }
@@ -112,17 +112,11 @@ assert_stash_commit_files_with_content() { # commit expected_files
 	| while read -r line
 	do
 		file_path_for_assertion="$(printf '%s' "$line" | awk '{print $1}')"
-		if printf '%s' "$file_path_for_assertion" | grep -qE '\\n$'
-		then
-			value_for_assert="$(git show "$1:$(printf '%s' "$file_path_for_assertion" | sed -E 's/\\n/\n/g')
-")"
-		else
-			value_for_assert="$(git show "$1:$(printf '%s' "$file_path_for_assertion" | sed -E 's/\\n/\n/g')")"
-		fi
+		value_for_assert="$(printf "%s:$file_path_for_assertion" "$1" | xargs -0 -- git show)"
 		#shellcheck disable=SC2059
 		expected_value="$(printf "$(printf '%s' "$line" | awk '{print $2}')")"
 		test "$value_for_assert" = "$expected_value" ||
-			fail 'Expected content of file "%s" in "%s" to be "%s" but it is "%s"!\n' "$file_path_for_assertion" "$1" "$expected_value" "$value_for_assert"
+			fail 'Expected content of file "'"$file_path_for_assertion"'" in "%s" to be:\n"%s"\nbut it is:\n"%s"!\n' "$1" "$expected_value" "$value_for_assert"
 		unset file_path_for_assertion
 	done
 	unset value_for_assert
@@ -133,23 +127,13 @@ assert_stash_files() { # stash_num expect_untracked expected_files
 	expected_files="$(printf '%s\n' "$3" | sed -E 's/^\t+//' | grep -vE '^\s*$' | _sort_repository_status)"
 	assert_stash_commit_files_with_content "stash@{$1}" "$(
 			printf '%s\n' "$expected_files" \
-			| while IFS= read -r line
-			do
-				if printf '%s' "$line" | grep -vqE '^(\?\?|!!|D.|.D) '
-				then
-					printf '%s' "$line" | cut -c4- | awk '{print $1,$2}'
-				fi
-			done
+			| grep -vE '^(\?\?|!!|D.|.D) ' \
+			| cut -c4- | awk '{print $1,$2}'
 		)"
 	assert_stash_commit_files "stash@{$1}^1" "$(
 			printf '%s\n' "$expected_files" \
-			| while IFS= read -r line
-			do
-				if printf '%s' "$line" | grep -vqE '^(\?\?|!!|A.|.A) '
-				then
-					printf '%s' "$line" | cut -c4- | awk '{print $1}'
-				fi
-			done
+			| grep -vE '^(\?\?|!!|A.|.A) ' \
+			| cut -c4- | awk '{print $1}'
 		)"
 	assert_stash_commit_files_with_content "stash@{$1}^2" "$(
 			printf '%s\n' "$expected_files" \
@@ -171,13 +155,8 @@ assert_stash_files() { # stash_num expect_untracked expected_files
 	fi
 	assert_stash_commit_files_with_content "stash@{$1}^3" "$(
 			printf '%s\n' "$expected_files" \
-			| while IFS= read -r line
-			do
-				if printf '%s' "$line" | grep -qE '^(\?\?|!!) '
-				then
-					printf '%s' "$line" | cut -c4- | awk '{print $1,$2}'
-				fi
-			done
+			| grep -E '^(\?\?|!!) ' \
+			| cut -c4- | awk '{print $1,$2}'
 		)"
 	unset expected_files
 }
