@@ -53,26 +53,39 @@ commit_changes() {
 	fi
 }
 
+sanitize_ls_tree() {
+	hexdump -ve'"\\" /1 "%02o"' \
+	| sed -E 's/\\0{1,3}(\\|$)/\n\1/g' \
+	| sed -E 's/(\\0{0,2}[0-7]|\\0?[^4][0-7]|\\0?4[1-7]|\\[1-3][0-7]{2})+\\0?40(\\0{0,2}[0-7]|\\0?[^4][0-7]|\\0?4[1-7]|\\[1-3][0-7]{2})+\\0?40(\\0{0,2}[0-7]|\\0?[^1][0-7]|\\0?1[02-7]|\\[1-3][0-7]{2})+\\0?11/&\n/' \
+	| while read -r data && read -r path
+	do
+		printf "$data%s\n" "$path"
+	done \
+	| sed -E 's/\\0?57\\/\/\\/g'
+}
+
 remove_tracked_files_from_HEAD() ( # [path]
 	if [ $# -lt 1 ]
 	then
 		set -- './'
 	fi
-	git ls-tree -z HEAD "$1" | tr '\n\0' '\0\n' \
-	| while IFS= read -r line
+	previous_files="$(git ls-tree -z HEAD~ "$1" | sanitize_ls_tree)"
+	git ls-tree -z HEAD "$1" | sanitize_ls_tree \
+	| while read -r line
 	do
-		if git ls-tree -z HEAD~ "$1" | tr '\n\0' '\0\n' | grep -qxF "$(printf '%s' "$line")"
+		if printf '%s' "$previous_files" | grep -qxF "$line"
 		then
 			continue
 		fi
 		if [ "$(printf '%s\n' "$line" | awk '{print $2}')" = 'blob' ]
 		then
-			printf '%s\n' "$line"
+			printf '%s\\000' "$line"
 		else
-			subtree_sha="$(remove_tracked_files_from_HEAD "$(printf '%s\n' "$line" | awk '{print $4}')/")"
-			printf '%s\n' "$line" | sed -E 's;^(\w+\s+\w+\s+)\w+(\s);\1'"$subtree_sha"'\2;'
-		fi
-	done | sed -E 's;^(\w+\s+\w+\s+\w+\s+)(.*/)?([^/]+)$;\1\3;' | tr '\n\0' '\0\n' \
+			#shellcheck disable=SC2059
+			subtree_sha="$(remove_tracked_files_from_HEAD "$(printf "$line" | sed -E '1 s/^.*\t//')/")"
+			printf '%s\\000' "$line" | sed -E 's;^(\w+\s+\w+\s+)\w+(\s);\1'"$subtree_sha"'\2;'
+		fi | sed -E 's;^(.*\t)(.*/)?([^/]+)$;\1\3;'
+	done | xargs -r0 -- printf \
 	| git mktree -z
 )
 
