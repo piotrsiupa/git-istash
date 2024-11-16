@@ -38,10 +38,8 @@ _sort_repository_status() {
 }
 
 _convert_zero_separated_path_list() {
-	sed -E -e 's/$/\\n/g' -e 's/\t/\\t/g' -e 's/ /\\040/g' \
-	| tr -d '\n' \
-	| tr '\0' '\n' \
-	| sed -E 's/\\n$//'
+	sed -E -e '$! s/$/\\n/g' -e 's/\t/\\t/g' -e 's/ /\\040/g' \
+	| tr -d '\n' | tr '\0' '\n'
 }
 
 _prepare_path_list_for_assertion() {
