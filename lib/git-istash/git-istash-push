@@ -22,6 +22,34 @@ print_help() {
 	printf '\t--no-include-untracked - Do not touch untracked files even with "--all".\n'
 }
 
+prepare_octal_conversion() {
+	if command -v od 1>/dev/null 2>&1
+	then
+		convert_to_octal() {
+			#shellcheck disable=SC1003
+			od -bvAn | tr ' ' '\\' | tr -d '\n'
+		}
+	else
+		convert_to_octal() {
+			hexdump -ve'"\\" /1 "%02o"'
+		}
+	fi
+}
+
+initialize() {
+	if [ "$include_ignored" = y ] || [ "$include_untracked" = y ]
+	then
+		has_3_commits=y
+	else
+		has_3_commits=n
+	fi
+	
+	if [ "$has_3_commits" = y ]
+	then
+		prepare_octal_conversion
+	fi
+}
+
 commit_changes() {
 	default_message="$(git rev-list --no-commit-header --format='%h %s' --max-count=1 HEAD)"
 	if [ "$curr_branch_type" != 'detached' ]
@@ -38,7 +66,7 @@ commit_changes() {
 	else
 		git commit --message="WIP on $branch_name_for_msg: $default_message" --allow-empty
 	fi
-	if [ "$include_ignored" = y ] || [ "$include_untracked" = y ]
+	if [ "$has_3_commits" = y ]
 	then
 		if [ "$include_untracked" = n ]
 		then
@@ -54,7 +82,7 @@ commit_changes() {
 }
 
 sanitize_ls_tree() {
-	hexdump -ve'"\\" /1 "%02o"' \
+	convert_to_octal \
 	| sed -E 's/\\0{1,3}(\\|$)/\n\1/g' \
 	| sed -E 's/(\\0{0,2}[0-7]|\\0?[^4][0-7]|\\0?4[1-7]|\\[1-3][0-7]{2})+\\0?40(\\0{0,2}[0-7]|\\0?[^4][0-7]|\\0?4[1-7]|\\[1-3][0-7]{2})+\\0?40(\\0{0,2}[0-7]|\\0?[^1][0-7]|\\0?1[02-7]|\\[1-3][0-7]{2})+\\0?11/&\n/' \
 	| while read -r data && read -r path
@@ -90,7 +118,7 @@ remove_tracked_files_from_HEAD() ( # [path]
 )
 
 tangle_stash() {
-	if [ "$include_ignored" = n ] && [ "$include_untracked" = n ]
+	if [ "$has_3_commits" = n ]
 	then
 		stash_sha="$(git show -s --format=%B HEAD | git commit-tree 'HEAD^{tree}' -p HEAD~2 -p HEAD~1)"
 	else
@@ -102,7 +130,7 @@ tangle_stash() {
 }
 
 restore_working_tree() {
-	if [ "$include_ignored" = n ] && [ "$include_untracked" = n ]
+	if [ "$has_3_commits" = n ]
 	then
 		if [ "$keep_index" = n ]
 		then
@@ -139,6 +167,7 @@ remove_temporary_branch() {
 }
 
 do_push() {
+	initialize
 	find_current_branch
 	if [ "$curr_branch_type" = 'orphan' ]
 	then
