@@ -60,24 +60,5 @@ Also, note that tests should not use any funny characters that would mess up she
 Each test has 2-character prefix followed by a `_`.
 Generally these prefixes work as follows:
 - The first character is a digit representing the general category of the test.
-  - For `git-istash` the categories are:
-    - `1` - Errors for invalid arguments.
-  - For `git-istash-apply` & `git-istash-pop` the categories are:
-    - `0` - Sanity tests that don't use git commands from this repository.
-    - `1` - Popping/Applying without conflicts.
-    - `2` - Popping/Applying with conflicts that need to be manually solved.
-    - `3` - Popping/Applying with "conflicts" that can be automatically resolved by Git merge algorithms.
-    - `4` - Popping/Applying with conflicts that is aborted before they are resolved.
-    - `5` - Different ways of specifying which stash to use.
-    - `6` - Specifying a stash that doesn't exist.
-    - `7` - Trying to istash when the repository is not in a state that allows that (e.g. an istash is already in progress).
-    - `8` - Handling various errors.
-    - `9` - Popping/Applying with sub-directories in the repository and when the working directory is not the repository's root.
-  - For `git-istash-push` the categories are:
-    - `0` - Sanity tests that don't use git commands from this repository.
-    - `1` - Creating stashes with different flags.
-    - `2` - Option `--patch`.
-    - `3` - Pathspecs.
-    - `4` - Tricky cases.
 - The second character is an uppercase letter that with tandem with the digit acts as an ID of the test in the current directory.
   (In some cases, when there is a lot if tests in a category, there are 2 letters instead of one.)
