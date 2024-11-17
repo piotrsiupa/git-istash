@@ -17,12 +17,13 @@ printf 'x\n' >'index'
 printf 'x\n' >'normal
 '
 printf 'x\n' >'
+
 both'
 mkdir 'tracked-dir1 '
 printf 'x\n' >'tracked-dir1 /unchanged '
 printf 'x\n' >'tracked-dir1 /index '
 printf 'x\n' >'tracked-dir1 /normal '
-printf 'x\n' >'tracked-dir1 /both '
+printf 'x\n' >'tracked-dir1 /both   '
 mkdir 'tracked-dir1 /
 tracked-dir2'
 printf 'x\n' >'tracked-dir1 /
@@ -34,6 +35,7 @@ tracked-dir2/normal'
 printf 'x\n' >'tracked-dir1 /
 tracked-dir2/
 both
+
 '
 git add .
 git commit -m 'Added some files'
@@ -44,13 +46,14 @@ SWITCH_HEAD_TYPE
 __test_section__ 'Create stash'
 printf 'y\n' >'index'
 printf 'y\n' >'
+
 both'
 printf 'y\n' >'
 new '
 printf 'y\n' >' changed-new
 '
 printf 'y\n' >'tracked-dir1 /index '
-printf 'y\n' >'tracked-dir1 /both '
+printf 'y\n' >'tracked-dir1 /both   '
 printf 'y\n' >'tracked-dir1 /new '
 printf 'y\n' >'tracked-dir1 / changed-new '
 printf 'y\n' >'tracked-dir1 /
@@ -58,6 +61,7 @@ tracked-dir2/ index '
 printf 'y\n' >'tracked-dir1 /
 tracked-dir2/
 both
+
 '
 printf 'y\n' >'tracked-dir1 /
 tracked-dir2/new'
@@ -67,17 +71,19 @@ git add .
 printf 'z\n' >'normal
 '
 printf 'z\n' >'
+
 both'
 printf 'z\n' >' changed-new
 '
 printf 'z\n' >'tracked-dir1 /normal '
-printf 'z\n' >'tracked-dir1 /both '
+printf 'z\n' >'tracked-dir1 /both   '
 printf 'z\n' >'tracked-dir1 / changed-new '
 printf 'z\n' >'tracked-dir1 /
 tracked-dir2/normal'
 printf 'z\n' >'tracked-dir1 /
 tracked-dir2/
 both
+
 '
 printf 'z\n' >'tracked-dir1 /
 tracked-dir2/ changed-new '
@@ -92,7 +98,7 @@ ignored-dir2'
 printf 'uf0\n' >'tracked-dir1 /
 ignored-dir2/some-file0'
 printf 'uf1\n' >'tracked-dir1 /
-ignored-dir2/ some-file1 '
+ignored-dir2/ some-file1   '
 printf '%s\n' '*ignored*' >.git/info/exclude
 assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
 if ! IS_KEEP_INDEX_ON
@@ -101,34 +107,34 @@ then
 	   \040unchanged\040				x
 	   index					x
 	   normal\n					x
-	   \nboth					x
+	   \n\nboth					x
 	   tracked-dir1\040/unchanged\040		x
 	   tracked-dir1\040/index\040			x
 	   tracked-dir1\040/normal\040			x
-	   tracked-dir1\040/both\040			x
+	   tracked-dir1\040/both\040\040\040		x
 	   tracked-dir1\040/\ntracked-dir2/unchanged	x
 	   tracked-dir1\040/\ntracked-dir2/\040index\040 x
 	   tracked-dir1\040/\ntracked-dir2/normal	x
-	   tracked-dir1\040/\ntracked-dir2/\nboth\n	x
+	   tracked-dir1\040/\ntracked-dir2/\nboth\n\n	x
 	'
 else
 	assert_files_H '
 	   \040unchanged\040				x
 	M  index						y
 	   normal\n					x
-	M  \nboth						y
+	M  \n\nboth						y
 	A  \nnew\040						y
 	A  \040changed-new\n					y
 	   tracked-dir1\040/unchanged\040		x
 	M  tracked-dir1\040/index\040				y
 	   tracked-dir1\040/normal\040			x
-	M  tracked-dir1\040/both\040				y
+	M  tracked-dir1\040/both\040\040\040			y
 	A  tracked-dir1\040/new\040				y
 	A  tracked-dir1\040/\040changed-new\040			y
 	   tracked-dir1\040/\ntracked-dir2/unchanged	x
 	M  tracked-dir1\040/\ntracked-dir2/\040index\040	y
 	   tracked-dir1\040/\ntracked-dir2/normal	x
-	M  tracked-dir1\040/\ntracked-dir2/\nboth\n		y
+	M  tracked-dir1\040/\ntracked-dir2/\nboth\n\n		y
 	A  tracked-dir1\040/\ntracked-dir2/new			y
 	A  tracked-dir1\040/\ntracked-dir2/\040changed-new\040	y
 	'
@@ -137,19 +143,19 @@ assert_stash_H 0 '' '
    \040unchanged\040				x
 M  index						y
  M normal\n					z	x
-MM \nboth					z	y
+MM \n\nboth					z	y
 A  \nnew\040						y
 AM \040changed-new\n				z	y
    tracked-dir1\040/unchanged\040		x
 M  tracked-dir1\040/index\040				y
  M tracked-dir1\040/normal\040			z	x
-MM tracked-dir1\040/both\040			z	y
+MM tracked-dir1\040/both\040\040\040		z	y
 A  tracked-dir1\040/new\040				y
 AM tracked-dir1\040/\040changed-new\040		z	y
    tracked-dir1\040/\ntracked-dir2/unchanged	x
 M  tracked-dir1\040/\ntracked-dir2/\040index\040	y
  M tracked-dir1\040/\ntracked-dir2/normal	z	x
-MM tracked-dir1\040/\ntracked-dir2/\nboth\n	z	y
+MM tracked-dir1\040/\ntracked-dir2/\nboth\n\n	z	y
 A  tracked-dir1\040/\ntracked-dir2/new			y
 AM tracked-dir1\040/\ntracked-dir2/\040changed-new\040 z	y
 !! \040ignored-file\040				uf
@@ -157,7 +163,7 @@ AM tracked-dir1\040/\ntracked-dir2/\040changed-new\040 z	y
 ?? untracked-dir1\040/\040some-file1\040	uf1
 ?? tracked-dir1\040/untracked-file\040		uf
 !! tracked-dir1\040/\nignored-dir2/some-file0	uf0
-!! tracked-dir1\040/\nignored-dir2/\040some-file1\040 uf1
+!! tracked-dir1\040/\nignored-dir2/\040some-file1\040\040\040 uf1
 '
 assert_stash_base_H 0 'HEAD'
 assert_stash_count 1
@@ -176,19 +182,19 @@ assert_files '
    \040unchanged\040				x
 M  index						y
  M normal\n					z	x
-MM \nboth					z	y
+MM \n\nboth					z	y
 A  \nnew\040						y
 AM \040changed-new\n				z	y
    tracked-dir1\040/unchanged\040			x
 M  tracked-dir1\040/index\040				y
  M tracked-dir1\040/normal\040			z	x
-MM tracked-dir1\040/both\040			z	y
+MM tracked-dir1\040/both\040\040\040		z	y
 A  tracked-dir1\040/new\040				y
 AM tracked-dir1\040/\040changed-new\040		z	y
    tracked-dir1\040/\ntracked-dir2/unchanged	x
 M  tracked-dir1\040/\ntracked-dir2/\040index\040	y
  M tracked-dir1\040/\ntracked-dir2/normal	z	x
-MM tracked-dir1\040/\ntracked-dir2/\nboth\n		z	y
+MM tracked-dir1\040/\ntracked-dir2/\nboth\n\n		z	y
 A  tracked-dir1\040/\ntracked-dir2/new			y
 AM tracked-dir1\040/\ntracked-dir2/\040changed-new\040 z	y
 !! \040ignored-file\040				uf
@@ -196,7 +202,7 @@ AM tracked-dir1\040/\ntracked-dir2/\040changed-new\040 z	y
 ?? untracked-dir1\040/\040some-file1\040	uf1
 ?? tracked-dir1\040/untracked-file\040		uf
 !! tracked-dir1\040/\nignored-dir2/some-file0	uf0
-!! tracked-dir1\040/\nignored-dir2/\040some-file1\040 uf1
+!! tracked-dir1\040/\nignored-dir2/\040some-file1\040\040\040 uf1
 '
 assert_stash_count 0
 assert_log_length 2
