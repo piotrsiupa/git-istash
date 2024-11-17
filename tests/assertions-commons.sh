@@ -38,7 +38,15 @@ _sort_repository_status() {
 }
 
 _convert_zero_separated_path_list() {
-	sed -E -e '$! s/$/\\n/g' -e 's/\t/\\t/g' -e 's/ /\\040/g' \
+	if command -v od 1>/dev/null 2>&1
+	then
+		#shellcheck disable=SC1003
+		od -bvAn | tr ' ' '\\' | tr -d '\n'
+	else
+		hexdump -ve'"\\" /1 "%02o"'
+	fi \
+	| sed -E -e 's/\\/\\0/g' -e 's/0([0-7]{3})/\1/g' -e 's/\\012/\\\\n/g' -e 's/\\011/\\\\t/g' -e 's/\\040/\\\\040/g' \
+	| xargs -0 -- printf \
 	| tr -d '\n' | tr '\0' '\n'
 }
 
