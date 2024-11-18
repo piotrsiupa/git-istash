@@ -95,10 +95,12 @@ sanitize_ls_tree() {
 remove_tracked_files_from_HEAD() ( # [path]
 	if [ $# -lt 1 ]
 	then
-		set -- './'
+		set -- '\056\057'
 	fi
-	previous_files="$(git ls-tree -z HEAD~ "$1" | sanitize_ls_tree)"
-	git ls-tree -z HEAD "$1" | sanitize_ls_tree \
+	#shellcheck disable=SC2059
+	previous_files="$(printf "$1" | xargs -0 -- git ls-tree -z HEAD~ -- | sanitize_ls_tree)"
+	#shellcheck disable=SC2059
+	printf "$1" | xargs -0 -- git ls-tree -z HEAD -- | sanitize_ls_tree \
 	| while read -r line
 	do
 		if printf '%s' "$previous_files" | grep -qxF "$line"
@@ -110,10 +112,10 @@ remove_tracked_files_from_HEAD() ( # [path]
 			printf '%s\\000' "$line"
 		else
 			#shellcheck disable=SC2059
-			subtree_sha="$(remove_tracked_files_from_HEAD "$(printf "$line" | sed -E '1 s/^.*\t//')/")"
+			subtree_sha="$(remove_tracked_files_from_HEAD "$(printf '%s' "$line" | sed -E '1 s/^.*\t//')/")"
 			printf '%s\\000' "$line" | sed -E 's;^(\w+\s+\w+\s+)\w+(\s);\1'"$subtree_sha"'\2;'
 		fi | sed -E 's;^(.*\t)(.*/)?([^/]+)$;\1\3;'
-	done | xargs -r0 -- printf \
+	done | xargs -r0 -- printf -- \
 	| git mktree -z
 )
 
