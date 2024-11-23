@@ -111,6 +111,10 @@ assert_stash_commit_files_with_content() { # commit expected_files
 	printf '%s\n' "$2" \
 	| while read -r line
 	do
+		if [ -z "$line" ]
+		then
+			continue
+		fi
 		file_path_for_assertion="$(printf '%s' "$line" | awk '{print $1}')"
 		value_for_assert="$(printf "%s:$file_path_for_assertion" "$1" | xargs -0 -- git show)"
 		#shellcheck disable=SC2059
