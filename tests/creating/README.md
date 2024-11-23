@@ -10,4 +10,4 @@ The first character of the prefix can be:
 - `1` - Creating stashes with different flags.
 - `2` - Option `--patch`.
 - `3` - Pathspecs.
-- `4` - Tricky cases.
+- `4` - Tricky/corner cases and miscellaneous options.
