@@ -60,10 +60,10 @@ commit_changes() {
 		branch_name_for_msg='(no branch)'
 	fi
 	git commit --message="index on $branch_name_for_msg: $default_message" --allow-empty
-	there_are_changes="$allow_empty"
-	if [ "$there_are_changes" = n ] && [ "$(git rev-parse 'HEAD^{tree}')" != "$(git rev-parse 'HEAD~^{tree}')" ]
+	there_are_enough_changes="$allow_empty"
+	if [ "$there_are_enough_changes" = n ] && [ "$(git rev-parse 'HEAD^{tree}')" != "$(git rev-parse 'HEAD~^{tree}')" ]
 	then
-		there_are_changes=y
+		there_are_enough_changes=y
 	fi
 	git add --update
 	if [ -n "$message" ]
@@ -72,9 +72,9 @@ commit_changes() {
 	else
 		git commit --message="WIP on $branch_name_for_msg: $default_message" --allow-empty
 	fi
-	if [ "$there_are_changes" = n ] && [ "$(git rev-parse 'HEAD^{tree}')" != "$(git rev-parse 'HEAD~^{tree}')" ]
+	if [ "$there_are_enough_changes" = n ] && [ "$(git rev-parse 'HEAD^{tree}')" != "$(git rev-parse 'HEAD~^{tree}')" ]
 	then
-		there_are_changes=y
+		there_are_enough_changes=y
 	fi
 	if [ "$has_3_commits" = y ]
 	then
@@ -88,12 +88,12 @@ commit_changes() {
 			git add --all --force
 		fi
 		git commit --message="untracked files on $branch_name_for_msg: $default_message" --allow-empty
-		if [ "$there_are_changes" = n ] && [ "$(git rev-parse 'HEAD^{tree}')" != "$(git rev-parse 'HEAD~^{tree}')" ]
+		if [ "$there_are_enough_changes" = n ] && [ "$(git rev-parse 'HEAD^{tree}')" != "$(git rev-parse 'HEAD~^{tree}')" ]
 		then
-			there_are_changes=y
+			there_are_enough_changes=y
 		fi
 	fi
-	if [ "$there_are_changes" = n ]
+	if [ "$there_are_enough_changes" = n ]
 	then
 		undo_commit_changes
 		printf 'fatal: There are no suitable changes to stash.\n' 1>&2
