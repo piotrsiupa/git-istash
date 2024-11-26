@@ -110,10 +110,7 @@ undo_commit_changes() {
 			git reset --soft HEAD~3
 		fi
 	else
-		curr_branch_name="$(git branch --show-current)"
-		git switch --detach HEAD
-		git branch -D "$curr_branch_name"
-		git switch --orphan "$curr_branch_name"
+		remove_temporary_branch
 	fi
 }
 
@@ -128,7 +125,7 @@ sanitize_ls_tree() {
 	| sed -E 's/\\0?57\\/\/\\/g'
 }
 
-remove_tracked_files_from_HEAD() ( # [path]
+remove_tracked_files_from_untracked() ( # [path]
 	if [ $# -lt 1 ]
 	then
 		set -- '\056\057'
@@ -148,7 +145,7 @@ remove_tracked_files_from_HEAD() ( # [path]
 			printf '%s\\000' "$line"
 		else
 			#shellcheck disable=SC2059
-			subtree_sha="$(remove_tracked_files_from_HEAD "$(printf '%s' "$line" | sed -E '1 s/^.*\t//')/")"
+			subtree_sha="$(remove_tracked_files_from_untracked "$(printf '%s' "$line" | sed -E '1 s/^.*\t//')/")"
 			printf '%s\\000' "$line" | sed -E 's;^(\w+\s+\w+\s+)\w+(\s);\1'"$subtree_sha"'\2;'
 		fi | sed -E 's;^(.*\t)(.*/)?([^/]+)$;\1\3;'
 	done | xargs -r0 -- printf -- \
@@ -160,7 +157,7 @@ tangle_stash() {
 	then
 		stash_sha="$(git show -s --format=%B HEAD | git commit-tree 'HEAD^{tree}' -p HEAD~2 -p HEAD~1)"
 	else
-		untracked_tree_sha="$(remove_tracked_files_from_HEAD)"
+		untracked_tree_sha="$(remove_tracked_files_from_untracked)"
 		untracked_sha="$(git show -s --format=%B HEAD | git commit-tree "$untracked_tree_sha")"
 		stash_sha="$(git show -s --format=%B HEAD~1 | git commit-tree 'HEAD~1^{tree}' -p HEAD~3 -p HEAD~2 -p "$untracked_sha")"
 	fi
