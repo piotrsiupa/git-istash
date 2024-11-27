@@ -48,6 +48,10 @@ assert_rebase y
 
 __test_section__ "Abort $OPERATION stash (1)"
 git branch master "$master_hash"
+if IS_HEAD_BRANCH
+then
+	git branch --set-upstream-to='my-origin/my-branch' master
+fi
 assert_exit_code 0 git istash "$OPERATION" --abort
 assert_files_H '
    aaa		ccc
@@ -61,3 +65,4 @@ assert_head_hash "$correct_head_hash"
 assert_head_name_H
 assert_data_files 'none'
 assert_rebase n
+assert_branch_metadata_H

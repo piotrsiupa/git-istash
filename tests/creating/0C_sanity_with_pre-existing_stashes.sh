@@ -23,6 +23,7 @@ assert_stash_count 2
 assert_log_length 2
 assert_branch_count 1
 assert_rebase n
+assert_branch_metadata_H
 
 SWITCH_HEAD_TYPE
 
@@ -51,6 +52,7 @@ then
 	assert_stash_hash 1 "$correct_pre_stash_hash_1"
 	assert_head_name_H
 	assert_rebase n
+	assert_branch_metadata_H
 else
 	if git stash push
 	then

@@ -248,6 +248,15 @@ assert_rebase() { # expected_in_progress
 	fi
 }
 
+assert_branch_metadata() {
+	expected_value='my-origin/my-branch'
+	value_for_assert="$(git for-each-ref --format='%(upstream:short)' -- "refs/heads/$(git branch --show-current)")"
+	test "$value_for_assert" = "$expected_value" ||
+		fail 'Expected the upstream branch to be "%s" but it is "%s"!\n' "$expected_value" "$value_for_assert"
+	unset expected_value
+	unset value_for_assert
+}
+
 assert_files_H() { # expected_files [expected_files_for_orphan]
 	if ! IS_HEAD_ORPHAN || [ $# -lt 2 ]
 	then
@@ -286,4 +295,10 @@ assert_head_name_H() {
 		'ORPHAN') assert_head_name '~ooo' ;;
 		*) fail 'Unknown HEAD type "%s"!' "$HEAD_TYPE" ;;
 	esac
+}
+assert_branch_metadata_H() {
+	if IS_HEAD_BRANCH
+	then
+		assert_branch_metadata
+	fi
 }

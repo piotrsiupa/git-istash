@@ -54,3 +54,4 @@ assert_stash_count 1
 assert_head_name 'HEAD'
 assert_data_files "$OPERATION"
 assert_rebase n
+assert_branch_metadata_H

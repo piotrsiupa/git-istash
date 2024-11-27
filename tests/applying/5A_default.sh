@@ -41,3 +41,4 @@ then
 else
 	assert_stash_hash 0 "$earlier_stash_hash"
 fi
+assert_branch_metadata_H

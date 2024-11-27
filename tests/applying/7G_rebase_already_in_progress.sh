@@ -50,3 +50,4 @@ assert_branch_count 2
 assert_head_hash_H "$correct_head_hash"
 assert_data_files 'none'
 assert_rebase y
+assert_branch_metadata_H
