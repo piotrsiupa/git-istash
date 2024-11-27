@@ -22,6 +22,7 @@ printf 'ddd\n' >ccc
 git add ccc
 rm ccc
 printf 'ddd\n' >ddd
+#shellcheck disable=SC2086
 assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS -mmsg
 if ! IS_KEEP_INDEX_ON
 then

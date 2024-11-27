@@ -22,6 +22,7 @@ SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_OTHER_OPERATION stash"
 correct_head_hash="$(get_head_hash_H)"
+#shellcheck disable=SC2086
 assert_exit_code 2 capture_outputs git istash $OTHER_OPERATION
 assert_conflict_message
 assert_files_H '
@@ -59,6 +60,7 @@ assert_data_files "$OTHER_OPERATION"
 assert_rebase y
 
 __test_section__ "Abort $OTHER_OPERATION stash"
+#shellcheck disable=SC2086
 assert_exit_code 0 git istash $OTHER_OPERATION --abort
 assert_files_H '
    aaa		ccc

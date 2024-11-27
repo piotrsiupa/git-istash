@@ -13,6 +13,7 @@ printf 'bbb\n' >bbb
 git add bbb
 printf 'ccc\n' >bbb
 printf 'ddd\n' >ddd
+#shellcheck disable=SC2086
 assert_exit_code 0 git istash push $ALL_FLAGS $UNTRACKED_FLAGS $KEEP_INDEX_FLAGS --message 'mesanmge'
 if ! IS_KEEP_INDEX_ON
 then

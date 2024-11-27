@@ -14,6 +14,7 @@ __test_section__ 'Create stash'
 printf 'aaa\n' >aaa
 printf 'bbb\n' >bbb
 printf 'y n ' | tr ' ' '\n' >.git/answers_for_patch
+#shellcheck disable=SC2086
 assert_exit_code 1 git istash push $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS <.git/answers_for_patch
 assert_files_H '
 ?? aaa		aaa

@@ -318,7 +318,7 @@ run_test() ( # test_name
 			break
 		fi
 	done
-	if [ $i != x ]
+	if [ "$i" != x ]
 	then
 		failed_count=$((failed_count + 1))
 		error_count=$((error_count + 1))
