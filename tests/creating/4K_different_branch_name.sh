@@ -14,6 +14,7 @@ git branch -m 'new-and-cool-branch'
 __test_section__ 'Create stash'
 printf 'bbb\n' >aaa
 git add aaa
+#shellcheck disable=SC2086
 assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
 if ! IS_KEEP_INDEX_ON
 then

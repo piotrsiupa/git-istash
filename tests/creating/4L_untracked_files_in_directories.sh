@@ -64,6 +64,7 @@ printf 'uf\n' >tracked-dir1/untracked-file
 mkdir tracked-dir1/untracked-dir2
 printf 'uf0\n' >tracked-dir1/untracked-dir2/untracked-file0
 printf 'uf1\n' >tracked-dir1/untracked-dir2/untracked-file1
+#shellcheck disable=SC2086
 assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
 if ! IS_KEEP_INDEX_ON
 then

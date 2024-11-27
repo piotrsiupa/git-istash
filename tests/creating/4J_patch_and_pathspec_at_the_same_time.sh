@@ -31,11 +31,14 @@ else
 fi
 if IS_PATHSPEC_IN_ARGS
 then
+	#shellcheck disable=SC2086
 	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS --patch --message 'this one is complicated' $KEEP_INDEX_FLAGS -m 'new stash' 'bbb'
 elif IS_PATHSPEC_IN_STDIN
 then
+	#shellcheck disable=SC2086
 	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS --patch --message 'this one is complicated' $KEEP_INDEX_FLAGS -m 'new stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test
 else
+	#shellcheck disable=SC2086
 	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS --patch --message 'this one is complicated' $KEEP_INDEX_FLAGS -m 'new stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
 fi
 if IS_KEEP_INDEX_OFF

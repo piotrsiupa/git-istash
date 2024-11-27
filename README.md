@@ -91,19 +91,20 @@ Most of the changes here, however, are bugs that were found during tests to be p
 - Untracked files are added to a new stash even with `--no-include-untracked` when they names are the same as names of files removed in index.
   (According to the Git test suite this is an expected behavior.)
 - `push` loses the information about deletion of a file if it's a new file added to index.
-- `push --patch` returns 0 when stash has failed to be created (when there are no changes).
-- Option `--patch` doesn't allow stash with no changes selected even when there are changes in index. 
+- `push` returns 0 when stash has failed to be created (when there are no changes).
+- Option `--patch` doesn't allow stash with no selected changes even when there are changes in index.
 - Option `--patch` with `--keep-index` doesn't keep the index.
 - Pathspecs are unable to find untracked files when the option `--keep-index` is specified.
 - `push` with a pathspec creates a stash even when it fails to match a file and returns a non-0 exit code.
 
 ### Other things different in standard `stash` (that may or may not be considered bugs)
-- Options cannot follow non-option arguments (like they are allowed to in POSIX utilities).
-- Option `--no-include-untracked` overrides `--all` (while it should include only ignored files in such case).
-- Option `--patch` doesn't work with untracked files.
-- Options `--patch` and `--pathspec` are not allowed together.
-- Files in index are not affected by the pathspec.
-- Stash cannot be created on an orphan branch.
+- Options can now follow non-option arguments (like they are allowed to in POSIX utilities).
+- Option `--no-include-untracked` doesn't override `--all` anymore (and instead it includes only ignored files if both options are specified).
+- Option `--patch` now works with untracked files.
+- Options `--patch` and `--pathspec` are allowed together now.
+- Files in index are affected by the pathspec now.
+- Stash can be created on an orphan branch now.
+- There is an option `--allow-empty` now, that allows creation of stash when there are no changes.
 
 
 

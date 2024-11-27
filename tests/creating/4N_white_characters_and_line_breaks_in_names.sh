@@ -93,6 +93,7 @@ printf 'uf1\n' >'tracked-dir1/ignored-d
 ir2/some
 file1'
 printf '%s\n' '*ignored*' >.git/info/exclude
+#shellcheck disable=SC2086
 assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
 if ! IS_KEEP_INDEX_ON
 then

@@ -12,6 +12,7 @@ SWITCH_HEAD_TYPE
 
 rm -f 'ignored0' 'ignored1'
 __test_section__ 'Create stash'
+#shellcheck disable=SC2086
 assert_exit_code 1 git istash push $KEEP_INDEX_FLAGS -m 'empty stash' $ALL_FLAGS $UNTRACKED_FLAGS
 assert_files_H '
 '

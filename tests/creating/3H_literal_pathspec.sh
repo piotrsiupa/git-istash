@@ -31,11 +31,14 @@ else
 fi
 if IS_PATHSPEC_IN_ARGS
 then
+	#shellcheck disable=SC2086
 	assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS $UNTRACKED_FLAGS ':(literal)a???e' $ALL_FLAGS $EOI ':(literal)a*e'
 elif IS_PATHSPEC_IN_STDIN
 then
+	#shellcheck disable=SC2086
 	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test
 else                                                                                     
+	#shellcheck disable=SC2086
 	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
 fi
 assert_files_H '

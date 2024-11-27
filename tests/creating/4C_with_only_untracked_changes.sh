@@ -17,6 +17,7 @@ SWITCH_HEAD_TYPE
 
 __test_section__ 'Create stash'
 printf 'ddd\n' >ddd
+#shellcheck disable=SC2086
 assert_exit_code 0 git istash push $ALL_FLAGS $KEEP_INDEX_FLAGS $UNTRACKED_FLAGS --message='stash message'
 assert_files_H '
 !! ignored0	ignored0

@@ -12,6 +12,7 @@ SWITCH_HEAD_TYPE
 
 __test_section__ 'Create stash'
 printf 'ddd\n' >ddd
+#shellcheck disable=SC2086
 assert_exit_code 0 git istash push $ALL_FLAGS $KEEP_INDEX_FLAGS $UNTRACKED_FLAGS -m 'description'
 if ! IS_KEEP_INDEX_ON
 then

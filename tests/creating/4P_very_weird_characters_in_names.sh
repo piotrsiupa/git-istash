@@ -68,6 +68,7 @@ mkdir 'tra	=ÿþ€{}\*?#@!|:<>()^&cked-dir1/ignored-di	=ÿþ€{}\*?#
 printf 'uf0\n' >'tra	=ÿþ€{}\*?#@!|:<>()^&cked-dir1/ignored-di	=ÿþ€{}\*?#@!|:<>()^&r2/some	=ÿþ€{}\*?#@!|:<>()^&file0'
 printf 'uf1\n' >'tra	=ÿþ€{}\*?#@!|:<>()^&cked-dir1/ignored-di	=ÿþ€{}\*?#@!|:<>()^&r2/some-file1'
 printf '%s\n' '*ignored*' >.git/info/exclude
+#shellcheck disable=SC2086
 assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
 if ! IS_KEEP_INDEX_ON
 then

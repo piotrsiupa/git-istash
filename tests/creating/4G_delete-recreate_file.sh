@@ -20,6 +20,7 @@ SWITCH_HEAD_TYPE
 __test_section__ 'Create stash'
 git rm aaa
 printf 'bbb\n' >aaa
+#shellcheck disable=SC2086
 assert_exit_code 0 git istash push $ALL_FLAGS $UNTRACKED_FLAGS $KEEP_INDEX_FLAGS --message 'stash, not a trash'
 if ! IS_KEEP_INDEX_ON
 then

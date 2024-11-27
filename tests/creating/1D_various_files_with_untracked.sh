@@ -13,6 +13,7 @@ printf 'aaa\n' >aaa
 git add aaa
 printf 'bbb\n' >aaa
 printf 'ddd\n' >ddd
+#shellcheck disable=SC2086
 assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS --message 'name of this stash'
 if ! IS_KEEP_INDEX_ON
 then

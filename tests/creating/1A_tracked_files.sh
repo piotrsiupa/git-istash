@@ -24,6 +24,7 @@ printf 'bbb2\n' >bbb
 git add aaa bbb
 printf 'bbb3\n' >bbb
 printf 'ddd3\n' >ddd
+#shellcheck disable=SC2086
 assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
 if ! IS_KEEP_INDEX_ON
 then

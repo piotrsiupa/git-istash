@@ -11,7 +11,6 @@ print_help() {
 	printf '    -h, --help\t\t- Print this help message and exit.\n'
 	printf '    -s, --skip-tests\t- Do not check test scripts from sub-directories of\n\t\t\t  the directory "tests". (a lot faster execution)\n'
 	printf '\t--version\t- Print version information and exit.\n'
-	exit 0
 }
 
 print_version() {

@@ -11,6 +11,7 @@ correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
 __test_section__ 'Create stash'
+#shellcheck disable=SC2086
 assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS -m 'empty stash' --allow-empty $ALL_FLAGS $UNTRACKED_FLAGS
 assert_files_H '
 !! ignored0	ignored0
