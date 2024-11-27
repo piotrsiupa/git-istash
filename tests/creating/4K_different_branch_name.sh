@@ -49,6 +49,7 @@ else
 	assert_head_name '~new-and-cool-branch'
 fi
 assert_rebase n
+assert_branch_metadata_H
 
 git reset --hard
 
@@ -70,3 +71,4 @@ else
 	assert_head_name '~new-and-cool-branch'
 fi
 assert_rebase n
+assert_branch_metadata_H

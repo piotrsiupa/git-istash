@@ -141,6 +141,7 @@ assert_branch_count 1
 assert_head_hash_H "$correct_head_hash"
 assert_head_name_H
 assert_rebase n
+assert_branch_metadata_H
 
 git reset --hard
 RESTORE_HEAD_TYPE
@@ -179,3 +180,4 @@ assert_branch_count 1
 assert_head_hash "$correct_head_hash"
 assert_head_name 'master'
 assert_rebase n
+assert_branch_metadata_H

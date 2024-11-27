@@ -39,3 +39,4 @@ git commit --amend --no-edit -- zzz
 assert_exit_code 1 git istash "$OPERATION" --continue
 assert_file_contents ignored0 'ignored0'
 assert_file_contents ignored1 'ignored1'
+assert_branch_metadata_H

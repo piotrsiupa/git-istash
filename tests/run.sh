@@ -62,6 +62,22 @@ print_centered() { # text character
 	printf -- "$2%.0s" $(seq 1 $((padding_size - (padding_size / 2))))
 }
 
+delete_test_remote() {
+	rm -rf 'remote-for-tests'
+}
+create_test_remote() {
+	delete_test_remote
+	mkdir 'remote-for-tests'
+	(
+		cd 'remote-for-tests'
+		git init --quiet .
+		git config --local user.email 'test@localhost'
+		git config --local user.name 'test'
+		git commit --quiet --allow-empty --message='some commit'
+		git branch --move 'my-branch'
+	)
+}
+
 get_test_script() { # test_name
 	printf '%s.sh' "$1"
 }
@@ -680,6 +696,11 @@ cd '../bin'
 PATH="$(pwd):$PATH"
 cd "$OLDPWD"
 export PATH
+create_test_remote
 run_tests
 print_summary
+if [ "$passed_tests" -eq "$total_tests" ]
+then
+	delete_test_remote
+fi
 [ "$total_tests" -ne 0 ] && [ "$passed_tests" -eq "$total_tests" ]

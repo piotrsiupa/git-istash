@@ -34,5 +34,9 @@ printf 'ignored?\n' >>.git/info/exclude
 printf 'ignored0\n' >ignored0
 printf 'ignored1\n' >ignored1
 
+git remote add 'my-origin' "file://$(dirname "$(dirname "$(pwd -L)")")/remote-for-tests"
+git fetch --quiet 'my-origin'
+git branch --set-upstream-to='my-origin/my-branch'
+
 #shellcheck disable=SC2164
 cd -

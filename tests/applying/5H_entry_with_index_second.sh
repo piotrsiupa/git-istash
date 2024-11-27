@@ -35,3 +35,4 @@ then
 	assert_stash_hash 1 "$earlier_stash_hash"
 fi
 assert_stash_hash 0 "$later_stash_hash"
+assert_branch_metadata_H

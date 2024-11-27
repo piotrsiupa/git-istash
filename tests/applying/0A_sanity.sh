@@ -45,6 +45,7 @@ fi
 assert_branch_count 1
 assert_data_files 'none'
 assert_rebase n
+assert_branch_metadata_H
 
 SWITCH_HEAD_TYPE
 
@@ -67,3 +68,4 @@ assert_head_hash_H "$correct_head_hash"
 assert_head_name_H
 assert_data_files 'none'
 assert_rebase n
+assert_branch_metadata_H
