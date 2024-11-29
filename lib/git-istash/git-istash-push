@@ -65,7 +65,7 @@ commit_changes() {
 	then
 		there_are_enough_changes=y
 	fi
-	git add --update
+	git add --update .
 	if [ -n "$message" ]
 	then
 		git commit --message="On $branch_name_for_msg: $message" --allow-empty
@@ -76,6 +76,7 @@ commit_changes() {
 	then
 		there_are_enough_changes=y
 	fi
+	git commit --message="non-stashed tracked files on $branch_name_for_msg: $default_message" --allow-empty
 	if [ "$has_3_commits" = y ]
 	then
 		if [ "$include_untracked" = n ]
@@ -83,15 +84,17 @@ commit_changes() {
 			git ls-files --exclude-standard --others --ignored -z | xargs -0 -- git add --force
 		elif [ "$include_ignored" = n ]
 		then
-			git add --all
+			git add --all --intent-to-add .
 		else
-			git add --all --force
+			git add --all --force --intent-to-add .
 		fi
+		git add --update
 		git commit --message="untracked files on $branch_name_for_msg: $default_message" --allow-empty
 		if [ "$there_are_enough_changes" = n ] && [ "$(git rev-parse 'HEAD^{tree}')" != "$(git rev-parse 'HEAD~^{tree}')" ]
 		then
 			there_are_enough_changes=y
 		fi
+		git commit --message="non-stashed untracked files on $branch_name_for_msg: $default_message" --allow-empty
 	fi
 	if [ "$there_are_enough_changes" = n ]
 	then
@@ -105,12 +108,38 @@ undo_commit_changes() {
 	then
 		if [ "$has_3_commits" = n ]
 		then
-			git reset --soft HEAD~2
-		else
 			git reset --soft HEAD~3
+		else
+			git reset --soft HEAD~5
 		fi
 	else
 		remove_temporary_branch
+	fi
+}
+
+sort_commits() {
+	last_commit_hash="$(git rev-parse HEAD)"
+	if [ "$has_3_commits" = n ]
+	then
+		if [ "$keep_index" = n ]
+		then
+			GIT_EDITOR='sed -i -En "3 p" --' git rebase --interactive --keep-empty --empty=keep -- "$stash_base_hash"
+		else
+			GIT_EDITOR='sed -i -En -e "1 p" -e "3 p" --' git rebase --interactive --keep-empty --empty=keep -- "$stash_base_hash"
+		fi
+		unstashed_changes_hash="$(git rev-parse HEAD)"
+		git switch --detach "$last_commit_hash"
+		GIT_EDITOR='sed -i -En "1,2 p"' git rebase --interactive --keep-empty --empty=keep -- "$stash_base_hash"
+	else
+		if [ "$keep_index" = n ]
+		then
+			GIT_EDITOR='sed -i -En -e "3 p" -e "5 p" --' git rebase --interactive --keep-empty --empty=keep -- "$stash_base_hash"
+		else
+			GIT_EDITOR='sed -i -En -e "1 p" -e "3 p" -e "5 p" --' git rebase --interactive --keep-empty --empty=keep -- "$stash_base_hash"
+		fi
+		unstashed_changes_hash="$(git rev-parse HEAD)"
+		git switch --detach "$last_commit_hash"
+		GIT_EDITOR='sed -i -En -e "1,2 p" -e "4 p"' git rebase --interactive --keep-empty --empty=keep -- "$stash_base_hash"
 	fi
 }
 
@@ -165,34 +194,41 @@ tangle_stash() {
 }
 
 restore_working_tree() {
+	git switch --detach "$unstashed_changes_hash"
 	if [ "$has_3_commits" = n ]
 	then
 		if [ "$keep_index" = n ]
 		then
-			git reset --hard HEAD~2
+			git reset --mixed HEAD~1
 		else
-			git reset --hard HEAD~1
+			git reset --mixed HEAD~1
 			git reset --soft HEAD~1
 		fi
 	else
 		if [ "$keep_index" = n ]
 		then
-			git reset --hard HEAD~3
+			git reset --mixed HEAD~2
 		else
-			git reset --hard HEAD~2
+			git reset --mixed HEAD~2
 			git reset --soft HEAD~1
 		fi
 	fi
 }
 
 create_stash() {
+	stash_base_hash="$(git rev-parse HEAD)"
 	commit_changes
+	sort_commits
 	tangle_stash
 	restore_working_tree
 }
 
 create_temporary_branch() {
 	git commit --message="Base commit for stash entry on an orphan branch \"$current_branch\"" --allow-empty --no-verify --only --
+}
+
+restore_branch() {
+	git switch --force-create "$current_branch" HEAD
 }
 
 remove_temporary_branch() {
@@ -204,7 +240,11 @@ remove_temporary_branch() {
 do_push() {
 	initialize
 	find_current_branch
-	if [ "$curr_branch_type" = 'orphan' ]
+	if [ "$curr_branch_type" = 'normal' ]
+	then
+		create_stash
+		restore_branch
+	elif [ "$curr_branch_type" = 'orphan' ]
 	then
 		create_temporary_branch
 		create_stash
