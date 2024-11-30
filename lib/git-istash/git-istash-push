@@ -66,6 +66,7 @@ commit_changes() {
 	then
 		there_are_enough_changes=y
 	fi
+	git commit --message="non-stashed index on $branch_name_for_msg: $default_message" --allow-empty
 	
 	git add --update $patch_options .
 	if [ -n "$message" ]
@@ -79,7 +80,7 @@ commit_changes() {
 		there_are_enough_changes=y
 	fi
 	git add --update
-	git commit --message="non-stashed tracked files on $branch_name_for_msg: $default_message" --allow-empty
+	git commit --message="non-stashed WIP on $branch_name_for_msg: $default_message" --allow-empty
 	
 	if [ "$has_3_commits" = y ]
 	then
@@ -111,14 +112,12 @@ commit_changes() {
 undo_commit_changes() {
 	if [ "$curr_branch_type" != 'orphan' ]
 	then
-		if [ "$has_3_commits" = n ]
+		if [ "$has_3_commits" = y ]
 		then
 			git reset --mixed HEAD~2
-			git reset --soft HEAD~1
-		else
-			git reset --mixed HEAD~4
-			git reset --soft HEAD~1
 		fi
+		git reset --mixed HEAD~2
+		git reset --soft HEAD~2
 	else
 		remove_temporary_branch
 	fi
@@ -130,23 +129,23 @@ sort_commits() {
 	then
 		if [ "$keep_index" = n ]
 		then
-			GIT_EDITOR='sed -i -En "3 p" --' git rebase --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash"
+			GIT_EDITOR='sed -i -En -e "2 p" -e "4 p" --' git rebase --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash"
 		else
-			GIT_EDITOR='sed -i -En -e "1 p" -e "3 p" --' git rebase --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash"
+			GIT_EDITOR='sed -i -En -e "1,2 p" -e "4 p" --' git rebase --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash"
 		fi
 		unstashed_changes_hash="$(git rev-parse HEAD)"
 		git switch --detach "$last_commit_hash"
-		GIT_EDITOR='sed -i -En "1,2 p"' git rebase --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash"
+		GIT_EDITOR='sed -i -En -e "1 p" -e "3 p"' git rebase --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash"
 	else
 		if [ "$keep_index" = n ]
 		then
-			GIT_EDITOR='sed -i -En -e "3 p" -e "5 p" --' git rebase --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash"
+			GIT_EDITOR='sed -i -En -e "2 p" -e "4 p" -e "6 p" --' git rebase --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash"
 		else
-			GIT_EDITOR='sed -i -En -e "1 p" -e "3 p" -e "5 p" --' git rebase --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash"
+			GIT_EDITOR='sed -i -En -e "1,2 p" -e "4 p" -e "6 p" --' git rebase --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash"
 		fi
 		unstashed_changes_hash="$(git rev-parse HEAD)"
 		git switch --detach "$last_commit_hash"
-		GIT_EDITOR='sed -i -En -e "1,2 p" -e "4 p"' git rebase --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash"
+		GIT_EDITOR='sed -i -En -e "1 p" -e "3 p" -e "5 p"' git rebase --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash"
 	fi
 }
 
@@ -202,23 +201,15 @@ tangle_stash() {
 
 restore_working_tree() {
 	git switch --detach "$unstashed_changes_hash"
-	if [ "$has_3_commits" = n ]
+	if [ "$has_3_commits" = y ]
 	then
-		if [ "$keep_index" = n ]
-		then
-			git reset --mixed HEAD~1
-		else
-			git reset --mixed HEAD~1
-			git reset --soft HEAD~1
-		fi
-	else
-		if [ "$keep_index" = n ]
-		then
-			git reset --mixed HEAD~2
-		else
-			git reset --mixed HEAD~2
-			git reset --soft HEAD~1
-		fi
+		git reset --mixed HEAD~1
+	fi
+	git reset --mixed HEAD~1
+	git reset --soft HEAD~1
+	if [ "$keep_index" = y ]
+	then
+		git reset --soft HEAD~1
 	fi
 }
 
