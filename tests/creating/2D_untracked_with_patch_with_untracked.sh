@@ -7,8 +7,6 @@ PARAMETRIZE_ALL 'DEFAULT'
 PARAMETRIZE_UNTRACKED 'YES'
 PARAMETRIZE_KEEP_INDEX
 
-known_failure 'Default implementation of "git stash" doesn'\''t allow stashing untracked files.'
-
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 

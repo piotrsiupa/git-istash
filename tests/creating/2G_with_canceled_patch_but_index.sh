@@ -7,8 +7,6 @@ PARAMETRIZE_ALL 'DEFAULT'
 PARAMETRIZE_UNTRACKED 'DEFAULT'
 PARAMETRIZE_KEEP_INDEX
 
-known_failure 'The default implementation in "git stash" doesn'\''t allow continuing when no change is selected.'
-
 __test_section__ 'Prepare repository'
 printf 'aaa\naaa\n' >aaa
 printf 'bbb\nbbb\n' >bbb
@@ -26,7 +24,7 @@ printf 'zzz\nbbb\nbbb\nzzz\n' >bbb
 printf 'q ' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
 assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS --patch --message 'some nice stash name' <.git/answers_for_patch
-if IS_KEEP_INDEX_OFF
+if ! IS_KEEP_INDEX_ON
 then
 	assert_files_H '
 	 M aaa		yyy\naaa\naaa\nyyy	aaa\naaa
@@ -43,7 +41,8 @@ else
 	'
 fi
 assert_stash_H 0 'some nice stash name' '
-M  aaa		aaa\naaa	xxx\naaa\naaa\nxxx
+M  aaa		xxx\naaa\naaa\nxxx
+   bbb		bbb\nbbb
 '
 assert_stash_base_H 0 'HEAD'
 assert_stash_count 1
@@ -60,8 +59,8 @@ RESTORE_HEAD_TYPE
 __test_section__ 'Pop stash'
 assert_exit_code 0 git stash pop --index
 assert_files '
-MM aaa		yyy\naaa\naaa\nxxx	xxx\naaa\naaa\nxxx
- M bbb		zzz\nbbb\nbbb\nzzz	bbb\nbbb
+M  aaa		xxx\naaa\naaa\nxxx
+   bbb		bbb\nbbb
 !! ignored0	ignored0
 !! ignored1	ignored1
 '

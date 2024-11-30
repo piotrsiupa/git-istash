@@ -1,11 +1,11 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
+non_essential_test
+
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_ALL 'DEFAULT'
 PARAMETRIZE_UNTRACKED 'DEFAULT' 'NO'
 PARAMETRIZE_KEEP_INDEX
-
-known_failure 'Default implementation of "git stash" returns 0 after failing to create a stash.'
 
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE

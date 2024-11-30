@@ -4,14 +4,8 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_ALL 'YES'
-PARAMETRIZE_UNTRACKED 'DEFAULT' 'YES'
+PARAMETRIZE_UNTRACKED 'NO'
 PARAMETRIZE_KEEP_INDEX
-
-known_failure 'Default implementation of "git stash" doesn'\''t allow stashing untracked files.'
-if IS_UNTRACKED_ON
-then
-	known_failure 'The flag "-u" in "git stash" seems to override "-a" while I would like it to be additive.'
-fi
 
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
@@ -19,14 +13,14 @@ SWITCH_HEAD_TYPE
 __test_section__ 'Create stash'
 printf 'aaa\n' >aaa
 printf 'bbb\n' >bbb
-printf 'y n y ' | tr ' ' '\n' >.git/answers_for_patch
+printf 'y y ' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS -message <.git/answers_for_patch
+assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS --message=message <.git/answers_for_patch
 assert_files_H '
+?? aaa		aaa
 ?? bbb		bbb
 '
-assert_stash_H 0 'essage' '
-?? aaa		aaa
+assert_stash_H 0 'message' '
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
