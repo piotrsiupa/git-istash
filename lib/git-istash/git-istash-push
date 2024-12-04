@@ -124,29 +124,41 @@ undo_commit_changes() {
 }
 
 sort_commits() {
-	last_commit_hash="$(git rev-parse HEAD)"
-	if [ "$has_3_commits" = n ]
+	stashed_commits_editor='sed -i -En -e "1 p" -e "3 p"'
+	if [ "$keep_index" = n ]
 	then
-		if [ "$keep_index" = n ]
-		then
-			GIT_EDITOR='sed -i -En -e "2 p" -e "4 p" --' git rebase --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash"
-		else
-			GIT_EDITOR='sed -i -En -e "1,2 p" -e "4 p" --' git rebase --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash"
-		fi
-		unstashed_changes_hash="$(git rev-parse HEAD)"
-		git switch --detach "$last_commit_hash"
-		GIT_EDITOR='sed -i -En -e "1 p" -e "3 p"' git rebase --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash"
+		unstashed_commits_editor='sed -i -En -e "2 p" -e "4 p"'
 	else
-		if [ "$keep_index" = n ]
-		then
-			GIT_EDITOR='sed -i -En -e "2 p" -e "4 p" -e "6 p" --' git rebase --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash"
-		else
-			GIT_EDITOR='sed -i -En -e "1,2 p" -e "4 p" -e "6 p" --' git rebase --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash"
-		fi
-		unstashed_changes_hash="$(git rev-parse HEAD)"
-		git switch --detach "$last_commit_hash"
-		GIT_EDITOR='sed -i -En -e "1 p" -e "3 p" -e "5 p"' git rebase --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash"
+		unstashed_commits_editor='sed -i -En -e "1,2 p" -e "4 p"'
 	fi
+	if [ "$has_3_commits" = y ]
+	then
+		stashed_commits_editor="$stashed_commits_editor"' -e "5 p"'
+		unstashed_commits_editor="$unstashed_commits_editor"' -e "6 p"'
+	fi
+	stashed_commits_editor="$stashed_commits_editor"' --'
+	unstashed_commits_editor="$unstashed_commits_editor"' --'
+	
+	
+	last_commit_hash="$(git rev-parse HEAD)"
+	if ! GIT_EDITOR="$unstashed_commits_editor" git rebase --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash"
+	then
+		while true
+		do
+			if ! git ls-files --unmerged | grep -q '.'
+			then
+				return 1
+			fi
+			git add .
+			if git rebase --continue
+			then
+				break
+			fi
+		done
+	fi
+	unstashed_changes_hash="$(git rev-parse HEAD)"
+	git switch --detach "$last_commit_hash"
+	GIT_EDITOR="$stashed_commits_editor" git rebase --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash"
 }
 
 sanitize_ls_tree() {

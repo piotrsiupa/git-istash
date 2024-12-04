@@ -1,0 +1,93 @@
+. "$(dirname "$0")/../commons.sh" 1>/dev/null
+
+non_essential_test
+
+PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
+PARAMETRIZE_ALL 'DEFAULT'
+PARAMETRIZE_UNTRACKED 'YES'
+PARAMETRIZE_KEEP_INDEX
+
+__test_section__ 'Prepare repository'
+printf 'aaa1\n' >aaa
+printf 'bbb1\n' >bbb
+printf 'ccc1\n' >ccc
+printf 'ddd1\n' >ddd
+git add aaa bbb ccc ddd
+git commit -m 'Added aaa, bbb, ccc & ddd'
+
+correct_head_hash="$(get_head_hash)"
+SWITCH_HEAD_TYPE
+
+__test_section__ 'Create stash'
+printf 'aaa2\n' >aaa
+printf 'bbb2\n' >bbb
+git add aaa bbb
+printf 'ccc2\n' >ccc
+printf 'ddd2\n' >ddd
+printf 'eee2\n' >eee
+printf 'fff2\n' >fff
+printf 'e n e n ' | tr ' ' '\n' >.git/answers_for_patch
+#shellcheck disable=SC2086
+GIT_EDITOR="sed -Ei 's/^\+[a-z]{3}2/+xxx/'" assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS <.git/answers_for_patch
+if ! IS_KEEP_INDEX_ON
+then
+	assert_files_H '
+	   aaa		aaa1
+	   bbb		bbb1
+	 M ccc		ccc2	ccc1
+	 M ddd		ddd2	ddd1
+	?? eee		eee2
+	?? fff		fff2
+	!! ignored0	ignored0
+	!! ignored1	ignored1
+	'
+else
+	assert_files_H '
+	M  aaa		aaa2
+	M  bbb		bbb2
+	 M ccc		ccc2	ccc1
+	 M ddd		ddd2	ddd1
+	?? eee		eee2
+	?? fff		fff2
+	!! ignored0	ignored0
+	!! ignored1	ignored1
+	'
+fi
+assert_stash_H 0 '' '
+M  aaa		aaa2
+M  bbb		bbb2
+ M ccc		xxx	ccc1
+   ddd		ddd1
+?? eee		xxx
+'
+assert_stash_base_H 0 'HEAD'
+assert_stash_count 1
+assert_log_length_H 2
+assert_branch_count 1
+assert_head_hash_H "$correct_head_hash"
+assert_head_name_H
+assert_rebase n
+assert_branch_metadata_H
+
+git reset --hard
+git clean -df
+RESTORE_HEAD_TYPE
+
+__test_section__ 'Pop stash'
+assert_exit_code 0 git stash pop --index
+assert_files '
+M  aaa		aaa2
+M  bbb		bbb2
+ M ccc		xxx	ccc1
+   ddd		ddd1
+?? eee		xxx
+!! ignored0	ignored0
+!! ignored1	ignored1
+'
+assert_stash_count 0
+assert_log_length 2
+assert_branch_count 1
+assert_head_hash "$correct_head_hash"
+assert_head_name 'master'
+assert_rebase n
+assert_branch_metadata_H
