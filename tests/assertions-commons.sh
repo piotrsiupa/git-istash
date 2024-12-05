@@ -52,7 +52,7 @@ _prepare_path_list_for_assertion() {
 assert_all_files() { # expected
 	value_for_assert="$(find . -type f ! -path './.git/*' -print0 | _convert_zero_separated_path_list | cut -c3- | sort | _prepare_path_list_for_assertion)"
 	test "$value_for_assert" = "$1" ||
-		fail 'Expected all files outside of ".git" to be:\n"%s"\nbut they are:\n"%s"!\n' "$1" "$value_for_assert"
+		fail 'Expected all files in the working directory to be:\n"%s"\nbut they are:\n"%s"!\n' "$1" "$value_for_assert"
 	unset value_for_assert
 }
 
