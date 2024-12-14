@@ -9,12 +9,6 @@ PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_PATHSPEC_STYLE
 PARAMETRIZE_OPTIONS_INDICATOR IS_PATHSPEC_IN_ARGS
 
-known_failure 'There is a bug in Git which makes it disregard pathspec for files in index.'
-if IS_OPTIONS_INDICATOR_ON
-then
-	known_failure 'Standard implementation of "git stash" does not adhere to the POSIX utility convention.'
-fi
-
 __test_section__ 'Prepare repository'
 printf 'xxx\n' >'%^$#&#@'
 printf 'xxx\n' >'
@@ -23,9 +17,21 @@ printf 'xxx\n' >'aaa
 bbb'
 printf 'xxx\n' >'ccc
 ddd'
+printf 'xxx\n' >'eee'
+printf 'xxx\n' >'eee fff'
+printf 'xxx\n' >'fff'
+printf 'xxx\n' >'ggg'
+printf 'xxx\n' >'"ggg"'
+printf 'xxx\n' >'""ggg""'
 printf 'xxx\n' >'xXxX*&Xx'
 printf 'xxx\n' >'?*?*?*'
 printf 'xxx\n' >'^&@*#'
+printf 'xxx\n' >'pp'
+printf 'xxx\n' >'p%sp'
+printf 'xxx\n' >'r	r'
+printf 'xxx\n' >'r\tr'
+printf 'xxx\n' >'q	q'
+printf 'xxx\n' >'q\tq'
 git add .
 git commit -m 'Added a bunch of files'
 
@@ -40,24 +46,36 @@ printf 'yyy\n' >'aaa
 bbb'
 printf 'yyy\n' >'ccc
 ddd'
+printf 'yyy\n' >'eee'
+printf 'yyy\n' >'eee fff'
+printf 'yyy\n' >'fff'
+printf 'yyy\n' >'ggg'
+printf 'yyy\n' >'"ggg"'
+printf 'yyy\n' >'""ggg""'
 printf 'yyy\n' >'xXxX*&Xx'
 printf 'yyy\n' >'?*?*?*'
 printf 'yyy\n' >'^&@*#'
 printf 'yyy\n' >'?'
+printf 'yyy\n' >'pp'
+printf 'yyy\n' >'p%sp'
+printf 'yyy\n' >'r	r'
+printf 'yyy\n' >'r\tr'
+printf 'yyy\n' >'q	q'
+printf 'yyy\n' >'q\tq'
 git add '%^$#&#@' 'aaa
-bbb' '^&@*#'
+bbb' 'ggg' '"ggg"' '""ggg""' '^&@*#'
 
 if ! IS_PATHSPEC_NULL_SEP
 then
-	printf '*&#?\n"ccc\\nddd"\n*\\?*\n' >.git/pathspec_for_test
+	printf '*&#?\n"ccc\nddd"\n*\\?*\neee fff\n\\"ggg\\"\n"p%%sp"\n"r\\tr"\nq\\tq\n' >.git/pathspec_for_test
 else
-	printf '*&#?\0ccc\nddd\0*\\?*' >.git/pathspec_for_test
+	printf '*&#?\0ccc\nddd\0*\\?*\0eee fff\0"ggg"\0p%%sp\0r\tr\0q\\tq' >.git/pathspec_for_test
 fi
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086
 	assert_exit_code 0 git istash push '*&#?' $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS 'ccc
-ddd' -m 'a fine stash' $EOI '*\?*'
+ddd' -m 'a fine stash' $EOI '*\?*' 'eee fff' '"ggg"' 'p%sp' 'r	r' 'q\tq'
 elif IS_PATHSPEC_IN_STDIN
 then
 	#shellcheck disable=SC2086
@@ -69,37 +87,73 @@ fi
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_H '
-	   %^$#&#@	xxx
+	   %%^$#&#@	xxx
 	 M \n		yyy	xxx
 	M  aaa\nbbb	yyy
 	   ccc\nddd	xxx
+	 M eee		yyy	xxx
+	   eee\040fff	xxx
+	 M fff		yyy	xxx
+	M  ggg		yyy
+	   "ggg"	xxx
+	M  ""ggg""	yyy
 	 M xXxX*&Xx	yyy	xxx
 	   ?*?*?*	xxx
 	M  ^&@*#	yyy
+	 M pp		yyy	xxx
+	   p%%sp	xxx
+	   r\tr		xxx
+	 M r\\tr	yyy	xxx
+	 M q\tq		yyy	xxx
+	   q\\tq	xxx
 	!! ignored0	ignored0
 	!! ignored1	ignored1
 	'
 else
 	assert_files_H '
-	M  %^$#&#@	yyy
+	M  %%^$#&#@	yyy
 	 M \n		yyy	xxx
 	M  aaa\nbbb	yyy
 	   ccc\nddd	xxx
+	 M eee		yyy	xxx
+	   eee\040fff	xxx
+	 M fff		yyy	xxx
+	M  ggg		yyy
+	M  "ggg"	yyy
+	M  ""ggg""	yyy
 	 M xXxX*&Xx	yyy	xxx
 	   ?*?*?*	xxx
 	M  ^&@*#	yyy
+	 M pp		yyy	xxx
+	   p%%sp	xxx
+	   r\tr		xxx
+	 M r\\tr	yyy	xxx
+	 M q\tq		yyy	xxx
+	   q\\tq	xxx
 	!! ignored0	ignored0
 	!! ignored1	ignored1
 	'
 fi
 assert_stash_H 0 'a fine stash' '
-M  %^$#&#@	yyy
+M  %%^$#&#@	yyy
    \n		xxx
    aaa\nbbb	xxx
  M ccc\nddd	yyy	xxx
+   eee		xxx
+ M eee\040fff	yyy	xxx
+   fff		xxx
+   ggg		xxx
+M  "ggg"	yyy
+   ""ggg""	xxx
    xXxX*&Xx	xxx
  M ?*?*?*	yyy	xxx
    ^&@*#	xxx
+   pp		xxx
+ M p%%sp	yyy	xxx
+ M r\tr		yyy	xxx
+   r\\tr	xxx
+   q\tq		xxx
+ M q\\tq	yyy	xxx
 ?? ?		yyy
 '
 assert_stash_base_H 0 'HEAD'
@@ -117,13 +171,25 @@ RESTORE_HEAD_TYPE
 __test_section__ 'Pop stash'
 assert_exit_code 0 git stash pop --index
 assert_files '
-M  %^$#&#@	yyy
+M  %%^$#&#@	yyy
    \n		xxx
    aaa\nbbb	xxx
  M ccc\nddd	yyy	xxx
+   eee		xxx
+ M eee\040fff	yyy	xxx
+   fff		xxx
+   ggg		xxx
+M  "ggg"	yyy
+   ""ggg""	xxx
    xXxX*&Xx	xxx
  M ?*?*?*	yyy	xxx
    ^&@*#	xxx
+   pp		xxx
+ M p%%sp	yyy	xxx
+ M r\tr		yyy	xxx
+   r\\tr	xxx
+   q\tq		xxx
+ M q\\tq	yyy	xxx
 ?? ?		yyy
 !! ignored0	ignored0
 !! ignored1	ignored1

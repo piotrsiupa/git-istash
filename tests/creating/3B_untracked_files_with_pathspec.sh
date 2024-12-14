@@ -7,15 +7,6 @@ PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_PATHSPEC_STYLE
 PARAMETRIZE_OPTIONS_INDICATOR IS_PATHSPEC_IN_ARGS
 
-if IS_KEEP_INDEX_ON
-then
-	known_failure 'It looks like in the standard "git stash" options "-k" and "-u" and alergic to each other.'
-fi
-if IS_OPTIONS_INDICATOR_ON
-then
-	known_failure 'Standard implementation of "git stash" does not adhere to the POSIX utility convention.'
-fi
-
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 

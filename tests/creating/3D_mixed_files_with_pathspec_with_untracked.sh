@@ -9,16 +9,6 @@ PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_PATHSPEC_STYLE
 PARAMETRIZE_OPTIONS_INDICATOR IS_PATHSPEC_IN_ARGS
 
-known_failure 'There is a bug in Git which makes it disregard pathspec for files in index.'
-if IS_KEEP_INDEX_ON
-then
-	known_failure 'It looks like in the standard "git stash" options "-k" and "-u" and alergic to each other.'
-fi
-if IS_OPTIONS_INDICATOR_ON
-then
-	known_failure 'Standard implementation of "git stash" does not adhere to the POSIX utility convention.'
-fi
-
 __test_section__ 'Prepare repository'
 printf 'xxx\n' >aaa0
 printf 'xxx\n' >aaa1

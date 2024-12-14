@@ -48,24 +48,26 @@ _convert_zero_separated_path_list() {
 	| sed -E -e 's/\\/\\0/g' \
 		-e 's/0([0-7]{3})/\1/g' -e 's/\\012/\\\\n/g' -e 's/\\011/\\\\t/g' -e 's/\\134/\\\\\\\\/g' \
 		-e 's/\\(00[1-7]|0[1-3][0-7]|040|177|[2-3][0-7]{2})/\\\\\1/g' \
+		-e 's/\\045/\\045\\045/g' \
 	| xargs -0 -- printf -- \
 	| tr -d '\n' | tr '\0' '\n'
 }
 
 _prepare_path_list_for_assertion() {
-	tr '\n' '|' \
+	sort \
+	| tr '\n' '|' \
 	| sed -E 's/.$//'
 }
 
 assert_all_files() { # expected
-	value_for_assert="$(find . -type f ! -path './.git/*' -print0 | _convert_zero_separated_path_list | cut -c3- | sort | _prepare_path_list_for_assertion)"
+	value_for_assert="$(find . -type f ! -path './.git/*' -print0 | _convert_zero_separated_path_list | cut -c3- | _prepare_path_list_for_assertion)"
 	test "$value_for_assert" = "$1" ||
 		fail 'Expected all files outside of ".git" to be:\n"%s"\nbut they are:\n"%s"!\n' "$1" "$value_for_assert"
 	unset value_for_assert
 }
 
 assert_tracked_files() { # expected
-	value_for_assert="$(git ls-tree -r --name-only -z HEAD | _convert_zero_separated_path_list | sort | _prepare_path_list_for_assertion)"
+	value_for_assert="$(git ls-tree -r --name-only -z HEAD | _convert_zero_separated_path_list | _prepare_path_list_for_assertion)"
 	test "$value_for_assert" = "$1" ||
 		fail 'Expected tracked files to be:\n"%s"\nbut they are:\n"%s"!\n' "$1" "$value_for_assert"
 	unset value_for_assert
@@ -140,35 +142,35 @@ assert_files() { # expected_files (see one of the tests as an example)
 		if printf '%s' "$line" | grep -qE '^(D ) '
 		then
 			test "$(printf '%s' "$stripped_line" | awk '{printf NF}')" -eq 1 ||
-				fail 'Error in test: the file "%s" should have 0 versions of content to check!\n' "$(printf '%s' "$stripped_line" | awk '{printf $1}')"
+				fail 'Error in test: the file "%s" should have 0 versions of content to check!\n' "$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}')"
 		elif printf '%s' "$line" | grep -qE '^([UD]U|!!|\?\?|.[ AD]) '
 		then
 			test "$(printf '%s' "$stripped_line" | awk '{printf NF}')" -eq 2 ||
-				fail 'Error in test: the file "%s" should have 1 version of content to check!\n' "$(printf '%s' "$stripped_line" | awk '{printf $1}')"
+				fail 'Error in test: the file "%s" should have 1 version of content to check!\n' "$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}')"
 			if printf '%s' "$line" | grep -qE '^(. ) '
 			then
 				assert_file_contents \
-					"$(printf '%s' "$stripped_line" | awk '{printf $1}')" \
-					"$(printf '%s' "$stripped_line" | awk '{printf $2}')" \
-					"$(printf '%s' "$stripped_line" | awk '{printf $2}')"
+					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}')" \
+					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}')" \
+					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}')"
 			elif printf '%s' "$line" | grep -qE '^(.D) '
 			then
 				assert_file_contents \
-					"$(printf '%s' "$stripped_line" | awk '{printf $1}')" \
+					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}')" \
 					'' \
-					"$(printf '%s' "$stripped_line" | awk '{printf $2}')"
+					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}')"
 			else
 				assert_file_contents \
-					"$(printf '%s' "$stripped_line" | awk '{printf $1}')" \
-					"$(printf '%s' "$stripped_line" | awk '{printf $2}')"
+					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}')" \
+					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}')"
 			fi
 		else
 			test "$(printf '%s' "$stripped_line" | awk '{printf NF}')" -eq 3 ||
-				fail 'Error in test: the file "%s" should have 2 versions of content to check!\n' "$(printf '%s' "$stripped_line" | awk '{printf $1}')"
+				fail 'Error in test: the file "%s" should have 2 versions of content to check!\n' "$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}')"
 			assert_file_contents \
-				"$(printf '%s' "$stripped_line" | awk '{printf $1}')" \
-				"$(printf '%s' "$stripped_line" | awk '{printf $2}')" \
-				"$(printf '%s' "$stripped_line" | awk '{printf $3}')"
+				"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}')" \
+				"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}')" \
+				"$(printf '%s' "$stripped_line" | awk '{printf "%s", $3}')"
 		fi
 	done
 }

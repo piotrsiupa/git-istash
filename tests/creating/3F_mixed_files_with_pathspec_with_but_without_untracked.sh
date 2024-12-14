@@ -9,13 +9,6 @@ PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_PATHSPEC_STYLE
 PARAMETRIZE_OPTIONS_INDICATOR IS_PATHSPEC_IN_ARGS
 
-known_failure 'There is a bug in Git which makes it disregard pathspec for files in index.'
-known_failure 'The flag "--no-include-untracked" in "git stash" seems to override "-a" while I would like it to be additive.'
-if IS_OPTIONS_INDICATOR_ON
-then
-	known_failure 'Standard implementation of "git stash" does not adhere to the POSIX utility convention.'
-fi
-
 __test_section__ 'Prepare repository'
 printf 'xxx\n' >aaa0
 printf 'xxx\n' >aaa1

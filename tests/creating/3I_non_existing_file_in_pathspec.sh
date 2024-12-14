@@ -7,12 +7,6 @@ PARAMETRIZE_KEEP_INDEX 'DEFAULT'
 PARAMETRIZE_PATHSPEC_STYLE
 PARAMETRIZE_OPTIONS_INDICATOR IS_PATHSPEC_IN_ARGS
 
-if IS_OPTIONS_INDICATOR_ON
-then
-	known_failure 'Standard implementation of "git stash" does not adhere to the POSIX utility convention.'
-fi
-known_failure 'Standard implementation creates a stash despite failing to match the pathspec and returning 1.'
-
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
