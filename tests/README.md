@@ -39,6 +39,13 @@ To run a test, use the script `run.sh` which will create and initialize a new Gi
 *Running a test without `run.sh` may mess up files in the Git repository or in the current directory.*
 (There is some protection from doing that in the `commons.sh`, but don't try regardless.)
 
+## Test categories
+
+The current test categories are:
+- [`main`](./main/README.md) - it covers scenarios that are common to all subcommands of `git istash`.
+- [`applying`](./applying/README.md) - it covers `git istash apply` and `git istash pop`.
+- [`creating`](./creating/README.md) - it covers `git istash push`.
+
 ## Test script
 
 Each test starts by sourcing `commons.sh`.
@@ -47,7 +54,7 @@ Finally, the tested command is called, which is followed by a bunch of assertion
 (Sometimes, in more complex scenarios, some of these steps repeat a few times.)
 (If a test didn't call `fail` and returned non-0, it's still considered failed but there will be no error message. In such cases, use the option `-d` for `run.sh`.)
 
-To fully understand a test, you need to read through [`commons.sh`](tests/commons.sh) which sets up a test repository and contain the code for all the assertions (among other things).
+To fully understand a test, you need to read through [`commons.sh`](./commons.sh) which sets up a test repository and contain the code for all the assertions (among other things).
 
 ## Naming convention
 
@@ -60,5 +67,6 @@ Also, note that tests should not use any funny characters that would mess up she
 Each test has 2-character prefix followed by a `_`.
 Generally these prefixes work as follows:
 - The first character is a digit representing the general category of the test.
+  (See the `README.md` of a specific test category to learn more.)
 - The second character is an uppercase letter that with tandem with the digit acts as an ID of the test in the current directory.
   (In some cases, when there is a lot if tests in a category, there are 2 letters instead of one.)
