@@ -43,10 +43,9 @@ _convert_zero_separated_path_list() {
 		#shellcheck disable=SC1003
 		od -bvAn | tr ' ' '\\' | tr -d '\n'
 	else
-		hexdump -ve'"\\" /1 "%02o"'
+		hexdump -ve'"\\" /1 "%03o"'
 	fi \
-	| sed -E -e 's/\\/\\0/g' \
-		-e 's/0([0-7]{3})/\1/g' -e 's/\\012/\\\\n/g' -e 's/\\011/\\\\t/g' -e 's/\\134/\\\\\\\\/g' \
+	| sed -E -e 's/\\012/\\\\n/g' -e 's/\\011/\\\\t/g' -e 's/\\134/\\\\\\\\/g' \
 		-e 's/\\(00[1-7]|0[1-3][0-7]|040|177|[2-3][0-7]{2})/\\\\\1/g' \
 		-e 's/\\045/\\045\\045/g' \
 	| xargs -0 -- printf -- \
