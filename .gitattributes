@@ -7,3 +7,6 @@
 *.bat           text eol=crlf
 *.txt           text
 *.md            text
+
+# Exceptions for quirky tests
+/tests/creating/3G_weird_characters_in_pathspec.sh -text
