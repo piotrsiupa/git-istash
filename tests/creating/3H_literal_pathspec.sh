@@ -32,7 +32,7 @@ elif IS_PATHSPEC_IN_STDIN
 then
 	#shellcheck disable=SC2086
 	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test
-else                                                                                     
+else
 	#shellcheck disable=SC2086
 	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
 fi
