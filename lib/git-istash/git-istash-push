@@ -109,10 +109,34 @@ cleanup() {
 check_pathspec() {
 	if [ -n "$pathspec_file" ]
 	then
-		if ! xargs -r0 -- git ls-files --cached --other --error-unmatch -- <"$pathspec_file" >/dev/null
-		then
-			return 1
-		fi
+		convert_to_octal <"$pathspec_file" \
+		| sed 's/\\000/\n/g' \
+		| while read -r ps
+		do
+			if [ -z "$ps" ]
+			then
+				continue
+			fi
+			good=n
+			if printf "$ps" | xargs -0 -- git commit --dry-run --short --quiet -- 1>/dev/null 2>&1
+			then
+				good=y
+			elif [ "$has_3_commits" = y ] && printf "$ps" | xargs -0 -- git ls-files --others --error-unmatch -- 1>/dev/null 2>&1
+			then
+				good=y
+				if [ "$include_ignored" = n ] && ! printf "$ps" | xargs -0 -- git ls-files --others --exclude-standard --error-unmatch -- 1>/dev/null 2>&1
+				then
+					good=n
+				elif [ "$include_untracked" = n ] && [ "$(printf "$ps" | xargs -0 -- git ls-files --others -z -- | tr -cd '\0' | wc -c)" -eq "$(printf "$ps" | xargs -0 -- git ls-files --others --exclude-standard -z -- | tr -cd '\0' | wc -c)" ] 2>/dev/null
+				then
+					good=n
+				fi
+			fi
+			if [ "$good" = n ]
+			then
+				return 1
+			fi
+		done
 	fi
 }
 
