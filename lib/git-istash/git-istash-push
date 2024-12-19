@@ -141,7 +141,7 @@ check_pathspec() {
 }
 
 commit_changes() {
-	# staged
+	# constants
 	default_message="$(git rev-list --no-commit-header --format='%h %s' --max-count=1 HEAD)"
 	if [ "$curr_branch_type" != 'detached' ]
 	then
@@ -149,20 +149,11 @@ commit_changes() {
 	else
 		branch_name_for_msg='(no branch)'
 	fi
-	if [ -z "$pathspec_file" ]
-	then
-		git commit --message="index on $branch_name_for_msg: $default_message" --allow-empty
-	else
-		xargs -r0 -- git diff --name-only HEAD --cached -z -- <"$pathspec_file" | xargs -0 -- git commit --message="index on $branch_name_for_msg: $default_message" --allow-empty --
-	fi
-	there_are_enough_changes="$allow_empty"
-	if [ "$there_are_enough_changes" = n ] && [ "$(git rev-parse 'HEAD^{tree}')" != "$(git rev-parse 'HEAD~^{tree}')" ]
-	then
-		there_are_enough_changes=y
-	fi
-	git commit --message="non-stashed index on $branch_name_for_msg: $default_message" --allow-empty
 	
-	#unstaged
+	# staged (initial)
+	git commit --message="index on $branch_name_for_msg: $default_message (unfinished)" --allow-empty
+	
+	# unstaged
 	if [ -z "$pathspec_file" ]
 	then
 		git add --update $patch_options .
@@ -181,6 +172,24 @@ commit_changes() {
 	fi
 	git add --update
 	git commit --message="non-stashed WIP on $branch_name_for_msg: $default_message" --allow-empty
+	
+	# staged (for real)
+	index_editor='sed -i -E "1 s/^(\s*)\w+(\s)/\1edit\2/"'
+	GIT_EDITOR="$index_editor" git rebase --interactive --keep-empty --empty=keep -- 'HEAD~3'
+	git reset --soft 'HEAD^'
+	if [ -z "$pathspec_file" ]
+	then
+		git commit --message="index on $branch_name_for_msg: $default_message" --allow-empty
+	else
+		xargs -r0 -- git diff --name-only HEAD --cached -z -- <"$pathspec_file" | xargs -0 -- git commit --message="index on $branch_name_for_msg: $default_message" --allow-empty --
+	fi
+	there_are_enough_changes="$allow_empty"
+	if [ "$there_are_enough_changes" = n ] && [ "$(git rev-parse 'HEAD^{tree}')" != "$(git rev-parse 'HEAD~^{tree}')" ]
+	then
+		there_are_enough_changes=y
+	fi
+	git commit --message="non-stashed index on $branch_name_for_msg: $default_message" --allow-empty
+	git rebase --continue
 	
 	# untracked
 	if [ "$has_3_commits" = y ]
