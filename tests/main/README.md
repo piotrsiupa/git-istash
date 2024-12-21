@@ -5,5 +5,5 @@ For example it tests what happens of a user types a non-existing name of a sub-c
 
 
 ### Prefix
-The first character of the prefix can be:
+The first character of the prefix (sub-category) can be:
 - `1` - Errors for invalid arguments.

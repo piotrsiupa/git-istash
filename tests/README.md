@@ -66,7 +66,7 @@ Also, note that tests should not use any funny characters that would mess up she
 ### Prefix
 Each test has 2-character prefix followed by a `_`.
 Generally these prefixes work as follows:
-- The first character is a digit representing the general category of the test.
+- The first character is a digit representing a sub-category of the test.
   (See the `README.md` of a specific test category to learn more.)
 - The second character is an uppercase letter that with tandem with the digit acts as an ID of the test in the current directory.
-  (In some cases, when there is a lot if tests in a category, there are 2 letters instead of one.)
+  (In some cases, when there is a lot if tests in the sub-category, there are 2 letters instead of one.)
