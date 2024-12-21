@@ -118,12 +118,14 @@ check_pathspec() {
 				continue
 			fi
 			good=n
+			#shellcheck disable=SC2059
 			if printf "$ps" | xargs -0 -- git commit --dry-run --short --quiet -- 1>/dev/null 2>&1
 			then
 				good=y
 			elif [ "$has_3_commits" = y ] && printf "$ps" | xargs -0 -- git ls-files --others --error-unmatch -- 1>/dev/null 2>&1
 			then
 				good=y
+				#shellcheck disable=SC2059
 				if [ "$include_ignored" = n ] && ! printf "$ps" | xargs -0 -- git ls-files --others --exclude-standard --error-unmatch -- 1>/dev/null 2>&1
 				then
 					good=n

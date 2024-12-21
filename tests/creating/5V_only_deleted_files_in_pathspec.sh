@@ -27,14 +27,14 @@ rm aaa bbb
 git rm ccc ddd
 if ! IS_PATHSPEC_NULL_SEP
 then
-	printf 'bbb ddd fff ' | tr ' ' '\n' >.git/pathspec_for_test
+	printf 'bbb ddd ' | tr ' ' '\n' >.git/pathspec_for_test
 else
-	printf 'bbb ddd fff' | tr ' ' '\0' >.git/pathspec_for_test
+	printf 'bbb ddd' | tr ' ' '\0' >.git/pathspec_for_test
 fi
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $EOI 'bbb' 'ddd' 'fff'
+	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $EOI 'bbb' 'ddd'
 elif IS_PATHSPEC_IN_STDIN
 then
 	#shellcheck disable=SC2086

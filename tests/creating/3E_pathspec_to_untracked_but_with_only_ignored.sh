@@ -1,11 +1,9 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
-non_essential_test
-
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
-PARAMETRIZE_ALL 'DEFAULT'
-PARAMETRIZE_UNTRACKED
-PARAMETRIZE_KEEP_INDEX
+PARAMETRIZE_ALL 'YES'
+PARAMETRIZE_UNTRACKED 'NO'
+PARAMETRIZE_KEEP_INDEX 'DEFAULT'
 PARAMETRIZE_PATHSPEC_STYLE
 PARAMETRIZE_OPTIONS_INDICATOR IS_PATHSPEC_IN_ARGS
 
@@ -13,25 +11,27 @@ correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
 __test_section__ 'Create stash'
+printf 'aaa\n' >'aaa'
 if ! IS_PATHSPEC_NULL_SEP
 then
-	printf 'ignored0 ignored1 ' | tr ' ' '\n' >.git/pathspec_for_test
+	printf 'aaa ' | tr ' ' '\n' >.git/pathspec_for_test
 else
-	printf 'ignored0 ignored1 ' | tr ' ' '\0' >.git/pathspec_for_test
+	printf 'aaa ' | tr ' ' '\0' >.git/pathspec_for_test
 fi
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 1 git istash push $KEEP_INDEX_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS $EOI 'ignored0' 'ignored1'
+	assert_exit_code 1 git istash push $KEEP_INDEX_FLAGS 'aaa' $UNTRACKED_FLAGS $ALL_FLAGS -m 'whatever' $EOI
 elif IS_PATHSPEC_IN_STDIN
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 1 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test
+	assert_exit_code 1 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS -m 'whatever' $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test
 else
 	#shellcheck disable=SC2086
-	assert_exit_code 1 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
+	assert_exit_code 1 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS -m 'whatever' $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
 fi
 assert_files_H '
+?? aaa		aaa
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
