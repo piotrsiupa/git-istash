@@ -8,7 +8,10 @@ PARAMETRIZE_KEEP_INDEX
 __test_section__ 'Prepare repository'
 printf 'aaa\naaa\n' >aaa
 printf 'bbb\nbbb\n' >bbb
-git add aaa bbb
+printf 'ccc\nccc\n' >ccc
+printf 'ddd\nddd\n' >ddd
+printf 'eee\neee\n' >eee
+git add aaa bbb ccc ddd eee
 git commit -m 'Added aaa & bbb'
 
 correct_head_hash="$(get_head_hash)"
@@ -19,7 +22,9 @@ printf 'xxx\naaa\naaa\nxxx\n' >aaa
 git add aaa
 printf 'yyy\naaa\naaa\nyyy\n' >aaa
 printf 'zzz\nbbb\nbbb\nzzz\n' >bbb
-printf 's y n s n y ' | tr ' ' '\n' >.git/answers_for_patch
+git rm ccc
+rm ddd eee
+printf 's y n s n y n y ' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
 assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS --patch --message 'some nice stash name' <.git/answers_for_patch
 if ! IS_KEEP_INDEX_ON
@@ -27,6 +32,9 @@ then
 	assert_files_H '
 	 M aaa		aaa\naaa\nyyy		aaa\naaa
 	 M bbb		zzz\nbbb\nbbb		bbb\nbbb
+	   ccc		ccc\nccc
+	 D ddd		ddd\nddd
+	   eee		eee\neee
 	!! ignored0	ignored0
 	!! ignored1	ignored1
 	'
@@ -34,6 +42,9 @@ else
 	assert_files_H '
 	MM aaa		xxx\naaa\naaa\nyyy	xxx\naaa\naaa\nxxx
 	 M bbb		zzz\nbbb\nbbb		bbb\nbbb
+	D  ccc
+	 D ddd		ddd\nddd
+	   eee		eee\neee
 	!! ignored0	ignored0
 	!! ignored1	ignored1
 	'
@@ -41,6 +52,9 @@ fi
 assert_stash_H 0 'some nice stash name' '
 MM aaa		yyy\naaa\naaa\nxxx	xxx\naaa\naaa\nxxx
  M bbb		bbb\nbbb\nzzz		bbb\nbbb
+D  ccc
+   ddd		ddd\nddd
+ D eee		eee\neee
 '
 assert_stash_base_H 0 'HEAD'
 assert_stash_count 1
@@ -59,6 +73,9 @@ assert_exit_code 0 git stash pop --index
 assert_files '
 MM aaa		yyy\naaa\naaa\nxxx	xxx\naaa\naaa\nxxx
  M bbb		bbb\nbbb\nzzz		bbb\nbbb
+D  ccc
+   ddd		ddd\nddd
+ D eee		eee\neee
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
