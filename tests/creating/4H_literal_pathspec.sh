@@ -17,7 +17,6 @@ printf 'xxx\n' >'abcde'
 printf 'xxx\n' >'a???e'
 printf 'xxx\n' >'a*e'
 printf 'xxx\n' >'xyz'
-
 if ! IS_PATHSPEC_NULL_SEP
 then
 	printf ':(literal)a???e :(literal)a*e ' | tr ' ' '\n' >.git/pathspec_for_test

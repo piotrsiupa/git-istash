@@ -11,6 +11,7 @@ __test_section__ 'Prepare repository'
 printf 'aaa' >aaa
 printf 'bbb' >bbb
 git add aaa bbb
+printf 'ccc' >aaa
 git commit -m 'Added aaa & bbb'
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE

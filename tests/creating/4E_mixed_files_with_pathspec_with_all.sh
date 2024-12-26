@@ -43,7 +43,9 @@ printf 'yyy\n' >eee12
 printf 'yyy\n' >eee13
 printf 'yyy\n' >eee14
 git add aaa0 bbb3 ccc6 ddd9 eee12
-
+printf 'zzz\n' >aaa0
+printf 'zzz\n' >ddd9
+printf 'zzz\n' >eee12
 if ! IS_PATHSPEC_NULL_SEP
 then
 	printf 'aaa0 bbb? *7 c?c8 *ore?0 ./?dd* ' | tr ' ' '\n' >.git/pathspec_for_test
@@ -74,7 +76,7 @@ then
 	   ccc7		xxx
 	   ddd9		xxx
 	   ddd10	xxx
-	M  eee12	yyy
+	MM eee12	zzz	yyy
 	 M eee13	yyy	xxx
 	?? eee14	yyy
 	!! ignored1	ignored1
@@ -90,14 +92,14 @@ else
 	   ccc7		xxx
 	M  ddd9		yyy
 	   ddd10	xxx
-	M  eee12	yyy
+	MM eee12	zzz	yyy
 	 M eee13	yyy	xxx
 	?? eee14	yyy
 	!! ignored1	ignored1
 	'
 fi
 assert_stash_H 0 'mr. stash' '
-M  aaa0		yyy
+MM aaa0		zzz	yyy
    aaa1		xxx
 M  bbb3		yyy
  M bbb4		yyy	xxx
@@ -105,7 +107,7 @@ M  bbb3		yyy
    ccc6		xxx
  M ccc7		yyy	xxx
 ?? ccc8		yyy
-M  ddd9		yyy
+MM ddd9		zzz	yyy
  M ddd10	yyy	xxx
 ?? ddd11	yyy
    eee12	xxx
@@ -127,7 +129,7 @@ RESTORE_HEAD_TYPE
 __test_section__ 'Pop stash'
 assert_exit_code 0 git stash pop --index
 assert_files '
-M  aaa0		yyy
+MM aaa0		zzz	yyy
    aaa1		xxx
 ?? aaa2		yyy
 M  bbb3		yyy
@@ -136,7 +138,7 @@ M  bbb3		yyy
    ccc6		xxx
  M ccc7		yyy	xxx
 ?? ccc8		yyy
-M  ddd9		yyy
+MM ddd9		zzz	yyy
  M ddd10	yyy	xxx
 ?? ddd11	yyy
    eee12	xxx

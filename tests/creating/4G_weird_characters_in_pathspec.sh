@@ -72,7 +72,9 @@ printf 'yyy\n' >'q	q'
 printf 'yyy\n' >'q\tq'
 git add '%^$#&#@' 'aaa
 bbb' 'ggg' '"ggg"' '""ggg""' '^&@*#'
-
+printf 'zzz\n' >'ggg'
+printf 'zzz\n' >'"ggg"'
+printf 'zzz\n' >'""ggg""'
 if ! IS_PATHSPEC_NULL_SEP
 then
 	printf '*&#?\n"c\\143c\r\nd\\144d"\r\n*\\?*\neee fff\r\n\\"ggg\\"\n"o\\07%%so"\n"p\\7%%sp"\n"r\\tr"\nq\\tq' >.git/pathspec_for_test
@@ -102,9 +104,9 @@ then
 	 M eee		yyy	xxx
 	   eee\040fff	xxx
 	 M fff		yyy	xxx
-	M  ggg		yyy
+	MM ggg		zzz	yyy
 	   "ggg"	xxx
-	M  ""ggg""	yyy
+	MM ""ggg""	zzz	yyy
 	 M xXxX*&Xx	yyy	xxx
 	   ?*?*?*	xxx
 	M  ^&@*#	yyy
@@ -128,9 +130,9 @@ else
 	 M eee		yyy	xxx
 	   eee\040fff	xxx
 	 M fff		yyy	xxx
-	M  ggg		yyy
+	MM ggg		zzz	yyy
 	M  "ggg"	yyy
-	M  ""ggg""	yyy
+	MM ""ggg""	zzz	yyy
 	 M xXxX*&Xx	yyy	xxx
 	   ?*?*?*	xxx
 	M  ^&@*#	yyy
@@ -155,7 +157,7 @@ M  %%^$#&#@	yyy
  M eee\040fff	yyy	xxx
    fff		xxx
    ggg		xxx
-M  "ggg"	yyy
+MM "ggg"	zzz	yyy
    ""ggg""	xxx
    xXxX*&Xx	xxx
  M ?*?*?*	yyy	xxx
@@ -193,7 +195,7 @@ M  %%^$#&#@	yyy
  M eee\040fff	yyy	xxx
    fff		xxx
    ggg		xxx
-M  "ggg"	yyy
+MM "ggg"	zzz	yyy
    ""ggg""	xxx
    xXxX*&Xx	xxx
  M ?*?*?*	yyy	xxx

@@ -21,7 +21,6 @@ printf 'xxx\n' >ddd6
 printf 'xxx\n' >ddd7
 printf 'xxx\n' >eee8
 printf 'xxx\n' >eee9
-
 if ! IS_PATHSPEC_NULL_SEP
 then
 	printf 'aaa0 bbb? *5 ./?dd* ' | tr ' ' '\n' >.git/pathspec_for_test

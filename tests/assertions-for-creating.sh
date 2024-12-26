@@ -128,7 +128,7 @@ assert_stash_commit_files_with_content() { # commit expected_files
 }
 
 assert_stash_files() { # stash_num expect_untracked expected_files
-	expected_files="$(printf '%s\n' "$3" | sed -E 's/^\t+//' | grep -vE '^\s*$' | _sort_repository_status)"
+	expected_files="$(printf '%s\n' "$3" | sed -E -e 's/^\t+//' -e '/^\s*$/ d')"
 	assert_stash_commit_files_with_content "stash@{$1}" "$(
 			printf '%s\n' "$expected_files" \
 			| grep -vE '^(\?\?|!!|D.|.D) ' \
