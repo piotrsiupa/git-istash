@@ -160,7 +160,14 @@ commit_changes() {
 	then
 		git add --update $patch_options .
 	else
-		xargs -r0n1 -- git add --update $patch_options -- <"$pathspec_file" || true
+		if [ -z "$patch_options" ]
+		then
+			xargs -r0n1 -- git add --update -- <"$pathspec_file" || true
+		else
+			exec 3<&0
+			xargs -r0n1 -- sh -c 'git add --update --patch -- "$@" <&3' -- <"$pathspec_file" || true
+			exec 3<&-
+		fi
 	fi
 	if [ -n "$message" ]
 	then
@@ -209,7 +216,14 @@ commit_changes() {
 		then
 			git add $patch_options --update
 		else
-			xargs -r0n1 -- git add $patch_options --update -- <"$pathspec_file" || true
+			if [ -z "$patch_options" ]
+			then
+				xargs -r0n1 -- git add --update -- <"$pathspec_file" || true
+			else
+				exec 3<&0
+				xargs -r0n1 -- sh -c 'git add --update --patch -- "$@" <&3' -- <"$pathspec_file" || true
+				exec 3<&-
+			fi
 		fi
 		git commit --message="untracked files on $branch_name_for_msg: $default_message" --allow-empty
 		if [ "$there_are_enough_changes" = n ] && [ "$(git rev-parse 'HEAD^{tree}')" != "$(git rev-parse 'HEAD~^{tree}')" ]
@@ -262,12 +276,13 @@ sort_commits() {
 	then
 		while true
 		do
-			if ! git ls-files --unmerged | grep -q '.'
+			if [ -z "$(git ls-files --unmerged)" ]
 			then
 				return 1
 			fi
+			git ls-files --unmerged --format='%(path)' -z | xargs -0 -- git restore --theirs --
 			git add .
-			if git rebase --continue
+			if GIT_EDITOR='true' git rebase --continue
 			then
 				break
 			fi
@@ -446,6 +461,12 @@ done
 if [ "$include_untracked" = d ]
 then
 	include_untracked=n
+fi
+if [ -n "$patch_options" ] && [ "$pathspec_from_file" = '-' ]
+then
+	#shellcheck disable=SC2016
+	printf 'Stdin cannot be assigned to both `--patch` and the pathspec.\n' 1>&2
+	exit 1
 fi
 if [ -z "$pathspec_from_file" ] && [ "$pathspec_file_nul" = y ]
 then

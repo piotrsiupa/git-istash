@@ -82,14 +82,23 @@ IS_OPTIONS_INDICATOR_OFF() {
 	test "$END_OPTIONS_INDICATOR" = 'EOI-NO'
 }
 
-PARAMETRIZE_PATHSPEC_STYLE() {
+PARAMETRIZE_PATHSPEC_STYLE() { # keys
 	#shellcheck disable=SC2154
-	if [ "$meticulousness" -gt 2 ]
+	if [ "$meticulousness" -le 2 ]
 	then
-		PARAMETRIZE 'PATHSPEC' 'PS-ARGS' 'PS-STDIN' 'PS-NULL-STDIN' 'PS-FILE' 'PS-NULL-FILE'
-	else
-		PARAMETRIZE 'PATHSPEC' 'PS-ARGS' 'PS-STDIN' 'PS-NULL-FILE'
+		if [ $# -eq 0 ]
+		then
+			set -- 'ARGS' 'STDIN' 'NULL-FILE'
+		else
+			#shellcheck disable=SC2046
+			set -- $(
+				printf ':%s:' "$@" \
+				| sed -E -e '/:NULL-FILE:/ s/:NULL-STDIN://' -e '/:STDIN:/ s/:FILE://' \
+				| tr ':' ' '
+			)
+		fi
 	fi
+	PARAMETRIZE_OPTION true 'PATHSPEC' 'ARGS: PS-ARGS | STDIN: PS-STDIN | NULL-STDIN: PS-NULL-STDIN | FILE: PS-FILE | NULL-FILE: PS-NULL-FILE' "$@"
 	#shellcheck disable=SC2034
 	if ! IS_PATHSPEC_NULL_SEP
 	then
