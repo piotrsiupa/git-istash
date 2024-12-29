@@ -312,8 +312,24 @@ gather_tasks() {
 	)"
 }
 
+get_istash_version() { # path_to_main_bin_file
+	"$1" --version | awk 'NR==1{print $NF}'
+}
+
 show_tasks() {
-	printf 'Installing "git-istash" for the current user (%s)...\n' "$(id -nu)"
+	if [ "$(id -u)" -eq 0 ]
+	then
+		printf 'Installing "git-istash" for the all users (%s)...\n' "$(id -nu)"
+	else
+		printf 'Installing "git-istash" for the current user (%s)...\n' "$(id -nu)"
+	fi
+	installed_bin_path="$(make_target_path 'bin/git-istash')"
+	if [ -e "$installed_bin_path" ]
+	then
+		printf 'There is already "git-install" in the chosen location.\nIt will be replaced. (%s -> %s)\n' "$(get_istash_version "$installed_bin_path")" "$(get_istash_version 'bin/git-istash')"
+	else
+		printf 'No existing "git-istash" has been found in the chosen location.\nThe version %s will be installed.\n' "$(get_istash_version 'bin/git-istash')"
+	fi
 	printf 'Operations that are to be performed:\n'
 	printf '%s\n' "$tasks" \
 	| while read -r task
