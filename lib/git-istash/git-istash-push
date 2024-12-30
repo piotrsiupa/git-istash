@@ -142,6 +142,27 @@ check_pathspec() {
 	fi
 }
 
+add_with_patch_and_pathspec() {
+	exec 3<&0
+	convert_to_octal <"$pathspec_file" \
+	| sed 's/\\000/\n/g' \
+	| while read -r ps
+	do
+		if [ -z "$ps" ]
+		then
+			continue
+		fi
+		#shellcheck disable=SC2059
+		if printf "$ps" | xargs -0 -- git add --update --dry-run -- 1>/dev/null 2>&1
+		then
+			#shellcheck disable=SC2059
+			printf "$ps\0"
+		fi
+	done \
+	| xargs -r0 -- sh -c 'git add --update --patch -- "$@" <&3' --
+	exec 3<&-
+}
+
 commit_changes() {
 	# constants
 	default_message="$(git rev-list --no-commit-header --format='%h %s' --max-count=1 HEAD)"
@@ -156,6 +177,10 @@ commit_changes() {
 	git commit --message="index on $branch_name_for_msg: $default_message (unfinished)" --allow-empty
 	
 	# unstaged
+	if [ -n "$patch_options" ]
+	then
+		printf '### Using the interactive patch for tracked files...' 1>&2
+	fi
 	if [ -z "$pathspec_file" ]
 	then
 		git add --update $patch_options .
@@ -164,9 +189,7 @@ commit_changes() {
 		then
 			xargs -r0n1 -- git add --update -- <"$pathspec_file" || true
 		else
-			exec 3<&0
-			xargs -r0n1 -- sh -c 'git add --update --patch -- "$@" <&3' -- <"$pathspec_file" || true
-			exec 3<&-
+			add_with_patch_and_pathspec
 		fi
 	fi
 	if [ -n "$message" ]
@@ -212,6 +235,10 @@ commit_changes() {
 		else
 			git add --all --force --intent-to-add .
 		fi
+		if [ -n "$patch_options" ]
+		then
+			printf '### Using the interactive patch for untracked files...' 1>&2
+		fi
 		if [ -z "$pathspec_file" ]
 		then
 			git add $patch_options --update
@@ -220,9 +247,7 @@ commit_changes() {
 			then
 				xargs -r0n1 -- git add --update -- <"$pathspec_file" || true
 			else
-				exec 3<&0
-				xargs -r0n1 -- sh -c 'git add --update --patch -- "$@" <&3' -- <"$pathspec_file" || true
-				exec 3<&-
+				add_with_patch_and_pathspec
 			fi
 		fi
 		git commit --message="untracked files on $branch_name_for_msg: $default_message" --allow-empty
