@@ -136,6 +136,8 @@ check_pathspec() {
 			fi
 			if [ "$good" = n ]
 			then
+				#shellcheck disable=SC2059
+				printf 'fatal: pathspec '\'"$ps"\'' did not match any files\n' 1>&2
 				return 1
 			fi
 		done
