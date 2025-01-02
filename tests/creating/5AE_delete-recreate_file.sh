@@ -7,8 +7,6 @@ PARAMETRIZE_ALL 'DEFAULT'
 PARAMETRIZE_UNTRACKED 'YES'
 PARAMETRIZE_KEEP_INDEX
 
-known_failure 'an inconsistency in how "git stash" works'
-
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
 git add aaa
