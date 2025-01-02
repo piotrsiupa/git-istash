@@ -166,7 +166,7 @@ add_with_patch_and_pathspec() {
 }
 
 commit_changes() {
-	# constants
+	# initialization
 	default_message="$(git rev-list --no-commit-header --format='%h %s' --max-count=1 HEAD)"
 	if [ "$curr_branch_type" != 'detached' ]
 	then
@@ -174,6 +174,7 @@ commit_changes() {
 	else
 		branch_name_for_msg='(no branch)'
 	fi
+	there_are_enough_changes="$allow_empty"
 	
 	# staged (initial)
 	git commit --message="index on $branch_name_for_msg: $default_message (unfinished)" --allow-empty
@@ -258,7 +259,6 @@ commit_changes() {
 	else
 		xargs -r0 -- git diff --name-only HEAD --cached -z -- <"$pathspec_file" | xargs -0 -- git commit --message="index on $branch_name_for_msg: $default_message" --allow-empty --
 	fi
-	there_are_enough_changes="$allow_empty"
 	if [ "$there_are_enough_changes" = n ] && [ "$(git rev-parse 'HEAD^{tree}')" != "$(git rev-parse 'HEAD~^{tree}')" ]
 	then
 		there_are_enough_changes=y
