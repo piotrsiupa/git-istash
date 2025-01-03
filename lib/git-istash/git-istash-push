@@ -432,7 +432,9 @@ do_push() { # pathspecs...
 	cleanup
 }
 
-getopt_result="$(getopt -o'ahkm:u' --long='all,allow-empty,keep-index,no-keep-index,message:,patch,pathspec-file-null,pathspec-from-file:,include-untracked,no-include-untracked' -n"$(basename "$0")" -ssh -- "$@")"
+getopt_short_options='ahkm:u'
+getopt_long_options='all,allow-empty,_implicit-push,_implicit-push_,keep-index,no-keep-index,message:,patch,pathspec-file-null,pathspec-from-file:,include-untracked,no-include-untracked'
+getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 include_ignored=n
 allow_empty=n

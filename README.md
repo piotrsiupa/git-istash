@@ -3,8 +3,9 @@
 Alternative Git command for reliably handling stashes, without the arbitrary limitations and corner cases of `git stash`.
 ([full-list-of-the-changes](#differences-from-the-official-git-stash))
 
-It is written entirely in POSIX (Portable Operating System Interface) shell script, making it compatible with basically every operating system (except Windows, but fortunately, Git for Windows can handle POSIX scripts on its own).
+It is written (almost[^1]) entirely in POSIX (Portable Operating System Interface) shell script, making it compatible with basically every operating system (except Windows, but fortunately, Git for Windows can handle POSIX scripts on its own).
 
+[^1]: The scripts use the program `getopt` for parsing options and the `-r` flag for `xargs`, both of which are not part of the standard but are widely supported.
 
 
 ## Overview
