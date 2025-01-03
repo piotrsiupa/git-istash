@@ -66,7 +66,13 @@ IS_UNTRACKED_OFF() {
 }
 
 PARAMETRIZE_OPTIONS_INDICATOR() { # condition
-	PARAMETRIZE_COND "$1" 'END_OPTIONS_INDICATOR' 'EOI-NO' 'EOI-YES'
+	#shellcheck disable=SC2154
+	if [ "$meticulousness" -le 3 ]
+	then
+		PARAMETRIZE_COND "$1" 'END_OPTIONS_INDICATOR' 'EOI-NO'
+	else
+		PARAMETRIZE_COND "$1" 'END_OPTIONS_INDICATOR' 'EOI-NO' 'EOI-YES'
+	fi
 	#shellcheck disable=SC2034
 	case "$END_OPTIONS_INDICATOR" in
 		'EOI-NO') EOI='' ;;
