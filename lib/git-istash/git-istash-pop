@@ -174,7 +174,9 @@ do_pop() { # args...
 	fi
 }
 
-getopt_result="$(getopt -o'ch' --long='abort,continue' -n"$(basename "$0")" -ssh -- "$@")"
+getopt_short_options='ch'
+getopt_long_options='abort,continue'
+getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 abort_set=n
 continue_set=n
