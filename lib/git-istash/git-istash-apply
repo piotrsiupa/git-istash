@@ -297,7 +297,7 @@ do_apply() { # args...
 }
 
 getopt_short_options='ch'
-getopt_long_options='abort,_called-from-pop,continue'
+getopt_long_options='abort,_called-from-pop,_called-from-pop_,continue'
 getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 abort_set=n
@@ -309,7 +309,7 @@ do
 	--abort)
 		abort_set=y
 		;;
-	--_called-from-pop)
+	--_called-from-pop*)
 		is_pop=y
 		;;
 	-c|--continue)
