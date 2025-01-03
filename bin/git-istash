@@ -29,22 +29,13 @@ print_version() {
 run_subcommand() { # subcommand [arguments...]
 	subcommand="$1"
 	shift
-	case "$subcommand" in
-		apply|pop)
-			sh "$(dirname "$0")/../lib/git-istash/git-istash-$subcommand" "$@"
-			;;
-		push)
-			sh "$(dirname "$0")/../lib/git-istash/git-istash-push" "$@"
-			;;
-		-*)
-			printf 'git-istash: Missing sub-command. See "git istash --help".\n' 1>&2
-			return 1
-			;;
-		*)
-			printf 'git-istash: "%s" is not a sub-command. See "git istash --help".\n' "$subcommand" 1>&2
-			return 1
-			;;
-	esac
+	subcommand_path="$(dirname "$0")/../lib/git-istash/git-istash-$subcommand"
+	if [ ! -f "$subcommand_path" ] || [ ! -x "$subcommand_path" ]
+	then
+		printf 'git-istash: "%s" is not a sub-command. See "git istash --help".\n' "$subcommand" 1>&2
+		return 1
+	fi
+	sh "$subcommand_path" "$@"
 }
 
 show_manual() {
@@ -94,13 +85,8 @@ then
 	exit 0
 fi
 
-if [ $# -ge 1 ]
+if [ $# -eq 0 ] || printf '%s' "$1" | grep -Eq '^-'
 then
-	run_subcommand "$@"
-else
-	printf 'git-istash: Missing sub-command.\n' 1>&2
-	printf 'hint: Please, specify the sub-command to run as the first argument after "git istash".\n' 1>&2
-	printf '\n'
-	print_help
-	exit 1
+	set -- 'push' '--_implicit-push_' "$@"
 fi
+run_subcommand "$@"

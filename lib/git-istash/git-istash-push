@@ -26,6 +26,38 @@ print_help() {
 	printf '\t--no-include-untracked - Do not touch untracked files even with "--all".\n'
 }
 
+check_pathspec_for_implicit_push() ( # args...
+	getopt_result="$(getopt -o"-$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
+	eval set -- "$getopt_result"
+	while [ $# -ne 0 ]
+	do
+		if [ "$1" = '--' ]
+		then
+			break
+		elif printf '%s' "$1" | grep -Eq '^--'
+		then
+			option_name="$(printf '%s' "$1" | sed -E 's/^--//')"
+			shift
+			if printf '%s' "$getopt_long_options" | grep -Eq "(^|,)$option_name:(,|\$)"
+			then
+				shift
+			fi
+		elif printf '%s' "$1" | grep -Eq '^-'
+		then
+			option_letter="$(printf '%s' "$1" | sed -E 's/^-//')"
+			shift
+			if printf '%s' "$getopt_short_options" | grep -Eq "$option_letter:"
+			then
+				shift
+			fi
+		else
+			printf 'fatal: unexpected token "%s"\n' "$1" 1>&2
+			printf 'fatal: pathspec for an implicit "push" command must be preceded by "--"\n' 1>&2
+			exit 1
+		fi
+	done
+)
+
 convert_pathspec_file() {
 	if [ "$pathspec_file_nul" = y ]
 	then
@@ -433,7 +465,12 @@ do_push() { # pathspecs...
 }
 
 getopt_short_options='ahkm:u'
-getopt_long_options='all,allow-empty,_implicit-push,_implicit-push_,keep-index,no-keep-index,message:,patch,pathspec-file-null,pathspec-from-file:,include-untracked,no-include-untracked'
+getopt_long_options='all,allow-empty,keep-index,no-keep-index,message:,patch,pathspec-file-null,pathspec-from-file:,include-untracked,no-include-untracked'
+if [ "$1" = '--_implicit-push_' ]
+then
+	shift
+	check_pathspec_for_implicit_push "$@"
+fi
 getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 include_ignored=n
