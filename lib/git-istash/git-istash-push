@@ -320,14 +320,25 @@ undo_commit_changes() {
 	fi
 }
 
+handle_rebase_conflict_using_theirs() {
+	while true
+	do
+		if [ -z "$(git ls-files --unmerged)" ]
+		then
+			return 1
+		fi
+		git ls-files --unmerged --format='%(path)' -z | xargs -0 -- git restore --theirs --
+		git add .
+		if GIT_EDITOR='true' git rebase --continue
+		then
+			break
+		fi
+	done
+}
+
 sort_commits() {
 	stashed_commits_editor='sed -i -En -e "1 p" -e "3 p"'
-	if [ "$keep_index" = n ]
-	then
-		unstashed_commits_editor='sed -i -En -e "2 p" -e "4 p"'
-	else
-		unstashed_commits_editor='sed -i -En -e "1,2 p" -e "4 p"'
-	fi
+	unstashed_commits_editor='sed -i -En -e "1,2 p" -e "4 p"'
 	if [ "$has_3_commits" = y ]
 	then
 		stashed_commits_editor="$stashed_commits_editor"' -e "5 p"'
@@ -340,19 +351,14 @@ sort_commits() {
 	last_commit_hash="$(git rev-parse HEAD)"
 	if ! GIT_EDITOR="$unstashed_commits_editor" git rebase --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash"
 	then
-		while true
-		do
-			if [ -z "$(git ls-files --unmerged)" ]
-			then
-				return 1
-			fi
-			git ls-files --unmerged --format='%(path)' -z | xargs -0 -- git restore --theirs --
-			git add .
-			if GIT_EDITOR='true' git rebase --continue
-			then
-				break
-			fi
-		done
+		handle_rebase_conflict_using_theirs
+	fi
+	if [ "$keep_index" = n ]
+	then
+		if ! GIT_EDITOR='sed -i -E -e "1 d" --' git rebase --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash"
+		then
+			handle_rebase_conflict_using_theirs
+		fi
 	fi
 	unstashed_changes_hash="$(git rev-parse HEAD)"
 	git switch --detach "$last_commit_hash"
@@ -415,7 +421,21 @@ restore_working_tree() {
 	then
 		git reset --mixed HEAD~1
 	fi
+	unstaged_commit_hash="$(git rev-parse 'HEAD')"
 	git reset --mixed HEAD~1
+	if [ -n "$(git ls-tree -r "$unstaged_commit_hash")" ]
+	then
+		git ls-tree --full-tree -r -z "$unstaged_commit_hash" | sanitize_ls_tree | awk '{print $4}' \
+		| while read -r path
+		do
+			if [ -z "$path" ]
+			then
+				continue
+			fi
+			#shellcheck disable=SC2059
+			printf "$path" | xargs -0 -- git add -N --
+		done
+	fi
 	git reset --soft HEAD~1
 	if [ "$keep_index" = y ]
 	then

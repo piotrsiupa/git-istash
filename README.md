@@ -95,6 +95,7 @@ Most of the changes here, however, are bugs that were found during tests to be p
 - `push` returns 0 when stash has failed to be created (when there are no changes).
 - Option `--patch` doesn't allow stash with no selected changes even when there are changes in index.
 - Option `--patch` with `--keep-index` doesn't keep the index.
+- `push` with `--path` fails if a new file was added and then modified.
 - Pathspecs are unable to find untracked files when the option `--keep-index` is specified.
 - `push` with a pathspec creates a stash even when it fails to match a file and returns a non-0 exit code.
 
