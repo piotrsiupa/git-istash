@@ -74,7 +74,7 @@ assert_tracked_files() { # expected
 }
 
 assert_status() { # expected
-	value_for_assert="$(git status --porcelain -z --untracked-files=all --ignored | _convert_zero_separated_path_list | _prepare_path_list_for_assertion y)"
+	value_for_assert="$(git status --porcelain -z --untracked-files=all --ignored --no-renames | _convert_zero_separated_path_list | _prepare_path_list_for_assertion y)"
 	test "$value_for_assert" = "$1" ||
 		fail 'Expected repository status to be:\n"%s"\nbut it is:\n"%s"!\n' "$1" "$value_for_assert"
 	unset value_for_assert

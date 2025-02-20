@@ -11,4 +11,5 @@ The first character of the prefix can be:
 - `2` - Option `--patch`.
 - `3` - Validating pathspecs.
 - `4` - Pathspecs.
-- `5` - Tricky/corner cases and miscellaneous options.
+- `5` - Tricky/corner cases and miscellaneous.
+- `6` - Sub-directories.

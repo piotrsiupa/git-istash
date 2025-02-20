@@ -218,7 +218,7 @@ commit_changes() {
 	fi
 	if [ -z "$pathspec_file" ]
 	then
-		git add --update $patch_options .
+		git add --update $patch_options :/
 	else
 		if [ -z "$patch_options" ]
 		then
@@ -237,7 +237,7 @@ commit_changes() {
 	then
 		there_are_enough_changes=y
 	fi
-	git add --update
+	git add --update :/
 	git commit --message="non-stashed WIP on $branch_name_for_msg: $default_message" --allow-empty
 	
 	# untracked
@@ -245,12 +245,12 @@ commit_changes() {
 	then
 		if [ "$include_untracked" = n ]
 		then
-			git ls-files --exclude-standard --others --ignored -z | xargs -r0 -- git add --intent-to-add --force --
+			git ls-files --exclude-standard --others --ignored -z :/ | xargs -r0 -- git add --intent-to-add --force --
 		elif [ "$include_ignored" = n ]
 		then
-			git add --all --intent-to-add .
+			git add --all --intent-to-add :/
 		else
-			git add --all --force --intent-to-add .
+			git add --all --force --intent-to-add :/
 		fi
 		if [ -n "$patch_options" ]
 		then
@@ -258,7 +258,7 @@ commit_changes() {
 		fi
 		if [ -z "$pathspec_file" ]
 		then
-			git add $patch_options --update
+			git add $patch_options --update :/
 		else
 			if [ -z "$patch_options" ]
 			then
@@ -272,7 +272,7 @@ commit_changes() {
 		then
 			there_are_enough_changes=y
 		fi
-		git add --update
+		git add --update :/
 		git commit --message="non-stashed untracked files on $branch_name_for_msg: $default_message" --allow-empty
 	fi
 	
@@ -289,7 +289,11 @@ commit_changes() {
 	then
 		git commit --message="index on $branch_name_for_msg: $default_message" --allow-empty
 	else
-		xargs -r0 -- git diff --name-only HEAD --cached -z -- <"$pathspec_file" | xargs -0 -- git commit --message="index on $branch_name_for_msg: $default_message" --allow-empty --
+		xargs -r0 -- git diff --name-only HEAD --cached -z -- <"$pathspec_file" \
+		| (
+			cd "$(git rev-parse --show-toplevel)"
+			xargs -0 -- git commit --message="index on $branch_name_for_msg: $default_message" --allow-empty --
+		)
 	fi
 	if [ "$there_are_enough_changes" = n ] && [ "$(git rev-parse 'HEAD^{tree}')" != "$(git rev-parse 'HEAD~^{tree}')" ]
 	then
@@ -323,12 +327,12 @@ undo_commit_changes() {
 handle_rebase_conflict_using_theirs() {
 	while true
 	do
-		if [ -z "$(git ls-files --unmerged)" ]
+		if [ -z "$(git ls-files --unmerged :/)" ]
 		then
 			return 1
 		fi
-		git ls-files --unmerged --format='%(path)' -z | xargs -0 -- git restore --theirs --
-		git add .
+		git ls-files --unmerged --format='%(path)' -z :/ | xargs -0 -- git restore --theirs --
+		git add :/
 		if GIT_EDITOR='true' git rebase --continue
 		then
 			break
@@ -347,22 +351,21 @@ sort_commits() {
 	stashed_commits_editor="$stashed_commits_editor"' --'
 	unstashed_commits_editor="$unstashed_commits_editor"' --'
 	
-	
 	last_commit_hash="$(git rev-parse HEAD)"
-	if ! GIT_EDITOR="$unstashed_commits_editor" git rebase --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash"
+	if ! GIT_EDITOR="$unstashed_commits_editor" git -c merge.renames=false rebase --strategy=recursive --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash"
 	then
 		handle_rebase_conflict_using_theirs
 	fi
 	if [ "$keep_index" = n ]
 	then
-		if ! GIT_EDITOR='sed -i -E -e "1 d" --' git rebase --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash"
+		if ! GIT_EDITOR='sed -i -E -e "1 d" --' git -c merge.renames=false rebase --strategy=recursive --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash"
 		then
 			handle_rebase_conflict_using_theirs
 		fi
 	fi
 	unstashed_changes_hash="$(git rev-parse HEAD)"
 	git switch --detach "$last_commit_hash"
-	GIT_EDITOR="$stashed_commits_editor" git rebase --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash"
+	GIT_EDITOR="$stashed_commits_editor" git -c merge.renames=false rebase --strategy=recursive --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash"
 }
 
 sanitize_ls_tree() {
@@ -379,7 +382,8 @@ sanitize_ls_tree() {
 remove_tracked_files_from_untracked() ( # [path]
 	if [ $# -lt 1 ]
 	then
-		set -- '\056\057'
+		cd "$(git rev-parse --show-toplevel)"
+		set -- '\072\057'
 	fi
 	#shellcheck disable=SC2059
 	previous_files="$(printf "$1" | xargs -0 -- git ls-tree -z HEAD~ -- | sanitize_ls_tree)"
@@ -425,7 +429,7 @@ restore_working_tree() {
 	git reset --mixed HEAD~1
 	if [ -n "$(git ls-tree -r "$unstaged_commit_hash")" ]
 	then
-		git ls-tree --full-tree -r -z "$unstaged_commit_hash" | sanitize_ls_tree | awk '{print $4}' \
+		git ls-tree -r -z "$unstaged_commit_hash" :/ | sanitize_ls_tree | awk '{print $4}' \
 		| while read -r path
 		do
 			if [ -z "$path" ]
@@ -567,5 +571,4 @@ then
 	exit 1
 fi
 
-cd "$(git rev-parse --show-toplevel)"
 do_push "$@"
