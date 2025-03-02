@@ -36,7 +36,7 @@ correct_head_hash="$(get_head_hash_H)"
 mkdir -p xxx
 cd xxx
 assert_exit_code 0 git stash "$OPERATION" --index
-cd ..
+cd -
 assert_files_H '
 MM aaa		ccc0	bbb0
 MM xxx/aaa	ccc1	bbb1

@@ -24,7 +24,7 @@ correct_head_hash="$(get_head_hash_H)"
 mkdir xxx
 cd xxx
 assert_exit_code 0 git istash "$OPERATION"
-cd ..
+cd -
 assert_files_H '
 AM aaa		bbb0	aaa0
 AM xxx/aaa	bbb1	aaa1
