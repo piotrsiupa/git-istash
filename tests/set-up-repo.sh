@@ -13,7 +13,17 @@ cd -
 export GIT_CONFIG_SYSTEM=/dev/null
 export GIT_CONFIG_GLOBAL=/dev/null
 
+if [ -e '.git' ] || [ -e '../.git' ] || [ -e '../../.git' ]
+then
+	printf 'It looks like we'\''re not in the test directory!\n' 1>&2
+	exit 1
+fi
 git init --initial-branch=master
+if [ ! -e '.git' ]
+then
+	printf 'Failed to create a test repository!\n' 1>&2
+	exit 1
+fi
 
 git config --local user.email 'test@localhost'
 git config --local user.name 'test'

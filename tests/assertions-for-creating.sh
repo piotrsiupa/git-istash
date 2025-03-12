@@ -94,7 +94,7 @@ assert_stash_name() { # stash_num expected_branch_name expeted_stash_name
 }
 
 assert_stash_commit_files() { # commit expected_files
-	value_for_assert="$(git ls-tree --name-only --full-tree -r -z "$1" | _convert_zero_separated_path_list | sort | _prepare_path_list_for_assertion)"
+	value_for_assert="$(git ls-tree --name-only --full-tree -r -z "$1" | _convert_zero_separated_path_list | _prepare_path_list_for_assertion)"
 	expected_value="$(printf '%s\n' "$2" | awk '{print $1}' | _prepare_path_list_for_assertion)"
 	test "$value_for_assert" = "$expected_value" ||
 		fail 'Expected all files in "%s" to be:\n"%s"\nbut they are:\n"%s"!\n' "$1" "$expected_value" "$value_for_assert"
@@ -111,6 +111,10 @@ assert_stash_commit_files_with_content() { # commit expected_files
 	printf '%s\n' "$2" \
 	| while read -r line
 	do
+		if [ -z "$line" ]
+		then
+			continue
+		fi
 		file_path_for_assertion="$(printf '%s' "$line" | awk '{print $1}')"
 		value_for_assert="$(printf "%s:$file_path_for_assertion" "$1" | xargs -0 -- git show)"
 		#shellcheck disable=SC2059
@@ -124,7 +128,7 @@ assert_stash_commit_files_with_content() { # commit expected_files
 }
 
 assert_stash_files() { # stash_num expect_untracked expected_files
-	expected_files="$(printf '%s\n' "$3" | sed -E 's/^\t+//' | grep -vE '^\s*$' | _sort_repository_status)"
+	expected_files="$(printf '%s\n' "$3" | sed -E -e 's/^\t+//' -e '/^\s*$/ d')"
 	assert_stash_commit_files_with_content "stash@{$1}" "$(
 			printf '%s\n' "$expected_files" \
 			| grep -vE '^(\?\?|!!|D.|.D) ' \
@@ -162,7 +166,7 @@ assert_stash_files() { # stash_num expect_untracked expected_files
 }
 
 assert_stash() { # stash_num expected_branch_name expected_stash_name expected_files
-	if printf '%s\n' "$4" | sed -E 's/^\t+//' | grep -qE '^(\?\?|!!) '
+	if IS_ALL_ON || IS_UNTRACKED_ON || printf '%s\n' "$4" | sed -E 's/^\t+//' | grep -qE '^(\?\?|!!) '
 	then
 		expect_untracked=y
 	else

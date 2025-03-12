@@ -43,7 +43,7 @@ correct_head_hash="$(get_head_hash_H)"
 mkdir -p xxx
 cd xxx
 assert_exit_code 2 capture_outputs git istash "$OPERATION"
-cd ..
+cd -
 assert_conflict_message
 assert_files_H '
 UU aaa		ddd0|bbb0
@@ -73,7 +73,7 @@ printf 'eee2\n' >yyy/aaa
 git add aaa xxx/aaa yyy/aaa
 cd xxx
 assert_exit_code 0 git istash "$OPERATION" --abort
-cd ..
+cd -
 assert_files_H '
    aaa		ddd0
    xxx/aaa	ddd1

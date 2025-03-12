@@ -31,7 +31,7 @@ if ! IS_HEAD_ORPHAN
 then
 	cd xxx
 	assert_exit_code 0 git stash push -u -m 'name'
-	cd ..
+	cd -
 	assert_files_H '
 	   aaa		aaa0
 	   xxx/aaa	aaa1
@@ -62,5 +62,5 @@ else
 		# This doesn't work in normal `git stash`
 		exit 1
 	fi
-	cd ..
+	cd -
 fi

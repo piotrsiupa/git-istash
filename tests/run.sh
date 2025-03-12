@@ -529,7 +529,9 @@ print_summary() {
 	printf '\n'
 }
 
-getopt_result="$(getopt -o'c:dfhj:l:m:pqQrv' --long='color:,debug,failed,file-name,help,jobs:,limit:,meticulousness:,print-paths,quiet,quieter,raw,raw-name,verbose,version' -n"$(basename "$0")" -ssh -- "$@")"
+getopt_short_options='c:dfhj:l:m:pqQrv'
+getopt_long_options='color:,debug,failed,file-name,help,jobs:,limit:,meticulousness:,print-paths,quiet,quieter,raw,raw-name,verbose,version'
+getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 only_failed=n
 debug_mode=n

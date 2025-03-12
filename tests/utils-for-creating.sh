@@ -29,6 +29,7 @@ IS_KEEP_INDEX_OFF() {
 	printf '%s' "$KEEP_INDEX" | grep -Eq '^INDEX-NO-'
 }
 
+#shellcheck disable=SC2120
 PARAMETRIZE_ALL() { # keys
 	PARAMETRIZE_OPTION true 'ALL' 'DEFAULT: ALL-DEFAULT | YES: ALL-YES-SHORT & ALL-YES-LONG && ALL-YES-LONGISH0 & ALL-YES-LONGISH1' "$@"
 	#shellcheck disable=SC2034
@@ -44,6 +45,7 @@ IS_ALL_ON() {
 	printf '%s' "$ALL" | grep -Eq '^ALL-YES-'
 }
 
+#shellcheck disable=SC2120
 PARAMETRIZE_UNTRACKED() { # keys
 	PARAMETRIZE_OPTION true 'UNTRACKED' 'DEFAULT: UNTR-DEFAULT | NO: UNTR-NO-LONG && UNTR-NO-LONGISH0 & UNTR-NO-LONGISH1 | YES: UNTR-YES-SHORT & UNTR-YES-LONG && UNTR-YES-LONGISH0 & UNTR-YES-LONGISH1' "$@"
 	#shellcheck disable=SC2034
@@ -86,14 +88,23 @@ IS_OPTIONS_INDICATOR_OFF() {
 	test "$END_OPTIONS_INDICATOR" = 'EOI-NO'
 }
 
-PARAMETRIZE_PATHSPEC_STYLE() {
+PARAMETRIZE_PATHSPEC_STYLE() { # keys
 	#shellcheck disable=SC2154
-	if [ "$meticulousness" -gt 2 ]
+	if [ "$meticulousness" -le 2 ]
 	then
-		PARAMETRIZE 'PATHSPEC' 'PS-ARGS' 'PS-STDIN' 'PS-NULL-STDIN' 'PS-FILE' 'PS-NULL-FILE'
-	else
-		PARAMETRIZE 'PATHSPEC' 'PS-ARGS' 'PS-STDIN' 'PS-NULL-FILE'
+		if [ $# -eq 0 ]
+		then
+			set -- 'ARGS' 'STDIN' 'NULL-FILE'
+		else
+			#shellcheck disable=SC2046
+			set -- $(
+				printf ':%s:' "$@" \
+				| sed -E -e '/:NULL-FILE:/ s/:NULL-STDIN://' -e '/:STDIN:/ s/:FILE://' \
+				| tr ':' ' '
+			)
+		fi
 	fi
+	PARAMETRIZE_OPTION true 'PATHSPEC' 'ARGS: PS-ARGS | STDIN: PS-STDIN | NULL-STDIN: PS-NULL-STDIN | FILE: PS-FILE | NULL-FILE: PS-NULL-FILE' "$@"
 	#shellcheck disable=SC2034
 	if ! IS_PATHSPEC_NULL_SEP
 	then
