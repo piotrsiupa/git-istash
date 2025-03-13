@@ -5,8 +5,6 @@ non_essential_test
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_POP
 
-known_failure 'an apparent bug in "git stash"'
-
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
 git add aaa
@@ -16,7 +14,7 @@ __test_section__ 'Create stash'
 printf 'bbb\n' >bbb
 git add bbb
 rm bbb
-git stash push
+git istash push  # Normal "git stash" doesn't allow creation of such stash so "git istash" has to be used instead. (This is a special case in "git stash" for some weird reason.)
 
 SWITCH_HEAD_TYPE
 
