@@ -101,7 +101,7 @@ Most of the changes here, however, are bugs that were found during tests to be p
 
 ### Other things different in standard `stash` (that may or may not be considered bugs)
 - Options can now follow non-option arguments (like they are allowed to in POSIX utilities).
-- Option `--no-include-untracked` doesn't override `--all` anymore (and instead it includes only ignored files if both options are specified).
+- Option `--no-include-untracked` doesn't override `--all` anymore. (Instead, ignored files are included if both options are specified.)
 - Option `--patch` now works with untracked files.
 - Options `--patch` and `--pathspec` are allowed together now.
 - Files in index are affected by the pathspec now.
