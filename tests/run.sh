@@ -62,6 +62,17 @@ print_centered() { # text character
 	printf -- "$2%.0s" $(seq 1 $((padding_size - (padding_size / 2))))
 }
 
+check_system() {
+	if echo 'test' >'file with "\" in name'
+	then
+		rm 'file with "\" in name'
+		limited_file_system=n
+	else
+		limited_file_system=y
+	fi 2>/dev/null
+	export limited_file_system
+}
+
 delete_test_remote() {
 	rm -rf 'remote-for-tests'
 }
@@ -693,6 +704,8 @@ then
 	printf '%s' "$tests" | xargs -- printf '%s.sh\n'
 	exit 0
 fi
+
+check_system
 
 cd '../bin'
 PATH="$(pwd):$PATH"
