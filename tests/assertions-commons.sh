@@ -41,7 +41,7 @@ _convert_zero_separated_path_list() {
 	| sed -E -e 's/\\015/\\\\r/g' -e 's/\\012/\\\\n/g' -e 's/\\011/\\\\t/g' -e 's/\\134/\\\\\\\\/g' \
 		-e 's/\\(00[1-7]|0[1-3][0-7]|040|177|[2-3][0-7]{2})/\\\\\1/g' \
 		-e 's/\\045/\\045\\045/g' \
-	| xargs -0 -- printf -- \
+	| xargs -r0 -- printf -- \
 	| tr -d '\n' | tr '\0' '\n'
 }
 
@@ -84,7 +84,7 @@ assert_file_contents() { # file expected_current [expected_staged]
 	if [ -n "$2" ]
 	then
 		#shellcheck disable=SC2059
-		value_for_assert="$(printf "$1" | xargs -0 -- cat)"
+		value_for_assert="$(printf -- "$1" | xargs -0 -- cat)"
 	else
 		value_for_assert=''
 	fi
@@ -109,15 +109,15 @@ assert_file_contents() { # file expected_current [expected_staged]
 		unset theirs_expected_contents
 	else
 		#shellcheck disable=SC2059
-		expected_contents="$(printf "$2")"
+		expected_contents="$(printf -- "$2")"
 		test "$value_for_assert" = "$expected_contents" ||
 			fail 'Expected content of file "'"$1"'" to be:\n"%s"\nbut it is:\n"%s"!\n' "$expected_contents" "$value_for_assert"
 		if [ $# -eq 3 ]
 		then
 			#shellcheck disable=SC2059
-			value_for_assert="$(printf ":$1" | xargs -0 -- git show)"
+			value_for_assert="$(printf -- ":$1" | xargs -0 -- git show)"
 			#shellcheck disable=SC2059
-			expected_contents="$(printf "$3")"
+			expected_contents="$(printf -- "$3")"
 			test "$value_for_assert" = "$expected_contents" ||
 				fail 'Expected staged content of file "'"$1"'" to be:\n"%s"\nbut it is:\n"%s"!\n' "$expected_contents" "$value_for_assert"
 		fi

@@ -52,7 +52,7 @@ printf_color_code() { # code_for_printf...
 	if [ "$use_color" = y ]
 	then
 		#shellcheck disable=SC2059
-		printf "$@"
+		printf -- "$@"
 	fi
 }
 print_centered() { # text character

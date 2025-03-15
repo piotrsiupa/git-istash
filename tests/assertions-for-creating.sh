@@ -118,7 +118,7 @@ assert_stash_commit_files_with_content() { # commit expected_files
 		file_path_for_assertion="$(printf '%s' "$line" | awk '{print $1}')"
 		value_for_assert="$(printf "%s:$file_path_for_assertion" "$1" | xargs -0 -- git show)"
 		#shellcheck disable=SC2059
-		expected_value="$(printf "$(printf '%s' "$line" | awk '{print $2}')")"
+		expected_value="$(printf -- "$(printf '%s' "$line" | awk '{print $2}')")"
 		test "$value_for_assert" = "$expected_value" ||
 			fail 'Expected content of file "'"$file_path_for_assertion"'" in "%s" to be:\n"%s"\nbut it is:\n"%s"!\n' "$1" "$expected_value" "$value_for_assert"
 		unset file_path_for_assertion

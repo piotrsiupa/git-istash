@@ -22,7 +22,7 @@ fail() { # printf_arguments...
 
 # Tests with known failures fail when they succeed and succeed when they fail.
 known_failure() { # reason
-	printf -- '%s\n' "$1" | sed -E 's/^/+/' 1>&4
+	printf '%s\n' "$1" | sed -E 's/^/+/' 1>&4
 }
 
 skip_silently() {

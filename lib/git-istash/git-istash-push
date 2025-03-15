@@ -71,9 +71,9 @@ convert_pathspec_file() {
 			if printf '%s\n' "$line" | grep -qEx '\\042.*\\042'
 			then
 				#shellcheck disable=SC2059
-				printf "$(
+				printf -- "$(
 					#shellcheck disable=SC2059
-					printf "$(
+					printf -- "$(
 						printf '%s' "$line" \
 						| sed -E -e 's/\\042(.*)\\042/\1/' \
 							-e 's/\\/\\\\/g' \
@@ -84,7 +84,7 @@ convert_pathspec_file() {
 				)\\0"
 			else
 				#shellcheck disable=SC2059
-				printf "$line\0"
+				printf -- "$line\0"
 			fi
 		done
 	fi
@@ -151,17 +151,17 @@ check_pathspec() {
 			fi
 			good=n
 			#shellcheck disable=SC2059
-			if printf "$ps" | xargs -0 -- git commit --dry-run --short --quiet -- 1>/dev/null 2>&1
+			if printf -- "$ps" | xargs -0 -- git commit --dry-run --short --quiet -- 1>/dev/null 2>&1
 			then
 				good=y
-			elif [ "$has_3_commits" = y ] && printf "$ps" | xargs -0 -- git ls-files --others --error-unmatch -- 1>/dev/null 2>&1
+			elif [ "$has_3_commits" = y ] && printf -- "$ps" | xargs -0 -- git ls-files --others --error-unmatch -- 1>/dev/null 2>&1
 			then
 				good=y
 				#shellcheck disable=SC2059
-				if [ "$include_ignored" = n ] && ! printf "$ps" | xargs -0 -- git ls-files --others --exclude-standard --error-unmatch -- 1>/dev/null 2>&1
+				if [ "$include_ignored" = n ] && ! printf -- "$ps" | xargs -0 -- git ls-files --others --exclude-standard --error-unmatch -- 1>/dev/null 2>&1
 				then
 					good=n
-				elif [ "$include_untracked" = n ] && [ "$(printf "$ps" | xargs -0 -- git ls-files --others -z -- | tr -cd '\0' | wc -c)" -eq "$(printf "$ps" | xargs -0 -- git ls-files --others --exclude-standard -z -- | tr -cd '\0' | wc -c)" ] 2>/dev/null
+				elif [ "$include_untracked" = n ] && [ "$(printf -- "$ps" | xargs -0 -- git ls-files --others -z -- | tr -cd '\0' | wc -c)" -eq "$(printf -- "$ps" | xargs -0 -- git ls-files --others --exclude-standard -z -- | tr -cd '\0' | wc -c)" ] 2>/dev/null
 				then
 					good=n
 				fi
@@ -187,10 +187,10 @@ add_with_patch_and_pathspec() {
 			continue
 		fi
 		#shellcheck disable=SC2059
-		if printf "$ps" | xargs -0 -- git add --update --dry-run -- 1>/dev/null 2>&1
+		if printf -- "$ps" | xargs -0 -- git add --update --dry-run -- 1>/dev/null 2>&1
 		then
 			#shellcheck disable=SC2059
-			printf "$ps\0"
+			printf -- "$ps\0"
 		fi
 	done \
 	| xargs -r0 -- sh -c 'git add --update --patch -- "$@" <&3' --
@@ -374,7 +374,7 @@ sanitize_ls_tree() {
 	| sed -E 's/(\\(0[0-35-7][0-7]|04[1-7]|[1-3][0-7]{2}))+\\040(\\(0[0-35-7][0-7]|04[1-7]|[1-3][0-7]{2}))+\\040(\\(0[02-7][0-7]|01[02-7]|[1-3][0-7]{2}))+\\011/&\n/' \
 	| while read -r data && read -r path
 	do
-		printf "$data%s\n" "$path"
+		printf -- "$data%s\n" "$path"
 	done \
 	| sed -E 's/\\057\\/\/\\/g'
 }
@@ -386,9 +386,9 @@ remove_tracked_files_from_untracked() ( # [path]
 		set -- '\072\057'
 	fi
 	#shellcheck disable=SC2059
-	previous_files="$(printf "$1" | xargs -0 -- git ls-tree -z HEAD~ -- | sanitize_ls_tree)"
+	previous_files="$(printf -- "$1" | xargs -0 -- git ls-tree -z HEAD~ -- | sanitize_ls_tree)"
 	#shellcheck disable=SC2059
-	printf "$1" | xargs -0 -- git ls-tree -z HEAD -- | sanitize_ls_tree \
+	printf -- "$1" | xargs -0 -- git ls-tree -z HEAD -- | sanitize_ls_tree \
 	| while read -r line
 	do
 		if printf '%s' "$previous_files" | grep -qxF "$line"
@@ -437,7 +437,7 @@ restore_working_tree() {
 				continue
 			fi
 			#shellcheck disable=SC2059
-			printf "$path" | xargs -0 -- git add -N --
+			printf -- "$path" | xargs -0 -- git add -N --
 		done
 	fi
 	git reset --soft HEAD~1
