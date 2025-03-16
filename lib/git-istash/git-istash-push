@@ -218,7 +218,7 @@ commit_changes() {
 	fi
 	if [ -z "$pathspec_file" ]
 	then
-		git add --update $patch_options :/
+		git add --update $patch_options :/ 2>/dev/null || true
 	else
 		if [ -z "$patch_options" ]
 		then
@@ -237,7 +237,7 @@ commit_changes() {
 	then
 		there_are_enough_changes=y
 	fi
-	git add --update :/
+	git add --update :/ 2>/dev/null || true
 	git commit --message="non-stashed WIP on $branch_name_for_msg: $default_message" --allow-empty
 	
 	# untracked
@@ -248,9 +248,9 @@ commit_changes() {
 			git ls-files --exclude-standard --others --ignored -z :/ | xargs -r0 -- git add --intent-to-add --force --
 		elif [ "$include_ignored" = n ]
 		then
-			git add --all --intent-to-add :/
+			git add --all --intent-to-add :/ 2>/dev/null || true
 		else
-			git add --all --force --intent-to-add :/
+			git add --all --force --intent-to-add :/ 2>/dev/null || true
 		fi
 		if [ -n "$patch_options" ]
 		then
@@ -258,7 +258,7 @@ commit_changes() {
 		fi
 		if [ -z "$pathspec_file" ]
 		then
-			git add $patch_options --update :/
+			git add $patch_options --update :/ 2>/dev/null || true
 		else
 			if [ -z "$patch_options" ]
 			then
@@ -272,7 +272,7 @@ commit_changes() {
 		then
 			there_are_enough_changes=y
 		fi
-		git add --update :/
+		git add --update :/ 2>/dev/null || true
 		git commit --message="non-stashed untracked files on $branch_name_for_msg: $default_message" --allow-empty
 	fi
 	
@@ -332,7 +332,7 @@ handle_rebase_conflict_using_theirs() {
 			return 1
 		fi
 		git ls-files --unmerged --format='%(path)' -z :/ | xargs -0 -- git restore --theirs --
-		git add :/
+		git add :/ 2>/dev/null || true
 		if GIT_EDITOR='true' git rebase --continue
 		then
 			break
