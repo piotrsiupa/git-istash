@@ -26,9 +26,17 @@ printf 'ccc2\n' >ccc
 printf 'ddd2\n' >ddd
 printf 'eee2\n' >eee
 printf 'fff2\n' >fff
-printf 'e n e n ' | tr ' ' '\n' >.git/answers_for_patch
-#shellcheck disable=SC2086
-GIT_EDITOR="sed -Ei 's/^\+[a-z]{3}2/+xxx/'" assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS <.git/answers_for_patch
+printf 'e n ' | tr ' ' '\n' >.git/answers_for_patch0
+printf 'e n ' | tr ' ' '\n' >.git/answers_for_patch1
+{
+	 cat .git/answers_for_patch0
+	 sleep 1  # On Windows a child shell tends to eat all the stdin if it's able to. This prevents it. If it still doesn't work, try to increase the time.
+	 cat .git/answers_for_patch1
+} \
+| {
+	#shellcheck disable=SC2086
+	GIT_EDITOR="sed -Ei 's/^\+[a-z]{3}2/+xxx/'" assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS
+}
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_H '

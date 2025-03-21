@@ -41,20 +41,26 @@ printf 'yyy\nyyy\n' >fff11
 git add aaa0 bbb2 ccc4 ddd6 eee8
 printf 'zzz\nxxx\nxxx\nzzz\n' >ccc4
 rm bbb2 ddd7
-printf 'y s y n s n y n y n ' | tr ' ' '\n' >.git/answers_for_patch
+printf 'y s y n s n y n ' | tr ' ' '\n' >.git/answers_for_patch0
+printf 'y n ' | tr ' ' '\n' >.git/answers_for_patch1
 if ! IS_PATHSPEC_NULL_SEP
 then
 	printf 'aaa0 bbb? *5 ./?dd* fff1? ' | tr ' ' '\n' >.git/pathspec_for_test
 else
 	printf 'aaa0 bbb? *5 ./?dd* fff1? ' | tr ' ' '\0' >.git/pathspec_for_test
 fi
-if IS_PATHSPEC_IN_ARGS
+{
+	 cat .git/answers_for_patch0
+	 sleep 1  # On Windows a child shell tends to eat all the stdin if it's able to. This prevents it. If it still doesn't work, try to increase the time.
+	 cat .git/answers_for_patch1
+} \
+| if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash push 'aaa0' $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS 'bbb?' --patch -m 'a very controlled stash' $EOI '*5' './?dd*' 'fff1?' <.git/answers_for_patch
+	assert_exit_code 0 git istash push 'aaa0' $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS 'bbb?' --patch -m 'a very controlled stash' $EOI '*5' './?dd*' 'fff1?'
 else
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS -m 'a very controlled stash' --patch $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test <.git/answers_for_patch
+	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS -m 'a very controlled stash' --patch $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
 fi
 if ! IS_KEEP_INDEX_ON
 then
