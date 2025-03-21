@@ -3,7 +3,7 @@
 set -e
 
 print_help() {
-	printf '%s - Test script that runs "shellcheck" on all shell scripts in this\n    repository. ' "$(basename "$0")"
+	printf '%s - A test script that runs "shellcheck" on all shell scripts in\n    this repository.\n' "$(basename "$0")"
 	printf '\n'
 	printf 'Usage: %s [<options...>]\n' "$(basename "$0")"
 	printf '\n'
