@@ -16,6 +16,7 @@ git add aaa
 printf 'ccc\n' >aaa
 git stash push -m 'the stash'
 assert_branch_count 1
+assert_dotgit_contents
 
 SWITCH_HEAD_TYPE
 
@@ -37,3 +38,4 @@ assert_head_name_H
 assert_data_files 'none'
 assert_rebase n
 assert_branch_metadata_H
+assert_dotgit_contents

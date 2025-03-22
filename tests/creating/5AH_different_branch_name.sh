@@ -50,6 +50,7 @@ else
 fi
 assert_rebase n
 assert_branch_metadata_H
+assert_dotgit_contents
 
 git reset --hard
 
@@ -72,3 +73,4 @@ else
 fi
 assert_rebase n
 assert_branch_metadata_H
+assert_dotgit_contents

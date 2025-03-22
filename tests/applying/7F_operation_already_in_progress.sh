@@ -35,6 +35,7 @@ DU aaa		bbb
 assert_stash_count 1
 assert_data_files "$OPERATION"
 assert_rebase y
+assert_dotgit_contents_for "$OPERATION"
 
 __test_section__ "$CAP_OPERATION stash again"
 correct_head_hash="$(get_head_hash_H)"
@@ -53,3 +54,4 @@ assert_head_hash_H "$correct_head_hash"
 assert_data_files "$OPERATION"
 assert_rebase y
 assert_branch_metadata_H
+assert_dotgit_contents_for "$OPERATION"

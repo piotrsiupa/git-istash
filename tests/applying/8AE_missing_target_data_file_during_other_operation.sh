@@ -38,6 +38,7 @@ assert_stash_count 1
 assert_branch_count_H 1
 assert_data_files "$OTHER_OPERATION"
 assert_rebase y
+assert_dotgit_contents_for "$OTHER_OPERATION"
 
 __test_section__ "Continue $OPERATION stash (0)"
 correct_head_hash2="$(get_head_hash_H)"
@@ -58,6 +59,12 @@ assert_stash_count 1
 assert_branch_count_H 1
 assert_head_hash_H "$correct_head_hash2"
 assert_rebase y
+if IS_APPLY
+then
+	assert_dotgit_contents 'ISTASH_STASH' 'ISTASH_TARGET~'
+else
+	assert_dotgit_contents 'ISTASH_TARGET~'
+fi
 
 __test_section__ "Continue $OTHER_OPERATION stash (1)"
 mv .git/ISTASH_TARGET~ .git/ISTASH_TARGET
@@ -85,3 +92,4 @@ assert_head_name_H
 assert_data_files 'none'
 assert_rebase n
 assert_branch_metadata_H
+assert_dotgit_contents

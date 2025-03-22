@@ -37,6 +37,7 @@ assert_stash_count 1
 assert_branch_count_H 1
 assert_data_files 'pop'
 assert_rebase y
+assert_dotgit_contents_for 'pop'
 
 if IS_APPLY
 then
@@ -62,6 +63,7 @@ assert_stash_count 1
 assert_branch_count_H 1
 assert_head_hash_H "$correct_head_hash2"
 assert_rebase y
+assert_dotgit_contents 'ISTASH_STASH' 'ISTASH_TARGET~'
 
 __test_section__ 'Abort popping stash'
 mv .git/ISTASH_TARGET~ .git/ISTASH_TARGET
@@ -82,3 +84,4 @@ assert_head_name_H
 assert_data_files 'none'
 assert_rebase n
 assert_branch_metadata_H
+assert_dotgit_contents

@@ -38,6 +38,7 @@ assert_stash_count 1
 assert_branch_count_H 1
 assert_data_files "$OTHER_OPERATION"
 assert_rebase y
+assert_dotgit_contents_for "$OTHER_OPERATION"
 
 __test_section__ "Continue $OPERATION stash"
 correct_head_hash2="$(get_head_hash_H)"
@@ -58,6 +59,7 @@ assert_branch_count_H 1
 assert_head_hash_H "$correct_head_hash2"
 assert_data_files "$OTHER_OPERATION"
 assert_rebase y
+assert_dotgit_contents_for "$OTHER_OPERATION"
 
 __test_section__ "Abort $OTHER_OPERATION stash"
 #shellcheck disable=SC2086
@@ -78,3 +80,4 @@ assert_head_name_H
 assert_data_files 'none'
 assert_rebase n
 assert_branch_metadata_H
+assert_dotgit_contents

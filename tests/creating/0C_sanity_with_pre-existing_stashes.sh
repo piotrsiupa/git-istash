@@ -24,6 +24,7 @@ assert_log_length 2
 assert_branch_count 1
 assert_rebase n
 assert_branch_metadata_H
+assert_dotgit_contents
 
 SWITCH_HEAD_TYPE
 
@@ -53,6 +54,7 @@ then
 	assert_head_name_H
 	assert_rebase n
 	assert_branch_metadata_H
+	assert_dotgit_contents
 else
 	if git stash push
 	then

@@ -33,6 +33,7 @@ assert_stash_count 1
 assert_branch_count 1
 assert_data_files "$OPERATION"
 assert_rebase y
+assert_dotgit_contents_for "$OPERATION"
 
 __test_section__ "Abort $OPERATION stash (0)"
 master_hash="$(git rev-parse master)"
@@ -45,6 +46,7 @@ assert_stash_count 1
 assert_branch_count 0
 assert_data_files "$OPERATION"
 assert_rebase y
+assert_dotgit_contents_for "$OPERATION"
 
 __test_section__ "Abort $OPERATION stash (1)"
 git branch master "$master_hash"
@@ -66,3 +68,4 @@ assert_head_name_H
 assert_data_files 'none'
 assert_rebase n
 assert_branch_metadata_H
+assert_dotgit_contents

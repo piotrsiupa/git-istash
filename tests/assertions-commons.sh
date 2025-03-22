@@ -312,3 +312,22 @@ assert_branch_metadata_H() {
 		assert_branch_metadata
 	fi
 }
+
+assert_dotgit_contents() { # expected_file_names...
+	expected_value="$(printf '%s\n' "$@" | sort)"
+	value_for_assert="$(find .git -type f -name '*[Ii][Ss][Tt][Aa][Ss][Hh]*' | sed 's;^\.git/;;' | sort)"
+	test "$value_for_assert" = "$expected_value" ||
+		fail 'Unexpected files were left in the directory ".git":\n%s\nExpected:\n%s\n' "$(printf '%s' "$value_for_assert" | sed 's/^.*$/- "&"/')" "$(printf '%s' "$expected_value" | sed 's/^.*$/- "&"/')"
+	unset expected_value
+	unset value_for_assert
+}
+assert_dotgit_contents_for() { # operation [additional_expected_file_names...]
+	operation_for_assert="$1"
+	shift
+	case "$operation_for_assert" in
+		'apply') assert_dotgit_contents 'ISTASH_TARGET' "$@" ;;
+		'pop') assert_dotgit_contents 'ISTASH_TARGET' 'ISTASH_STASH' "$@" ;;
+		*) fail 'Unknown operation "%s"!' "$operation_for_assert" ;;
+	esac
+	unset operation_for_assert
+}

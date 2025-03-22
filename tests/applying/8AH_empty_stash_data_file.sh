@@ -40,6 +40,7 @@ DU aaa		bbb
 assert_stash_count 1
 assert_data_files "$OPERATION"
 assert_rebase y
+assert_dotgit_contents_for "$OPERATION"
 
 __test_section__ "Continue $OPERATION stash (0)"
 correct_head_hash2="$(get_head_hash_H)"
@@ -60,6 +61,7 @@ A  aaa		eee
 assert_stash_count 1
 assert_head_hash_H "$correct_head_hash2"
 assert_rebase y
+assert_dotgit_contents_for "$OPERATION" 'ISTASH_STASH~'
 
 __test_section__ "Continue $OPERATION stash (1)"
 mv .git/ISTASH_STASH~ .git/ISTASH_STASH
@@ -81,3 +83,4 @@ assert_head_name_H
 assert_data_files 'none'
 assert_rebase n
 assert_branch_metadata_H
+assert_dotgit_contents

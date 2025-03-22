@@ -37,6 +37,7 @@ assert_stash_count 1
 assert_branch_count_H 1
 assert_data_files "$OPERATION"
 assert_rebase y
+assert_dotgit_contents_for "$OPERATION"
 
 __test_section__ "Continue $OPERATION stash (0)"
 printf 'eee\n' >aaa
@@ -53,6 +54,7 @@ assert_stash_count 1
 assert_branch_count_H 1
 assert_data_files "$OPERATION"
 assert_rebase y
+assert_dotgit_contents_for "$OPERATION"
 
 __test_section__ "Continue $OPERATION stash (1)"
 printf 'fff\n' >aaa
@@ -73,3 +75,4 @@ assert_head_name_H
 assert_data_files 'none'
 assert_rebase n
 assert_branch_metadata_H
+assert_dotgit_contents

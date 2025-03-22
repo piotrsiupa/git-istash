@@ -35,6 +35,7 @@ DU aaa		bbb
 assert_stash_count 1
 assert_data_files "$OPERATION"
 assert_rebase y
+assert_dotgit_contents_for "$OPERATION"
 
 __test_section__ "Continue $OPERATION stash"
 printf 'ddd\n' >aaa
@@ -55,3 +56,4 @@ assert_head_name 'HEAD'
 assert_data_files "$OPERATION"
 assert_rebase n
 assert_branch_metadata_H
+assert_dotgit_contents_for "$OPERATION"

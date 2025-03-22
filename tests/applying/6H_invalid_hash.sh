@@ -31,6 +31,7 @@ assert_head_hash_H "$correct_head_hash"
 assert_head_name_H
 assert_data_files 'none'
 assert_rebase n
+assert_dotgit_contents
 
 __test_section__ "$CAP_OPERATION stash (with changes)"
 printf 'ccc\n' >aaa
@@ -50,3 +51,4 @@ assert_head_name_H
 assert_data_files 'none'
 assert_rebase n
 assert_branch_metadata_H
+assert_dotgit_contents

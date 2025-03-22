@@ -36,3 +36,4 @@ then
 fi
 assert_stash_hash 0 "$later_stash_hash"
 assert_branch_metadata_H
+assert_dotgit_contents

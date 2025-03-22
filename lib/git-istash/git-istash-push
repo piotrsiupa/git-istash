@@ -111,8 +111,11 @@ initialize_octal_conversion() {
 		}
 	fi
 }
-initialize_pathspec() { # pathspecs
+initialize_pathspec_file_path() {
 	pathspec_file="$(git rev-parse --git-dir)/ISTASH_PATHSPEC"
+}
+initialize_pathspec() { # pathspecs
+	initialize_pathspec_file_path
 	if [ "$pathspec_from_file" = '-' ]
 	then
 		convert_pathspec_file >"$pathspec_file"
@@ -132,6 +135,7 @@ initialize() { # pathspecs
 	initialize_pathspec "$@"
 }
 cleanup() {
+	initialize_pathspec_file_path
 	if [ -n "$pathspec_file" ]
 	then
 		rm -f "$pathspec_file"
@@ -485,7 +489,6 @@ do_push() { # pathspecs...
 	else
 		create_stash
 	fi
-	cleanup
 }
 
 getopt_short_options='ahkm:u'
@@ -571,4 +574,12 @@ then
 	exit 1
 fi
 
-do_push "$@"
+set +e
+(
+	set -e
+	do_push "$@"
+)
+exit_code=$?
+set -e
+cleanup
+exit $exit_code

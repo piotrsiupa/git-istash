@@ -32,6 +32,7 @@ assert_stash_count 1
 assert_branch_count 1
 assert_data_files "$OPERATION"
 assert_rebase y
+assert_dotgit_contents_for "$OPERATION"
 
 __test_section__ "Continue $OPERATION stash"
 printf 'ddd\n' >aaa
@@ -42,3 +43,4 @@ assert_exit_code 1 git istash "$OPERATION" --continue
 assert_file_contents ignored0 'ignored0'
 assert_file_contents ignored1 'ignored1'
 assert_branch_metadata_H
+assert_dotgit_contents_for "$OPERATION" 'ISTASH_TARGET~'

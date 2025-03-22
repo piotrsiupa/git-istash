@@ -55,6 +55,7 @@ then
 	assert_head_name_H
 	assert_rebase n
 	assert_branch_metadata_H
+	assert_dotgit_contents
 else
 	cd xxx
 	if git stash push -u --message 'some name'

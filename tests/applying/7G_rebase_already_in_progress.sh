@@ -35,6 +35,7 @@ assert_stash_count 1
 assert_branch_count 2
 assert_data_files 'none'
 assert_rebase y
+assert_dotgit_contents
 
 __test_section__ "$CAP_OPERATION stash"
 correct_head_hash="$(get_head_hash_H)"
@@ -51,3 +52,4 @@ assert_head_hash_H "$correct_head_hash"
 assert_data_files 'none'
 assert_rebase y
 assert_branch_metadata_H
+assert_dotgit_contents
