@@ -17,7 +17,7 @@ fi
 
 set -e
 
-cd ../..
+cd ../../..
 WAS_IT_CALLED_FROM_COMMONS_SH='affirmative'
 . ./set-up-repo.sh
 . ./utils.sh

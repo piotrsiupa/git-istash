@@ -13,7 +13,7 @@ cd -
 export GIT_CONFIG_SYSTEM=/dev/null
 export GIT_CONFIG_GLOBAL=/dev/null
 
-if [ -e '.git' ] || [ -e '../.git' ] || [ -e '../../.git' ]
+if [ -e '.git' ] || [ -e '../.git' ] || [ -e '../../.git' ] || [ -e '../../../.git' ]
 then
 	printf 'It looks like we'\''re not in the test directory!\n' 1>&2
 	exit 1
@@ -34,7 +34,7 @@ printf 'ignored?\n' >>.git/info/exclude
 printf 'ignored0\n' >ignored0
 printf 'ignored1\n' >ignored1
 
-git remote add 'my-origin' "file://$(dirname "$(dirname "$(pwd -L)")")/remote-for-tests"
+git remote add 'my-origin' "file://$(dirname "$(dirname "$(dirname "$(pwd -L)")")")/remote-for-tests"
 git fetch --quiet 'my-origin'
 git branch --set-upstream-to='my-origin/my-branch'
 

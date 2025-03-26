@@ -8,7 +8,7 @@ fi
 
 
 . ./assertions-commons.sh
-case "$(basename "$(dirname "$OLDPWD")")" in
+case "$(basename "$(dirname "$(dirname "$OLDPWD")")")" in
 	applying) . ./assertions-for-applying.sh ;;
 	creating) . ./assertions-for-creating.sh ;;
 esac

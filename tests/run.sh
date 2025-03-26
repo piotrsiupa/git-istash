@@ -92,15 +92,17 @@ create_test_remote() {
 get_test_script() { # test_name
 	printf '%s.sh' "$1"
 }
-get_test_dir() { # test_name
-	printf '%s/t_dir__%s' "$(basename "$(dirname "$1")")" "$(basename "$1")"
+get_test_dir() { # test_name [parameters_string]
+	printf '%s/t_dir__%s/%s' "$(basename "$(dirname "$1")")" "$(basename "$1")" "$2"
 }
 
-cleanup_test() { # test_name
-	rm -rf "$(get_test_dir "$1")"
+cleanup_test() { # test_name [parameters_string]
+	rm -rf "$(get_test_dir "$@")"
 }
-create_test_dir() { # test_name
+create_test_dir() { # test_name [parameters_string]
 	test_dir="$(get_test_dir "$1")"
+	mkdir -p "$test_dir"
+	test_dir="$(get_test_dir "$1" "$2")"
 	mkdir "$test_dir"
 }
 
@@ -129,12 +131,12 @@ do_run_test() { # test_name
 	{
 		{
 			export WAS_IT_CALLED_FROM_RUN_SH='indeed'
-			if ! cd "$(get_test_dir "$1")"
+			if ! cleanup_test "$1" 'current' || ! create_test_dir "$1" 'current' || ! cd "$(get_test_dir "$1" 'current')"
 			then
 				printf '0' 1>&4
 			elif [ "$debug_mode" = n ]
 			then
-				if sh "../$(basename "$(get_test_script "$1")")" 1>/dev/null 2>&1
+				if sh "../../$(basename "$(get_test_script "$1")")" 1>/dev/null 2>&1
 				then
 					printf y 1>&4
 				else
@@ -142,7 +144,7 @@ do_run_test() { # test_name
 				fi
 			else
 				{
-					if sh "../$(basename "$(get_test_script "$1")")"
+					if sh "../../$(basename "$(get_test_script "$1")")"
 					then
 						printf y 1>&4
 					else
@@ -262,14 +264,13 @@ run_test() ( # test_name
 	output_file="$(mktemp)"
 	parametrized_run_cap=2048
 	iteration_cap=$((parametrized_run_cap * 8))
+	cleanup_test "$1"
 	for i in $(seq 1 $iteration_cap)
 	do
 		sed -iE '/^--------$/ d' "$PARAMETERS_FILE"
 		printf -- '--------\n' >>"$PARAMETERS_FILE"
 		ROTATE_PARAMETER=y
 		export ROTATE_PARAMETER
-		cleanup_test "$1"
-		create_test_dir "$1" 1>/dev/null
 		exec 4>"$output_file"
 		test_result="$(
 			do_run_test "$1"
@@ -312,21 +313,20 @@ run_test() ( # test_name
 			fi
 			if [ "$test_passed" = y ] || [ -n "$known_failure_reason" ]
 			then
-				cleanup_test "$1"
+				cleanup_test "$1" 'current'
 			fi
 			if [ -n "$parameters_string" ]
 			then
-				test_dir="$(get_test_dir "$1")"
-				parametrized_test_dir="${test_dir}__$(awk 'x{print $2} /^--------$/{x=1}' "$PARAMETERS_FILE" | head -c-1 | tr '\n' '_')"
-				rm -rf "$parametrized_test_dir"
+				test_dir="$(get_test_dir "$1" 'current')"
 				if [ -e "$test_dir" ]
 				then
+					parameters_string="$(awk 'x{print $2} /^--------$/{x=1}' "$PARAMETERS_FILE" | head -c-1 | tr '\n' '_')"
+					parametrized_test_dir="$(get_test_dir "$1" "$parameters_string")"
 					mv "$test_dir" "$parametrized_test_dir"
-					mkdir "$test_dir"
 				fi
 			fi
 		else
-			cleanup_test "$1"
+			cleanup_test "$1" 'current'
 		fi
 		if { [ "$meticulousness" -le 1 ] && [ $test_count -ne 0 ] ; } || [ -z "$(awk '$2 != $3 { print 1 }' "$PARAMETERS_FILE")" ]
 		then
@@ -345,6 +345,7 @@ run_test() ( # test_name
 			break
 		fi
 	done
+	rmdir "$(get_test_dir "$1")" 2>/dev/null || true
 	if [ "$i" != x ]
 	then
 		failed_count=$((failed_count + 1))

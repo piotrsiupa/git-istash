@@ -9,7 +9,7 @@ fi
 
 . ./utils-commons.sh
 . ./utils-parametrization.sh
-case "$(basename "$(dirname "$OLDPWD")")" in
+case "$(basename "$(dirname "$(dirname "$OLDPWD")")")" in
 	applying) . ./utils-for-applying.sh ;;
 	creating) . ./utils-for-creating.sh ;;
 esac
