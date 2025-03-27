@@ -30,7 +30,7 @@ printf 'e n ' | tr ' ' '\n' >.git/answers_for_patch0
 printf 'e n ' | tr ' ' '\n' >.git/answers_for_patch1
 {
 	 cat .git/answers_for_patch0
-	 sleep 1  # On Windows a child shell tends to eat all the stdin if it's able to. This prevents it. If it still doesn't work, try to increase the time.
+	 sleep 5  # On Windows a child shell tends to eat all the stdin if it's able to. This prevents it. If it still doesn't work, try to increase the time.
 	 cat .git/answers_for_patch1
 } \
 | {
