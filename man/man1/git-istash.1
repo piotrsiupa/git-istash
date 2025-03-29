@@ -3,18 +3,34 @@
 .ad l
 
 .SH NAME
-git\-istash \- Handle Git stashes without arbitrary limitations
+git\-istash \- Handle Git stashes without arbitrary limitations of the original command
 
 .SH SYNOPSIS
 .nf
-\fBgit istash\fR ( pop | apply ) [<\fIstash\fR>]
-\fBgit istash\fR ( pop | apply ) ( \-\-continue | \-\-abort )
+\fBgit istash\fR push [-a | --all] [--allow-empty] [-k | --[no-]keep-index]
+              [(-m | --message) <\fImessage\fR>] [--patch] [--patchspec-file-nul]
+              [--patchspec-from-file=<\fIfile\fR>] [-u | --[no-]include-untracked]
+              [--] [<\fIpathspec\fR>...]
+\fBgit istash\fR [-a | --all] [--allow-empty] [-k | --[no-]keep-index]
+              [(-m | --message) <\fImessage\fR>] [--patch] [--patchspec-file-nul]
+              [--patchspec-from-file=<\fIfile\fR>] [-u | --[no-]include-untracked]
+              [-- <\fIpathspec\fR>...]
+\fBgit istash\fR (pop | apply) [<\fIstash\fR>]
+\fBgit istash\fR (pop | apply) ( \-\-continue | \-\-abort )
 .fi
 
 .SH DESCRIPTION
-\fBgit istash\fR ("improved stash") is an extension for \fBgit stash\fR, compatible with stash entries created by it. \
+\fBgit istash\fR ("improved stash") is an alternative implementation for \fBgit stash\fR, mostly compatible with stash entries created by it (other than special cases in \fBgit stash\fR which are not present in \fBgit istash\fR). \
 Use \fBgit istash\fR commands as a replacement for \fBgit stash\fR commands with the same names.
 .sp
+
+\fBgit istash push\fR:
+.RS 4
+This command creates a new stash entry containing files (specified by options and pathspecs). \
+These files are then reverted in the working directory (usually, depending on options).
+.br
+(This is mostly the same as the \fBgit stash\fR equivalent, except for some corner cases and combinations of options.)
+.RE
 
 \fBgit istash apply\fR and \fBgit istash pop\fR:
 .RS 4
@@ -26,20 +42,34 @@ In case of conflicts, instead of refusing and demanding to run it without \fB\-\
 After the conflicts are resolved, the commands can be resumed with \fB\-\-continue\fR. \
 Alternatively, \fB\-\-abort\fR can be used to cancel the operation and return to the repository state before it started.
 .br
-Because of the multi-stage conflict resolution, \fIthe index saved to the stash entry will be preserved\fR.
+Because of the multi-stage conflict resolution, \fIthe index saved to the stash entry will be preserved\fR (unlike in \fBgit stash\fR equivalent commands).
 .RE
 
 .SH COMMANDS
 
 .PP
-\fBapply\fR [<\fIstash\fR>]
+\fBpush\fR [-a | --all] [--allow-empty] [-k | --[no-]keep-index] [(-m | --message) <\fImessage\fR>] [--patch] [--patchspec-file-nul] [--patchspec-from-file=<\fIfile\fR>] [-u | --[no-]include-untracked] [--] [<\fIpathspec\fR>...]
+.RS 4
+Like \fBgit stash push\fR, except some minor differences.
+.br
+Every sensible combination of options is supported (including \fB--all\fR in conjunction with \fB--no-include-untracked\fR which results in adding ignored files but leaving non-ignored untracked ones). \
+The option \fB--patch\fR works also with untracked files. \
+Failing to create a stash is much more reliable especially in the case when there is no files to stash. \
+(There is a new option \fB--allow-empty\fR to bypass that.) \
+Stashes can be created on orphan branches. \
+The pathspec affect stashed index too. \
+And finally, the options \fB--patch\fR and \fB--pathspec-from-file\fR are allowed together.
+.RE
+
+.PP
+\fBapply\fR [<\fIstash\fR> | -c | --continue]
 .RS 4
 Like \fBgit stash apply \-\-index\fR, but it handles staged and unstaged conflicts separately, preventing those scopes from mixing. \
 \fB<stash>\fR may be any commit that looks like a commit created by \fBgit stash push\fR or \fBgit stash create\fR.
 .RE
 
 .PP
-\fBpop\fR [<\fIstash\fR>]
+\fBpop\fR [<\fIstash\fR> | -c | --continue]
 .RS 4
 Like \fBgit stash pop \-\-index\fR, but it handles staged and unstaged conflicts separately, preventing those scopes from mixing. \
 Unlike \fBgit stash pop\fR, it can handle stashes referenced by name (\fBstash^{/<name>}\fR).
@@ -53,14 +83,97 @@ This is the inverse operation of \fBgit stash push\fR.
 .SH OPTIONS
 
 .PP
+\fB-a\fR, \fB--all\fR
+.RS 4
+This options is only valid for \fBpush\fR command.
+.sp
+All ignored and untracked files are also stashed and then removed.
+.RE
+
+.PP
+\fB--allow-empty\fR
+.RS 4
+This options is only valid for \fBpush\fR command.
+.sp
+Stash is created even if there is no changes or options / pathspec exclude all of them. \
+The exit code becomes 0 in such cases.
+.RE
+
+.PP
+\fB-k\fR, \fB--keep-index\fR, \fB--no-keep-index\fR
+.RS 4
+This options is only valid for \fBpush\fR command.
+.sp
+All changes already added to the index are left intact.
+.br
+(\fB--no-keep-index\fR not that useful; it exist mainly to comply with the standard stash command.)
+.RE
+
+.PP
+\fB-m\fR <\fImessage\fR>, \fB--message\fR <\fImessage\fR>
+.RS 4
+This options is only valid for \fBpush\fR command.
+.sp
+Custom message (name) for stash is used instead of the one generated using the last commit message.
+.RE
+
+.PP
+\fB--patch\fR
+.RS 4
+This options is only valid for \fBpush\fR command.
+.sp
+Interactively select hunks from the diff between HEAD and the working tree to be stashed.
+.br
+The stash entry is constructed such that its index state is the same as the index state of your repository, and its worktree contains only the changes you selected interactively. \
+The selected changes are then rolled back from your worktree. \
+See the “Interactive Mode” section of \fBgit-add\fR(1) to learn how to operate the \fB--patch\fR mode.
+.sp
+Unlike in the standard \fBgit stash\fR command, the option \fB--keep-index\fR is \fInot\fR affected.
+.RE
+
+.PP
+\fB--pathspec-from-file\fR=<\fIfile\fR>
+.RS 4
+This options is only valid for \fBpush\fR command.
+.sp
+Pathspec is passed in \fB<file>\fR instead of command line arguments. \
+If \fB<file>\fR is exactly \fB-\fR then standard input is used (so this is not allowed with \fB--patch\fR). \
+Pathspec elements are separated by LF or CR/LF and are interpreted the same way as the one passed via the command line. \
+See also \fB--pathspec-file-nul\fR.
+.RE
+
+.PP
+\fB--pathspec-file-nul\fR
+.RS 4
+This options is only valid for \fBpush\fR command.
+.sp
+Only meaningful with \fB--pathspec-from-file\fR. \
+Pathspec elements are separated with NUL character and all other characters are taken literally (including newlines and quotes).
+.RE
+
+.PP
+\fB-u\fR, \fB--inclulde-untracked\fR, \fB--no-include-untracked\fR
+.RS 4
+This options is only valid for \fBpush\fR command.
+.sp
+All untracked files are also stashed and then removed.
+.br
+\fB--no-include-untracked\fR also affect \fB--all\fR, resulting in stashing and removing only ignored files.
+.RE
+
+.PP
 \fB\-\-continue\fR
 .RS 4
+This options is only valid for \fBapply\fR and \fBpop\fR commands.
+.sp
 Resume the operation after conflicts have been resolved.
 .RE
 
 .PP
 \fB\-\-abort\fR
 .RS 4
+This options is only valid for \fBapply\fR and \fBpop\fR commands.
+.sp
 Cancel the operation and restore the repository to the state before it started.
 .RE
 
@@ -77,6 +190,22 @@ Prefer \fBgit help istash\fR over \fBgit istash [<sub-command>] -h\fR.
 \fB\-\-version\fR
 .RS 4
 Display version information for the script.
+.RE
+
+.PP
+\fB--\fR
+.RS 4
+Separates options from non-option arguments (like stash or pathspec) for disambiguation purposes.
+.RE
+
+.PP
+\fB<pathspec>...\fR
+.RS 4
+This options is only valid for \fBpush\fR command.
+.sp
+The new stash entry records the modified states and roll back only for the files that match the pathspec.
+.sp
+For more details, see the \fIpathspec\fR entry in \fBgitglossary\fR(7).
 .RE
 
 .PP
@@ -130,7 +259,7 @@ You can use \fBgit istash\fR to simplify it \fIand\fR keep the index intact:
 .RS 4
 .nf
 # ... hack hack hack ...
-$ git stash
+$ git istash
 # Implement the idea
 $ git commit \-a \-m "Best change ever"
 $ git istash pop
@@ -155,7 +284,7 @@ When \fBgit istash\fR encounters conflicts, it behaves like \fBgit rebase\fR and
 .RS 4
 .nf
 # ... hack hack hack ...
-$ git stash
+$ git istash
 # Implement the idea
 $ git commit \-a \-m "Best change ever"
 $ git istash pop
