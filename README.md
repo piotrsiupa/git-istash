@@ -103,7 +103,7 @@ Most of the changes here, however, are bugs that were found during tests to be p
 - Options can now follow non-option arguments (like they are allowed to in POSIX utilities).
 - Option `--no-include-untracked` doesn't override `--all` anymore. (Instead, ignored files are included if both options are specified.)
 - Option `--patch` now works with untracked files.
-- Options `--patch` and `--pathspec` are allowed together now.
+- Options `--patch` and `--pathspec-from-file` are allowed together now.
 - Files in index are affected by the pathspec now.
 - Stash can be created on an orphan branch now.
 - There is an option `--allow-empty` now, that allows creation of stash when there are no changes.
