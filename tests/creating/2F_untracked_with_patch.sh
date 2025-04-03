@@ -6,6 +6,8 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_ALL 'DEFAULT'
 PARAMETRIZE_UNTRACKED 'DEFAULT' 'NO'
 PARAMETRIZE_KEEP_INDEX
+PARAMETRIZE_STAGED
+PARAMETRIZE_UNSTAGED
 
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
@@ -15,7 +17,7 @@ printf 'aaa\n' >aaa
 printf 'bbb\n' >bbb
 printf 'y n ' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash push $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS <.git/answers_for_patch
+assert_exit_code 1 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS --patch $KEEP_INDEX_FLAGS <.git/answers_for_patch
 assert_files_H '
 ?? aaa		aaa
 ?? bbb		bbb

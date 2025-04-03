@@ -6,6 +6,8 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_ALL 'DEFAULT'
 PARAMETRIZE_UNTRACKED 'DEFAULT'
 PARAMETRIZE_KEEP_INDEX
+PARAMETRIZE_STAGED 'YES'
+PARAMETRIZE_UNSTAGED 'YES'
 
 __test_section__ 'Create pre-existing stash (0)'
 printf 'xxx\n' >aaa
@@ -30,7 +32,7 @@ git add aaa
 printf 'bbb\n' >aaa
 printf 'ddd\n' >ddd
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash push $ALL_FLAGS $UNTRACKED_FLAGS $KEEP_INDEX_FLAGS
+assert_exit_code 0 git istash push $ALL_FLAGS $UNTRACKED_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_H '

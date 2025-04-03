@@ -4,6 +4,8 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_ALL 'YES'
 PARAMETRIZE_UNTRACKED 'DEFAULT' 'YES'
 PARAMETRIZE_KEEP_INDEX
+PARAMETRIZE_STAGED 'YES'
+PARAMETRIZE_UNSTAGED 'YES'
 
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
@@ -14,14 +16,14 @@ git add aaa
 printf 'bbb\n' >aaa
 printf 'ddd\n' >ddd
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS --message 'name of the new stash'
+assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS $ALL_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $UNTRACKED_FLAGS --message 'name of the new stash'
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_H '
 	'
 else
 	assert_files_H '
-	A  aaa			aaa
+	A  aaa		aaa
 	'
 fi
 assert_stash_H 0 'name of the new stash' '

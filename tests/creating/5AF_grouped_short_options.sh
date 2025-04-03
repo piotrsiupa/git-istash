@@ -10,7 +10,7 @@ SWITCH_HEAD_TYPE
 __test_section__ 'Create stash'
 printf 'bbb\n' >aaa
 git add aaa
-assert_exit_code 0 git istash push -kmabc
+assert_exit_code 0 git istash push -kSmabc
 assert_files_H '
 A  aaa		bbb
 !! ignored0	ignored0

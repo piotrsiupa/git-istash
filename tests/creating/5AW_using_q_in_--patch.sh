@@ -6,6 +6,8 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_ALL 'YES'
 PARAMETRIZE_UNTRACKED 'DEFAULT' 'YES'
 PARAMETRIZE_KEEP_INDEX
+PARAMETRIZE_STAGED
+PARAMETRIZE_UNSTAGED 'YES'
 
 __test_section__ 'Prepare repository'
 printf 'xxx\n' >aaa
@@ -23,7 +25,7 @@ printf 'yyy\n' >ccc
 printf 'yyy\n' >ddd
 printf 'q q y y y y ' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS --allow-empty <.git/answers_for_patch
+assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS --allow-empty <.git/answers_for_patch
 assert_files_H '
  M aaa		yyy	xxx
  M bbb		yyy	xxx

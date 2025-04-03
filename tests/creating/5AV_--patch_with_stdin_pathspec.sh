@@ -8,6 +8,8 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_ALL 'DEFAULT'
 PARAMETRIZE_UNTRACKED 'YES'
 PARAMETRIZE_KEEP_INDEX
+PARAMETRIZE_STAGED 'YES'
+PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_PATHSPEC_STYLE 'STDIN' 'NULL-STDIN'
 PARAMETRIZE_OPTIONS_INDICATOR IS_PATHSPEC_IN_ARGS
 
@@ -51,7 +53,7 @@ else
 	printf 'aaa0 bbb? *5 ./?dd* fff1? ' | tr ' ' '\0' >>.git/patchspec_for_test
 fi
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS -m 'a very controlled stash' --patch $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/patchspec_for_test
+assert_exit_code 1 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'a very controlled stash' --patch $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/patchspec_for_test
 assert_files_H '
 M  aaa0		yyy\nxxx\nxxx\nyyy
  M aaa1		yyy\nxxx\nxxx\nyyy	xxx\nxxx

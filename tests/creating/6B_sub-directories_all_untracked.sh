@@ -6,6 +6,8 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_ALL
 PARAMETRIZE_UNTRACKED 'YES'
 PARAMETRIZE_KEEP_INDEX
+PARAMETRIZE_STAGED
+PARAMETRIZE_UNSTAGED
 
 # We don't need those in this test.
 rm ignored0 ignored1
@@ -25,7 +27,7 @@ printf 'xxx\n' >'b/1/i'
 printf 'xxx\n' >'b/1/j'
 cd 'a'
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
+assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
 cd -
 assert_files_H '
 '

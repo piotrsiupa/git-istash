@@ -6,6 +6,8 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_ALL 'DEFAULT'
 PARAMETRIZE_UNTRACKED 'YES'
 PARAMETRIZE_KEEP_INDEX
+PARAMETRIZE_STAGED 'YES'
+PARAMETRIZE_UNSTAGED
 
 __test_section__ 'Prepare repository'
 printf 'X' >.gitignore
@@ -21,7 +23,7 @@ printf 'bbb\n' >bbb
 printf 'aaa\n' >.gitignore
 git add .gitignore
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS -mX
+assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS -mX
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_H '

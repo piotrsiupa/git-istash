@@ -4,6 +4,8 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_ALL
 PARAMETRIZE_UNTRACKED 'YES' 'NO'
 PARAMETRIZE_KEEP_INDEX
+PARAMETRIZE_STAGED 'YES'
+PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_PATHSPEC_STYLE 'ARGS'
 PARAMETRIZE_OPTIONS_INDICATOR true
 
@@ -39,7 +41,7 @@ git add aaa0 bbb2 ccc4 ddd6 eee8
 printf 'zzz\n' >bbb2
 printf 'zzz\n' >ccc4
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash $UNTRACKED_FLAGS $ALL_FLAGS 'aaa0' $KEEP_INDEX_FLAGS 'bbb?' -m 'new stash' $EOI '*5' './?dd*'
+assert_exit_code 1 git istash $UNTRACKED_FLAGS $ALL_FLAGS 'aaa0' $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS 'bbb?' -m 'new stash' $EOI '*5' './?dd*'
 assert_files_H '
 M  aaa0		yyy
  M aaa1		yyy	xxx

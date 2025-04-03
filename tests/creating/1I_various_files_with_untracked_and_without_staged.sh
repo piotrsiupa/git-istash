@@ -1,28 +1,30 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
-non_essential_test
-
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
-PARAMETRIZE_ALL 'YES'
-PARAMETRIZE_UNTRACKED 'DEFAULT' 'YES'
+PARAMETRIZE_ALL 'DEFAULT'
+PARAMETRIZE_UNTRACKED 'YES'
 PARAMETRIZE_KEEP_INDEX
+PARAMETRIZE_STAGED 'NO'
+PARAMETRIZE_UNSTAGED 'YES'
 
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
 __test_section__ 'Create stash'
 printf 'aaa\n' >aaa
-printf 'bbb\n' >bbb
-printf 'y n y n ' | tr ' ' '\n' >.git/answers_for_patch
+git add aaa
+printf 'bbb\n' >aaa
+printf 'ddd\n' >ddd
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS -message <.git/answers_for_patch
+assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS $UNTRACKED_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS --message 'name of this stash'
 assert_files_H '
-?? bbb		bbb
+A  aaa		aaa
+!! ignored0	ignored0
 !! ignored1	ignored1
 '
-assert_stash_H 0 'essage' '
-?? aaa		aaa
-!! ignored0	ignored0
+assert_stash_H 0 'name of this stash' '
+ A aaa		bbb
+?? ddd		ddd
 '
 assert_stash_base_H 0 'HEAD'
 assert_stash_count 1
@@ -37,11 +39,13 @@ assert_dotgit_contents
 git reset --hard
 RESTORE_HEAD_TYPE
 
+known_failure 'The standard "git stash pop" doesn'\''t support files added with "git add -N".'
+
 __test_section__ 'Pop stash'
 assert_exit_code 0 git stash pop --index
 assert_files '
-?? aaa		aaa
-?? bbb		bbb
+ A aaa		bbb
+?? ddd		ddd
 !! ignored0	ignored0
 !! ignored1	ignored1
 '

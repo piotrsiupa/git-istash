@@ -6,6 +6,8 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_ALL 'DEFAULT'
 PARAMETRIZE_UNTRACKED 'YES'
 PARAMETRIZE_KEEP_INDEX
+PARAMETRIZE_STAGED
+PARAMETRIZE_UNSTAGED
 
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
@@ -15,7 +17,7 @@ printf 'aaa\n' >aaa
 printf 'bbb\n' >bbb
 printf 'aaa\n' >.gitignore
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS -mX
+assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS -mX
 assert_files_H '
 ?? aaa		aaa
 !! ignored0	ignored0

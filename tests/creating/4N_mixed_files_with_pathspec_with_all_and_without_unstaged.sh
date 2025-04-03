@@ -4,8 +4,10 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_ALL 'YES'
-PARAMETRIZE_UNTRACKED 'NO'
+PARAMETRIZE_UNTRACKED 'DEFAULT' 'YES'
 PARAMETRIZE_KEEP_INDEX
+PARAMETRIZE_STAGED 'YES'
+PARAMETRIZE_UNSTAGED 'NO'
 PARAMETRIZE_PATHSPEC_STYLE
 PARAMETRIZE_OPTIONS_INDICATOR IS_PATHSPEC_IN_ARGS
 
@@ -48,37 +50,34 @@ printf 'zzz\n' >ddd9
 printf 'zzz\n' >eee12
 if ! IS_PATHSPEC_NULL_SEP
 then
-	printf 'aaa0 bbb? *7 *ore?0 ./?dd* ' | tr ' ' '\n' >.git/pathspec_for_test
+	printf 'aaa0 bbb? c?c8 *ore?0 ./?dd* ' | tr ' ' '\n' >.git/pathspec_for_test
 else
-	printf 'aaa0 bbb? *7 *ore?0 ./?dd* ' | tr ' ' '\0' >.git/pathspec_for_test
+	printf 'aaa0 bbb? c?c8 *ore?0 ./?dd* ' | tr ' ' '\0' >.git/pathspec_for_test
 fi
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash push 'aaa0' $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS 'bbb?' $EOI '*7' '*ore?0' './?dd*'
+	assert_exit_code 0 git istash push 'aaa0' $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS 'bbb?' -m 'mr. stash' $EOI 'c?c8' '*ore?0' './?dd*'
 elif IS_PATHSPEC_IN_STDIN
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test
+	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'mr. stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test
 else
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
+	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'mr. stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
 fi
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_H '
-	   aaa0		xxx
+	 M aaa0		zzz	xxx
 	 M aaa1		yyy	xxx
 	?? aaa2		yyy
 	   bbb3		xxx
-	   bbb4		xxx
-	?? bbb5		yyy
+	 M bbb4		yyy	xxx
 	M  ccc6		yyy
-	   ccc7		xxx
-	?? ccc8		yyy
-	   ddd9		xxx
-	   ddd10	xxx
-	?? ddd11	yyy
+	 M ccc7		yyy	xxx
+	 M ddd9		zzz	xxx
+	 M ddd10	yyy	xxx
 	MM eee12	zzz	yyy
 	 M eee13	yyy	xxx
 	?? eee14	yyy
@@ -86,33 +85,33 @@ then
 	'
 else
 	assert_files_H '
-	M  aaa0		yyy
+	MM aaa0		zzz	yyy
 	 M aaa1		yyy	xxx
 	?? aaa2		yyy
 	M  bbb3		yyy
-	   bbb4		xxx
-	?? bbb5		yyy
+	 M bbb4		yyy	xxx
 	M  ccc6		yyy
-	   ccc7		xxx
-	?? ccc8		yyy
-	M  ddd9		yyy
-	   ddd10	xxx
-	?? ddd11	yyy
+	 M ccc7		yyy	xxx
+	MM ddd9		zzz	yyy
+	 M ddd10	yyy	xxx
 	MM eee12	zzz	yyy
 	 M eee13	yyy	xxx
 	?? eee14	yyy
 	!! ignored1	ignored1
 	'
 fi
-assert_stash_H 0 '' '
-MM aaa0		zzz	yyy
+assert_stash_H 0 'mr. stash' '
+M  aaa0		yyy
    aaa1		xxx
 M  bbb3		yyy
- M bbb4		yyy	xxx
+   bbb4		xxx
+?? bbb5		yyy
    ccc6		xxx
- M ccc7		yyy	xxx
-MM ddd9		zzz	yyy
- M ddd10	yyy	xxx
+   ccc7		xxx
+?? ccc8		yyy
+M  ddd9		yyy
+   ddd10	xxx
+?? ddd11	yyy
    eee12	xxx
    eee13	xxx
 !! ignored0	ignored0
@@ -133,17 +132,17 @@ RESTORE_HEAD_TYPE
 __test_section__ 'Pop stash'
 assert_exit_code 0 git stash pop --index
 assert_files '
-MM aaa0		zzz	yyy
+M  aaa0		yyy
    aaa1		xxx
 ?? aaa2		yyy
 M  bbb3		yyy
- M bbb4		yyy	xxx
+   bbb4		xxx
 ?? bbb5		yyy
    ccc6		xxx
- M ccc7		yyy	xxx
+   ccc7		xxx
 ?? ccc8		yyy
-MM ddd9		zzz	yyy
- M ddd10	yyy	xxx
+M  ddd9		yyy
+   ddd10	xxx
 ?? ddd11	yyy
    eee12	xxx
    eee13	xxx
