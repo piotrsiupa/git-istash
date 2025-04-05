@@ -149,12 +149,8 @@ check_pathspec() {
 	then
 		convert_to_octal <"$pathspec_file" \
 		| sed 's/\\000/\n/g' \
-		| while read -r ps
+		| while read -r ps || [ -n "$ps" ]
 		do
-			if [ -z "$ps" ]
-			then
-				continue
-			fi
 			good=n
 			#shellcheck disable=SC2059
 			if ! printf '%s' "$ps" | grep -qE '\\012' && printf -- "$ps" | grep -qE '^:([!^]:?|\(([^()],)?exclude(,[^()])?\))'
@@ -189,7 +185,7 @@ add_with_patch_and_pathspec() {
 	exec 3<&0
 	convert_to_octal <"$pathspec_file" \
 	| sed 's/\\000/\n/g' \
-	| while read -r ps
+	| while read -r ps || [ -n "$ps" ]
 	do
 		if [ -z "$ps" ]
 		then
