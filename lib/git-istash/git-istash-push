@@ -144,6 +144,12 @@ cleanup() {
 	fi
 }
 
+is_pathspec_exclude() { # pathspec
+	#shellcheck disable=SC2059
+	! printf '%s' "$1" | grep -qE '\\012' \
+	&& printf -- "$1" | grep -qE '^:([!^]:?|\(([^()],)?exclude(,[^()])?\))'
+}
+
 check_pathspec() {
 	if [ -n "$pathspec_file" ]
 	then
@@ -153,7 +159,7 @@ check_pathspec() {
 		do
 			good=n
 			#shellcheck disable=SC2059
-			if ! printf '%s' "$ps" | grep -qE '\\012' && printf -- "$ps" | grep -qE '^:([!^]:?|\(([^()],)?exclude(,[^()])?\))'
+			if is_pathspec_exclude "$ps"
 			then
 				good=y
 			elif printf -- "$ps" | xargs -0 -- git commit --dry-run --short --quiet -- 1>/dev/null 2>&1
@@ -181,18 +187,29 @@ check_pathspec() {
 	fi
 }
 
+add_with_pathspec() {
+	convert_to_octal <"$pathspec_file" \
+	| sed 's/\\000/\n/g' \
+	| while read -r ps || [ -n "$ps" ]
+	do
+		#shellcheck disable=SC2059
+		if is_pathspec_exclude "$ps" || printf -- "$ps" | xargs -0 -- git add --update --dry-run -- 1>/dev/null 2>&1
+		then
+			#shellcheck disable=SC2059
+			printf -- "$ps\0"
+		fi
+	done \
+	| xargs -r0 -- git add --update --
+}
+
 add_with_patch_and_pathspec() {
 	exec 3<&0
 	convert_to_octal <"$pathspec_file" \
 	| sed 's/\\000/\n/g' \
 	| while read -r ps || [ -n "$ps" ]
 	do
-		if [ -z "$ps" ]
-		then
-			continue
-		fi
 		#shellcheck disable=SC2059
-		if printf -- "$ps" | xargs -0 -- git add --update --dry-run -- 1>/dev/null 2>&1
+		if is_pathspec_exclude "$ps" || printf -- "$ps" | xargs -0 -- git add --update --dry-run -- 1>/dev/null 2>&1
 		then
 			#shellcheck disable=SC2059
 			printf -- "$ps\0"
@@ -229,7 +246,7 @@ commit_changes() {
 		else
 			if [ -z "$patch_options" ]
 			then
-				xargs -r0n1 -- git add --update -- <"$pathspec_file" || true
+				add_with_pathspec
 			else
 				add_with_patch_and_pathspec
 			fi
@@ -270,7 +287,7 @@ commit_changes() {
 		else
 			if [ -z "$patch_options" ]
 			then
-				xargs -r0n1 -- git add --update -- <"$pathspec_file" || true
+				add_with_pathspec
 			else
 				add_with_patch_and_pathspec
 			fi
@@ -299,11 +316,17 @@ commit_changes() {
 		then
 			git commit --message="index on $branch_name_for_msg: $default_message" --allow-empty
 		else
+			base_commit_hash="$(git rev-parse HEAD)"
 			xargs -r0 -- git diff --name-only HEAD --cached -z -- <"$pathspec_file" \
 			| (
 				cd "$(git rev-parse --show-toplevel)"
-				xargs -0 -- git commit --message="index on $branch_name_for_msg: $default_message" --allow-empty --
+				xargs -r0 -- git commit --message="index on $branch_name_for_msg: $default_message" --allow-empty --
 			)
+			if [ "$(git rev-parse HEAD)" = "$base_commit_hash" ]
+			then
+				index_commit_hash="$(git commit-tree 'HEAD^{tree}' -p 'HEAD' -m "index on $branch_name_for_msg: $default_message")"
+				git reset --soft "$index_commit_hash"
+			fi
 		fi
 	else
 		index_commit_hash="$(git commit-tree 'HEAD^{tree}' -p 'HEAD' -m "index on $branch_name_for_msg: $default_message")"
