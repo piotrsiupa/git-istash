@@ -48,7 +48,7 @@ Because of the multi-stage conflict resolution, \fIthe index saved to the stash 
 .SH COMMANDS
 
 .PP
-\fBpush\fR [-a | --all] [--allow-empty] [-k | --[no-]keep-index] [(-m | --message) <\fImessage\fR>] [--patch] [--patchspec-file-nul] [--patchspec-from-file=<\fIfile\fR>] [-u | --[no-]include-untracked] [--] [<\fIpathspec\fR>...]
+\fBpush\fR [-a\~|\~--all] [--allow-empty] [-k\~|\~--[no-]keep-index] [-l\~|\~--leave-staged] [(-m\~|\~--message) <\fImessage\fR>] [--patch] [--patchspec-file-nul] [--patchspec-from-file=<\fIfile\fR>] [-S\~|\~--staged] [-u\~|\~--[no-]include-untracked] [--] [<\fIpathspec\fR>...]
 .RS 4
 Like \fBgit stash push\fR, except some minor differences.
 .br
@@ -62,14 +62,14 @@ And finally, the options \fB--patch\fR and \fB--pathspec-from-file\fR are allowe
 .RE
 
 .PP
-\fBapply\fR [<\fIstash\fR> | -c | --continue]
+\fBapply\fR [<\fIstash\fR>\~|\~-c\~|\~--continue]
 .RS 4
 Like \fBgit stash apply \-\-index\fR, but it handles staged and unstaged conflicts separately, preventing those scopes from mixing. \
 \fB<stash>\fR may be any commit that looks like a commit created by \fBgit stash push\fR or \fBgit stash create\fR.
 .RE
 
 .PP
-\fBpop\fR [<\fIstash\fR> | -c | --continue]
+\fBpop\fR [<\fIstash\fR>\~|\~-c\~|\~--continue]
 .RS 4
 Like \fBgit stash pop \-\-index\fR, but it handles staged and unstaged conflicts separately, preventing those scopes from mixing. \
 Unlike \fBgit stash pop\fR, it can handle stashes referenced by name (\fBstash^{/<name>}\fR).
@@ -104,9 +104,19 @@ The exit code becomes 0 in such cases.
 .RS 4
 This options is only valid for \fBpush\fR command.
 .sp
-All changes already added to the index are left intact.
+All changes already added to the index are left intact (but still staged). \
+See also \fB--leave-staged\fR.
 .br
 (\fB--no-keep-index\fR not that useful; it exist mainly to comply with the standard stash command.)
+.RE
+
+.PP
+\fB-l\fR, \fB--leave-staged\fR
+.RS 4
+This options is only valid for \fBpush\fR command.
+.sp
+All changes already added to the index are not staged and left intact. \
+See also \fB--keep-index\fR and \fB--staged\fR.
 .RE
 
 .PP
@@ -149,6 +159,15 @@ This options is only valid for \fBpush\fR command.
 .sp
 Only meaningful with \fB--pathspec-from-file\fR. \
 Pathspec elements are separated with NUL character and all other characters are taken literally (including newlines and quotes).
+.RE
+
+.PP
+\fB-S\fR, \fB--staged\fR
+.RS 4
+This options is only valid for \fBpush\fR command.
+.sp
+All changes that are tracked but not yet added to the index are not staged and left intact. \
+See also \fB--leave-staged\fR.
 .RE
 
 .PP
