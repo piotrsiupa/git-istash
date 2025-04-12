@@ -270,7 +270,7 @@ commit_changes() {
 	then
 		if [ "$include_untracked" = n ]
 		then
-			git ls-files --exclude-standard --others --ignored -z :/ | xargs -r0 -- git add --intent-to-add --force --
+			git ls-files --exclude-standard --others --ignored -z :/ | xargs -r0 -- git --literal-pathspecs add --intent-to-add --force --
 		elif [ "$include_ignored" = n ]
 		then
 			git add --all --intent-to-add :/ 2>/dev/null || true
@@ -320,7 +320,7 @@ commit_changes() {
 			xargs -r0 -- git diff --name-only HEAD --cached -z -- <"$pathspec_file" \
 			| (
 				cd "$(git rev-parse --show-toplevel)"
-				xargs -r0 -- git commit --message="index on $branch_name_for_msg: $default_message" --allow-empty --
+				xargs -r0 -- git --literal-pathspecs commit --message="index on $branch_name_for_msg: $default_message" --allow-empty --
 			)
 			if [ "$(git rev-parse HEAD)" = "$base_commit_hash" ]
 			then
@@ -368,7 +368,7 @@ handle_rebase_conflict_using_theirs() {
 		then
 			return 1
 		fi
-		git ls-files --unmerged --format='%(path)' -z :/ | xargs -0 -- git restore --theirs --
+		git ls-files --unmerged --format='%(path)' -z :/ | xargs -0 -- git --literal-pathspecs restore --theirs --
 		git add :/ 2>/dev/null || true
 		if GIT_EDITOR='true' git rebase --continue
 		then
@@ -475,7 +475,7 @@ restore_working_tree() {
 				continue
 			fi
 			#shellcheck disable=SC2059
-			printf -- "$path" | xargs -0 -- git add -N --
+			printf -- "$path" | xargs -0 -- git --literal-pathspecs add -N --
 		done
 	fi
 	if [ "$keep_index" = y ]
