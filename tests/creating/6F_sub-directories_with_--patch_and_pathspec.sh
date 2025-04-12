@@ -52,12 +52,7 @@ echo zzz >'b/1/i'
 #shellcheck disable=SC2086
 cd 'a'
 printf 'y y n n ' | tr ' ' '\n' >../.git/answers_for_patch
-if ! IS_PATHSPEC_NULL_SEP
-then
-	printf '0 1/k ../b/0 ../b/1/i ' | tr ' ' '\n' >../.git/pathspec_for_test
-else
-	printf '0 1/k ../b/0 ../b/1/i ' | tr ' ' '\0' >../.git/pathspec_for_test
-fi
+printf '0 1/k ../b/0 ../b/1/i ' | PREPARE_PATHSPEC_FILE
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086

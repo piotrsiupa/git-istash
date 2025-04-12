@@ -24,12 +24,7 @@ printf 'yyy\n' >'f*'
 printf 'yyy\n' >'foo'
 printf 'yyy\n' >'bar'
 git add .
-if ! IS_PATHSPEC_NULL_SEP
-then
-	printf ':(literal)f* ' | tr ' ' '\n' >.git/pathspec_for_test
-else
-	printf ':(literal)f* ' | tr ' ' '\0' >.git/pathspec_for_test
-fi
+printf ':(literal)f* ' | PREPARE_PATHSPEC_FILE
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086

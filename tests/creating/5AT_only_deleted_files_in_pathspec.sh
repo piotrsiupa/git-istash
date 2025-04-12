@@ -29,10 +29,10 @@ rm aaa bbb
 git rm ccc ddd
 if ! IS_PATHSPEC_NULL_SEP
 then
-	printf 'bbb ddd ' | tr ' ' '\n' >.git/pathspec_for_test
+	printf 'bbb ddd '
 else
-	printf 'bbb ddd' | tr ' ' '\0' >.git/pathspec_for_test
-fi
+	printf 'bbb ddd'
+fi | PREPARE_PATHSPEC_FILE
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086

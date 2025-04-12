@@ -21,12 +21,7 @@ SWITCH_HEAD_TYPE
 __test_section__ 'Create stash'
 printf 'xxx' >aaa
 
-if ! IS_PATHSPEC_NULL_SEP
-then
-	printf 'bbb ' | tr ' ' '\n' >.git/pathspec_for_test
-else
-	printf 'bbb ' | tr ' ' '\0' >.git/pathspec_for_test
-fi
+printf 'bbb ' | PREPARE_PATHSPEC_FILE
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086

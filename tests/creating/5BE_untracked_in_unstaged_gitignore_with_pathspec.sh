@@ -23,12 +23,7 @@ printf 'aaa\n' >aaa1
 printf 'bbb\n' >bbb0
 printf 'bbb\n' >bbb1
 printf 'aaa?\n' >.gitignore
-if ! IS_PATHSPEC_NULL_SEP
-then
-	printf '*1 .gitignore ' | tr ' ' '\n' >.git/pathspec_for_test
-else
-	printf '*1 .gitignore ' | tr ' ' '\0' >.git/pathspec_for_test
-fi
+printf '*1 .gitignore ' | PREPARE_PATHSPEC_FILE
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086

@@ -29,12 +29,7 @@ SWITCH_HEAD_TYPE
 __test_section__ 'Create stash'
 git rm aaa0 bbb2 ccc4 ddd6 eee8
 rm aaa1 bbb3 ccc5 ddd7 eee9
-if ! IS_PATHSPEC_NULL_SEP
-then
-	printf 'aaa0 bbb? *5 ./?dd* ' | tr ' ' '\n' >.git/pathspec_for_test
-else
-	printf 'aaa0 bbb? *5 ./?dd* ' | tr ' ' '\0' >.git/pathspec_for_test
-fi
+printf 'aaa0 bbb? *5 ./?dd* ' | PREPARE_PATHSPEC_FILE
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086

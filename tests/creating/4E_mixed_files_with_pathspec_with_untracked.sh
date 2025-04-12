@@ -48,12 +48,7 @@ git add aaa0 bbb3 ccc6 ddd9 eee12
 printf 'zzz\n' >aaa0
 printf 'zzz\n' >ddd9
 printf 'zzz\n' >eee12
-if ! IS_PATHSPEC_NULL_SEP
-then
-	printf 'aaa0 bbb? *7 c?c8 ./?dd* ' | tr ' ' '\n' >.git/pathspec_for_test
-else
-	printf 'aaa0 bbb? *7 c?c8 ./?dd* ' | tr ' ' '\0' >.git/pathspec_for_test
-fi
+printf 'aaa0 bbb? *7 c?c8 ./?dd* ' | PREPARE_PATHSPEC_FILE
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086

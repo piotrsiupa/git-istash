@@ -21,12 +21,7 @@ __test_section__ 'Create stash'
 printf 'bbb\n' >'aaa'
 git add aaa
 printf 'ccc\n' >'aaa'
-if ! IS_PATHSPEC_NULL_SEP
-then
-	printf 'aaa ' | tr ' ' '\n' >.git/pathspec_for_test
-else
-	printf 'aaa ' | tr ' ' '\0' >.git/pathspec_for_test
-fi
+printf 'aaa ' | PREPARE_PATHSPEC_FILE
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086

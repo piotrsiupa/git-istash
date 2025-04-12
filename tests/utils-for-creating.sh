@@ -159,6 +159,14 @@ IS_PATHSPEC_IN_FILE() {
 IS_PATHSPEC_NULL_SEP() {
 	printf '%s' "$PATHSPEC" | grep -qE -- '-NULL-'
 }
+PREPARE_PATHSPEC_FILE() {
+	if IS_PATHSPEC_NULL_SEP
+	then
+		tr ' ' '\0'
+	else
+		tr ' ' '\n'
+	fi >"$(git rev-parse --git-dir)/pathspec_for_test"
+}
 
 PARAMETRIZE_EXCLUDE() {
 	PARAMETRIZE_OPTION true 'EXCLUDE_STYLE' 'EXCLUDE: LONG && EXCL & EXCL_COLON & CARET & CARET_COLON'

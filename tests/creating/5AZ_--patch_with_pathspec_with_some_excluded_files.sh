@@ -46,12 +46,7 @@ printf 'zzz\nxxx\nxxx\nzzz\n' >ccc4
 rm bbb2 ddd7
 printf 'y s y n s n y n ' | tr ' ' '\n' >.git/answers_for_patch0
 printf 'y n ' | tr ' ' '\n' >.git/answers_for_patch1
-if ! IS_PATHSPEC_NULL_SEP
-then
-	printf ':%saaa1 aaa? bbb? ccc? ./?dd* fff1? :%s*4 ' "$EXCLUDE_PATTERN" "$EXCLUDE_PATTERN" | tr ' ' '\n' >.git/pathspec_for_test
-else
-	printf ':%saaa1 aaa? bbb? ccc? ./?dd* fff1? :%s*4 ' "$EXCLUDE_PATTERN" "$EXCLUDE_PATTERN" | tr ' ' '\0' >.git/pathspec_for_test
-fi
+printf ':%saaa1 aaa? bbb? ccc? ./?dd* fff1? :%s*4 ' "$EXCLUDE_PATTERN" "$EXCLUDE_PATTERN" | PREPARE_PATHSPEC_FILE
 {
 	 cat .git/answers_for_patch0
 	 sleep 5  # On Windows a child shell tends to eat all the stdin if it's able to. This prevents it. If it still doesn't work, try to increase the time.

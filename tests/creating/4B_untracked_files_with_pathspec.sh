@@ -23,12 +23,7 @@ printf 'xxx\n' >ddd6
 printf 'xxx\n' >ddd7
 printf 'xxx\n' >eee8
 printf 'xxx\n' >eee9
-if ! IS_PATHSPEC_NULL_SEP
-then
-	printf 'aaa0 bbb? *5 ./?dd* ' | tr ' ' '\n' >.git/pathspec_for_test
-else
-	printf 'aaa0 bbb? *5 ./?dd* ' | tr ' ' '\0' >.git/pathspec_for_test
-fi
+printf 'aaa0 bbb? *5 ./?dd* ' | PREPARE_PATHSPEC_FILE
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086

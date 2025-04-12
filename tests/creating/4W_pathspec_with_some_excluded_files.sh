@@ -20,12 +20,7 @@ printf 'xxx\n' >'a1'
 printf 'xxx\n' >'a2'
 printf 'xxx\n' >'b1'
 printf 'xxx\n' >'b2'
-if ! IS_PATHSPEC_NULL_SEP
-then
-	printf ':%s?1 b? ' "$EXCLUDE_PATTERN" | tr ' ' '\n' >.git/pathspec_for_test
-else
-	printf ':%s?1 b? ' "$EXCLUDE_PATTERN" | tr ' ' '\0' >.git/pathspec_for_test
-fi
+printf ':%s?1 b? ' "$EXCLUDE_PATTERN" | PREPARE_PATHSPEC_FILE
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086

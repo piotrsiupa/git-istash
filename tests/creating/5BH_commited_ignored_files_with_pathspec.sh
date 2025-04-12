@@ -34,12 +34,7 @@ printf 'yyy\n' >ccc1
 printf 'yyy\n' >ddd0
 printf 'yyy\n' >ddd1
 git add --force ddd0 ddd1
-if ! IS_PATHSPEC_NULL_SEP
-then
-	printf 'aaa? bbb? ccc? ddd?' | tr ' ' '\n' >.git/pathspec_for_test
-else
-	printf 'aaa? bbb? ccc? ddd?' | tr ' ' '\0' >.git/pathspec_for_test
-fi
+printf 'aaa? bbb? ccc? ddd?' | PREPARE_PATHSPEC_FILE
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086

@@ -13,12 +13,7 @@ correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
 __test_section__ 'Create stash'
-if ! IS_PATHSPEC_NULL_SEP
-then
-	printf 'ignored0 ' | tr ' ' '\n' >.git/pathspec_for_test
-else
-	printf 'ignored0 ' | tr ' ' '\0' >.git/pathspec_for_test
-fi
+printf 'ignored0 ' | PREPARE_PATHSPEC_FILE
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086

@@ -46,12 +46,7 @@ git add aaa0 bbb2 ccc4 ddd6 eee8
 printf 'zzz\nxxx\nxxx\nzzz\n' >ccc4
 rm bbb2 ddd7
 printf 'y s y n s n y n y n ' | tr ' ' '\n' >.git/patchspec_for_test
-if ! IS_PATHSPEC_NULL_SEP
-then
-	printf 'aaa0 bbb? *5 ./?dd* fff1? ' | tr ' ' '\n' >>.git/patchspec_for_test
-else
-	printf 'aaa0 bbb? *5 ./?dd* fff1? ' | tr ' ' '\0' >>.git/patchspec_for_test
-fi
+printf 'aaa0 bbb? *5 ./?dd* fff1? ' | PREPARE_PATHSPEC_FILE
 #shellcheck disable=SC2086
 assert_exit_code 1 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'a very controlled stash' --patch $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/patchspec_for_test
 assert_files_H '
