@@ -19,6 +19,7 @@ print_help() {
 	printf '    -q, --quiet\t\t- Don'\''t print summaries for passed tests.\n'
 	printf '    -Q, --quieter\t- Don'\''t print summaries for known failures either.\n'
 	printf '    -r, --raw-name\t- Print paths to test files instead of prettified names.\n'
+	printf '    -s, --skip-at-fail\t- Don'\''t test other sets of parameters for a test when\n\t\t\t  one already failed. (Other tests still run.)\n'
 	printf '    -v, --verbose\t- Show each set of parameters even of if passes.\n'
 	printf '\t--version\t- Print version information and exit.\n'
 	printf '\n'
@@ -303,16 +304,20 @@ run_test() ( # test_name
 			else
 				test_result_is_correct=n
 			fi
-			if [ "$test_result_is_correct" = n ]
-			then
-				error_count=$((error_count + 1))
-			fi
-			if { [ -z "$parameters_string" ] || [ "$test_result_is_correct" = n ] || [ "$verbose_mode" = y ] ; } && { [ "$test_result_is_correct" = n ] || [ "$quiet_level" -eq 0 ] || { [ "$test_passed" = n ] && [ "$quiet_level" -eq 1 ] ; } ; }
+			if { [ -z "$parameters_string" ] || [ "$test_result_is_correct" = n ] || [ "$verbose_mode" = y ] ; } \
+				&& { [ "$test_result_is_correct" = n ] || [ "$quiet_level" -eq 0 ] || { [ "$test_passed" = n ] && [ "$quiet_level" -eq 1 ] ; } ; }
 			then
 				print_test_result
 			fi
-			if [ "$test_passed" = y ] || [ -n "$known_failure_reason" ]
+			if [ "$test_result_is_correct" = n ]
 			then
+				error_count=$((error_count + 1))
+				if [ "$skip_on_fail" = y ]
+				then
+					i=x
+					break
+				fi
+			else
 				cleanup_test "$1" 'current'
 			fi
 			if [ -n "$parameters_string" ]
@@ -356,7 +361,8 @@ run_test() ( # test_name
 		printf '\n'
 	fi
 	rm -f "$output_file"
-	if { [ "$meticulousness" -le 1 ] && [ -n "$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | tail -n+2)" ] ; } || { [ $test_count -ge 2 ] && { [ "$error_count" -ne 0 ] || [ "$quiet_level" -eq 0 ] || { [ "$failed_count" -ne 0 ] && [ "$quiet_level" -eq 1 ] ; } ; } ; }
+	if { [ "$meticulousness" -le 1 ] && [ -n "$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | tail -n+2)" ] ; } \
+		|| { [ "$error_count" -ne 0 ] || [ "$quiet_level" -eq 0 ] || { [ "$failed_count" -ne 0 ] && [ "$quiet_level" -eq 1 ] ; } ; }
 	then
 		test_passed="$(test "$failed_count" -eq 0 && printf 'y' || printf 'n')"
 		test_result_is_correct="$(test "$error_count" -eq 0 && printf 'y' || printf 'n')"
@@ -541,8 +547,8 @@ print_summary() {
 	printf '\n'
 }
 
-getopt_short_options='c:dfhj:l:m:pqQrv'
-getopt_long_options='color:,debug,failed,file-name,help,jobs:,limit:,meticulousness:,print-paths,quiet,quieter,raw,raw-name,verbose,version'
+getopt_short_options='c:dfhj:l:m:pqQrsv'
+getopt_long_options='color:,debug,failed,file-name,help,jobs:,limit:,meticulousness:,print-paths,quiet,quieter,raw,raw-name,stop-at-fail,skip-at-fail,stop-at-error,skip-at-error,stop-on-fail,skip-on-fail,stop-on-error,skip-on-error,verbose,version'
 getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 only_failed=n
@@ -551,6 +557,7 @@ quiet_level=0
 verbose_mode=n
 use_color='auto'
 raw_name=n
+skip_on_fail=n
 test_limit=0
 print_paths=n
 jobs_num=1
@@ -641,6 +648,9 @@ do
 		;;
 	-r|--raw|--raw-name|--file-name)
 		raw_name=y
+		;;
+	-s|--stop-at-fail|--skip-at-fail|--stop-at-error|--skip-at-error|--stop-on-fail|--skip-on-fail|--stop-on-error|--skip-on-error)
+		skip_on_fail=y
 		;;
 	-v|--verbose)
 		verbose_mode=y
