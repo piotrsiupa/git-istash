@@ -145,6 +145,10 @@ cleanup() {
 }
 
 is_pathspec_exclude() { # pathspec
+	if parse_git_bool "$GIT_LITERAL_PATHSPECS"
+	then
+		return 1
+	fi
 	#shellcheck disable=SC2059
 	! printf '%s' "$1" | grep -qE '\\012' \
 	&& printf -- "$1" | grep -qE '^:([!^]:?|\(([^()],)?exclude(,[^()])?\))'
@@ -242,7 +246,7 @@ commit_changes() {
 	then
 		if [ -z "$pathspec_file" ]
 		then
-			git add --update $patch_options :/ 2>/dev/null || true
+			git --no-literal-pathspecs add --update $patch_options :/ 2>/dev/null || true
 		else
 			if [ -z "$patch_options" ]
 			then
@@ -262,7 +266,7 @@ commit_changes() {
 	then
 		there_are_enough_changes=y
 	fi
-	git add --update :/ 2>/dev/null || true
+	git --no-literal-pathspecs add --update :/ 2>/dev/null || true
 	git commit --message="non-stashed WIP on $branch_name_for_msg: $default_message" --allow-empty
 	
 	# untracked
@@ -270,12 +274,12 @@ commit_changes() {
 	then
 		if [ "$include_untracked" = n ]
 		then
-			git ls-files --exclude-standard --others --ignored -z :/ | xargs -r0 -- git --literal-pathspecs add --intent-to-add --force --
+			git --no-literal-pathspecs ls-files --exclude-standard --others --ignored -z :/ | xargs -r0 -- git --literal-pathspecs add --intent-to-add --force --
 		elif [ "$include_ignored" = n ]
 		then
-			git add --all --intent-to-add :/ 2>/dev/null || true
+			git --no-literal-pathspecs add --all --intent-to-add :/ 2>/dev/null || true
 		else
-			git add --all --force --intent-to-add :/ 2>/dev/null || true
+			git --no-literal-pathspecs add --all --force --intent-to-add :/ 2>/dev/null || true
 		fi
 		if [ -n "$patch_options" ]
 		then
@@ -283,7 +287,7 @@ commit_changes() {
 		fi
 		if [ -z "$pathspec_file" ]
 		then
-			git add $patch_options --update :/ 2>/dev/null || true
+			git --no-literal-pathspecs add $patch_options --update :/ 2>/dev/null || true
 		else
 			if [ -z "$patch_options" ]
 			then
@@ -298,7 +302,7 @@ commit_changes() {
 			there_are_enough_changes=y
 		fi
 	fi
-	git add :/ 2>/dev/null || true
+	git --no-literal-pathspecs add :/ 2>/dev/null || true
 	git commit --message="non-stashed untracked files on $branch_name_for_msg: $default_message" --allow-empty
 	
 	# staged (for real)
@@ -364,12 +368,12 @@ undo_commit_changes() {
 handle_rebase_conflict_using_theirs() {
 	while true
 	do
-		if [ -z "$(git ls-files --unmerged :/)" ]
+		if [ -z "$(git --no-literal-pathspecs ls-files --unmerged :/)" ]
 		then
 			return 1
 		fi
-		git ls-files --unmerged --format='%(path)' -z :/ | xargs -0 -- git --literal-pathspecs restore --theirs --
-		git add :/ 2>/dev/null || true
+		git --no-literal-pathspecs ls-files --unmerged --format='%(path)' -z :/ | xargs -0 -- git --literal-pathspecs restore --theirs --
+		git --no-literal-pathspecs add :/ 2>/dev/null || true
 		if GIT_EDITOR='true' git rebase --continue
 		then
 			break
@@ -428,9 +432,9 @@ remove_tracked_files_from_untracked() ( # [path]
 		set -- '\072\057'
 	fi
 	#shellcheck disable=SC2059
-	previous_files="$(printf -- "$1" | xargs -0 -- git ls-tree -z HEAD~ -- | sanitize_ls_tree)"
+	previous_files="$(printf -- "$1" | xargs -0 -- git --no-literal-pathspecs ls-tree -z HEAD~ -- | sanitize_ls_tree)"
 	#shellcheck disable=SC2059
-	printf -- "$1" | xargs -0 -- git ls-tree -z HEAD -- | sanitize_ls_tree \
+	printf -- "$1" | xargs -0 -- git --no-literal-pathspecs ls-tree -z HEAD -- | sanitize_ls_tree \
 	| while read -r line
 	do
 		if printf '%s' "$previous_files" | grep -qxF "$line"
@@ -465,9 +469,9 @@ restore_working_tree() {
 	git switch --detach "$unstashed_changes_hash"
 	unstaged_commit_hash="$(git rev-parse 'HEAD~')"
 	git reset --mixed HEAD~2
-	if [ -n "$(git ls-tree -r "$unstaged_commit_hash")" ]
+	if [ -n "$(git --no-literal-pathspecs ls-tree -r "$unstaged_commit_hash" :/)" ]
 	then
-		git ls-tree -r -z "$unstaged_commit_hash" :/ | sanitize_ls_tree | awk '{print $4}' \
+		git --no-literal-pathspecs ls-tree -r -z "$unstaged_commit_hash" :/ | sanitize_ls_tree | awk '{print $4}' \
 		| while read -r path
 		do
 			if [ -z "$path" ]
@@ -495,7 +499,7 @@ create_stash() {
 }
 
 create_temporary_branch() {
-	git commit --message="Base commit for stash entry on an orphan branch \"$current_branch\"" --allow-empty --no-verify --only --
+	git --no-literal-pathspecs commit --message="Base commit for stash entry on an orphan branch \"$current_branch\"" --allow-empty --no-verify --only
 }
 
 restore_branch() {

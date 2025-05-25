@@ -181,3 +181,7 @@ find_current_branch() {
 are_there_conflicts() {
 	git status --porcelain | grep -qE '^.U|^U.'
 }
+
+parse_git_bool() { # boolean_to_parse
+     test "$(git -c 'istash.bool-parsing-tmp-value'="$1" config --get --type=bool 'istash.bool-parsing-tmp-value' 2>/dev/null)" = 'true'
+}
