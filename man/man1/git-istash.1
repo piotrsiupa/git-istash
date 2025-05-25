@@ -8,12 +8,14 @@ git\-istash \- Handle Git stashes without arbitrary limitations of the original 
 .SH SYNOPSIS
 .nf
 \fBgit istash\fR push [-a | --all] [--allow-empty] [-k | --[no-]keep-index]
-              [(-m | --message) <\fImessage\fR>] [--patch] [--patchspec-file-nul]
-              [--patchspec-from-file=<\fIfile\fR>] [-u | --[no-]include-untracked]
+              [-l | --leave-staged] [(-m | --message) <\fImessage\fR>]
+              [--patch] [--patchspec-file-nul] [--patchspec-from-file=<\fIfile\fR>]
+              [-S | --staged] [-u | --[no-]include-untracked]
               [--] [<\fIpathspec\fR>...]
 \fBgit istash\fR [-a | --all] [--allow-empty] [-k | --[no-]keep-index]
-              [(-m | --message) <\fImessage\fR>] [--patch] [--patchspec-file-nul]
-              [--patchspec-from-file=<\fIfile\fR>] [-u | --[no-]include-untracked]
+              [-l | --leave-staged] [(-m | --message) <\fImessage\fR>]
+              [--patch] [--patchspec-file-nul] [--patchspec-from-file=<\fIfile\fR>]
+              [-S | --staged] [-u | --[no-]include-untracked]
               [-- <\fIpathspec\fR>...]
 \fBgit istash\fR (pop | apply) [<\fIstash\fR>]
 \fBgit istash\fR (pop | apply) ( \-\-continue | \-\-abort )
@@ -29,7 +31,7 @@ Use \fBgit istash\fR commands as a replacement for \fBgit stash\fR commands with
 This command creates a new stash entry containing files (specified by options and pathspecs). \
 These files are then reverted in the working directory (usually, depending on options).
 .br
-(This is mostly the same as the \fBgit stash\fR equivalent, except for some corner cases and combinations of options.)
+(This is mostly the same as the \fBgit stash push\fR, except for some corner cases and combinations of options.)
 .RE
 
 \fBgit istash apply\fR and \fBgit istash pop\fR:
