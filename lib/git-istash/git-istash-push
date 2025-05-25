@@ -531,7 +531,7 @@ do_push() { # pathspecs...
 }
 
 getopt_short_options='ahklm:Su'
-getopt_long_options='all,allow-empty,keep-index,no-keep-index,leave-staged,leave-index,message:,patch,pathspec-file-null,pathspec-from-file:,staged,include-untracked,no-include-untracked'
+getopt_long_options='all,allow-empty,keep-index,no-keep-index,leave-staged,message:,patch,pathspec-file-null,pathspec-from-file:,staged,include-untracked,no-include-untracked'
 if [ "$1" = '--_implicit-push_' ]
 then
 	shift
@@ -572,7 +572,7 @@ do
 	--no-keep-index)
 		keep_index=n
 		;;
-	-l|--leave-index|--leave-staged)
+	-l|--leave-staged)
 		leave_staged=y
 		;;
 	-m|--message)
