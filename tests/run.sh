@@ -42,7 +42,7 @@ print_help() {
 	printf '    2 - When an option has a few spellings (e.g. "-m" and "--message") only one\n\tof them will be tested. Beside that, other things from parametric tests\n\tare tested in all combinations, except not all the ways to specify\n\tpathspecs because there is a lot. (Null-separated stdin and non-null-\n\t-separated file are skipped but it probably should still test all\n\texecution paths.) This is relatively thorough and it should be enough\n\tfor testing on the fly, while writing code.\n'
 	printf '    3 - When an option has multiple spellings, all of them are tested but not\n\tnecessarily all combinations of spellings of different options.\n\tThis level should be run before every commit!\n'
 	printf '    4 - All combinations of parameters are run in parametric tests.\n\t(A bit of an overkill but it is run from time to time, just to be sure.)\n'
-	printf '    5 - All combinations of parameters are run in parametric tests plus non\n\tstandard versions of options are tested (e.g. "--mess" instead of\n\t"--message"). (It'\''s definitely an overkill and it takes really long.)\n'
+	printf '    5 - All combinations of parameters are run in parametric tests but non\n\tstandard versions of options are tested (e.g. "--mess" instead of\n\t"--message"). (Sometimes it can catch a weird option naming conflict but\n\tgenerarly running it has sense only for big merges and releases.)\n'
 }
 
 print_version() {
@@ -263,7 +263,7 @@ run_test() ( # test_name
 	PARAMETERS_FILE="$(mktemp)"
 	export PARAMETERS_FILE
 	output_file="$(mktemp)"
-	parametrized_run_cap=2048
+	parametrized_run_cap=10000
 	iteration_cap=$((parametrized_run_cap * 8))
 	cleanup_test "$1"
 	for i in $(seq 1 $iteration_cap)

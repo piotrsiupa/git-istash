@@ -171,7 +171,9 @@ PARAMETRIZE_OPTION() { # condition name map values...
 		MAP="$(printf '%s' "$MAP" | awk '{print $1,$2}')"
 	elif [ "$meticulousness" -le 4 ]
 	then
-		MAP="$(printf '%s' "$MAP" | sed 's/  .*$//')"
+		MAP="$(printf '%s' "$MAP" | sed -E 's/  .*$//')"
+	else
+		MAP="$(printf '%s' "$MAP" | sed -E 's/^(\S+ ).*  (.+)$/\1\2/')"
 	fi
 	if [ $# -eq 0 ]
 	then

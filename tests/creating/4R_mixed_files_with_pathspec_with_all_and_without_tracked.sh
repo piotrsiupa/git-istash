@@ -9,7 +9,6 @@ PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_STAGED 'NO'
 PARAMETRIZE_UNSTAGED 'NO'
 PARAMETRIZE_PATHSPEC_STYLE
-PARAMETRIZE_OPTIONS_INDICATOR IS_PATHSPEC_IN_ARGS
 
 __test_section__ 'Prepare repository'
 printf 'xxx\n' >aaa0
@@ -52,7 +51,7 @@ printf 'bbb? c?c8 *ore?0 ./?dd* ' | PREPARE_PATHSPEC_FILE
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS 'bbb?' -m 'mr. stash' $EOI 'c?c8' '*ore?0' './?dd*'
+	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS 'bbb?' -m 'mr. stash' 'c?c8' '*ore?0' './?dd*'
 elif IS_PATHSPEC_IN_STDIN
 then
 	#shellcheck disable=SC2086
