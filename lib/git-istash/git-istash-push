@@ -203,7 +203,7 @@ add_with_pathspec() {
 			printf -- "$ps\0"
 		fi
 	done \
-	| xargs -r0 -- git add --update --
+	| xargs -r0 -- git add --update --ignore-errors -- #TODO "--ignore-errors" is temporary - there is a regression in Git
 }
 
 add_with_patch_and_pathspec() {

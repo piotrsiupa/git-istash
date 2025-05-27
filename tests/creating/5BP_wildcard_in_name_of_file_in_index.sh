@@ -1,5 +1,11 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
+#shellcheck disable=SC2154
+if [ "$limited_file_system" = y ]
+then
+	known_failure 'This test requires a file system without limitations for file names.'
+fi
+
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_ALL 'DEFAULT'
 PARAMETRIZE_UNTRACKED 'DEFAULT'
