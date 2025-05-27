@@ -1,5 +1,7 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
+non_essential_test
+
 #shellcheck disable=SC2154
 if [ "$limited_file_system" = y ]
 then

@@ -1,7 +1,5 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
-non_essential_test
-
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_ALL 'DEFAULT'
 PARAMETRIZE_UNTRACKED 'DEFAULT'
