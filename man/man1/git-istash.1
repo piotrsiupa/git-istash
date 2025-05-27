@@ -7,18 +7,18 @@ git\-istash \- Handle Git stashes without arbitrary limitations of the original 
 
 .SH SYNOPSIS
 .nf
-\fBgit istash\fR push [-a | --all] [--allow-empty] [-k | --[no-]keep-index]
-              [-l | --leave-staged] [(-m | --message) <\fImessage\fR>]
-              [--patch] [--patchspec-file-nul] [--patchspec-from-file=<\fIfile\fR>]
-              [-S | --staged] [-u | --[no-]include-untracked]
-              [--] [<\fIpathspec\fR>...]
-\fBgit istash\fR [-a | --all] [--allow-empty] [-k | --[no-]keep-index]
-              [-l | --leave-staged] [(-m | --message) <\fImessage\fR>]
-              [--patch] [--patchspec-file-nul] [--patchspec-from-file=<\fIfile\fR>]
-              [-S | --staged] [-u | --[no-]include-untracked]
-              [-- <\fIpathspec\fR>...]
-\fBgit istash\fR (pop | apply) [<\fIstash\fR>]
-\fBgit istash\fR (pop | apply) ( \-\-continue | \-\-abort )
+\fBgit istash\fR push [\-a\~|\~\-\-all] [\-\-allow-empty] [\-k\~|\~\-\-[no\-]keep\-index]
+              [\-l\~|\~\-\-leave\-staged] [(\-m\~|\~\-\-message)\~<\fImessage\fR>]
+              [\-\-patch] [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<\fIfile\fR>]
+              [\-S\~|\~\-\-staged] [\-u\~|\~\-\-[no\-]include\-untracked]
+              [\-\-] [<\fIpathspec\fR>...]
+\fBgit istash\fR [\-a\~|\~\-\-all] [\-\-allow\-empty] [\-k\~|\~\-\-[no\-]keep\-index]
+              [\-l\~|\~\-\-leave\-staged] [(\-m\~|\~\-\-message)\~<\fImessage\fR>]
+              [\-\-patch] [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<\fIfile\fR>]
+              [\-S\~|\~\-\-staged] [\-u\~|\~\-\-[no\-]include\-untracked]
+              [\-\-\~<\fIpathspec\fR>...]
+\fBgit istash\fR (pop\~|\~apply) [<\fIstash\fR>]
+\fBgit istash\fR (pop\~|\~apply) (\-\-continue\~|\~\-\-abort)
 .fi
 
 .SH DESCRIPTION
@@ -50,28 +50,28 @@ Because of the multi-stage conflict resolution, \fIthe index saved to the stash 
 .SH COMMANDS
 
 .PP
-\fBpush\fR [-a\~|\~--all] [--allow-empty] [-k\~|\~--[no-]keep-index] [-l\~|\~--leave-staged] [(-m\~|\~--message) <\fImessage\fR>] [--patch] [--patchspec-file-nul] [--patchspec-from-file=<\fIfile\fR>] [-S\~|\~--staged] [-u\~|\~--[no-]include-untracked] [--] [<\fIpathspec\fR>...]
+\fBpush\fR [\-a\~|\~\-\-all] [\-\-allow\-empty] [\-k\~|\~\-\-[no\-]keep\-index] [\-l\~|\~\-\-leave\-staged] [(\-m\~|\~\-\-message)\~<\fImessage\fR>] [\-\-patch] [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<\fIfile\fR>] [\-S\~|\~\-\-staged] [\-u\~|\~\-\-[no\-]include\-untracked] [\-\-] [<\fIpathspec\fR>...]
 .RS 4
 Like \fBgit stash push\fR, except some minor differences.
 .br
-Every sensible combination of options is supported (including \fB--all\fR in conjunction with \fB--no-include-untracked\fR which results in adding ignored files but leaving non-ignored untracked ones). \
-The option \fB--patch\fR works also with untracked files. \
+Every sensible combination of options is supported (including \fB\-\-all\fR in conjunction with \fB\-\-no\-include\-untracked\fR which results in adding ignored files but leaving non-ignored untracked ones). \
+The option \fB\-\-patch\fR works also with untracked files. \
 Failing to create a stash is much more reliable especially in the case when there is no files to stash. \
-(There is a new option \fB--allow-empty\fR to bypass that.) \
+(There is a new option \fB\-\-allow\-empty\fR to bypass that.) \
 Stashes can be created on orphan branches. \
 The pathspec affect stashed index too. \
-And finally, the options \fB--patch\fR and \fB--pathspec-from-file\fR are allowed together.
+And finally, the options \fB\-\-patch\fR and \fB\-\-pathspec\-from\-file\fR are allowed together.
 .RE
 
 .PP
-\fBapply\fR [<\fIstash\fR>\~|\~-c\~|\~--continue]
+\fBapply\fR [<\fIstash\fR>\~|\~\-c\~|\~\-\-continue]
 .RS 4
 Like \fBgit stash apply \-\-index\fR, but it handles staged and unstaged conflicts separately, preventing those scopes from mixing. \
 \fB<stash>\fR may be any commit that looks like a commit created by \fBgit stash push\fR or \fBgit stash create\fR.
 .RE
 
 .PP
-\fBpop\fR [<\fIstash\fR>\~|\~-c\~|\~--continue]
+\fBpop\fR [<\fIstash\fR>\~|\~\-c\~|\~\-\-continue]
 .RS 4
 Like \fBgit stash pop \-\-index\fR, but it handles staged and unstaged conflicts separately, preventing those scopes from mixing. \
 Unlike \fBgit stash pop\fR, it can handle stashes referenced by name (\fBstash^{/<name>}\fR).
@@ -85,7 +85,7 @@ This is the inverse operation of \fBgit stash push\fR.
 .SH OPTIONS
 
 .PP
-\fB-a\fR, \fB--all\fR
+\fB\-a\fR, \fB\-\-all\fR
 .RS 4
 This options is only valid for \fBpush\fR command.
 .sp
@@ -93,7 +93,7 @@ All ignored and untracked files are also stashed and then removed.
 .RE
 
 .PP
-\fB--allow-empty\fR
+\fB\-\-allow\-empty\fR
 .RS 4
 This options is only valid for \fBpush\fR command.
 .sp
@@ -102,27 +102,27 @@ The exit code becomes 0 in such cases.
 .RE
 
 .PP
-\fB-k\fR, \fB--keep-index\fR, \fB--no-keep-index\fR
+\fB\-k\fR, \fB\-\-keep\-index\fR, \fB\-\-no\-keep\-index\fR
 .RS 4
 This options is only valid for \fBpush\fR command.
 .sp
 All changes already added to the index are left intact (but still staged). \
-See also \fB--leave-staged\fR.
+See also \fB\-\-leave\-staged\fR.
 .br
-(\fB--no-keep-index\fR not that useful; it exist mainly to comply with the standard stash command.)
+(\fB\-\-no\-keep\-index\fR not that useful; it exist mainly to comply with the standard stash command.)
 .RE
 
 .PP
-\fB-l\fR, \fB--leave-staged\fR
+\fB\-l\fR, \fB\-\-leave\-staged\fR
 .RS 4
 This options is only valid for \fBpush\fR command.
 .sp
 All changes already added to the index are not staged and left intact. \
-See also \fB--keep-index\fR and \fB--staged\fR.
+See also \fB\-\-keep\-index\fR and \fB\-\-staged\fR.
 .RE
 
 .PP
-\fB-m\fR <\fImessage\fR>, \fB--message\fR <\fImessage\fR>
+\fB\-m\fR <\fImessage\fR>, \fB\-\-message\fR <\fImessage\fR>
 .RS 4
 This options is only valid for \fBpush\fR command.
 .sp
@@ -130,7 +130,7 @@ Custom message (name) for stash is used instead of the one generated using the l
 .RE
 
 .PP
-\fB--patch\fR
+\fB\-\-patch\fR
 .RS 4
 This options is only valid for \fBpush\fR command.
 .sp
@@ -138,48 +138,48 @@ Interactively select hunks from the diff between HEAD and the working tree to be
 .br
 The stash entry is constructed such that its index state is the same as the index state of your repository, and its worktree contains only the changes you selected interactively. \
 The selected changes are then rolled back from your worktree. \
-See the “Interactive Mode” section of \fBgit-add\fR(1) to learn how to operate the \fB--patch\fR mode.
+See the “Interactive Mode” section of \fBgit\-add\fR(1) to learn how to operate the \fB\-\-patch\fR mode.
 .sp
-Unlike in the standard \fBgit stash\fR command, the option \fB--keep-index\fR is \fInot\fR affected.
+Unlike in the standard \fBgit stash\fR command, the option \fB\-\-keep\-index\fR is \fInot\fR affected.
 .RE
 
 .PP
-\fB--pathspec-from-file\fR=<\fIfile\fR>
+\fB\-\-pathspec\-from\-file\fR=<\fIfile\fR>
 .RS 4
 This options is only valid for \fBpush\fR command.
 .sp
 Pathspec is passed in \fB<file>\fR instead of command line arguments. \
-If \fB<file>\fR is exactly \fB-\fR then standard input is used (so this is not allowed with \fB--patch\fR). \
+If \fB<file>\fR is exactly \fB\-\fR then standard input is used (so this is not allowed with \fB\-\-patch\fR). \
 Pathspec elements are separated by LF or CR/LF and are interpreted the same way as the one passed via the command line. \
-See also \fB--pathspec-file-nul\fR.
+See also \fB\-\-pathspec\-file\-nul\fR.
 .RE
 
 .PP
-\fB--pathspec-file-nul\fR
+\fB\-\-pathspec\-file\-nul\fR
 .RS 4
 This options is only valid for \fBpush\fR command.
 .sp
-Only meaningful with \fB--pathspec-from-file\fR. \
+Only meaningful with \fB\-\-pathspec\-from\-file\fR. \
 Pathspec elements are separated with NUL character and all other characters are taken literally (including newlines and quotes).
 .RE
 
 .PP
-\fB-S\fR, \fB--staged\fR
+\fB\-S\fR, \fB\-\-staged\fR
 .RS 4
 This options is only valid for \fBpush\fR command.
 .sp
 All changes that are tracked but not yet added to the index are not staged and left intact. \
-See also \fB--leave-staged\fR.
+See also \fB\-\-leave\-staged\fR.
 .RE
 
 .PP
-\fB-u\fR, \fB--inclulde-untracked\fR, \fB--no-include-untracked\fR
+\fB\-u\fR, \fB\-\-include\-untracked\fR, \fB\-\-no\-include\-untracked\fR
 .RS 4
 This options is only valid for \fBpush\fR command.
 .sp
 All untracked files are also stashed and then removed.
 .br
-\fB--no-include-untracked\fR also affect \fB--all\fR, resulting in stashing and removing only ignored files.
+\fB\-\-no\-include\-untracked\fR also affect \fB\-\-all\fR, resulting in stashing and removing only ignored files.
 .RE
 
 .PP
@@ -204,7 +204,7 @@ Cancel the operation and restore the repository to the state before it started.
 Display a rudimentary help text.
 .sp
 This is a fallback option that is to be used when the man page is not available. \
-Prefer \fBgit help istash\fR over \fBgit istash [<sub-command>] -h\fR.
+Prefer \fBgit help istash\fR over \fBgit istash [<sub-command>] \-h\fR.
 .RE
 
 .PP
@@ -214,7 +214,7 @@ Display version information for the script.
 .RE
 
 .PP
-\fB--\fR
+\fB\-\-\fR
 .RS 4
 Separates options from non-option arguments (like stash or pathspec) for disambiguation purposes.
 .RE
@@ -297,7 +297,7 @@ So far, you may be thinking: \
 .br
 Let's assume the same scenario as in the example above; however, this time the \fIbrilliant idea\fR involves editing some of the same lines that are currently changed.
 .sp
-In such situation, normal \fBgit stash\fR won't let you use the option \fB--index\fR, forcing you to discard your changes in index.
+In such situation, normal \fBgit stash\fR won't let you use the option \fB\-\-index\fR, forcing you to discard your changes in index.
 .br
 When \fBgit istash\fR encounters conflicts, it behaves like \fBgit rebase\fR and stops to allow the user to deal with the problem. \
 (Actually, it uses \fBrebase\fR under the hood.)
@@ -309,13 +309,13 @@ $ git istash
 # Implement the idea
 $ git commit \-a \-m "Best change ever"
 $ git istash pop
-# (git-istash will stop and report that some files have conflicts)
+# (git\-istash will stop and report that some files have conflicts)
 # Fix the conflicts in the index
-$ git add -u
+$ git add \-u
 $ git istash pop \-\-continue
-# (git-istash will stop and report that some files have conflicts again)
+# (git\-istash will stop and report that some files have conflicts again)
 # Fix the conflicts in unstaged changes
-$ git add -u
+$ git add \-u
 $ git istash pop \-\-continue
 # ... continue hacking ...
 .fi
@@ -324,10 +324,32 @@ $ git istash pop \-\-continue
 After the whole operation is finished, the stashed index is restored and intact.
 .RE
 
+.PP
+Stashing away untracked files
+.RS 4
+You've created a few new files yet to be added to the repository but you've realized that you will need them a little later and they are getting in the way of what you're doing right now.
+.sp
+You would like to move them somewhere where they won't bother you for now, but keep them safe.
+.sp
+.RS 4
+.nf
+# ... hack hack hack ...
+$ git istash push \-\-leave\-staged \-\-staged \-\-include\-untracked \-m 'some new files, for safe keeping'
+# (or just "git istash push \-lSu")
+# ... continue hacking until the files are needed ...
+$ git istash pop
+# ... hacking intensifies ...
+.fi
+.RE
+.RE
+
 .SH SEE ALSO
-\fBgit-stash\fR(1), \fBgit-rebase\fR(1)
+\fBgit\-stash\fR(1), \fBgit\-rebase\fR(1)
 
 .SH CURRENT LIMITATIONS
+.PP
+Files added with the flag \fB-N\fR / \fB--intend-to-add\fR are not supported. \
+(This will be implemented next, since it's one of the main goals of the project.)
 .PP
 It is not possible to \fBapply\fR or \fBpop\fR stash on top of existing changes in the working copy. \
 All modified files need to be restored or stashed away before starting the process.

@@ -13,6 +13,13 @@ It is written (almost[^1]) entirely in POSIX (Portable Operating System Interfac
 `git istash` ("incredible stash") is an extension for `git stash`, compatible with stash entries created by it.
 Use `git istash` commands as a replacement for `git stash` commands with the same names.
 
+### `git istash push`
+
+This command creates a new stash, compatible with the standard Git stash format (except for some corner cases and exceptions in the vanilla command).
+It behaves almost the same as the standard `git stash push` but it can handle some additional situation (like creating a stash from an orphan branch),
+it has a few additional options (e.g. for stashing only staged / unstaged files),
+and it's generally more reliable and predictable because it has no corner cases and / or exceptions.
+
 ### `git istash apply` and `git istash pop`
 
 Both of these commands restore stashed changes to the working directory.
@@ -101,7 +108,10 @@ Most of the changes here, however, are bugs that were found during tests to be p
 
 ### Other things different in standard `stash` (that may or may not be considered bugs)
 - Options can now follow non-option arguments (like they are allowed to in POSIX utilities).
-- Option `--no-include-untracked` doesn't override `--all` anymore. (Instead, ignored files are included if both options are specified.)
+- Option `--no-include-untracked` doesn't override `--all` anymore.
+  (Instead, ignored files are included if both options are specified.)
+- A new option `--leave-staged` skips staged files when creating a stash and leaves them untouched.
+- A new option `--staged` skips non-staged files when creating a stash and leaves them untouched.
 - Option `--patch` now works with untracked files.
 - Options `--patch` and `--pathspec-from-file` are allowed together now.
 - Files in index are affected by the pathspec now.
@@ -112,8 +122,10 @@ Most of the changes here, however, are bugs that were found during tests to be p
 
 ## Current limitations
 
+- The script doesn't support files added with the flag `--intend to add`.
+  (Planned to be implemented really soon because this is one of the main goals of the project.)
 - The script refuses to apply a stash when the working directory contains any changes.
-  (Planned to be fixed soon.)
+  (Planned to be implemented soon.)
 
 
 
@@ -208,6 +220,22 @@ git istash pop --continue
 ```
 
 After the whole operation is finished, the stashed index is restored and intact.
+
+
+## Stashing away untracked files
+
+You've created a few new files yet to be added to the repository but you've realized that you will need them a little later and they are getting in the way of what you're doing right now.
+
+You would like to move them somewhere where they won't bother you for now, but keep them safe.
+
+```sh
+# ... hack hack hack ...
+$ git istash push --leave-staged --staged --include-untracked -m 'some new files, for safe keeping'
+# (or just "git istash push -lSu")
+# ... continue hacking until the files are needed ...
+$ git istash pop
+# ... hacking intensifies ...
+```
 
 
 
