@@ -17,6 +17,10 @@ There are also filtering and formatting options.
 A script that checks all the scripts in the projects (including the tests), using `shellcheck`.
 (For more information, run `shellcheck.sh --help`.)
 
+## `list.sh`
+A helper script that just prints the list of tests and allows filtering for essential / no-essential tests.
+(It's useful mostly to check if tests were correctly marked as non-essential.)
+
 ## `commons.sh`
 
 A helper file with utility functions for implementing tests.
