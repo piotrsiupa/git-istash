@@ -312,6 +312,16 @@ run_test() ( # test_name
 			if [ "$test_result_is_correct" = n ]
 			then
 				error_count=$((error_count + 1))
+				if [ -n "$parameters_string" ]
+				then
+					test_dir="$(get_test_dir "$1" 'current')"
+					if [ -e "$test_dir" ]
+					then
+						parameters_string="$(awk 'x{print $2} /^--------$/{x=1}' "$PARAMETERS_FILE" | head -c-1 | tr '\n' '_')"
+						parametrized_test_dir="$(get_test_dir "$1" "$parameters_string")"
+						mv "$test_dir" "$parametrized_test_dir"
+					fi
+				fi
 				if [ "$skip_on_fail" = y ]
 				then
 					i=x
@@ -319,16 +329,6 @@ run_test() ( # test_name
 				fi
 			else
 				cleanup_test "$1" 'current'
-			fi
-			if [ -n "$parameters_string" ]
-			then
-				test_dir="$(get_test_dir "$1" 'current')"
-				if [ -e "$test_dir" ]
-				then
-					parameters_string="$(awk 'x{print $2} /^--------$/{x=1}' "$PARAMETERS_FILE" | head -c-1 | tr '\n' '_')"
-					parametrized_test_dir="$(get_test_dir "$1" "$parameters_string")"
-					mv "$test_dir" "$parametrized_test_dir"
-				fi
 			fi
 		else
 			cleanup_test "$1" 'current'
