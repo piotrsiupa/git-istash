@@ -362,7 +362,7 @@ run_test() ( # test_name
 	fi
 	rm -f "$output_file"
 	if { [ "$meticulousness" -le 1 ] && [ -n "$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | tail -n+2)" ] ; } \
-		|| { [ "$error_count" -ne 0 ] || [ "$quiet_level" -eq 0 ] || { [ "$failed_count" -ne 0 ] && [ "$quiet_level" -eq 1 ] ; } ; }
+		|| { [ "$test_count" -ne 0 ] && { [ "$error_count" -ne 0 ] || [ "$quiet_level" -eq 0 ] || { [ "$failed_count" -ne 0 ] && [ "$quiet_level" -eq 1 ] ; } ; } ; }
 	then
 		test_passed="$(test "$failed_count" -eq 0 && printf 'y' || printf 'n')"
 		test_result_is_correct="$(test "$error_count" -eq 0 && printf 'y' || printf 'n')"
