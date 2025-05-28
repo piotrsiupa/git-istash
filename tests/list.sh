@@ -10,10 +10,15 @@ print_help() {
 	printf '    -e, --essential\t- Print only the tests marked as essential.\n'
 	printf '    -E, --non-essential\t- Print only the tests NOT marked as essential.\n'
 	printf '    -h, --help\t\t- Print this help text.\n'
+	printf '    -v, --version\t- Print version information and exit.\n'
 }
 
-getopt_short_options='eEh'
-getopt_long_options='essential,non-essential,help'
+print_version() {
+	printf 'test listing script version 1.0.0\n'
+}
+
+getopt_short_options='eEhv'
+getopt_long_options='essential,non-essential,help,version'
 getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 essential=n
@@ -29,6 +34,10 @@ do
 		;;
 	-h|--help)
 		print_help
+		exit 0
+		;;
+	-v|--version)
+		print_version
 		exit 0
 		;;
 	--)
