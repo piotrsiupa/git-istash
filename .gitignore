@@ -1,3 +1,4 @@
 /share/man
 /tests/results.txt
 /tests/*/t_dir_*
+/tests/remote-for-tests

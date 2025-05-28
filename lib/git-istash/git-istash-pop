@@ -14,9 +14,9 @@ print_help() {
 	printf '   or: git istash pop -h\n'
 	printf '\n'
 	printf 'Options:\n'
-	printf '    -h\t\t\t- Show this help text and exit.\n'
-	printf '    -c, --continue\t- Resume the previous operation.\n\t\t\t  (Conflicts need to be resolved before that.)\n'
 	printf '\t--abort\t\t- Abort the previous operation and return the repository\n\t\t\t  to the state before it started.\n'
+	printf '    -c, --continue\t- Resume the previous operation.\n\t\t\t  (Conflicts need to be resolved before that.)\n'
+	printf '    -h\t\t\t- Show this help text and exit.\n'
 }
 
 save_data() {
@@ -123,7 +123,7 @@ check_data_files() { # resume
 }
 
 run_apply() { # args...
-	sh "$(dirname "$0")/git-istash-apply" --called-from-pop "$@"
+	sh "$(dirname "$0")/git-istash-apply" --_called-from-pop_ "$@"
 }
 
 do_start() { # args...
@@ -174,22 +174,24 @@ do_pop() { # args...
 	fi
 }
 
-getopt_result="$(getopt -o'hc' --long='continue,abort' -n"$(basename "$0")" -- "$@")"
+getopt_short_options='ch'
+getopt_long_options='abort,continue'
+getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
-continue_set=n
 abort_set=n
+continue_set=n
 while true
 do
 	case "$1" in
-	-h)
-		print_help
-		exit 0
+	--abort)
+		abort_set=y
 		;;
 	-c|--continue)
 		continue_set=y
 		;;
-	--abort)
-		abort_set=y
+	-h)
+		print_help
+		exit 0
 		;;
 	--)
 		shift

@@ -24,7 +24,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'installer version 1.0.1\n'
+	printf 'installer version 1.0.2\n'
 }
 
 is_windows() {
@@ -151,7 +151,7 @@ are_foreign_files_in_target() { # source_path
 are_foreign_files_in_root_target() {
 	are_foreign_files_in_target 'bin' \
 	|| are_foreign_files_in_target 'lib' \
-	|| find "$(make_target_path '')" -mindepth 1 -maxdepth 1 | grep -qv '/\(bin\|lib\)$'
+	|| find "$(make_target_path '')" -mindepth 1 -maxdepth 1 | grep -qEv '/(bin|lib)$'
 }
 
 is_target_in_PATH() { # source_path
@@ -274,8 +274,8 @@ print_remove_from_profile_task() { # source_path
 	printf 'The line in "%s" that appends "%s" to PATH will be removed.\n' "$(make_profile_path)" "$(make_target_path "$1")"
 }
 execute_remove_from_profile_task() { # source_path
-	delete_regex='\(^\|\n\?\n\)\([\t ]*#[^\n]*\n\)\?\s*'"$(make_profile_insertion "$(make_target_path "$1")" | tail -n 1 | head -c -1 | sed -e 's/[^^]/[&]/g' -e 's/\^/\\^/g')"'[\t ]*'
-	sed -i -e ':s ; $! { N ; bs }' -e "\$s;$delete_regex;;" "$(make_profile_path)"
+	delete_regex='(^|\n?\n)([\t ]*#[^\n]*\n)?\s*'"$(make_profile_insertion "$(make_target_path "$1")" | tail -n 1 | head -c -1 | sed -E -e 's/[^^\\;]/[&]/g' -e 's/\^/\\^/g' -e 's/\\/\\\\/g' -e 's/;/\\;/g')"'[\t ]*'
+	sed -iE -e ':s ; $! { N ; bs }' -e "\$s;$delete_regex;;" "$(make_profile_path)"
 }
 
 gather_tasks() {
@@ -312,8 +312,24 @@ gather_tasks() {
 	)"
 }
 
+get_istash_version() { # path_to_main_bin_file
+	"$1" --version | awk 'NR==1{print $NF}'
+}
+
 show_tasks() {
-	printf 'Installing "git-istash" for the current user (%s)...\n' "$(id -nu)"
+	if [ "$(id -u)" -eq 0 ]
+	then
+		printf 'Installing "git-istash" for the all users (%s)...\n' "$(id -nu)"
+	else
+		printf 'Installing "git-istash" for the current user (%s)...\n' "$(id -nu)"
+	fi
+	installed_bin_path="$(make_target_path 'bin/git-istash')"
+	if [ -e "$installed_bin_path" ]
+	then
+		printf 'There is already "git-install" in the chosen location.\nIt will be replaced. (%s -> %s)\n' "$(get_istash_version "$installed_bin_path")" "$(get_istash_version 'bin/git-istash')"
+	else
+		printf 'No existing "git-istash" has been found in the chosen location.\nThe version %s will be installed.\n' "$(get_istash_version 'bin/git-istash')"
+	fi
 	printf 'Operations that are to be performed:\n'
 	printf '%s\n' "$tasks" \
 	| while read -r task
@@ -340,10 +356,10 @@ ask_confirmation() {
 	printf '\nDo you want to continue? [y/N]\n'
 	while read -r answer
 	do
-		if printf '%s' "$answer" | grep -qix 'y\|yes'
+		if printf '%s' "$answer" | grep -qEix 'y|yes'
 		then
 			return 0
-		elif [ -z "$answer" ] || printf '%s' "$answer" | grep -qix 'n\|no'
+		elif [ -z "$answer" ] || printf '%s' "$answer" | grep -qEix 'n|no'
 		then
 			return 1
 		else
@@ -387,7 +403,7 @@ do_the_install_thing() {
 			else
 				printf 'Uninstall finished successfully.\n'
 			fi
-			if printf '%s\n' "$tasks" | grep -q '^\(add\|remove\)-path_'
+			if printf '%s\n' "$tasks" | grep -qE '^(add|remove)-path_'
 			then
 				printf '\nPATH was modified. Restart the session to apply those changes.\n'
 			fi
@@ -413,7 +429,9 @@ do_the_install_thing() {
 	fi
 }
 
-getopt_result="$(getopt -o'hgc:C:u' --long='help,version,global,custom-dir:,create-dir:,uninstall,debug' -n"$(basename "$0")" -- "$@")"
+getopt_short_options='hgc:C:u'
+getopt_long_options='help,version,global,custom-dir:,create-dir:,uninstall,debug'
+getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 global=n
 uninstall=n
@@ -425,7 +443,7 @@ set_custom_dir() { # dir
 		printf 'error: Cannot specify multiple custom directories.\n' 1>&2
 		exit 1
 	fi
-	if printf '%s' "$1" | grep -q '^/'
+	if printf '%s' "$1" | grep -qE '^/'
 	then
 		custom_dir="$1"
 	else

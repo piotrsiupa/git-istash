@@ -14,9 +14,9 @@ print_help() {
 	printf '   or: git istash apply -h\n'
 	printf '\n'
 	printf 'Options:\n'
-	printf '    -h\t\t\t- Show this help text and exit.\n'
-	printf '    -c, --continue\t- Resume the previous operation.\n\t\t\t  (Conflicts need to be resolved before that.)\n'
 	printf '\t--abort\t\t- Abort the previous operation and return the repository\n\t\t\t  to the state before it started.\n'
+	printf '    -c, --continue\t- Resume the previous operation.\n\t\t\t  (Conflicts need to be resolved before that.)\n'
+	printf '    -h\t\t\t- Show this help text and exit.\n'
 }
 
 get_sub_command_name() { #
@@ -29,7 +29,7 @@ get_sub_command_name() { #
 }
 
 save_data() {
-	target_data="$(if [ "$target_type" = 'orphan' ] ; then printf '~' ; fi ; printf '%s' "$target")"
+	target_data="$(if [ "$curr_branch_type" = 'orphan' ] ; then printf '~' ; fi ; printf '%s' "$current_branch")"
 	printf '%s\n' "$target_data" >"$target_data_file"
 }
 load_data() {
@@ -38,22 +38,22 @@ load_data() {
 		printf 'fatal: "%s" is should contain exactly 1 line.\n' "$target_data_file" 1>&2
 		return 1
 	fi
-	target="$(cat "$target_data_file")"
-	if printf '%s' "$target" | grep -q '^~'
+	current_branch="$(cat "$target_data_file")"
+	if printf '%s' "$current_branch" | grep -qE '^~'
 	then
-		target="$(printf '%s' "$target" | cut -c2-)"
-		target_type='orphan'
+		current_branch="$(printf '%s' "$current_branch" | cut -c2-)"
+		curr_branch_type='orphan'
 	else
-		target_type='normal'
+		curr_branch_type='normal'
 	fi
-	if ! git rev-parse --quiet --verify "$target^{commit}" 1>/dev/null
+	if ! git rev-parse --quiet --verify "$current_branch^{commit}" 1>/dev/null
 	then
-		printf 'fatal: "%s" says "%s" but there is no such commit.\n' "$target_data_file" "$target" 1>&2
+		printf 'fatal: "%s" says "%s" but there is no such commit.\n' "$target_data_file" "$current_branch" 1>&2
 		return 1
 	fi
-	if [ "$target_type" != 'orphan' ] && [ "$(git rev-parse "$target")" = "$target" ]
+	if [ "$curr_branch_type" != 'orphan' ] && [ "$(git rev-parse "$current_branch")" = "$current_branch" ]
 	then
-		target_type='detached'
+		curr_branch_type='detached'
 	fi
 }
 delete_data() {
@@ -83,12 +83,12 @@ end_with_rebase_problem() {
 end_with_success() {
 	other_changes_hash="$(git rev-parse HEAD)"
 	staged_changes_hash="$(git rev-parse HEAD~)"
-	if [ "$target_type" != 'orphan' ] && [ "$(git rev-parse HEAD~2)" != "$(git rev-parse "$target")" ]
+	if [ "$curr_branch_type" != 'orphan' ] && [ "$(git rev-parse HEAD~2)" != "$(git rev-parse "$current_branch")" ]
 	then
 		printf 'fatal: HEAD is not in correct position after rebasing.\n' 1>&2
 		return 1
 	fi
-	case "$target_type" in
+	case "$curr_branch_type" in
 		orphan)
 			if [ "$(git rev-list --no-walk --count HEAD~2^@)" -ne 0 ]
 			then
@@ -100,11 +100,11 @@ end_with_success() {
 				printf 'fatal: The empty commit created for the command is not empty.\n' 1>&2
 				return 1
 			fi
-			git branch --delete --force "$target"
-			git switch --orphan "$target"
+			git branch --delete --force "$current_branch"
+			git switch --orphan "$current_branch"
 			;;
 		normal)
-			git switch "$target"
+			git switch "$current_branch"
 			;;
 		detached)
 			git switch -d HEAD~2
@@ -182,7 +182,7 @@ untangle_git_stash() {
 	if git rev-parse "$stash_commit^3" 1>/dev/null 2>&1
 	then
 		git ls-tree -r --name-only "$stash_commit^3" -z \
-		| xargs -r0 -- git restore --source="$stash_commit^3" --
+		| xargs -r0 -- git --literal-pathspecs restore --source="$stash_commit^3" --
 		git add .
 	fi
 	git commit --no-edit --no-verify --allow-empty
@@ -197,12 +197,12 @@ do_start() { # args...
 	find_current_branch
 	save_data
 	
-	if [ "$target_type" = 'orphan' ]
+	if [ "$curr_branch_type" = 'orphan' ]
 	then
 		git commit --allow-empty --message 'Temporary commit by "git-stash"'
 	fi
 	untangle_git_stash
-	if git rebase --onto "$target" "HEAD~2" "HEAD" --empty=keep --keep-empty
+	if git rebase --onto "$current_branch" "HEAD~2" "HEAD" --empty=keep --keep-empty
 	then
 		end_with_success
 	elif are_there_conflicts
@@ -237,22 +237,22 @@ do_abort() { # args...
 	
 	git rebase --abort || true  # Errors are ignored because if rebase is not in progress, we still want to try to restore HEAD.
 	succeeded_switch=n
-	case "$target_type" in
+	case "$curr_branch_type" in
 		orphan)
-			git branch --delete --force "$target"
-			if git switch --orphan "$target"
+			git branch --delete --force "$current_branch"
+			if git switch --orphan "$current_branch"
 			then
 				succeeded_switch=y
 			fi
 			;;
 		normal)
-			if git switch --quiet "$target"
+			if git switch --quiet "$current_branch"
 			then
 				succeeded_switch=y
 			fi
 			;;
 		detached)
-			if git switch --detach --quiet "$target"
+			if git switch --detach --quiet "$current_branch"
 			then
 				succeeded_switch=y
 			fi
@@ -296,26 +296,28 @@ do_apply() { # args...
 	fi
 }
 
-getopt_result="$(getopt -o'hc' --long='continue,abort,called-from-pop' -n"$(basename "$0")" -- "$@")"
+getopt_short_options='ch'
+getopt_long_options='abort,_called-from-pop,_called-from-pop_,continue'
+getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
-continue_set=n
 abort_set=n
 is_pop=n
+continue_set=n
 while true
 do
 	case "$1" in
-	-h)
-		print_help
-		exit 0
+	--abort)
+		abort_set=y
+		;;
+	--_called-from-pop*)
+		is_pop=y
 		;;
 	-c|--continue)
 		continue_set=y
 		;;
-	--abort)
-		abort_set=y
-		;;
-	--called-from-pop)
-		is_pop=y
+	-h)
+		print_help
+		exit 0
 		;;
 	--)
 		shift

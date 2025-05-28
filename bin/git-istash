@@ -22,30 +22,23 @@ print_help() {
 }
 
 print_version() {
-	printf 'git-istash version 1.0.1\n'
+	printf 'git-istash version 1.1.0\n'
 	printf 'Author: Piotr Siupa\n'
 }
 
 run_subcommand() { # subcommand [arguments...]
 	subcommand="$1"
 	shift
-	case "$subcommand" in
-		apply|pop)
-			sh "$(dirname "$0")/../lib/git-istash/git-istash-$subcommand" "$@"
-			;;
-		-*)
-			printf 'git-istash: Missing sub-command. See "git istash --help".\n' 1>&2
-			return 1
-			;;
-		*)
-			printf 'git-istash: "%s" is not a sub-command. See "git istash --help".\n' "$subcommand" 1>&2
-			return 1
-			;;
-	esac
+	subcommand_path="$(dirname "$0")/../lib/git-istash/git-istash-$subcommand"
+	if [ ! -f "$subcommand_path" ] || [ ! -x "$subcommand_path" ]
+	then
+		printf 'git-istash: "%s" is not a sub-command. See "git istash --help".\n' "$subcommand" 1>&2
+		return 1
+	fi
+	sh "$subcommand_path" "$@"
 }
 
-if [ "$1" = '--help' ] || [ "$2" = '--help' ]
-then
+show_manual() {
 	if [ -f "$(dirname "$0")/../man/man1/git-istash.1" ]
 	then
 		if (
@@ -55,22 +48,32 @@ then
 			man git-istash
 		)
 		then
-			exit 0
+			return 0
 		fi
 	fi
 	if man git-istash
 	then
-		exit 0
+		return 0
 	fi
 	printf 'Unable to open the manual entry.\n' 1>&2
 	printf 'Falling back to the built-in help text.\n' 1>&2
 	printf '\n' 1>&2
-	if [ "$1" = '--help' ]
+	return 1
+}
+
+if [ "$1" = '--help' ] || [ "$2" = '--help' ]
+then
+	if show_manual
 	then
-		print_help
 		exit 0
 	else
-		eval set -- "$1" -h
+		if [ "$1" = '--help' ]
+		then
+			print_help
+			exit 0
+		else
+			eval set -- "$1" -h
+		fi
 	fi
 elif [ "$1" = '-h' ] || [ "$1" = '--help' ]
 then
@@ -82,13 +85,8 @@ then
 	exit 0
 fi
 
-if [ $# -ge 1 ]
+if [ $# -eq 0 ] || printf '%s' "$1" | grep -Eq '^-'
 then
-	run_subcommand "$@"
-else
-	printf 'git-istash: Missing sub-command.\n' 1>&2
-	printf 'hint: Please, specify the sub-command to run as the first argument after "git istash".\n' 1>&2
-	printf '\n'
-	print_help
-	exit 1
+	set -- 'push' '--_implicit-push_' "$@"
 fi
+run_subcommand "$@"
