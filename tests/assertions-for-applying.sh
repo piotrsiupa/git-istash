@@ -45,7 +45,7 @@ assert_data_files() { # expected_state
 }
 
 assert_stash_count_O() { # expected
-	case "$OPERATION" in
+	case "$APPLY_OPERATION" in
 		apply) assert_stash_count "$1" ;;
 		pop) assert_stash_count $(($1 - 1)) ;;
 	esac

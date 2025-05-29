@@ -3,7 +3,7 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
-PARAMETRIZE_APPLY_POP
+PARAMETRIZE_APPLY_OPERATION
 if IS_POP
 then
 	skip_silently # "pop" doesn't support hashes, which is checked in an ealier test
@@ -17,9 +17,9 @@ git stash push -m 'the only stash'
 
 SWITCH_HEAD_TYPE
 
-__test_section__ "$CAP_OPERATION stash (without changes)"
+__test_section__ "$CAP_APPLY_OPERATION stash (without changes)"
 correct_head_hash="$(get_head_hash_H)"
-assert_exit_code 1 git istash "$OPERATION" 'non_existent_branch'
+assert_exit_code 1 git istash "$APPLY_OPERATION" 'non_existent_branch'
 assert_files_H '
 !! ignored0	ignored0
 !! ignored1	ignored1
@@ -33,11 +33,11 @@ assert_data_files 'none'
 assert_rebase n
 assert_dotgit_contents
 
-__test_section__ "$CAP_OPERATION stash (with changes)"
+__test_section__ "$CAP_APPLY_OPERATION stash (with changes)"
 printf 'ccc\n' >aaa
 git add aaa
 printf 'ddd\n' >aaa
-assert_exit_code 1 git istash "$OPERATION" 'non_existent_branch'
+assert_exit_code 1 git istash "$APPLY_OPERATION" 'non_existent_branch'
 assert_files_H '
 AM aaa		ddd	ccc
 !! ignored0	ignored0

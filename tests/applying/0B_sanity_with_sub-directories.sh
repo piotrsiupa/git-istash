@@ -3,7 +3,7 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
-PARAMETRIZE_APPLY_POP
+PARAMETRIZE_APPLY_OPERATION
 
 __test_section__ 'Prepare repository'
 mkdir xxx yyy
@@ -31,11 +31,11 @@ git stash push -u
 
 SWITCH_HEAD_TYPE
 
-__test_section__ "$CAP_OPERATION stash"
+__test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_hash="$(get_head_hash_H)"
 mkdir -p xxx
 cd xxx
-assert_exit_code 0 git stash "$OPERATION" --index
+assert_exit_code 0 git stash "$APPLY_OPERATION" --index
 cd -
 assert_files_H '
 MM aaa		ccc0	bbb0

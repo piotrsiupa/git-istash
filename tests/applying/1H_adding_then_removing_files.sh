@@ -3,7 +3,7 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
-PARAMETRIZE_APPLY_POP
+PARAMETRIZE_APPLY_OPERATION
 
 __test_section__ 'Create stash'
 printf 'aaa\n' >aaa
@@ -13,9 +13,9 @@ git istash push  # Normal "git stash" doesn't allow creation of such stash so "g
 
 SWITCH_HEAD_TYPE
 
-__test_section__ "$CAP_OPERATION stash"
+__test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_hash="$(get_head_hash_H)"
-assert_exit_code 0 git istash "$OPERATION"
+assert_exit_code 0 git istash "$APPLY_OPERATION"
 assert_files_H '
 AD aaa		aaa
 !! ignored0	ignored0

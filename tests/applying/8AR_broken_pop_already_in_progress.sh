@@ -3,7 +3,7 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
-PARAMETRIZE_APPLY_POP
+PARAMETRIZE_APPLY_OPERATION
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
@@ -49,7 +49,7 @@ mv .git/ISTASH_TARGET .git/ISTASH_TARGET~
 correct_head_hash2="$(get_head_hash_H)"
 printf 'ddd\n' >aaa
 git add aaa
-assert_exit_code 1 git istash "$OPERATION"
+assert_exit_code 1 git istash "$APPLY_OPERATION"
 assert_files_H '
 M  aaa		ddd
 !! ignored0	ignored0

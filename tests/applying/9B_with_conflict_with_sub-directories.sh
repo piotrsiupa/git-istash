@@ -3,7 +3,7 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
-PARAMETRIZE_APPLY_POP
+PARAMETRIZE_APPLY_OPERATION
 
 __test_section__ 'Prepare repository'
 mkdir xxx yyy
@@ -38,11 +38,11 @@ git commit -m 'Changed aaa & added zzz'
 
 SWITCH_HEAD_TYPE
 
-__test_section__ "$CAP_OPERATION stash"
+__test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_hash="$(get_head_hash_H)"
 mkdir -p xxx
 cd xxx
-assert_exit_code 2 capture_outputs git istash "$OPERATION"
+assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION"
 cd -
 assert_conflict_message
 assert_files_H '
@@ -63,17 +63,17 @@ DU yyy/aaa	bbb2
 '
 assert_stash_count 1
 assert_branch_count_H 1
-assert_data_files "$OPERATION"
+assert_data_files "$APPLY_OPERATION"
 assert_rebase y
-assert_dotgit_contents_for "$OPERATION"
+assert_dotgit_contents_for "$APPLY_OPERATION"
 
-__test_section__ "Continue $OPERATION stash (0)"
+__test_section__ "Continue $APPLY_OPERATION stash (0)"
 printf 'eee0\n' >aaa
 printf 'eee1\n' >xxx/aaa
 printf 'eee2\n' >yyy/aaa
 git add aaa xxx/aaa yyy/aaa
 cd xxx
-assert_exit_code 2 capture_outputs git istash "$OPERATION" --continue
+assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION" --continue
 cd -
 assert_conflict_message
 assert_files_H '
@@ -97,11 +97,11 @@ A  yyy/zzz	zzz2
 '
 assert_stash_count 1
 assert_branch_count_H 1
-assert_data_files "$OPERATION"
+assert_data_files "$APPLY_OPERATION"
 assert_rebase y
-assert_dotgit_contents_for "$OPERATION"
+assert_dotgit_contents_for "$APPLY_OPERATION"
 
-__test_section__ "Continue $OPERATION stash (1)"
+__test_section__ "Continue $APPLY_OPERATION stash (1)"
 printf 'fff0\n' >aaa
 printf 'fff1\n' >xxx/aaa
 printf 'fff2\n' >yyy/aaa
@@ -110,7 +110,7 @@ printf 'xxx1\n' >xxx/zzz
 printf 'xxx2\n' >yyy/zzz
 git add aaa xxx/aaa yyy/aaa zzz xxx/zzz yyy/zzz
 cd xxx
-assert_exit_code 0 git istash "$OPERATION" --continue
+assert_exit_code 0 git istash "$APPLY_OPERATION" --continue
 cd -
 assert_files_H '
 MM aaa		fff0	eee0

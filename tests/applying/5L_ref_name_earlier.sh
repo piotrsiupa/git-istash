@@ -1,7 +1,7 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
-PARAMETRIZE_APPLY_POP
+PARAMETRIZE_APPLY_OPERATION
 
 __test_section__ 'Create earlier stash'
 printf 'aaa\n' >aaa
@@ -21,7 +21,7 @@ assert_stash_count 0
 
 SWITCH_HEAD_TYPE
 
-__test_section__ "$CAP_OPERATION stash"
+__test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_hash="$(get_head_hash_H)"
 if IS_APPLY
 then
