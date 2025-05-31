@@ -24,17 +24,17 @@ printf 'zzz\nbbb\nbbb\nzzz\n' >bbb
 printf 'q q ' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
 assert_exit_code 1 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $KEEP_INDEX_FLAGS --patch --message 'some nicer stash name' <.git/answers_for_patch
-assert_files_H '
+assert_files_HT '
  M aaa		yyy\naaa\naaa\nyyy	aaa\naaa
  M bbb		zzz\nbbb\nbbb\nzzz	bbb\nbbb
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
 assert_stash_count 0
-assert_log_length_H 2
+assert_log_length_HT 2
 assert_branch_count 1
-assert_head_hash_H "$correct_head_hash"
-assert_head_name_H
+assert_head_hash_HT "$correct_head_hash"
+assert_head_name_HT
 assert_rebase n
-assert_branch_metadata_H
+assert_branch_metadata_HT
 assert_dotgit_contents

@@ -24,17 +24,17 @@ git commit -m 'Changed aaa & added zzz'
 SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
-correct_head_hash="$(get_head_hash_H)"
+correct_head_hash="$(get_head_hash_HT)"
 assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION"
 assert_conflict_message
-assert_files_H '
+assert_files_HT '
 UU aaa		ddd|bbb
    zzz		yyy
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
 assert_stash_count 1
-assert_branch_count_H 1
+assert_branch_count_HT 1
 assert_data_files "$APPLY_OPERATION"
 assert_rebase y
 assert_dotgit_contents_for "$APPLY_OPERATION"
@@ -44,14 +44,14 @@ printf 'eee\n' >aaa
 git add aaa
 assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION" --continue
 assert_conflict_message
-assert_files_H '
+assert_files_HT '
 UU aaa		eee|ccc
 AA zzz		yyy|zzz
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
 assert_stash_count 1
-assert_branch_count_H 1
+assert_branch_count_HT 1
 assert_data_files "$APPLY_OPERATION"
 assert_rebase y
 assert_dotgit_contents_for "$APPLY_OPERATION"
@@ -61,18 +61,18 @@ printf 'fff\n' >aaa
 printf 'xxx\n' >zzz
 git add aaa zzz
 assert_exit_code 0 git istash "$APPLY_OPERATION" --continue
-assert_files_H '
+assert_files_HT '
 MM aaa		fff	eee
  M zzz		xxx	yyy
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
-assert_stash_count_O 1
-assert_log_length_H 3
+assert_stash_count_AO 1
+assert_log_length_HT 3
 assert_branch_count 1
-assert_head_hash_H "$correct_head_hash"
-assert_head_name_H
+assert_head_hash_HT "$correct_head_hash"
+assert_head_name_HT
 assert_data_files 'none'
 assert_rebase n
-assert_branch_metadata_H
+assert_branch_metadata_HT
 assert_dotgit_contents

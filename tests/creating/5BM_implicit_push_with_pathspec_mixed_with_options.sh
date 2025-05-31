@@ -42,7 +42,7 @@ printf 'zzz\n' >bbb2
 printf 'zzz\n' >ccc4
 #shellcheck disable=SC2086
 assert_exit_code 1 git istash $UNTRACKED_FLAGS $ALL_FLAGS 'aaa0' $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS 'bbb?' -m 'new stash' $EOI '*5' './?dd*'
-assert_files_H '
+assert_files_HT '
 M  aaa0		yyy
  M aaa1		yyy	xxx
 MM bbb2		zzz	yyy
@@ -57,10 +57,10 @@ M  eee8		yyy
 !! ignored1	ignored1
 '
 assert_stash_count 0
-assert_log_length_H 2
+assert_log_length_HT 2
 assert_branch_count 1
-assert_head_hash_H "$correct_head_hash"
-assert_head_name_H
+assert_head_hash_HT "$correct_head_hash"
+assert_head_name_HT
 assert_rebase n
-assert_branch_metadata_H
+assert_branch_metadata_HT
 assert_dotgit_contents

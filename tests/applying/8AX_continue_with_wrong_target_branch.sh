@@ -25,7 +25,7 @@ SWITCH_HEAD_TYPE
 __test_section__ "$CAP_APPLY_OPERATION stash"
 assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION"
 assert_conflict_message
-assert_files_H '
+assert_files_HT '
 UU aaa		ccc|bbb
 !! ignored0	ignored0
 !! ignored1	ignored1
@@ -46,5 +46,5 @@ printf 'wrong_branch\n' >'.git/ISTASH_TARGET'
 assert_exit_code 1 git istash "$APPLY_OPERATION" --continue
 assert_file_contents ignored0 'ignored0'
 assert_file_contents ignored1 'ignored1'
-assert_branch_metadata_H
+assert_branch_metadata_HT
 assert_dotgit_contents_for "$APPLY_OPERATION"

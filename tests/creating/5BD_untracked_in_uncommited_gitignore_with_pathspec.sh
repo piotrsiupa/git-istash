@@ -41,7 +41,7 @@ else
 fi
 if ! IS_KEEP_INDEX_ON
 then
-	assert_files_H '
+	assert_files_HT '
 	   .gitignore	X
 	?? aaa0		aaa
 	?? aaa1		aaa
@@ -50,7 +50,7 @@ then
 	!! ignored1	ignored1
 	'
 else
-	assert_files_H '
+	assert_files_HT '
 	M  .gitignore	aaa?
 	!! aaa0		aaa
 	!! aaa1		aaa
@@ -59,18 +59,18 @@ else
 	!! ignored1	ignored1
 	'
 fi
-assert_stash_H 0 'X' '
+assert_stash_HT 0 'X' '
 M  .gitignore	aaa?
 ?? bbb1		bbb
 '
-assert_stash_base_H 0 'HEAD'
+assert_stash_base_HT 0 'HEAD'
 assert_stash_count 1
-assert_log_length_H 2
+assert_log_length_HT 2
 assert_branch_count 1
-assert_head_hash_H "$correct_head_hash"
-assert_head_name_H
+assert_head_hash_HT "$correct_head_hash"
+assert_head_name_HT
 assert_rebase n
-assert_branch_metadata_H
+assert_branch_metadata_HT
 assert_dotgit_contents
 
 git reset --hard
@@ -93,5 +93,5 @@ assert_branch_count 1
 assert_head_hash "$correct_head_hash"
 assert_head_name 'master'
 assert_rebase n
-assert_branch_metadata_H
+assert_branch_metadata_HT
 assert_dotgit_contents

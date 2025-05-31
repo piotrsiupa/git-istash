@@ -42,7 +42,7 @@ printf 'e n e n ' | tr ' ' '\n' >.git/answers_for_patch
 GIT_EDITOR="sed -Ei 's/^\+[a-z]{3}2/+xxx/'" assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS <.git/answers_for_patch
 if ! IS_KEEP_INDEX_ON
 then
-	assert_files_H '
+	assert_files_HT '
 	   bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{a}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th aaa1
 	   bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{b}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th bbb1
 	 M bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{c}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th ccc2 ccc1
@@ -53,7 +53,7 @@ then
 	!! ignored1	ignored1
 	'
 else
-	assert_files_H '
+	assert_files_HT '
 	M  bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{a}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th aaa2
 	M  bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{b}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th bbb2
 	 M bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{c}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th ccc2 ccc1
@@ -64,21 +64,21 @@ else
 	!! ignored1	ignored1
 	'
 fi
-assert_stash_H 0 '' '
+assert_stash_HT 0 '' '
 M  bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{a}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th aaa2
 M  bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{b}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th bbb2
  M bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{c}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th xxx ccc1
    bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{d}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th ddd1
 ?? bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{e}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th xxx
 '
-assert_stash_base_H 0 'HEAD'
+assert_stash_base_HT 0 'HEAD'
 assert_stash_count 1
-assert_log_length_H 2
+assert_log_length_HT 2
 assert_branch_count 1
-assert_head_hash_H "$correct_head_hash"
-assert_head_name_H
+assert_head_hash_HT "$correct_head_hash"
+assert_head_name_HT
 assert_rebase n
-assert_branch_metadata_H
+assert_branch_metadata_HT
 assert_dotgit_contents
 
 git reset --hard
@@ -102,5 +102,5 @@ assert_branch_count 1
 assert_head_hash "$correct_head_hash"
 assert_head_name 'master'
 assert_rebase n
-assert_branch_metadata_H
+assert_branch_metadata_HT
 assert_dotgit_contents

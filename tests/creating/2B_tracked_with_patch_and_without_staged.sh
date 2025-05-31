@@ -29,7 +29,7 @@ rm ddd eee
 printf 's y n s n y n y ' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
 assert_exit_code 0 git istash push $STAGED_FLAGS $UNSTAGED_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS --patch --message 'some nice stash name' <.git/answers_for_patch
-assert_files_H '
+assert_files_HT '
 MM aaa		xxx\naaa\naaa\nyyy	xxx\naaa\naaa\nxxx
  M bbb		zzz\nbbb\nbbb		bbb\nbbb
 D  ccc
@@ -38,21 +38,21 @@ D  ccc
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
-assert_stash_H 0 'some nice stash name' '
+assert_stash_HT 0 'some nice stash name' '
  M aaa		yyy\naaa\naaa		aaa\naaa
  M bbb		bbb\nbbb\nzzz		bbb\nbbb
    ccc		ccc\nccc
    ddd		ddd\nddd
  D eee		eee\neee
 '
-assert_stash_base_H 0 'HEAD'
+assert_stash_base_HT 0 'HEAD'
 assert_stash_count 1
-assert_log_length_H 2
+assert_log_length_HT 2
 assert_branch_count 1
-assert_head_hash_H "$correct_head_hash"
-assert_head_name_H
+assert_head_hash_HT "$correct_head_hash"
+assert_head_name_HT
 assert_rebase n
-assert_branch_metadata_H
+assert_branch_metadata_HT
 assert_dotgit_contents
 
 git reset --hard
@@ -75,5 +75,5 @@ assert_branch_count 1
 assert_head_hash "$correct_head_hash"
 assert_head_name 'master'
 assert_rebase n
-assert_branch_metadata_H
+assert_branch_metadata_HT
 assert_dotgit_contents

@@ -20,12 +20,12 @@ git stash push -u
 SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
-correct_head_hash="$(get_head_hash_H)"
+correct_head_hash="$(get_head_hash_HT)"
 mkdir xxx
 cd xxx
 assert_exit_code 0 git istash "$APPLY_OPERATION"
 cd -
-assert_files_H '
+assert_files_HT '
 AM aaa		bbb0	aaa0
 AM xxx/aaa	bbb1	aaa1
 AM yyy/aaa	bbb2	aaa2
@@ -35,12 +35,12 @@ AM yyy/aaa	bbb2	aaa2
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
-assert_stash_count_O 1
-assert_log_length_H 1
+assert_stash_count_AO 1
+assert_log_length_HT 1
 assert_branch_count 1
-assert_head_hash_H "$correct_head_hash"
-assert_head_name_H
+assert_head_hash_HT "$correct_head_hash"
+assert_head_name_HT
 assert_data_files 'none'
 assert_rebase n
-assert_branch_metadata_H
+assert_branch_metadata_HT
 assert_dotgit_contents

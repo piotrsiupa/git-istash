@@ -112,7 +112,7 @@ printf '%s\n' '*ignored*' >.git/info/exclude
 assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
 if ! IS_KEEP_INDEX_ON
 then
-	assert_files_H '
+	assert_files_HT '
 	   \040unchanged\040				x
 	   index					x
 	   normal\n					x
@@ -127,7 +127,7 @@ then
 	   tracked-dir1\040/\ntracked-dir2/\nboth\n\n	x
 	'
 else
-	assert_files_H '
+	assert_files_HT '
 	   \040unchanged\040				x
 	M  index						y
 	   normal\n					x
@@ -148,7 +148,7 @@ else
 	A  tracked-dir1\040/\ntracked-dir2/\040changed-new\040	y
 	'
 fi
-assert_stash_H 0 '' '
+assert_stash_HT 0 '' '
    \040unchanged\040				x
 M  index						y
  M normal\n					z	x
@@ -174,14 +174,14 @@ AM tracked-dir1\040/\ntracked-dir2/\040changed-new\040 z	y
 !! tracked-dir1\040/\nignored-dir2/some-file0	uf0
 !! tracked-dir1\040/\nignored-dir2/\040some-file1\040\040\040 uf1
 '
-assert_stash_base_H 0 'HEAD'
+assert_stash_base_HT 0 'HEAD'
 assert_stash_count 1
-assert_log_length_H 2
+assert_log_length_HT 2
 assert_branch_count 1
-assert_head_hash_H "$correct_head_hash"
-assert_head_name_H
+assert_head_hash_HT "$correct_head_hash"
+assert_head_name_HT
 assert_rebase n
-assert_branch_metadata_H
+assert_branch_metadata_HT
 assert_dotgit_contents
 
 git reset --hard
@@ -221,5 +221,5 @@ assert_branch_count 1
 assert_head_hash "$correct_head_hash"
 assert_head_name 'master'
 assert_rebase n
-assert_branch_metadata_H
+assert_branch_metadata_HT
 assert_dotgit_contents

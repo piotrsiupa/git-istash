@@ -267,7 +267,7 @@ assert_branch_metadata() {
 	unset value_for_assert
 }
 
-assert_files_H() { # expected_files [expected_files_for_orphan]
+assert_files_HT() { # expected_files [expected_files_for_orphan]
 	if ! IS_HEAD_ORPHAN || [ $# -lt 2 ]
 	then
 		assert_files "$1"
@@ -275,21 +275,21 @@ assert_files_H() { # expected_files [expected_files_for_orphan]
 		assert_files "$2"
 	fi
 }
-assert_log_length_H() { # expected_for_not_orphan
+assert_log_length_HT() { # expected_for_not_orphan
 	if IS_HEAD_ORPHAN
 	then
 		set -- 0
 	fi
 	assert_log_length "$1"
 }
-assert_branch_count_H() { # expected_for_not_orphan
+assert_branch_count_HT() { # expected_for_not_orphan
 	if IS_HEAD_ORPHAN
 	then
 		set -- $(($1 + 1))
 	fi
 	assert_branch_count "$1"
 }
-assert_head_hash_H() { # expected_for_not_orphan
+assert_head_hash_HT() { # expected_for_not_orphan
 	if ! IS_HEAD_ORPHAN
 	then
 		value_for_assert="$(get_head_hash)"
@@ -298,7 +298,7 @@ assert_head_hash_H() { # expected_for_not_orphan
 		unset value_for_assert
 	fi
 }
-assert_head_name_H() {
+assert_head_name_HT() {
 	case "$HEAD_TYPE" in
 		'BRANCH') assert_head_name 'master' ;;
 		'DETACH') assert_head_name 'HEAD' ;;
@@ -306,7 +306,7 @@ assert_head_name_H() {
 		*) fail 'Unknown HEAD type "%s"!' "$HEAD_TYPE" ;;
 	esac
 }
-assert_branch_metadata_H() {
+assert_branch_metadata_HT() {
 	if IS_HEAD_BRANCH
 	then
 		assert_branch_metadata

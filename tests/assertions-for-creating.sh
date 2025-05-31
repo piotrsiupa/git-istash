@@ -214,7 +214,7 @@ assert_stash_base() { # stash_num expected_base
 	fi
 }
 
-assert_stash_H() { # stash_num expected_stash_name expected_files [expected_files_for_orphan]
+assert_stash_HT() { # stash_num expected_stash_name expected_files [expected_files_for_orphan]
 	case "$HEAD_TYPE" in
 		'BRANCH') assert_stash "$1" 'master' "$2" "$3" ;;
 		'DETACH') assert_stash "$1" 'HEAD' "$2" "$3" ;;
@@ -222,7 +222,7 @@ assert_stash_H() { # stash_num expected_stash_name expected_files [expected_file
 		*) fail 'Unknown HEAD type "%s"!' "$HEAD_TYPE" ;;
 	esac
 }
-assert_stash_untracked_H() { # stash_num expected_stash_name expected_files [expected_files_for_orphan]
+assert_stash_untracked_HT() { # stash_num expected_stash_name expected_files [expected_files_for_orphan]
 	case "$HEAD_TYPE" in
 		'BRANCH') assert_stash_untracked "$1" 'master' "$2" "$3" ;;
 		'DETACH') assert_stash_untracked "$1" 'HEAD' "$2" "$3" ;;
@@ -230,7 +230,7 @@ assert_stash_untracked_H() { # stash_num expected_stash_name expected_files [exp
 		*) fail 'Unknown HEAD type "%s"!' "$HEAD_TYPE" ;;
 	esac
 }
-assert_stash_base_H() { # stash_num expected_base_for_not_orphan
+assert_stash_base_HT() { # stash_num expected_base_for_not_orphan
 	if ! IS_HEAD_ORPHAN
 	then
 		assert_stash_base "$1" "$2"

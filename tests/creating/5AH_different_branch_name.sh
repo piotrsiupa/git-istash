@@ -20,12 +20,12 @@ git add aaa
 assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
 if ! IS_KEEP_INDEX_ON
 then
-	assert_files_H '
+	assert_files_HT '
 	!! ignored0	ignored0
 	!! ignored1	ignored1
 	'
 else
-	assert_files_H '
+	assert_files_HT '
 	A  aaa			bbb
 	!! ignored0	ignored0
 	!! ignored1	ignored1
@@ -41,9 +41,9 @@ else
 	assert_stash_base 0 '~new-and-cool-branch'
 fi
 assert_stash_count 1
-assert_log_length_H 1
+assert_log_length_HT 1
 assert_branch_count 1
-assert_head_hash_H "$correct_head_hash"
+assert_head_hash_HT "$correct_head_hash"
 if ! IS_HEAD_ORPHAN
 then
 	assert_head_name 'new-and-cool-branch'
@@ -51,7 +51,7 @@ else
 	assert_head_name '~new-and-cool-branch'
 fi
 assert_rebase n
-assert_branch_metadata_H
+assert_branch_metadata_HT
 assert_dotgit_contents
 
 git reset --hard
@@ -64,9 +64,9 @@ A  aaa		bbb
 !! ignored1	ignored1
 '
 assert_stash_count 0
-assert_log_length_H 1
+assert_log_length_HT 1
 assert_branch_count 1
-assert_head_hash_H "$correct_head_hash"
+assert_head_hash_HT "$correct_head_hash"
 if ! IS_HEAD_ORPHAN
 then
 	assert_head_name 'new-and-cool-branch'
@@ -74,5 +74,5 @@ else
 	assert_head_name '~new-and-cool-branch'
 fi
 assert_rebase n
-assert_branch_metadata_H
+assert_branch_metadata_HT
 assert_dotgit_contents

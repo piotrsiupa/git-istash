@@ -23,7 +23,7 @@ SWITCH_HEAD_TYPE
 __test_section__ "$CAP_APPLY_OPERATION stash"
 assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION"
 assert_conflict_message
-assert_files_H '
+assert_files_HT '
 UU aaa		ccc|bbb
 !! ignored0	ignored0
 !! ignored1	ignored1
@@ -38,9 +38,9 @@ assert_rebase y
 assert_dotgit_contents_for "$APPLY_OPERATION"
 
 __test_section__ "$CAP_APPLY_OPERATION stash again"
-correct_head_hash="$(get_head_hash_H)"
+correct_head_hash="$(get_head_hash_HT)"
 assert_exit_code 1 git istash "$APPLY_OPERATION"
-assert_files_H '
+assert_files_HT '
 UU aaa		ccc|bbb
 !! ignored0	ignored0
 !! ignored1	ignored1
@@ -50,8 +50,8 @@ DU aaa		bbb
 !! ignored1	ignored1
 '
 assert_stash_count 1
-assert_head_hash_H "$correct_head_hash"
+assert_head_hash_HT "$correct_head_hash"
 assert_data_files "$APPLY_OPERATION"
 assert_rebase y
-assert_branch_metadata_H
+assert_branch_metadata_HT
 assert_dotgit_contents_for "$APPLY_OPERATION"

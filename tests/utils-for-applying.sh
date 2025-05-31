@@ -9,7 +9,7 @@ fi
 
 # It calls "PARAMETRIZE" with the name "APPLY_OPERATION" and values "apply" & "pop".
 # It also creates a variable "CAP_APPLY_OPERATION" which stores the same operation name but capitalized and a few other variables.
-# (See also assertions with suffix "_O".)
+# (See also assertions with suffix "_AO".)
 PARAMETRIZE_APPLY_OPERATION() {
 	PARAMETRIZE 'APPLY_OPERATION' 'apply' 'pop'
 	#shellcheck disable=SC2034

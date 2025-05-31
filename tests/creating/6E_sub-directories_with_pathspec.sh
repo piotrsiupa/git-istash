@@ -67,7 +67,7 @@ fi
 cd -
 if ! IS_KEEP_INDEX_ON
 then
-	assert_files_H '
+	assert_files_HT '
 	   a/0/i	xxx
 	   a/0/j	xxx
 	   a/0/k	xxx
@@ -82,7 +82,7 @@ then
 	M  b/1/k	yyy
 	'
 else
-	assert_files_H '
+	assert_files_HT '
 	M  a/0/i	yyy
 	   a/0/j	xxx
 	D  a/0/k
@@ -97,7 +97,7 @@ else
 	M  b/1/k	yyy
 	'
 fi
-assert_stash_H 0 '' '
+assert_stash_HT 0 '' '
 M  a/0/i	yyy
    a/0/j	xxx
 D  a/0/k
@@ -111,14 +111,14 @@ MD b/0/k	yyy
    b/1/j	xxx
    b/1/k	xxx
 '
-assert_stash_base_H 0 'HEAD'
+assert_stash_base_HT 0 'HEAD'
 assert_stash_count 1
-assert_log_length_H 2
+assert_log_length_HT 2
 assert_branch_count 1
-assert_head_hash_H "$correct_head_hash"
-assert_head_name_H
+assert_head_hash_HT "$correct_head_hash"
+assert_head_name_HT
 assert_rebase n
-assert_branch_metadata_H
+assert_branch_metadata_HT
 assert_dotgit_contents
 
 git reset --hard
@@ -146,5 +146,5 @@ assert_branch_count 1
 assert_head_hash "$correct_head_hash"
 assert_head_name 'master'
 assert_rebase n
-assert_branch_metadata_H
+assert_branch_metadata_HT
 assert_dotgit_contents

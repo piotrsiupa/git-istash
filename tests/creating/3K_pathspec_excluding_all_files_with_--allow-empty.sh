@@ -61,7 +61,7 @@ else
 	#shellcheck disable=SC2086
 	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'ms. stash' --allow-empty $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
 fi
-assert_files_H '
+assert_files_HT '
 MM aaa0		zzz	yyy
  M aaa1		yyy	xxx
 ?? aaa2		yyy
@@ -80,7 +80,7 @@ MM eee12	zzz	yyy
 !! ignored1	ignored1
 !! ignored0	ignored0
 '
-assert_stash_H 0 'ms. stash' '
+assert_stash_HT 0 'ms. stash' '
    aaa0		xxx
    aaa1		xxx
    bbb3		xxx
@@ -92,14 +92,14 @@ assert_stash_H 0 'ms. stash' '
    eee12	xxx
    eee13	xxx
 '
-assert_stash_base_H 0 'HEAD'
+assert_stash_base_HT 0 'HEAD'
 assert_stash_count 1
-assert_log_length_H 2
+assert_log_length_HT 2
 assert_branch_count 1
-assert_head_hash_H "$correct_head_hash"
-assert_head_name_H
+assert_head_hash_HT "$correct_head_hash"
+assert_head_name_HT
 assert_rebase n
-assert_branch_metadata_H
+assert_branch_metadata_HT
 assert_dotgit_contents
 
 git reset --hard
@@ -132,5 +132,5 @@ assert_branch_count 1
 assert_head_hash "$correct_head_hash"
 assert_head_name 'master'
 assert_rebase n
-assert_branch_metadata_H
+assert_branch_metadata_HT
 assert_dotgit_contents
