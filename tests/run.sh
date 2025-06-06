@@ -282,7 +282,7 @@ run_test() ( # test_name
 			test_count=$((test_count + 1))
 			if [ "$raw_name" = n ]
 			then
-				display_name="\"$(printf '%s' "$1" | tr '_' ' ')\""
+				display_name="\"$(printf '%s' "$1" | sed -E -e 's/_/ /g' -e 's;/; -> ;g')\""
 			else
 				display_name="$(dirname "$0")/$1.sh"
 			fi
@@ -362,7 +362,8 @@ run_test() ( # test_name
 	fi
 	rm -f "$output_file"
 	if { [ "$meticulousness" -le 1 ] && [ -n "$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | tail -n+2)" ] ; } \
-		|| { [ "$test_count" -ne 0 ] && { [ "$error_count" -ne 0 ] || [ "$quiet_level" -eq 0 ] || { [ "$failed_count" -ne 0 ] && [ "$quiet_level" -eq 1 ] ; } ; } ; }
+		|| { [ "$test_count" -ne 0 ] && { [ "$error_count" -ne 0 ] || { [ "$failed_count" -ne 0 ] && [ "$quiet_level" -eq 1 ] ; } ; } ; } \
+		|| { [ "$test_count" -gt 1 ] && [ "$quiet_level" -eq 0 ] ; }
 	then
 		test_passed="$(test "$failed_count" -eq 0 && printf 'y' || printf 'n')"
 		test_result_is_correct="$(test "$error_count" -eq 0 && printf 'y' || printf 'n')"
