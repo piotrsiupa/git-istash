@@ -81,7 +81,7 @@ assert_rebase n
 assert_branch_metadata_HT
 assert_dotgit_contents
 
-git reset --hard
+remove_all_changes
 git clean -df
 RESTORE_HEAD_TYPE
 
@@ -93,8 +93,6 @@ M  bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{b}\\*?#@!\033[1;35;4;5m
  M bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{c}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th xxx ccc1
    bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{d}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th ddd1
 ?? bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{e}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th xxx
-!! ignored0	ignored0
-!! ignored1	ignored1
 '
 assert_stash_count 0
 assert_log_length 2

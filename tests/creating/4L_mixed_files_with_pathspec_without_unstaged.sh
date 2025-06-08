@@ -125,7 +125,7 @@ assert_rebase n
 assert_branch_metadata_HT
 assert_dotgit_contents
 
-git reset --hard
+remove_all_changes
 RESTORE_HEAD_TYPE
 
 __test_section__ 'Pop stash'
@@ -133,21 +133,14 @@ assert_exit_code 0 git stash pop --index
 assert_files '
 M  aaa0		yyy
    aaa1		xxx
-?? aaa2		yyy
 M  bbb3		yyy
    bbb4		xxx
-?? bbb5		yyy
    ccc6		xxx
    ccc7		xxx
-?? ccc8		yyy
 M  ddd9		yyy
    ddd10	xxx
-?? ddd11	yyy
    eee12	xxx
    eee13	xxx
-?? eee14	yyy
-!! ignored0	ignored0
-!! ignored1	ignored1
 '
 assert_stash_count 0
 assert_log_length 2

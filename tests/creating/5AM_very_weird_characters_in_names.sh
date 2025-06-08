@@ -152,7 +152,7 @@ assert_rebase n
 assert_branch_metadata_HT
 assert_dotgit_contents
 
-git reset --hard
+remove_all_changes
 RESTORE_HEAD_TYPE
 
 __test_section__ 'Pop stash'

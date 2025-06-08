@@ -36,7 +36,7 @@ assert_rebase n
 assert_branch_metadata_HT
 assert_dotgit_contents
 
-git reset --hard
+remove_all_changes
 RESTORE_HEAD_TYPE
 
 known_failure 'The standard "git stash pop" doesn'\''t support files added with "git add -N".'
@@ -45,7 +45,6 @@ __test_section__ 'Pop stash'
 assert_exit_code 0 git stash pop --index
 assert_files '
  A aaa		bbb
-?? ddd		ddd
 !! ignored0	ignored0
 !! ignored1	ignored1
 '

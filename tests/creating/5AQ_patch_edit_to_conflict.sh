@@ -80,7 +80,7 @@ assert_rebase n
 assert_branch_metadata_HT
 assert_dotgit_contents
 
-git reset --hard
+remove_all_changes
 git clean -df
 RESTORE_HEAD_TYPE
 
@@ -92,8 +92,6 @@ M  bbb		bbb2
  M ccc		xxx	ccc1
    ddd		ddd1
 ?? eee		xxx
-!! ignored0	ignored0
-!! ignored1	ignored1
 '
 assert_stash_count 0
 assert_log_length 2
