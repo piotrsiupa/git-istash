@@ -26,7 +26,7 @@ git commit -m 'Added a bunch of files'
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
-__test_section__ 'Create stash'
+__test_section__ "Push stash (implicitly)"
 printf 'yyy\n' >aaa0
 printf 'yyy\n' >aaa1
 printf 'yyy\n' >bbb2

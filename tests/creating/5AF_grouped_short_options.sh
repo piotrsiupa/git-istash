@@ -3,20 +3,26 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
+PARAMETRIZE_CREATE_OPERATION
 
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
-__test_section__ 'Create stash'
+__test_section__ "$CAP_CREATE_OPERATION stash"
 printf 'bbb\n' >aaa
 git add aaa
-assert_exit_code 0 git istash push -kSmabc
-assert_files_HT '
+new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" -kSmabc)"
+assert_files_HTCO '
+A  aaa		bbb
+!! ignored0	ignored0
+!! ignored1	ignored1
+' '
 A  aaa		bbb
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
-assert_stash_HT 0 'abc' '
+store_stash_CO "$new_stash_hash_CO"
+assert_stash_HTCO 0 'abc' '
 A  aaa		bbb
 '
 assert_stash_base_HT 0 'HEAD'

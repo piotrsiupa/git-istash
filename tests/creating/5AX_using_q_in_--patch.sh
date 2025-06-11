@@ -3,6 +3,7 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
+PARAMETRIZE_CREATE_OPERATION
 PARAMETRIZE_ALL 'YES'
 PARAMETRIZE_UNTRACKED 'DEFAULT' 'YES'
 PARAMETRIZE_KEEP_INDEX
@@ -18,15 +19,22 @@ git commit -m 'Added some files'
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
-__test_section__ 'Create stash'
+__test_section__ "$CAP_CREATE_OPERATION stash"
 printf 'yyy\n' >aaa
 printf 'yyy\n' >bbb
 printf 'yyy\n' >ccc
 printf 'yyy\n' >ddd
 printf 'q q y y y y ' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS --allow-empty <.git/answers_for_patch
-assert_files_HT '
+new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS --allow-empty <.git/answers_for_patch)"
+assert_files_HTCO '
+ M aaa		yyy	xxx
+ M bbb		yyy	xxx
+?? ccc		yyy
+?? ddd		yyy
+!! ignored0	ignored0
+!! ignored1	ignored1
+' '
  M aaa		yyy	xxx
  M bbb		yyy	xxx
 ?? ccc		yyy
@@ -34,7 +42,8 @@ assert_files_HT '
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
-assert_stash_HT 0 '' '
+store_stash_CO "$new_stash_hash_CO"
+assert_stash_HTCO 0 '' '
    aaa		xxx
    bbb		xxx
 '

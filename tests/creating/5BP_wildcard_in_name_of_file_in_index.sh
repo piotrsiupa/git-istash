@@ -9,6 +9,7 @@ then
 fi
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
+PARAMETRIZE_CREATE_OPERATION
 PARAMETRIZE_ALL 'DEFAULT'
 PARAMETRIZE_UNTRACKED 'DEFAULT'
 PARAMETRIZE_KEEP_INDEX
@@ -27,7 +28,7 @@ git commit -m 'Added a few files'
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
-__test_section__ 'Create stash'
+__test_section__ "$CAP_CREATE_OPERATION stash"
 printf 'yyy\n' >'f*'
 printf 'yyy\n' >'foo'
 printf 'yyy\n' >'bar'
@@ -36,18 +37,24 @@ printf ':(literal)f* ' | PREPARE_PATHSPEC_FILE
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'new stash' $EOI ':(literal)f*'
+	new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'new stash' $EOI ':(literal)f*')"
 elif IS_PATHSPEC_IN_STDIN
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'new stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test
+	new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'new stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test)"
 else
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'new stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
+	new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'new stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test)"
 fi
 if ! IS_KEEP_INDEX_ON
 then
-	assert_files_HT '
+	assert_files_HTCO '
+	M  f*		yyy
+	M  foo		yyy
+	M  bar		yyy
+	!! ignored0	ignored0
+	!! ignored1	ignored1
+	' '
 	   f*		xxx
 	M  foo		yyy
 	M  bar		yyy
@@ -55,7 +62,13 @@ then
 	!! ignored1	ignored1
 	'
 else
-	assert_files_HT '
+	assert_files_HTCO '
+	M  f*		yyy
+	M  foo		yyy
+	M  bar		yyy
+	!! ignored0	ignored0
+	!! ignored1	ignored1
+	' '
 	M  f*		yyy
 	M  foo		yyy
 	M  bar		yyy
@@ -63,7 +76,8 @@ else
 	!! ignored1	ignored1
 	'
 fi
-assert_stash_HT 0 'new stash' '
+store_stash_CO "$new_stash_hash_CO"
+assert_stash_HTCO 0 'new stash' '
 M  f*		yyy
    foo		xxx
    bar		xxx

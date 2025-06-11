@@ -3,6 +3,7 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
+PARAMETRIZE_CREATE_OPERATION
 PARAMETRIZE_ALL 'DEFAULT'
 PARAMETRIZE_UNTRACKED 'DEFAULT'
 PARAMETRIZE_KEEP_INDEX
@@ -24,7 +25,7 @@ assert_stash_count 2
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
-__test_section__ 'Create stash'
+__test_section__ "$CAP_CREATE_OPERATION stash"
 correct_pre_stash_hash_0="$(get_stash_hash 1)"
 correct_pre_stash_hash_1="$(get_stash_hash 0)"
 printf 'aaa\n' >aaa
@@ -32,23 +33,34 @@ git add aaa
 printf 'bbb\n' >aaa
 printf 'ddd\n' >ddd
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash push $ALL_FLAGS $UNTRACKED_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS
+new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $ALL_FLAGS $UNTRACKED_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS)"
 if ! IS_KEEP_INDEX_ON
 then
-	assert_files_HT '
+	assert_files_HTCO '
+	AM aaa		bbb	aaa
+	?? ddd		ddd
+	!! ignored0	ignored0
+	!! ignored1	ignored1
+	' '
 	?? ddd		ddd
 	!! ignored0	ignored0
 	!! ignored1	ignored1
 	'
 else
-	assert_files_HT '
+	assert_files_HTCO '
+	AM aaa		bbb	aaa
+	?? ddd		ddd
+	!! ignored0	ignored0
+	!! ignored1	ignored1
+	' '
 	A  aaa			aaa
 	?? ddd		ddd
 	!! ignored0	ignored0
 	!! ignored1	ignored1
 	'
 fi
-assert_stash_HT 0 '' '
+store_stash_CO "$new_stash_hash_CO"
+assert_stash_HTCO 0 '' '
 AM aaa		bbb	aaa
 '
 assert_stash_base_HT 0 'HEAD'

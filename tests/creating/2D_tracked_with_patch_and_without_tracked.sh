@@ -1,6 +1,7 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
+PARAMETRIZE_CREATE_OPERATION
 PARAMETRIZE_ALL 'DEFAULT'
 PARAMETRIZE_UNTRACKED 'DEFAULT'
 PARAMETRIZE_KEEP_INDEX
@@ -19,7 +20,7 @@ git commit -m 'Added aaa & bbb'
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
-__test_section__ 'Create stash'
+__test_section__ "$CAP_CREATE_OPERATION stash"
 printf 'xxx\naaa\naaa\nxxx\n' >aaa
 git add aaa
 printf 'yyy\naaa\naaa\nyyy\n' >aaa
@@ -28,7 +29,7 @@ git rm ccc
 rm ddd eee
 printf '' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash push $STAGED_FLAGS $UNSTAGED_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS --patch --message 'some nice stash name' <.git/answers_for_patch
+assert_exit_code 1 git istash "$CREATE_OPERATION" $STAGED_FLAGS $UNSTAGED_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS --patch --message 'some nice stash name' <.git/answers_for_patch
 assert_files_HT '
 MM aaa		yyy\naaa\naaa\nyyy	xxx\naaa\naaa\nxxx
  M bbb		zzz\nbbb\nbbb\nzzz	bbb\nbbb

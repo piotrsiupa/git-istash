@@ -3,6 +3,7 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
+PARAMETRIZE_CREATE_OPERATION
 PARAMETRIZE_ALL 'DEFAULT'
 PARAMETRIZE_UNTRACKED 'DEFAULT' 'NO'
 PARAMETRIZE_KEEP_INDEX
@@ -28,7 +29,7 @@ git commit -m 'Added a bunch of files'
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
-__test_section__ 'Create stash'
+__test_section__ "$CAP_CREATE_OPERATION stash"
 printf 'yyy\n' >aaa0
 printf 'yyy\n' >aaa1
 printf 'yyy\n' >aaa2
@@ -52,16 +53,34 @@ printf 'aaa0 bbb? *7 ./?dd* ' | PREPARE_PATHSPEC_FILE
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash push 'aaa0' $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS 'bbb?' $EOI '*7' './?dd*'
+	new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" 'aaa0' $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS 'bbb?' $EOI '*7' './?dd*')"
 elif IS_PATHSPEC_IN_STDIN
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test
+	new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test)"
 else
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
+	new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test)"
 fi
-assert_files_HT '
+assert_files_HTCO '
+MM aaa0		zzz	yyy
+ M aaa1		yyy	xxx
+?? aaa2		yyy
+M  bbb3		yyy
+ M bbb4		yyy	xxx
+?? bbb5		yyy
+M  ccc6		yyy
+ M ccc7		yyy	xxx
+?? ccc8		yyy
+MM ddd9		zzz	yyy
+ M ddd10	yyy	xxx
+?? ddd11	yyy
+MM eee12	zzz	yyy
+ M eee13	yyy	xxx
+?? eee14	yyy
+!! ignored0	ignored0
+!! ignored1	ignored1
+' '
 M  aaa0		yyy
  M aaa1		yyy	xxx
 ?? aaa2		yyy
@@ -80,7 +99,8 @@ MM eee12	zzz	yyy
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
-assert_stash_HT 0 '' '
+store_stash_CO "$new_stash_hash_CO"
+assert_stash_HTCO 0 '' '
  M aaa0		zzz	xxx
    aaa1		xxx
    bbb3		xxx

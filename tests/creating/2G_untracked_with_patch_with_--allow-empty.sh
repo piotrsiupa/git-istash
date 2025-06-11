@@ -1,6 +1,7 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
+PARAMETRIZE_CREATE_OPERATION
 PARAMETRIZE_ALL 'DEFAULT'
 PARAMETRIZE_UNTRACKED 'DEFAULT' 'NO'
 PARAMETRIZE_KEEP_INDEX
@@ -10,19 +11,25 @@ PARAMETRIZE_UNSTAGED
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
-__test_section__ 'Create stash'
+__test_section__ "$CAP_CREATE_OPERATION stash"
 printf 'aaa\n' >aaa
 printf 'bbb\n' >bbb
 printf 'y n ' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS --allow-empty <.git/answers_for_patch
-assert_files_HT '
+new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS --allow-empty <.git/answers_for_patch)"
+assert_files_HTCO '
+?? aaa		aaa
+?? bbb		bbb
+!! ignored0	ignored0
+!! ignored1	ignored1
+' '
 ?? aaa		aaa
 ?? bbb		bbb
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
-assert_stash_HT 0 '' '
+store_stash_CO "$new_stash_hash_CO"
+assert_stash_HTCO 0 '' '
 '
 assert_stash_base_HT 0 'HEAD'
 assert_stash_count 1

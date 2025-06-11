@@ -3,6 +3,7 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
+PARAMETRIZE_CREATE_OPERATION
 PARAMETRIZE_ALL 'YES'
 PARAMETRIZE_UNTRACKED 'DEFAULT' 'YES'
 PARAMETRIZE_KEEP_INDEX 'DEFAULT' 'YES'
@@ -28,7 +29,7 @@ git commit -m 'Added a bunch of files'
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
-__test_section__ 'Create stash'
+__test_section__ "$CAP_CREATE_OPERATION stash"
 printf 'yyy\n' >aaa0
 printf 'yyy\n' >aaa1
 printf 'yyy\n' >aaa2
@@ -52,14 +53,14 @@ printf '%s' ":$EXCLUDE_PATTERN" | PREPARE_PATHSPEC_FILE
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 1 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'ms. stash' ":$EXCLUDE_PATTERN"
+	assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'ms. stash' ":$EXCLUDE_PATTERN"
 elif IS_PATHSPEC_IN_STDIN
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 1 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'ms. stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test
+	assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'ms. stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test
 else
 	#shellcheck disable=SC2086
-	assert_exit_code 1 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'ms. stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
+	assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'ms. stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
 fi
 assert_files_HT '
 MM aaa0		zzz	yyy

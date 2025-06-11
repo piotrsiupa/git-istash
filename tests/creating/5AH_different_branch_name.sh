@@ -3,6 +3,7 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'ORPHAN'
+PARAMETRIZE_CREATE_OPERATION
 PARAMETRIZE_ALL 'DEFAULT'
 PARAMETRIZE_UNTRACKED 'DEFAULT'
 PARAMETRIZE_KEEP_INDEX
@@ -13,25 +14,34 @@ correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 git branch -m 'new-and-cool-branch'
 
-__test_section__ 'Create stash'
+__test_section__ "$CAP_CREATE_OPERATION stash"
 printf 'bbb\n' >aaa
 git add aaa
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
+new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS)"
 if ! IS_KEEP_INDEX_ON
 then
-	assert_files_HT '
+	assert_files_HTCO '
+	A  aaa		bbb
+	!! ignored0	ignored0
+	!! ignored1	ignored1
+	' '
 	!! ignored0	ignored0
 	!! ignored1	ignored1
 	'
 else
-	assert_files_HT '
-	A  aaa			bbb
+	assert_files_HTCO '
+	A  aaa		bbb
+	!! ignored0	ignored0
+	!! ignored1	ignored1
+	' '
+	A  aaa		bbb
 	!! ignored0	ignored0
 	!! ignored1	ignored1
 	'
 fi
-assert_stash 0 'new-and-cool-branch' '' '
+store_stash_CO "$new_stash_hash_CO"
+assert_stash_CO 0 'new-and-cool-branch' '' '
 A  aaa		bbb
 '
 if ! IS_HEAD_ORPHAN

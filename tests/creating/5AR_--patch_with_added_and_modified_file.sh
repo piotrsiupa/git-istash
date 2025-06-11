@@ -3,6 +3,7 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
+PARAMETRIZE_CREATE_OPERATION
 PARAMETRIZE_ALL 'DEFAULT'
 PARAMETRIZE_UNTRACKED
 PARAMETRIZE_KEEP_INDEX
@@ -12,28 +13,37 @@ PARAMETRIZE_UNSTAGED 'YES'
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
-__test_section__ 'Create stash'
+__test_section__ "$CAP_CREATE_OPERATION stash"
 printf 'xxx\naaa\naaa\nxxx\n' >aaa
 git add aaa
 printf 'yyy\naaa\naaa\nyyy\n' >aaa
 printf 's y n ' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS --patch <.git/answers_for_patch
+new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS --patch <.git/answers_for_patch)"
 if ! IS_KEEP_INDEX_ON
 then
-	assert_files_HT '
+	assert_files_HTCO '
+	AM aaa		yyy\naaa\naaa\nyyy	xxx\naaa\naaa\nxxx
+	!! ignored0	ignored0
+	!! ignored1	ignored1
+	' '
 	 A aaa		xxx\naaa\naaa\nyyy
 	!! ignored0	ignored0
 	!! ignored1	ignored1
 	'
 else
-	assert_files_HT '
+	assert_files_HTCO '
+	AM aaa		yyy\naaa\naaa\nyyy	xxx\naaa\naaa\nxxx
+	!! ignored0	ignored0
+	!! ignored1	ignored1
+	' '
 	AM aaa		xxx\naaa\naaa\nyyy	xxx\naaa\naaa\nxxx
 	!! ignored0	ignored0
 	!! ignored1	ignored1
 	'
 fi
-assert_stash_HT 0 '' '
+store_stash_CO "$new_stash_hash_CO"
+assert_stash_HTCO 0 '' '
 AM aaa		yyy\naaa\naaa\nxxx	xxx\naaa\naaa\nxxx
 '
 assert_stash_base_HT 0 'HEAD'

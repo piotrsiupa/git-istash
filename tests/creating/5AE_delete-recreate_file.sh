@@ -3,6 +3,7 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
+PARAMETRIZE_CREATE_OPERATION
 PARAMETRIZE_ALL 'DEFAULT'
 PARAMETRIZE_UNTRACKED 'YES'
 PARAMETRIZE_KEEP_INDEX
@@ -17,26 +18,37 @@ git commit -m 'Added aaa'
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
-__test_section__ 'Create stash'
+__test_section__ "$CAP_CREATE_OPERATION stash"
 git rm aaa
 printf 'bbb\n' >aaa
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash push $ALL_FLAGS $UNTRACKED_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS --message 'stash, not a trash'
+new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $ALL_FLAGS $UNTRACKED_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS --message 'stash, not a trash')"
 if ! IS_KEEP_INDEX_ON
 then
-	assert_files_HT '
+	assert_files_HTCO '
+	D  aaa
+	?? aaa		bbb
+	!! ignored0	ignored0
+	!! ignored1	ignored1
+	' '
 	   aaa		aaa
 	!! ignored0	ignored0
 	!! ignored1	ignored1
 	'
 else
-	assert_files_HT '
+	assert_files_HTCO '
+	D  aaa
+	?? aaa		bbb
+	!! ignored0	ignored0
+	!! ignored1	ignored1
+	' '
 	D  aaa
 	!! ignored0	ignored0
 	!! ignored1	ignored1
 	'
 fi
-assert_stash_HT 0 'stash, not a trash' '
+store_stash_CO "$new_stash_hash_CO"
+assert_stash_HTCO 0 'stash, not a trash' '
 D  aaa
 ?? aaa		bbb
 '

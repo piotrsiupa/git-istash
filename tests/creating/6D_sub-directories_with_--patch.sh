@@ -3,6 +3,7 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
+PARAMETRIZE_CREATE_OPERATION
 PARAMETRIZE_ALL
 PARAMETRIZE_UNTRACKED
 PARAMETRIZE_KEEP_INDEX
@@ -33,7 +34,7 @@ git commit -m 'Added some files'
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
-__test_section__ 'Create stash'
+__test_section__ "$CAP_CREATE_OPERATION stash"
 printf 'yyy\nxxx\nxxx\nyyy\n' >'a/0/i'
 rm 'a/0/k'
 printf 'yyy\nxxx\nxxx\nyyy\n' >'a/0/l'
@@ -50,11 +51,26 @@ printf 'zzz\nxxx\nxxx\nzzz\n' >'b/0/l'
 printf 's y n y s n y n s y n ' | tr ' ' '\n' >.git/answers_for_patch
 cd 'a'
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS --patch <../.git/answers_for_patch
+new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS --patch <../.git/answers_for_patch)"
 cd -
 if ! IS_KEEP_INDEX_ON
 then
-	assert_files_HT '
+	assert_files_HTCO '
+	M  a/0/i	yyy\nxxx\nxxx\nyyy
+	   a/0/j	xxx\nxxx
+	D  a/0/k
+	A  a/0/l	yyy\nxxx\nxxx\nyyy
+	 M a/1/i	zzz\nxxx\nxxx\nzzz	xxx\nxxx
+	   a/1/j	xxx\nxxx
+	 D a/1/k	xxx\nxxx
+	MM b/0/i	zzz\nxxx\nxxx\nzzz	yyy\nxxx\nxxx\nyyy
+	   b/0/j	xxx\nxxx
+	MD b/0/k	yyy\nxxx\nxxx\nyyy
+	AM b/0/l	zzz\nxxx\nxxx\nzzz	yyy\nxxx\nxxx\nyyy
+	   b/1/i	xxx\nxxx
+	   b/1/j	xxx\nxxx
+	   b/1/k	xxx\nxxx
+	' '
 	   a/0/i	xxx\nxxx
 	   a/0/j	xxx\nxxx
 	   a/0/k	xxx\nxxx
@@ -70,7 +86,22 @@ then
 	   b/1/k	xxx\nxxx
 	'
 else
-	assert_files_HT '
+	assert_files_HTCO '
+	M  a/0/i	yyy\nxxx\nxxx\nyyy
+	   a/0/j	xxx\nxxx
+	D  a/0/k
+	A  a/0/l	yyy\nxxx\nxxx\nyyy
+	 M a/1/i	zzz\nxxx\nxxx\nzzz	xxx\nxxx
+	   a/1/j	xxx\nxxx
+	 D a/1/k	xxx\nxxx
+	MM b/0/i	zzz\nxxx\nxxx\nzzz	yyy\nxxx\nxxx\nyyy
+	   b/0/j	xxx\nxxx
+	MD b/0/k	yyy\nxxx\nxxx\nyyy
+	AM b/0/l	zzz\nxxx\nxxx\nzzz	yyy\nxxx\nxxx\nyyy
+	   b/1/i	xxx\nxxx
+	   b/1/j	xxx\nxxx
+	   b/1/k	xxx\nxxx
+	' '
 	M  a/0/i	yyy\nxxx\nxxx\nyyy
 	   a/0/j	xxx\nxxx
 	D  a/0/k
@@ -87,7 +118,8 @@ else
 	   b/1/k	xxx\nxxx
 	'
 fi
-assert_stash_HT 0 '' '
+store_stash_CO "$new_stash_hash_CO"
+assert_stash_HTCO 0 '' '
 M  a/0/i	yyy\nxxx\nxxx\nyyy
    a/0/j	xxx\nxxx
 D  a/0/k

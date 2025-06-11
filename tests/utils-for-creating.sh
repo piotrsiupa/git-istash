@@ -7,6 +7,40 @@ then
 fi
 
 
+# It calls "PARAMETRIZE" with the name "CREATE_OPERATION" and values "create" & "push".
+# It also creates a variable "CAP_CREATE_OPERATION" which stores the same operation name but capitalized.
+# (See also assertions with suffix "_O".)
+#shellcheck disable=SC2120
+PARAMETRIZE_CREATE_OPERATION() { # [operations...]
+	if [ $# -eq 0 ]
+	then
+		PARAMETRIZE 'CREATE_OPERATION' 'create' 'snatch' 'save' 'push'
+	else
+		PARAMETRIZE 'CREATE_OPERATION' "$@"
+	fi
+	#shellcheck disable=SC2034
+	CAP_CREATE_OPERATION="$(printf '%s' "$CREATE_OPERATION" | cut  -c1 | tr '[:lower:]' '[:upper:]')$(printf '%s' "$CREATE_OPERATION" | cut  -c2-)"
+}
+IS_CREATE() {
+	test "$CREATE_OPERATION" = 'create'
+}
+IS_SNATCH() {
+	test "$CREATE_OPERATION" = 'snatch'
+}
+IS_SAVE() {
+	test "$CREATE_OPERATION" = 'save'
+}
+IS_PUSH() {
+	test "$CREATE_OPERATION" = 'push'
+}
+CO_REMOVES_FILES() {
+	IS_SNATCH || IS_PUSH
+}
+CO_STORES_STASH() {
+	IS_SAVE || IS_PUSH
+}
+
+
 #shellcheck disable=SC2120
 PARAMETRIZE_KEEP_INDEX() { # keys
 	PARAMETRIZE_OPTION true 'KEEP_INDEX' 'DEFAULT: INDEX-DEFAULT | NO: INDEX-NO-LONG && INDEX-NO-LONGISH0 & INDEX-NO-LONGISH1 | YES: INDEX-YES-SHORT & INDEX-YES-LONG && INDEX-YES-LONGISH0 & INDEX-YES-LONGISH1' "$@"
@@ -176,4 +210,21 @@ PARAMETRIZE_EXCLUDE() {
 		CARET) EXCLUDE_PATTERN='^' ;;
 		CARET_COLON) EXCLUDE_PATTERN='^:' ;;
 	esac
+}
+
+store_stash_CO() { # new_stash_hash
+	if CO_STORES_STASH
+	then
+		test -z "$1" ||
+			fail 'The operation "%s" should not print anything to the output!\n' "$CREATE_OPERATION"
+	else
+		stash_count_before="$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)"
+		git stash store "$1" ||
+			fail 'Cannot store stash using hash returned by "%s"! ("%s")\n' "$CREATE_OPERATION" "$1"
+		stash_count_after="$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)"
+		test "$stash_count_after" -gt "$stash_count_before" ||
+			fail 'Storing stash produced by "%s" quietly failed! (Possibly a duplicated entry.)\n' "$CREATE_OPERATION"
+		unset stash_count_before
+		unset stash_count_after
+	fi
 }

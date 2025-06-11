@@ -1,6 +1,7 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
+PARAMETRIZE_CREATE_OPERATION
 PARAMETRIZE_ALL 'DEFAULT'
 PARAMETRIZE_UNTRACKED 'DEFAULT' 'NO'
 PARAMETRIZE_KEEP_INDEX 'DEFAULT'
@@ -17,20 +18,20 @@ git commit -m 'Added aaa'
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
-__test_section__ 'Create stash'
+__test_section__ "$CAP_CREATE_OPERATION stash"
 printf 'bbb\n' >'aaa'
 printf 'aaa ' | PREPARE_PATHSPEC_FILE
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 1 git istash push $KEEP_INDEX_FLAGS 'aaa' $UNTRACKED_FLAGS $ALL_FLAGS -m 'whatever' $UNSTAGED_FLAGS $STAGED_FLAGS $EOI
+	assert_exit_code 1 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS 'aaa' $UNTRACKED_FLAGS $ALL_FLAGS -m 'whatever' $UNSTAGED_FLAGS $STAGED_FLAGS $EOI
 elif IS_PATHSPEC_IN_STDIN
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 1 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS -m 'whatever' $PATHSPEC_NULL_FLAGS --pathspec-from-file=- $UNSTAGED_FLAGS $STAGED_FLAGS <.git/pathspec_for_test
+	assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS -m 'whatever' $PATHSPEC_NULL_FLAGS --pathspec-from-file=- $UNSTAGED_FLAGS $STAGED_FLAGS <.git/pathspec_for_test
 else
 	#shellcheck disable=SC2086
-	assert_exit_code 1 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS -m 'whatever' $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test $UNSTAGED_FLAGS $STAGED_FLAGS
+	assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS -m 'whatever' $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test $UNSTAGED_FLAGS $STAGED_FLAGS
 fi
 assert_files_HT '
  M aaa		bbb		aaa

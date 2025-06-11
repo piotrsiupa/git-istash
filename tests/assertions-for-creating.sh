@@ -92,6 +92,13 @@ assert_stash_name() { # stash_num expected_branch_name expeted_stash_name
 	unset expected_value_regex
 	unset value_for_assert
 }
+assert_stash_name_CO() { # stash_num expected_branch_name expeted_stash_name
+	if ! CO_STORES_STASH
+	then
+		return 0
+	fi
+	assert_stash_name "$@"
+}
 
 assert_stash_commit_files() { # commit expected_files
 	value_for_assert="$(git ls-tree --name-only --full-tree -r -z "$1" | _convert_zero_separated_path_list | _prepare_path_list_for_assertion)"
@@ -178,6 +185,19 @@ assert_stash() { # stash_num expected_branch_name expected_stash_name expected_f
 	assert_stash_files "$1" "$expect_untracked" "$4"
 	unset expect_untracked
 }
+assert_stash_CO() { # stash_num expected_branch_name expected_stash_name expected_files
+	if IS_ALL_ON || IS_UNTRACKED_ON || printf '%s\n' "$4" | sed -E 's/^\t+//' | grep -qE '^(\?\?|!!) '
+	then
+		expect_untracked=y
+	else
+		expect_untracked=n
+	fi
+	assert_stash_structure "$1" "$expect_untracked"
+	assert_stash_messages "$1" "$2" "$expect_untracked" "$3"
+	assert_stash_name_CO "$1" "$2" "$3"
+	assert_stash_files "$1" "$expect_untracked" "$4"
+	unset expect_untracked
+}
 assert_stash_untracked() { # stash_num expected_branch_name expected_stash_name expected_files
 	assert_stash_structure "$1" y
 	assert_stash_messages "$1" "$2" y "$3"
@@ -222,6 +242,14 @@ assert_stash_HT() { # stash_num expected_stash_name expected_files [expected_fil
 		*) fail 'Unknown HEAD type "%s"!' "$HEAD_TYPE" ;;
 	esac
 }
+assert_stash_HTCO() { # stash_num expected_stash_name expected_files [expected_files_for_orphan]
+	case "$HEAD_TYPE" in
+		'BRANCH') assert_stash_CO "$1" 'master' "$2" "$3" ;;
+		'DETACH') assert_stash_CO "$1" 'HEAD' "$2" "$3" ;;
+		'ORPHAN') if [ $# -lt 4 ] ; then assert_stash_CO "$1" '~ooo' "$2" "$3" ; else assert_stash_CO "$1" '~ooo' "$2" "$4" ; fi ;;
+		*) fail 'Unknown HEAD type "%s"!' "$HEAD_TYPE" ;;
+	esac
+}
 assert_stash_untracked_HT() { # stash_num expected_stash_name expected_files [expected_files_for_orphan]
 	case "$HEAD_TYPE" in
 		'BRANCH') assert_stash_untracked "$1" 'master' "$2" "$3" ;;
@@ -236,5 +264,24 @@ assert_stash_base_HT() { # stash_num expected_base_for_not_orphan
 		assert_stash_base "$1" "$2"
 	else
 		assert_stash_base "$1" '~ooo'
+	fi
+}
+
+assert_files_HTCO() { # expected_files_unchanged expected_files_changed [expected_files_for_orphan_unchanged expected_files_for_orphan_changed]
+	if ! CO_REMOVES_FILES
+	then
+		if [ $# -ge 3 ]
+		then
+			assert_files_HT "$1" "$3"
+		else
+			assert_files_HT "$1"
+		fi
+	else
+		if [ $# -ge 4 ]
+		then
+			assert_files_HT "$2" "$4"
+		else
+			assert_files_HT "$2"
+		fi
 	fi
 }

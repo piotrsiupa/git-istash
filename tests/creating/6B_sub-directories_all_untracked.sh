@@ -3,6 +3,7 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
+PARAMETRIZE_CREATE_OPERATION
 PARAMETRIZE_ALL
 PARAMETRIZE_UNTRACKED 'YES'
 PARAMETRIZE_KEEP_INDEX
@@ -15,7 +16,7 @@ rm ignored0 ignored1
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
-__test_section__ 'Create stash'
+__test_section__ "$CAP_CREATE_OPERATION stash"
 mkdir -p 'a/0' 'a/1' 'b/0' 'b/1'
 printf 'xxx\n' >'a/0/i'
 printf 'xxx\n' >'a/0/j'
@@ -27,11 +28,21 @@ printf 'xxx\n' >'b/1/i'
 printf 'xxx\n' >'b/1/j'
 cd 'a'
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
+new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS)"
 cd -
-assert_files_HT '
+assert_files_HTCO '
+?? a/0/i	xxx
+?? a/0/j	xxx
+?? a/1/i	xxx
+?? a/1/j	xxx
+?? b/0/i	xxx
+?? b/0/j	xxx
+?? b/1/i	xxx
+?? b/1/j	xxx
+' '
 '
-assert_stash_HT 0 '' '
+store_stash_CO "$new_stash_hash_CO"
+assert_stash_HTCO 0 '' '
 ?? a/0/i	xxx
 ?? a/0/j	xxx
 ?? a/1/i	xxx

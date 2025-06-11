@@ -5,12 +5,12 @@ set -e
 . "$(dirname "$0")/git-istash-commons"
 
 print_help() {
-	printf 'git istash push - Improved version of "git stash push" that can handle orphan\n    branches.\n'
+	printf 'git istash snatch - A version of "git istash create" that removes the stashed\n    changes from the working directory.\n'
 	printf '\n'
 	printf 'This is only a rudimentary help text. Prefer "git help istash" if available.\n'
 	printf '\n'
-	printf 'Usage: git istash push\n'
-	printf '   or: git istash push -h\n'
+	printf 'Usage: git istash snatch\n'
+	printf '   or: git istash snatch -h\n'
 	printf '\n'
 	printf 'Options:\n'
 	printf '    -a, --all\t\t- Stash and clean also untracked and ignored files.\n'
@@ -28,48 +28,10 @@ print_help() {
 	printf '\t--no-include-untracked - Do not touch untracked files even with "--all".\n'
 }
 
-check_pathspec_for_implicit_push() ( # args...
-	getopt_result="$(getopt -o"-$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
-	eval set -- "$getopt_result"
-	while [ $# -ne 0 ]
-	do
-		if [ "$1" = '--' ]
-		then
-			break
-		elif printf '%s' "$1" | grep -Eq '^--'
-		then
-			option_name="$(printf '%s' "$1" | sed -E 's/^--//')"
-			shift
-			if printf '%s' "$getopt_long_options" | grep -Eq "(^|,)$option_name:(,|\$)"
-			then
-				shift
-			fi
-		elif printf '%s' "$1" | grep -Eq '^-'
-		then
-			option_letter="$(printf '%s' "$1" | sed -E 's/^-//')"
-			shift
-			if printf '%s' "$getopt_short_options" | grep -Eq "$option_letter:"
-			then
-				shift
-			fi
-		else
-			printf 'fatal: unexpected token "%s"\n' "$1" 1>&2
-			printf 'fatal: pathspec for an implicit "push" command must be preceded by "--"\n' 1>&2
-			exit 1
-		fi
-	done
-)
-
-set_getopt_options_from_make_command
-if [ "$1" = '--_implicit-push_' ]
-then
-	shift
-	check_pathspec_for_implicit_push "$@"
-fi
 if check_for_option_h_in_make_command "$@"
 then
 	print_help
 	exit 0
 fi
 
-exec sh "$(dirname "$0")/git-istash-make-stash" --remove-stashed "$@"
+exec sh "$(dirname "$0")/git-istash-make-stash" --no-store --remove-stashed "$@"

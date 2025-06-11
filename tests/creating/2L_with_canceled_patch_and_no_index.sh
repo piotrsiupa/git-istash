@@ -3,6 +3,7 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
+PARAMETRIZE_CREATE_OPERATION
 PARAMETRIZE_ALL
 PARAMETRIZE_UNTRACKED
 PARAMETRIZE_KEEP_INDEX
@@ -18,12 +19,12 @@ git commit -m 'Added aaa & bbb'
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
-__test_section__ 'Create stash'
+__test_section__ "$CAP_CREATE_OPERATION stash"
 printf 'yyy\naaa\naaa\nyyy\n' >aaa
 printf 'zzz\nbbb\nbbb\nzzz\n' >bbb
 printf 'q q ' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $KEEP_INDEX_FLAGS --patch --message 'some nicer stash name' <.git/answers_for_patch
+assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $KEEP_INDEX_FLAGS --patch --message 'some nicer stash name' <.git/answers_for_patch
 assert_files_HT '
  M aaa		yyy\naaa\naaa\nyyy	aaa\naaa
  M bbb		zzz\nbbb\nbbb\nzzz	bbb\nbbb

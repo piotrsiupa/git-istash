@@ -3,6 +3,7 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
+PARAMETRIZE_CREATE_OPERATION
 PARAMETRIZE_ALL 'DEFAULT' 'YES'
 PARAMETRIZE_UNTRACKED 'YES'
 PARAMETRIZE_KEEP_INDEX
@@ -34,7 +35,7 @@ git commit -m 'Added some files'
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
-__test_section__ 'Create stash'
+__test_section__ "$CAP_CREATE_OPERATION stash"
 printf 'y\n' >index
 printf 'y\n' >both
 printf 'y\n' >new
@@ -67,10 +68,35 @@ mkdir tracked-dir1/untracked-dir2
 printf 'uf0\n' >tracked-dir1/untracked-dir2/untracked-file0
 printf 'uf1\n' >tracked-dir1/untracked-dir2/untracked-file1
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash push $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
+new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS)"
 if ! IS_KEEP_INDEX_ON
 then
-	assert_files_HT '
+	assert_files_HTCO '
+	   unchanged					x
+	M  index						y
+	 M normal					z	x
+	MM both						z	y
+	A  new							y
+	AM changed-new					z	y
+	   tracked-dir1/unchanged			x
+	M  tracked-dir1/index					y
+	 M tracked-dir1/normal				z	x
+	MM tracked-dir1/both				z	y
+	A  tracked-dir1/new					y
+	AM tracked-dir1/changed-new			z	y
+	   tracked-dir1/tracked-dir2/unchanged		x
+	M  tracked-dir1/tracked-dir2/index			y
+	 M tracked-dir1/tracked-dir2/normal		z	x
+	MM tracked-dir1/tracked-dir2/both		z	y
+	A  tracked-dir1/tracked-dir2/new			y
+	AM tracked-dir1/tracked-dir2/changed-new	z	y
+	?? untracked-file				uf
+	?? untracked-dir1/untracked-file0		uf0
+	?? untracked-dir1/untracked-file1		uf1
+	?? tracked-dir1/untracked-file			uf
+	?? tracked-dir1/untracked-dir2/untracked-file0	uf0
+	?? tracked-dir1/untracked-dir2/untracked-file1	uf1
+	' '
 	   unchanged					x
 	   index					x
 	   normal					x
@@ -85,7 +111,32 @@ then
 	   tracked-dir1/tracked-dir2/both		x
 	'
 else
-	assert_files_HT '
+	assert_files_HTCO '
+	   unchanged					x
+	M  index						y
+	 M normal					z	x
+	MM both						z	y
+	A  new							y
+	AM changed-new					z	y
+	   tracked-dir1/unchanged			x
+	M  tracked-dir1/index					y
+	 M tracked-dir1/normal				z	x
+	MM tracked-dir1/both				z	y
+	A  tracked-dir1/new					y
+	AM tracked-dir1/changed-new			z	y
+	   tracked-dir1/tracked-dir2/unchanged		x
+	M  tracked-dir1/tracked-dir2/index			y
+	 M tracked-dir1/tracked-dir2/normal		z	x
+	MM tracked-dir1/tracked-dir2/both		z	y
+	A  tracked-dir1/tracked-dir2/new			y
+	AM tracked-dir1/tracked-dir2/changed-new	z	y
+	?? untracked-file				uf
+	?? untracked-dir1/untracked-file0		uf0
+	?? untracked-dir1/untracked-file1		uf1
+	?? tracked-dir1/untracked-file			uf
+	?? tracked-dir1/untracked-dir2/untracked-file0	uf0
+	?? tracked-dir1/untracked-dir2/untracked-file1	uf1
+	' '
 	   unchanged					x
 	M  index						y
 	   normal					x
@@ -106,7 +157,8 @@ else
 	A  tracked-dir1/tracked-dir2/changed-new		y
 	'
 fi
-assert_stash_HT 0 '' '
+store_stash_CO "$new_stash_hash_CO"
+assert_stash_HTCO 0 '' '
    unchanged					x
 M  index						y
  M normal					z	x

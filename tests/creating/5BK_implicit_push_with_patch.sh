@@ -19,7 +19,7 @@ git commit -m 'Added aaa & bbb'
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
-__test_section__ 'Create stash'
+__test_section__ "Push stash (implicitly)"
 printf 'xxx\naaa\naaa\nxxx\n' >aaa
 git add aaa
 printf 'yyy\naaa\naaa\nyyy\n' >aaa

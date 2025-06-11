@@ -3,6 +3,7 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
+PARAMETRIZE_CREATE_OPERATION
 PARAMETRIZE_ALL 'DEFAULT'
 PARAMETRIZE_UNTRACKED 'DEFAULT' 'NO'
 PARAMETRIZE_KEEP_INDEX
@@ -12,12 +13,12 @@ PARAMETRIZE_UNSTAGED
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
-__test_section__ 'Create stash'
+__test_section__ "$CAP_CREATE_OPERATION stash"
 printf 'aaa\n' >aaa
 printf 'bbb\n' >bbb
 printf 'y n ' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS --patch $KEEP_INDEX_FLAGS <.git/answers_for_patch
+assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS --patch $KEEP_INDEX_FLAGS <.git/answers_for_patch
 assert_files_HT '
 ?? aaa		aaa
 ?? bbb		bbb

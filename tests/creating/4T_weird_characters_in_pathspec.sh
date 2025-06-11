@@ -13,6 +13,7 @@ then
 fi
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
+PARAMETRIZE_CREATE_OPERATION
 PARAMETRIZE_ALL 'DEFAULT'
 PARAMETRIZE_UNTRACKED 'YES'
 PARAMETRIZE_KEEP_INDEX
@@ -52,7 +53,7 @@ git commit -m 'Added a bunch of files'
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
-__test_section__ 'Create stash'
+__test_section__ "$CAP_CREATE_OPERATION stash"
 printf 'yyy\n' >'%^$#&#@'
 printf 'yyy\n' >'
 '
@@ -92,19 +93,44 @@ fi
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash push '*&#?' $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS 'ccc
-ddd' -m 'a fine stash' $EOI '*\?*' 'eee fff' '"ggg"' 'o%so' 'p%sp' 'r	r' 'q\tq'
+	new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" '*&#?' $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS 'ccc
+ddd' -m 'a fine stash' $EOI '*\?*' 'eee fff' '"ggg"' 'o%so' 'p%sp' 'r	r' 'q\tq')"
 elif IS_PATHSPEC_IN_STDIN
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'a fine stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test
+	new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'a fine stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test)"
 else
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'a fine stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
+	new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'a fine stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test)"
 fi
 if ! IS_KEEP_INDEX_ON
 then
-	assert_files_HT '
+	assert_files_HTCO '
+	M  %%^$#&#@	yyy
+	 M \n		yyy	xxx
+	M  aaa\nbbb	yyy
+	 M ccc\r\nddd	yyy	xxx
+	 M eee		yyy	xxx
+	 M eee\040fff	yyy	xxx
+	 M fff		yyy	xxx
+	MM ggg		zzz	yyy
+	MM "ggg"	zzz	yyy
+	MM ""ggg""	zzz	yyy
+	 M xXxX*&Xx	yyy	xxx
+	 M ?*?*?*	yyy	xxx
+	M  ^&@*#	yyy
+	 M o\007o	yyy	xxx
+	 M o\007%%so	yyy	xxx
+	 M p\007p	yyy	xxx
+	 M p\007%%sp	yyy	xxx
+	 M r\tr		yyy	xxx
+	 M r\\tr	yyy	xxx
+	 M q\tq		yyy	xxx
+	 M q\\tq	yyy	xxx
+	?? ?		yyy
+	!! ignored0	ignored0
+	!! ignored1	ignored1
+	' '
 	   %%^$#&#@	xxx
 	 M \n		yyy	xxx
 	M  aaa\nbbb	yyy
@@ -130,7 +156,32 @@ then
 	!! ignored1	ignored1
 	'
 else
-	assert_files_HT '
+	assert_files_HTCO '
+	M  %%^$#&#@	yyy
+	 M \n		yyy	xxx
+	M  aaa\nbbb	yyy
+	 M ccc\r\nddd	yyy	xxx
+	 M eee		yyy	xxx
+	 M eee\040fff	yyy	xxx
+	 M fff		yyy	xxx
+	MM ggg		zzz	yyy
+	MM "ggg"	zzz	yyy
+	MM ""ggg""	zzz	yyy
+	 M xXxX*&Xx	yyy	xxx
+	 M ?*?*?*	yyy	xxx
+	M  ^&@*#	yyy
+	 M o\007o	yyy	xxx
+	 M o\007%%so	yyy	xxx
+	 M p\007p	yyy	xxx
+	 M p\007%%sp	yyy	xxx
+	 M r\tr		yyy	xxx
+	 M r\\tr	yyy	xxx
+	 M q\tq		yyy	xxx
+	 M q\\tq	yyy	xxx
+	?? ?		yyy
+	!! ignored0	ignored0
+	!! ignored1	ignored1
+	' '
 	M  %%^$#&#@	yyy
 	 M \n		yyy	xxx
 	M  aaa\nbbb	yyy
@@ -156,7 +207,8 @@ else
 	!! ignored1	ignored1
 	'
 fi
-assert_stash_HT 0 'a fine stash' '
+store_stash_CO "$new_stash_hash_CO"
+assert_stash_HTCO 0 'a fine stash' '
 M  %%^$#&#@	yyy
    \n		xxx
    aaa\nbbb	xxx

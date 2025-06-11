@@ -1,6 +1,7 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
+PARAMETRIZE_CREATE_OPERATION
 PARAMETRIZE_ALL 'DEFAULT'
 PARAMETRIZE_UNTRACKED 'DEFAULT'
 PARAMETRIZE_KEEP_INDEX
@@ -10,29 +11,40 @@ PARAMETRIZE_UNSTAGED 'YES'
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
-__test_section__ 'Create stash'
+__test_section__ "$CAP_CREATE_OPERATION stash"
 printf 'bbb\n' >bbb
 git add bbb
 printf 'ccc\n' >bbb
 printf 'ddd\n' >ddd
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash push $ALL_FLAGS $UNTRACKED_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS --message 'mesanmge'
+new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $ALL_FLAGS $UNTRACKED_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS --message 'mesanmge')"
 if ! IS_KEEP_INDEX_ON
 then
-	assert_files_HT '
+	assert_files_HTCO '
+	AM bbb		ccc	bbb
+	?? ddd		ddd
+	!! ignored0	ignored0
+	!! ignored1	ignored1
+	' '
 	?? ddd		ddd
 	!! ignored0	ignored0
 	!! ignored1	ignored1
 	'
 else
-	assert_files_HT '
+	assert_files_HTCO '
+	AM bbb		ccc	bbb
+	?? ddd		ddd
+	!! ignored0	ignored0
+	!! ignored1	ignored1
+	' '
 	A  bbb			bbb
 	?? ddd		ddd
 	!! ignored0	ignored0
 	!! ignored1	ignored1
 	'
 fi
-assert_stash_HT 0 'mesanmge' '
+store_stash_CO "$new_stash_hash_CO"
+assert_stash_HTCO 0 'mesanmge' '
 AM bbb		ccc	bbb
 '
 assert_stash_base_HT 0 'HEAD'
