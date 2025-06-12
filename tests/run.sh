@@ -253,10 +253,14 @@ print_test_result() {
 	then
 		printf ' (the result is kept)'
 	fi
+	printf_color_code '\033[2m'
+	printf ' %is' $((test_run_end_time - test_run_start_time))
+	printf_color_code '\033[22m'
 	printf '\n'
 }
 
 run_test() ( # test_name
+	test_start_time="$(date '+%s')"
 	test_count=0
 	failed_count=0
 	error_count=0
@@ -273,9 +277,11 @@ run_test() ( # test_name
 		ROTATE_PARAMETER=y
 		export ROTATE_PARAMETER
 		exec 4>"$output_file"
+		test_run_start_time="$(date '+%s')"
 		test_result="$(
 			do_run_test "$1"
 		)"
+		test_run_end_time="$(date '+%s')"
 		exec 4>&-
 		if ! printf '%s\n' "$test_result" | grep -qE '^\?'
 		then
@@ -351,6 +357,7 @@ run_test() ( # test_name
 		fi
 	done
 	rmdir "$(get_test_dir "$1")" 2>/dev/null || true
+	test_end_time="$(date '+%s')"
 	if [ "$i" != x ]
 	then
 		failed_count=$((failed_count + 1))
@@ -369,7 +376,9 @@ run_test() ( # test_name
 		test_result_is_correct="$(test "$error_count" -eq 0 && printf 'y' || printf 'n')"
 		printf_color_code '\033[0;1;%im' "$(get_test_result_color "$test_passed" "$test_result_is_correct")"
 		printf '%s - %s (%i/%i)' "$(get_result_status "$test_passed" "$test_result_is_correct")" "$display_name" $((test_count - error_count)) $test_count
-		printf_color_code '\033[22;39m'
+		printf_color_code '\033[22;2;39m'
+		printf ' %is' $((test_end_time - test_start_time))
+		printf_color_code '\033[22m'
 		printf '\n'
 	fi
 	rm -f "$PARAMETERS_FILE"
@@ -381,17 +390,31 @@ run_test() ( # test_name
 	fi
 )
 update_current_category() { # test_name
-	current_category="$(dirname "$1")"
+	if [ -n "$1" ]
+	then
+		current_category="$(dirname "$1")"
+	else
+		current_category=''
+	fi
 	if [ "$current_category" != "$previous_category" ]
 	then
+		if [ -n "$previous_category" ]
+		then
+			category_end_time="$(date '+%s')"
+			printf '%s - time = %i\n' "$previous_category" $((category_end_time - category_start_time + 1))
+			category_start_time="$category_end_time"
+		fi
 		previous_category="$current_category"
-		{
-			printf_color_code '\033[1m'
-			print_centered "$current_category" '-'
-			printf_color_code '\033[22m'
-			printf '\n'
-		} 1>&5
-		printf '%s - passed\n%s - failed\n' "$current_category" "$current_category"
+		if [ -n "$current_category" ]
+		then
+			{
+				printf_color_code '\033[1m'
+				print_centered "$current_category" '-'
+				printf_color_code '\033[22m'
+				printf '\n'
+			} 1>&5
+			printf '%s - passed\n%s - failed\n' "$current_category" "$current_category"
+		fi
 	fi
 }
 run_tests() {
@@ -409,6 +432,7 @@ run_tests() {
 	exec 5>&1
 	test_results="$(
 		previous_category=''
+		category_start_time="$(date '+%s')"
 		printf '%s\n' "$tests" \
 		| if [ "$jobs_num" -eq 1 ]
 		then
@@ -423,6 +447,7 @@ run_tests() {
 					printf '%s - failed\n' "$current_category"
 				fi
 			done
+			update_current_category ''
 		else
 			running_tests_count=0
 			running_tests_data=''
@@ -467,8 +492,9 @@ run_tests() {
 					break
 				fi
 			done
+			update_current_category ''
 		fi \
-		| sort | uniq -c | awk '{print $1 - 1}'
+		| sort | uniq -c | sed -E 's/^.* - time = ([0-9]+)$/\1/' | awk '{print $1 - 1}'
 	)"
 	exec 5>&-
 }
@@ -489,6 +515,8 @@ print_summary() {
 			i=$((i + 1))
 			passed_in_category="$(printf '%s' "$test_results" | head -n $i | tail -n 1)"
 			total_in_category=$((failed_in_category + passed_in_category))
+			i=$((i + 1))
+			category_time="$(printf '%s' "$test_results" | head -n $i | tail -n 1)"
 			printf '%s: ' "$(printf '%s' "$category" | cut -d' ' -f2)"
 			if [ "$failed_in_category" -eq 0 ]
 			then
@@ -507,6 +535,13 @@ print_summary() {
 				else
 					printf 'Passed %i out of %i tests.' "$passed_in_category" "$total_in_category"
 				fi
+			fi
+			printf_color_code '\033[22;2;39;24m'
+			if [ "$jobs_num" -eq 1 ]
+			then
+				printf ' %is' "$category_time"
+			else
+				printf ' ~%is' "$category_time"
 			fi
 			printf_color_code '\033[0m'
 			printf '\n'
@@ -544,6 +579,8 @@ print_summary() {
 		printf_color_code '\033[43;1;33;4m'
 		printf 'No matching tests were found!'
 	fi
+	printf_color_code '\033[2;39;49;24m'
+	printf ' %is' $((total_time_end - total_time_start))
 	printf_color_code '\033[0m'
 	printf '\n'
 }
@@ -724,7 +761,9 @@ PATH="$(pwd):$PATH"
 cd "$OLDPWD"
 export PATH
 create_test_remote
+total_time_start="$(date '+%s')"
 run_tests
+total_time_end="$(date '+%s')"
 print_summary
 if [ "$passed_tests" -eq "$total_tests" ]
 then
