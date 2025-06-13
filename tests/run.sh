@@ -153,14 +153,14 @@ do_run_test() { # test_name
 					fi 6>&2 2>&1 1>&6 6>&- \
 					| if [ "$use_color" = y ]
 					then
-						$sed_call -E 's/^.*$/\t'"$esc_char"'[31m&'"$esc_char"'[39m/'
+						$SED_CALL -E 's/^.*$/\t'"$esc_char"'[31m&'"$esc_char"'[39m/'
 					else
-						$sed_call -E 's/^/\t/'
+						$SED_CALL -E 's/^/\t/'
 					fi
-				} 6>&2 2>&1 1>&6 6>&- | $sed_call -E 's/^/\t/'
+				} 6>&2 2>&1 1>&6 6>&- | $SED_CALL -E 's/^/\t/'
 			fi 6>&4 4>&1 1>&6 6>&-
 		} 6>&3 3>&1 1>&6 6>&- \
-		| $sed_call -E 's/^/\tFailed assertion: /'
+		| $SED_CALL -E 's/^/\tFailed assertion: /'
 	} 6>&3 3>&1 1>&6 6>&- 2>&4
 	exec 3>&-
 }
@@ -424,9 +424,15 @@ run_tests() {
 	fi
 	if printf '' | sed --unbuffered -E 's/^/x/' 1>/dev/null 2>&1
 	then
-		sed_call='sed --unbuffered'
+		SED_CALL='sed --unbuffered'
 	else
-		sed_call='sed'
+		SED_CALL='sed'
+	fi
+	if sleep '0.1' 2>/dev/null
+	then
+		SLEEP_TIME='0.1'
+	else
+		SLEEP_TIME='1'
 	fi
 	esc_char="$(printf '\033')"
 	exec 5>&1
@@ -451,6 +457,7 @@ run_tests() {
 		else
 			running_tests_count=0
 			running_tests_data=''
+			alive_children=''
 			while true
 			do
 				while [ $running_tests_count -ne "$jobs_num" ]
@@ -462,35 +469,64 @@ run_tests() {
 					result_file="$(mktemp)"
 					{ run_test "$test_name" && printf '0\n' || printf '%i\n' $? ; } 1>"$result_file" 2>&1 &
 					running_tests_count=$((running_tests_count + 1))
-					running_tests_data="$(printf '%s\n%i %s %s' "$running_tests_data" $! "$result_file" "$test_name" | sed -E '/^\s*$/ d')"
+					running_tests_data="$(printf '%s\n%i %s %s' "$running_tests_data" $! "$result_file" "$test_name" | grep -vE '^$')"
+					alive_children="$(printf '%s\n%i' "$alive_children" $! | grep -vE '^$')"
 				done
-				update_current_category "$(printf '%s\n' "$running_tests_data" | head -n1 | cut -d' ' -f3-)"
-				wait "$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f1)"
-				result_file="$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f2)"
-				head -n-1 "$result_file" \
-				| while IFS= read -r line
-				do
-					if printf '%s' "$line" | grep -qE '^\t'
-					then
-						printf '%s\n' "$line" 1>&2
-					else
-						printf '%s\n' "$line" 1>&5
-					fi
-				done
-				if [ "$(tail -n1 "$result_file")" = '0' ]
-				then
-					printf '%s - passed\n' "$current_category"
-				elif [ "$(tail -n1 "$result_file")" != '123' ]
-				then
-					printf '%s - failed\n' "$current_category"
-				fi
-				rm -f "$result_file"
-				running_tests_count=$((running_tests_count - 1))
-				running_tests_data="$(printf '%s\n' "$running_tests_data" | tail -n+2)"
 				if [ $running_tests_count -eq 0 ]
 				then
 					break
 				fi
+				update_current_category "$(printf '%s\n' "$running_tests_data" | head -n1 | cut -d' ' -f3-)"
+				while true
+				do
+					new_dead_children="$(
+						printf '%s\n' "$alive_children" \
+						| while read -r pid
+						do
+							if ! kill -0 "$pid" 2>/dev/null
+							then
+								printf '%i\n' "$pid"
+							fi
+						done
+					)"
+					if [ -z "$new_dead_children" ]
+					then
+						sleep "$SLEEP_TIME"
+					else
+						dead_children="$(printf '%s\n%s' "$dead_children" "$new_dead_children" | grep -vE '^$')"
+						running_tests_count=$((running_tests_count - $(printf '%s\n' "$new_dead_children" | wc -l)))
+						alive_children="$(printf '%s' "$alive_children" | grep -vEx "$(printf '%s' "$new_dead_children" | sed -E 's/^.*$/^&$/' | tr '\n' '\|')" || true)"
+						break
+					fi
+				done
+				while printf '%s' "$dead_children" | grep -qEx "$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f1)"
+				do
+					result_file="$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f2)"
+					head -n-1 "$result_file" \
+					| while IFS= read -r line
+					do
+						if printf '%s' "$line" | grep -qE '^\t'
+						then
+							printf '%s\n' "$line" 1>&2
+						else
+							printf '%s\n' "$line" 1>&5
+						fi
+					done
+					if [ "$(tail -n1 "$result_file")" = '0' ]
+					then
+						printf '%s - passed\n' "$current_category"
+					elif [ "$(tail -n1 "$result_file")" != '123' ]
+					then
+						printf '%s - failed\n' "$current_category"
+					fi
+					dead_children="$(printf '%s' "$dead_children" | grep -vEx "$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f1)" || true)"
+					rm -f "$result_file"
+					running_tests_data="$(printf '%s\n' "$running_tests_data" | tail -n+2)"
+					if [ -n "$running_tests_data" ]
+					then
+						update_current_category "$(printf '%s\n' "$running_tests_data" | head -n1 | cut -d' ' -f3-)"
+					fi
+				done
 			done
 			update_current_category ''
 		fi \
