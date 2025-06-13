@@ -552,8 +552,8 @@ print_summary() {
 		passed_tests=0
 		total_tests=0
 	else
-		passed_tests=$(($(printf '%s\n' "$test_results" | sed -n 'n;p' | tr '\n' '+' | head -c-1)))
-		total_tests=$(($(printf '%s' "$test_results" | tr '\n' '+')))
+		passed_tests=$(($(printf '%s\n' "$test_results" | sed -n 'n;p;n' | tr '\n' '+')0))
+		total_tests=$(($(printf '%s' "$test_results" | sed -n 'p;n;p;n' | tr '\n' '+')0))
 	fi
 	if [ "$total_tests" -ne 0 ]
 	then
