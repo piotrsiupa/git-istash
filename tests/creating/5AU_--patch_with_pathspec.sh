@@ -49,9 +49,15 @@ printf 'y n ' | tr ' ' '\n' >.git/answers_for_patch1
 printf 'aaa0 bbb? *5 ./?dd* fff1? ' | PREPARE_PATHSPEC_FILE
 new_stash_hash_CO="$(
 	{
-		 cat .git/answers_for_patch0
-		 sleep 5  # On Windows a child shell tends to eat all the stdin if it's able to. This prevents it. If it still doesn't work, try to increase the time.
-		 cat .git/answers_for_patch1
+		cat .git/answers_for_patch0
+		# A child shell tends to eat all the stdin if it's able to. This prevents it. If it still doesn't work, try to increase the time.
+		if [ "$(uname)" = 'Linux' ]
+		then
+			sleep 1
+		else
+			sleep 5
+		fi
+		cat .git/answers_for_patch1
 	} \
 	| if IS_PATHSPEC_IN_ARGS
 	then
