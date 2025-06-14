@@ -127,9 +127,10 @@ Most of the changes here, however, are bugs that were found during tests to be p
 - The command refuses to apply a stash when the working directory contains any changes.
   (Planned to be implemented soon.)
 - Not all actions from the vanilla command are present (like `git stash show`, `git stash list`...).
-  (However, most of the vanilla commands are fully compitible with stashes created by this commands.)
+  (However, most of the vanilla commands are fully compatible with stashes created by this commands.)
 - Because this command is written entirely in the shell script, it's rather slow to run.
-  (A few seconds to make a stash isn't that big deal, though, so it probably won't be improved any time soon, especially that this would require rewritting the command to another language.)
+  The advantage of this is that it can run on every system with very little additional development cost.
+  (A few seconds to make a stash isn't that big deal, though, so it probably won't be improved any time soon, especially that this would require rewriting the command to another language.)
 
 
 
