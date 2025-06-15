@@ -495,7 +495,7 @@ run_tests() {
 					else
 						dead_children="$(printf '%s\n%s' "$dead_children" "$new_dead_children" | grep -vE '^$')"
 						running_tests_count=$((running_tests_count - $(printf '%s\n' "$new_dead_children" | wc -l)))
-						alive_children="$(printf '%s' "$alive_children" | grep -vEx "$(printf '%s' "$new_dead_children" | sed -E 's/^.*$/^&$/' | tr '\n' '\|')" || true)"
+						alive_children="$(printf '%s' "$alive_children" | grep -vEx "$(printf '%s' "$new_dead_children" | sed -E 's/^.*$/(^&$)/' | tr '\n' '|')" || true)"
 						break
 					fi
 				done
@@ -519,7 +519,7 @@ run_tests() {
 					then
 						printf '%s - failed\n' "$current_category"
 					fi
-					dead_children="$(printf '%s' "$dead_children" | grep -vEx "$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f1)" || true)"
+					dead_children="$(printf '%s' "$dead_children" | grep -vFx "$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f1)" || true)"
 					rm -f "$result_file"
 					running_tests_data="$(printf '%s\n' "$running_tests_data" | tail -n+2)"
 					if [ -n "$running_tests_data" ]
