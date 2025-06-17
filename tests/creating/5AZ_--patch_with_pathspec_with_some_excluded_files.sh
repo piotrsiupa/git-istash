@@ -6,7 +6,7 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_CREATE_OPERATION
 PARAMETRIZE_ALL 'DEFAULT'
 PARAMETRIZE_UNTRACKED 'YES'
-PARAMETRIZE_KEEP_INDEX
+PARAMETRIZE_KEEP_INDEX 'YES'
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_PATHSPEC_STYLE 'ARGS' 'FILE' 'NULL-FILE'
@@ -50,9 +50,15 @@ printf 'y n ' | tr ' ' '\n' >.git/answers_for_patch1
 printf ':%saaa1 aaa? bbb? ccc? ./?dd* fff1? :%s*4 ' "$EXCLUDE_PATTERN" "$EXCLUDE_PATTERN" | PREPARE_PATHSPEC_FILE
 new_stash_hash_CO="$(
 	{
-		 cat .git/answers_for_patch0
-		 sleep 5  # On Windows a child shell tends to eat all the stdin if it's able to. This prevents it. If it still doesn't work, try to increase the time.
-		 cat .git/answers_for_patch1
+		cat .git/answers_for_patch0
+		# A child shell tends to eat all the stdin if it's able to. This prevents it. If it still doesn't work, try to increase the time.
+		if [ "$(uname)" = 'Linux' ]
+		then
+			sleep 1
+		else
+			sleep 5
+		fi
+		cat .git/answers_for_patch1
 	} \
 	| if IS_PATHSPEC_IN_ARGS
 	then
@@ -63,70 +69,36 @@ new_stash_hash_CO="$(
 		assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'a very controlled stash' --patch $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
 	fi
 )"
-if ! IS_KEEP_INDEX_ON
-then
-	assert_files_HTCO '
-	M  aaa0		yyy\nxxx\nxxx\nyyy
-	 M aaa1		yyy\nxxx\nxxx\nyyy	xxx\nxxx
-	MD bbb2		yyy\nxxx\nxxx\nyyy
-	 M bbb3		yyy\nxxx\nxxx\nyyy	xxx\nxxx
-	MM ccc4		zzz\nxxx\nxxx\nzzz	yyy\nxxx\nxxx\nyyy
-	 M ccc5		yyy\nxxx\nxxx\nyyy	xxx\nxxx
-	M  ddd6		yyy\nxxx\nxxx\nyyy
-	 D ddd7		xxx\nxxx
-	M  eee8		yyy\nxxx\nxxx\nyyy
-	 M eee9		yyy\nxxx\nxxx\nyyy	xxx\nxxx
-	?? fff10	yyy\nyyy
-	?? fff11	yyy\nyyy
-	!! ignored0	ignored0
-	!! ignored1	ignored1
-	' '
-	   aaa0		xxx\nxxx
-	 M aaa1		yyy\nxxx\nxxx\nyyy	xxx\nxxx
-	   bbb2		xxx\nxxx
-	 M bbb3		xxx\nxxx\nyyy		xxx\nxxx
-	MM ccc4		zzz\nxxx\nxxx\nzzz	yyy\nxxx\nxxx\nyyy
-	 M ccc5		yyy\nxxx\nxxx		xxx\nxxx
-	   ddd6		xxx\nxxx
-	 D ddd7		xxx\nxxx
-	M  eee8		yyy\nxxx\nxxx\nyyy
-	 M eee9		yyy\nxxx\nxxx\nyyy	xxx\nxxx
-	?? fff11	yyy\nyyy
-	!! ignored0	ignored0
-	!! ignored1	ignored1
-	'
-else
-	assert_files_HTCO '
-	M  aaa0		yyy\nxxx\nxxx\nyyy
-	 M aaa1		yyy\nxxx\nxxx\nyyy	xxx\nxxx
-	MD bbb2		yyy\nxxx\nxxx\nyyy
-	 M bbb3		yyy\nxxx\nxxx\nyyy	xxx\nxxx
-	MM ccc4		zzz\nxxx\nxxx\nzzz	yyy\nxxx\nxxx\nyyy
-	 M ccc5		yyy\nxxx\nxxx\nyyy	xxx\nxxx
-	M  ddd6		yyy\nxxx\nxxx\nyyy
-	 D ddd7		xxx\nxxx
-	M  eee8		yyy\nxxx\nxxx\nyyy
-	 M eee9		yyy\nxxx\nxxx\nyyy	xxx\nxxx
-	?? fff10	yyy\nyyy
-	?? fff11	yyy\nyyy
-	!! ignored0	ignored0
-	!! ignored1	ignored1
-	' '
-	M  aaa0		yyy\nxxx\nxxx\nyyy
-	 M aaa1		yyy\nxxx\nxxx\nyyy	xxx\nxxx
-	M  bbb2		yyy\nxxx\nxxx\nyyy
-	 M bbb3		xxx\nxxx\nyyy		xxx\nxxx
-	MM ccc4		zzz\nxxx\nxxx\nzzz	yyy\nxxx\nxxx\nyyy
-	 M ccc5		yyy\nxxx\nxxx		xxx\nxxx
-	M  ddd6		yyy\nxxx\nxxx\nyyy
-	 D ddd7		xxx\nxxx
-	M  eee8		yyy\nxxx\nxxx\nyyy
-	 M eee9		yyy\nxxx\nxxx\nyyy	xxx\nxxx
-	?? fff11	yyy\nyyy
-	!! ignored0	ignored0
-	!! ignored1	ignored1
-	'
-fi
+assert_files_HTCO '
+M  aaa0		yyy\nxxx\nxxx\nyyy
+ M aaa1		yyy\nxxx\nxxx\nyyy	xxx\nxxx
+MD bbb2		yyy\nxxx\nxxx\nyyy
+ M bbb3		yyy\nxxx\nxxx\nyyy	xxx\nxxx
+MM ccc4		zzz\nxxx\nxxx\nzzz	yyy\nxxx\nxxx\nyyy
+ M ccc5		yyy\nxxx\nxxx\nyyy	xxx\nxxx
+M  ddd6		yyy\nxxx\nxxx\nyyy
+ D ddd7		xxx\nxxx
+M  eee8		yyy\nxxx\nxxx\nyyy
+ M eee9		yyy\nxxx\nxxx\nyyy	xxx\nxxx
+?? fff10	yyy\nyyy
+?? fff11	yyy\nyyy
+!! ignored0	ignored0
+!! ignored1	ignored1
+' '
+M  aaa0		yyy\nxxx\nxxx\nyyy
+ M aaa1		yyy\nxxx\nxxx\nyyy	xxx\nxxx
+M  bbb2		yyy\nxxx\nxxx\nyyy
+ M bbb3		xxx\nxxx\nyyy		xxx\nxxx
+MM ccc4		zzz\nxxx\nxxx\nzzz	yyy\nxxx\nxxx\nyyy
+ M ccc5		yyy\nxxx\nxxx		xxx\nxxx
+M  ddd6		yyy\nxxx\nxxx\nyyy
+ D ddd7		xxx\nxxx
+M  eee8		yyy\nxxx\nxxx\nyyy
+ M eee9		yyy\nxxx\nxxx\nyyy	xxx\nxxx
+?? fff11	yyy\nyyy
+!! ignored0	ignored0
+!! ignored1	ignored1
+'
 store_stash_CO "$new_stash_hash_CO"
 assert_stash_HTCO 0 'a very controlled stash' '
 M  aaa0		yyy\nxxx\nxxx\nyyy

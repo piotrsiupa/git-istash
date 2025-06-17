@@ -16,6 +16,8 @@ print_help() {
 	printf '    -l, --limit=number\t- Set maximum number of tests to be run. (It pairs well\n\t\t\t  with "--failed" to e.g. rerun the first failed test.)\n'
 	printf '    -m, --meticulous=N\t- Set how many tests will be run. Allowed values are\n\t\t\t  0..5 (default=3). (See the section "Meticulousness".)\n'
 	printf '    -p, --print-paths\t- Instead of running tests, print their paths and exit.\n\t\t\t  (The paths are relative to the directory "tests".)\n'
+	printf '\t--progress\t- Show progress information during testing. (It uses the\n\t\t\t  multi-threaded code, which adds some overhead for\n\t\t\t  a single job run.) This is the default when both color\n\t\t\t  is enabled and there are multiple jobs.\n'
+	printf '\t--no-progress\t- Don'\''t show progress information. (See "--progress".)\n\t\t\t  This is useful to avoid outputting ANSI escape codes.\n'
 	printf '    -q, --quiet\t\t- Don'\''t print summaries for passed tests.\n'
 	printf '    -Q, --quieter\t- Don'\''t print summaries for known failures either.\n'
 	printf '    -r, --raw-name\t- Print paths to test files instead of prettified names.\n'
@@ -127,6 +129,29 @@ find_tests() { # pattern
 	fi
 }
 
+get_test_display_name() { # raw_name
+	if [ "$raw_name" = n ]
+	then
+		printf '"'
+		printf '%s' "$1" | sed -E -e 's/_/ /g' -e 's;/; -> ;g'
+		printf '"'
+	else
+		printf '%s' "$(dirname "$0")/$1.sh"
+	fi
+}
+
+format_time() { # seconds
+	if [ "$1" -ge 3600 ]
+	then
+		printf '%ih' $(($1 / 3600))
+	fi
+	if [ "$1" -ge 60 ]
+	then
+		printf '%im' $(($1 % 3600 / 60))
+	fi
+	printf '%is' $(($1 % 60))
+}
+
 do_run_test() { # test_name
 	exec 3>&4
 	{
@@ -153,14 +178,14 @@ do_run_test() { # test_name
 					fi 6>&2 2>&1 1>&6 6>&- \
 					| if [ "$use_color" = y ]
 					then
-						$sed_call -E 's/^.*$/\t'"$esc_char"'[31m&'"$esc_char"'[39m/'
+						$SED_CALL -E 's/^.*$/\t'"$esc_char"'[31m&'"$esc_char"'[39m/'
 					else
-						$sed_call -E 's/^/\t/'
+						$SED_CALL -E 's/^/\t/'
 					fi
-				} 6>&2 2>&1 1>&6 6>&- | $sed_call -E 's/^/\t/'
+				} 6>&2 2>&1 1>&6 6>&- | $SED_CALL -E 's/^/\t/'
 			fi 6>&4 4>&1 1>&6 6>&-
 		} 6>&3 3>&1 1>&6 6>&- \
-		| $sed_call -E 's/^/\tFailed assertion: /'
+		| $SED_CALL -E 's/^/\tFailed assertion: /'
 	} 6>&3 3>&1 1>&6 6>&- 2>&4
 	exec 3>&-
 }
@@ -253,10 +278,15 @@ print_test_result() {
 	then
 		printf ' (the result is kept)'
 	fi
+	printf_color_code '\033[2m'
+	printf ' '
+	format_time $((test_run_end_time - test_run_start_time))
+	printf_color_code '\033[22m'
 	printf '\n'
 }
 
 run_test() ( # test_name
+	test_start_time="$(date '+%s')"
 	test_count=0
 	failed_count=0
 	error_count=0
@@ -273,19 +303,16 @@ run_test() ( # test_name
 		ROTATE_PARAMETER=y
 		export ROTATE_PARAMETER
 		exec 4>"$output_file"
+		test_run_start_time="$(date '+%s')"
 		test_result="$(
 			do_run_test "$1"
 		)"
+		test_run_end_time="$(date '+%s')"
 		exec 4>&-
 		if ! printf '%s\n' "$test_result" | grep -qE '^\?'
 		then
 			test_count=$((test_count + 1))
-			if [ "$raw_name" = n ]
-			then
-				display_name="\"$(printf '%s' "$1" | sed -E -e 's/_/ /g' -e 's;/; -> ;g')\""
-			else
-				display_name="$(dirname "$0")/$1.sh"
-			fi
+			display_name="$(get_test_display_name "$1")"
 			if [ -z "$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | tail -n+2)" ]
 			then
 				parameters_string=''
@@ -351,6 +378,7 @@ run_test() ( # test_name
 		fi
 	done
 	rmdir "$(get_test_dir "$1")" 2>/dev/null || true
+	test_end_time="$(date '+%s')"
 	if [ "$i" != x ]
 	then
 		failed_count=$((failed_count + 1))
@@ -369,7 +397,10 @@ run_test() ( # test_name
 		test_result_is_correct="$(test "$error_count" -eq 0 && printf 'y' || printf 'n')"
 		printf_color_code '\033[0;1;%im' "$(get_test_result_color "$test_passed" "$test_result_is_correct")"
 		printf '%s - %s (%i/%i)' "$(get_result_status "$test_passed" "$test_result_is_correct")" "$display_name" $((test_count - error_count)) $test_count
-		printf_color_code '\033[22;39m'
+		printf_color_code '\033[22;2;39m'
+		printf ' '
+		format_time $((test_end_time - test_start_time))
+		printf_color_code '\033[22m'
 		printf '\n'
 	fi
 	rm -f "$PARAMETERS_FILE"
@@ -381,18 +412,113 @@ run_test() ( # test_name
 	fi
 )
 update_current_category() { # test_name
-	current_category="$(dirname "$1")"
+	if [ -n "$1" ]
+	then
+		current_category="$(dirname "$1")"
+	else
+		current_category=''
+	fi
 	if [ "$current_category" != "$previous_category" ]
 	then
+		if [ -n "$previous_category" ]
+		then
+			category_end_time="$(date '+%s')"
+			printf '%s - time = %i\n' "$previous_category" $((category_end_time - category_start_time + 1))
+			category_start_time="$category_end_time"
+		fi
 		previous_category="$current_category"
-		{
-			printf_color_code '\033[1m'
-			print_centered "$current_category" '-'
-			printf_color_code '\033[22m'
-			printf '\n'
-		} 1>&5
-		printf '%s - passed\n%s - failed\n' "$current_category" "$current_category"
+		if [ -n "$current_category" ]
+		then
+			{
+				printf_color_code '\033[1m'
+				print_centered "$current_category" '-'
+				printf_color_code '\033[22m'
+				printf '\n'
+			} 1>&5
+			printf '%s - passed\n%s - failed\n' "$current_category" "$current_category"
+		fi
 	fi
+}
+print_progress() { # total_count running_count finalizing_count done_count alive_children_pids
+	printf '(Remaining tests: Waiting - %i, Running - %i' "$(($1 - $2 - $3 - $4))" "$2"
+	printf_color_code '\033[2m'
+	printf ' (%s)' "$(printf '%s' "$5" | tr '\n' ',' | sed -E -e 's/^([0-9]+,).*$/\1.../' -e 's/,/, /g')"
+	printf_color_code '\033[22m'
+	printf ', Finalizing - %i)\n' "$3"
+	done_bar_lenght=$(($4 * 78 / $1))
+	done_bar_lenght=$((done_bar_lenght + (done_bar_lenght == 0 && $4 != 0)))
+	finalizing_bar_lenght=$(($3 * 78 / $1))
+	finalizing_bar_lenght=$((finalizing_bar_lenght + (finalizing_bar_lenght == 0 && $3 != 0)))
+	running_bar_lenght=$(($2 * 78 / $1))
+	running_bar_lenght=$((running_bar_lenght + (running_bar_lenght == 0 && $2 != 0)))
+	remaining_bar_lenght=$((($1 - $2 - $3 - $4) * 78 / $1))
+	missing_bar_lenght=$((78 - (done_bar_lenght + finalizing_bar_lenght + running_bar_lenght + remaining_bar_lenght)))
+	if [ $missing_bar_lenght -gt 0 ]
+	then
+		# We try to keep the "done" part of progress bar stable, so we dump the missing length to the later segments.
+		if [ $remaining_bar_lenght -ne 0 ]
+		then
+			remaining_bar_lenght=$((remaining_bar_lenght + missing_bar_lenght))
+		else
+			running_bar_lenght=$((running_bar_lenght + missing_bar_lenght))
+		fi
+	elif [ $missing_bar_lenght -lt 0 ]
+	then
+		# The "missing_bar_lenght" will never be smaller than -3.
+		# We try to distribute the cuts more or less even, preferring the parts showing the work that currently runs (to not overestimate the progress).
+		# We try not to touch the "done" part if not necessary, so the bar doesn't appear to go backwards.
+		for i in 1 2 3
+		do
+			if [ $running_bar_lenght -ge 2 ]
+			then
+				running_bar_lenght=$((running_bar_lenght - 1))
+				missing_bar_lenght=$((missing_bar_lenght + 1))
+				if [ $missing_bar_lenght -eq 0 ]
+				then
+					break
+				fi
+			fi
+			if [ $finalizing_bar_lenght -ge 2 ]
+			then
+				finalizing_bar_lenght=$((finalizing_bar_lenght - 1))
+				missing_bar_lenght=$((missing_bar_lenght + 1))
+				if [ $missing_bar_lenght -eq 0 ]
+				then
+					break
+				fi
+			fi
+			if [ $remaining_bar_lenght -ge 2 ]
+			then
+				remaining_bar_lenght=$((remaining_bar_lenght - 1))
+				missing_bar_lenght=$((missing_bar_lenght + 1))
+				if [ $missing_bar_lenght -eq 0 ]
+				then
+					break
+				fi
+			fi
+		done
+		done_bar_lenght=$((done_bar_lenght + missing_bar_lenght))
+	fi
+	printf '['
+	if [ $done_bar_lenght -ne 0 ]
+	then
+		printf '#%.0s' $(seq 1 $done_bar_lenght)
+	fi
+	if [ $finalizing_bar_lenght -ne 0 ]
+	then
+		printf '+%.0s' $(seq 1 $finalizing_bar_lenght)
+	fi
+	if [ $running_bar_lenght -ne 0 ]
+	then
+		printf -- '-%.0s' $(seq 1 $running_bar_lenght)
+	fi
+	if [ $remaining_bar_lenght -ne 0 ]
+	then
+		printf_color_code '\033[2m'
+		printf '.%.0s' $(seq 1 $remaining_bar_lenght)
+		printf_color_code '\033[22m'
+	fi
+	printf ']\n'
 }
 run_tests() {
 	if [ -z "$tests" ]
@@ -401,16 +527,24 @@ run_tests() {
 	fi
 	if printf '' | sed --unbuffered -E 's/^/x/' 1>/dev/null 2>&1
 	then
-		sed_call='sed --unbuffered'
+		SED_CALL='sed --unbuffered'
 	else
-		sed_call='sed'
+		SED_CALL='sed'
+	fi
+	if sleep '0.2' 2>/dev/null
+	then
+		SLEEP_TIME='0.2'
+	else
+		SLEEP_TIME='1'
 	fi
 	esc_char="$(printf '\033')"
 	exec 5>&1
 	test_results="$(
 		previous_category=''
+		category_start_time="$(date '+%s')"
+		total_test_count="$(printf '%s\n' "$tests" | wc -l)"
 		printf '%s\n' "$tests" \
-		| if [ "$jobs_num" -eq 1 ]
+		| if [ "$jobs_num" -eq 1 ] && [ "$show_progress" = n ]
 		then
 			while read -r test_name
 			do
@@ -423,9 +557,13 @@ run_tests() {
 					printf '%s - failed\n' "$current_category"
 				fi
 			done
+			update_current_category ''
 		else
 			running_tests_count=0
 			running_tests_data=''
+			alive_children=''
+			finalizing_tests_count=0
+			done_tests_count=0
 			while true
 			do
 				while [ $running_tests_count -ne "$jobs_num" ]
@@ -437,38 +575,91 @@ run_tests() {
 					result_file="$(mktemp)"
 					{ run_test "$test_name" && printf '0\n' || printf '%i\n' $? ; } 1>"$result_file" 2>&1 &
 					running_tests_count=$((running_tests_count + 1))
-					running_tests_data="$(printf '%s\n%i %s %s' "$running_tests_data" $! "$result_file" "$test_name" | sed -E '/^\s*$/ d')"
+					running_tests_data="$(printf '%s\n%i %s %s %s' "$running_tests_data" $! "$result_file" "$test_name" "$(date '+%s')" | grep -vE '^$')"
+					alive_children="$(printf '%s\n%i' "$alive_children" $! | grep -vE '^$')"
 				done
-				update_current_category "$(printf '%s\n' "$running_tests_data" | head -n1 | cut -d' ' -f3-)"
-				wait "$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f1)"
-				result_file="$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f2)"
-				head -n-1 "$result_file" \
-				| while IFS= read -r line
-				do
-					if printf '%s' "$line" | grep -qE '^\t'
-					then
-						printf '%s\n' "$line" 1>&2
-					else
-						printf '%s\n' "$line" 1>&5
-					fi
-				done
-				if [ "$(tail -n1 "$result_file")" = '0' ]
-				then
-					printf '%s - passed\n' "$current_category"
-				elif [ "$(tail -n1 "$result_file")" != '123' ]
-				then
-					printf '%s - failed\n' "$current_category"
-				fi
-				rm -f "$result_file"
-				running_tests_count=$((running_tests_count - 1))
-				running_tests_data="$(printf '%s\n' "$running_tests_data" | tail -n+2)"
 				if [ $running_tests_count -eq 0 ]
 				then
 					break
 				fi
+				update_current_category "$(printf '%s\n' "$running_tests_data" | head -n1 | cut -d' ' -f3)"
+				test_display_name="$(get_test_display_name "$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f3)")"
+				if [ "$show_progress" = y ]
+				then
+					printf 'PENDNG - %s (?/?) \n' "$test_display_name" 1>&5
+					print_progress "$total_test_count" "$running_tests_count" "$finalizing_tests_count" "$done_tests_count" "$alive_children" 1>&5
+				fi
+				pending_test_start_time="$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f4)"
+				while true
+				do
+					if [ "$show_progress" = y ]
+					then
+						printf '\033[3A\033[%iC' $((${#test_display_name} + 16))
+						printf_color_code '\033[2m'
+						format_time $(($(date '+%s') - pending_test_start_time))
+						printf_color_code '\033[22m'
+						printf '\033[3E'
+					fi 1>&5
+					new_dead_children="$(
+						printf '%s\n' "$alive_children" \
+						| while read -r pid
+						do
+							if ! kill -0 "$pid" 2>/dev/null
+							then
+								printf '%i\n' "$pid"
+							fi
+						done
+					)"
+					if [ -z "$new_dead_children" ]
+					then
+						sleep "$SLEEP_TIME"
+					else
+						dead_children="$(printf '%s\n%s' "$dead_children" "$new_dead_children" | grep -vE '^$')"
+						new_dead_children_count="$(printf '%s\n' "$new_dead_children" | wc -l)"
+						running_tests_count=$((running_tests_count - new_dead_children_count))
+						finalizing_tests_count=$((finalizing_tests_count + new_dead_children_count))
+						alive_children="$(printf '%s' "$alive_children" | grep -vEx "$(printf '%s' "$new_dead_children" | sed -E 's/^.*$/(^&$)/' | tr '\n' '|')" || true)"
+						break
+					fi
+				done
+				if [ "$show_progress" = y ]
+				then
+					printf '\033[3A\033[0J' 1>&5
+				fi
+				while printf '%s' "$dead_children" | grep -qEx "$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f1)"
+				do
+					result_file="$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f2)"
+					head -n-1 "$result_file" \
+					| while IFS= read -r line
+					do
+						if printf '%s' "$line" | grep -qE '^\t'
+						then
+							printf '%s\n' "$line" 1>&2
+						else
+							printf '%s\n' "$line" 1>&5
+						fi
+					done
+					if [ "$(tail -n1 "$result_file")" = '0' ]
+					then
+						printf '%s - passed\n' "$current_category"
+					elif [ "$(tail -n1 "$result_file")" != '123' ]
+					then
+						printf '%s - failed\n' "$current_category"
+					fi
+					dead_children="$(printf '%s' "$dead_children" | grep -vFx "$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f1)" || true)"
+					finalizing_tests_count=$((finalizing_tests_count - 1))
+					done_tests_count=$((done_tests_count + 1))
+					rm -f "$result_file"
+					running_tests_data="$(printf '%s\n' "$running_tests_data" | tail -n+2)"
+					if [ -n "$running_tests_data" ]
+					then
+						update_current_category "$(printf '%s\n' "$running_tests_data" | head -n1 | cut -d' ' -f3)"
+					fi
+				done
 			done
+			update_current_category ''
 		fi \
-		| sort | uniq -c | awk '{print $1 - 1}'
+		| sort | uniq -c | sed -E 's/^.* - time = ([0-9]+)$/\1/' | awk '{print $1 - 1}'
 	)"
 	exec 5>&-
 }
@@ -489,6 +680,8 @@ print_summary() {
 			i=$((i + 1))
 			passed_in_category="$(printf '%s' "$test_results" | head -n $i | tail -n 1)"
 			total_in_category=$((failed_in_category + passed_in_category))
+			i=$((i + 1))
+			category_time="$(printf '%s' "$test_results" | head -n $i | tail -n 1)"
 			printf '%s: ' "$(printf '%s' "$category" | cut -d' ' -f2)"
 			if [ "$failed_in_category" -eq 0 ]
 			then
@@ -508,6 +701,13 @@ print_summary() {
 					printf 'Passed %i out of %i tests.' "$passed_in_category" "$total_in_category"
 				fi
 			fi
+			printf_color_code '\033[22;2;39;24m'
+			printf ' '
+			if [ "$jobs_num" -ne 1 ]
+			then
+				printf '~'
+			fi
+			format_time "$category_time"
 			printf_color_code '\033[0m'
 			printf '\n'
 		done
@@ -517,8 +717,8 @@ print_summary() {
 		passed_tests=0
 		total_tests=0
 	else
-		passed_tests=$(($(printf '%s\n' "$test_results" | sed -n 'n;p' | tr '\n' '+' | head -c-1)))
-		total_tests=$(($(printf '%s' "$test_results" | tr '\n' '+')))
+		passed_tests=$(($(printf '%s\n' "$test_results" | sed -n 'n;p;n' | tr '\n' '+')0))
+		total_tests=$(($(printf '%s' "$test_results" | sed -n 'p;n;p;n' | tr '\n' '+')0))
 	fi
 	if [ "$total_tests" -ne 0 ]
 	then
@@ -544,19 +744,23 @@ print_summary() {
 		printf_color_code '\033[43;1;33;4m'
 		printf 'No matching tests were found!'
 	fi
+	printf_color_code '\033[2;39;49;24m'
+	printf ' '
+	format_time $((total_time_end - total_time_start))
 	printf_color_code '\033[0m'
 	printf '\n'
 }
 
 getopt_short_options='c:dfhj:l:m:pqQrsv'
-getopt_long_options='color:,debug,failed,file-name,help,jobs:,limit:,meticulousness:,print-paths,quiet,quieter,raw,raw-name,stop-at-fail,skip-at-fail,stop-at-error,skip-at-error,stop-on-fail,skip-on-fail,stop-on-error,skip-on-error,verbose,version'
+getopt_long_options='color:,debug,failed,file-name,help,jobs:,limit:,meticulousness:,print-paths,progress,no-progress,quiet,quieter,raw,raw-name,stop-at-fail,skip-at-fail,stop-at-error,skip-at-error,stop-on-fail,skip-on-fail,stop-on-error,skip-on-error,verbose,version'
 getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 only_failed=n
 debug_mode=n
 quiet_level=0
 verbose_mode=n
-use_color='auto'
+use_color=auto
+show_progress=auto
 raw_name=n
 skip_on_fail=n
 test_limit=0
@@ -631,6 +835,12 @@ do
 	-p|--print-paths)
 		print_paths=y
 		;;
+	--progress)
+		show_progress=y
+		;;
+	--no-progress)
+		show_progress=n
+		;;
 	-q|--quiet)
 		if [ "$quiet_level" -eq 2 ]
 		then
@@ -676,6 +886,15 @@ then
 		use_color=n
 	fi
 fi
+if [ "$show_progress" = auto ]
+then
+	if [ "$use_color" = y ] && [ "$jobs_num" -gt 1 ]
+	then
+		show_progress=y
+	else
+		show_progress=n
+	fi
+fi
 if [ "$quiet_level" -ne 0 ] && [ "$verbose_mode" = y ]
 then
 	printf 'Options "--quiet" and "--verbose" are incompatible.\n' 1>&2
@@ -709,6 +928,8 @@ else
 	done
 fi
 
+trap 'trap - INT ; kill -s KILL -- -$$' INT
+
 cd "$(dirname "$0")"
 tests="$(find_tests "$filter")"
 if [ "$print_paths" = y ]
@@ -724,7 +945,9 @@ PATH="$(pwd):$PATH"
 cd "$OLDPWD"
 export PATH
 create_test_remote
+total_time_start="$(date '+%s')"
 run_tests
+total_time_end="$(date '+%s')"
 print_summary
 if [ "$passed_tests" -eq "$total_tests" ]
 then
