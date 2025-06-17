@@ -928,6 +928,8 @@ else
 	done
 fi
 
+trap 'trap - INT ; kill -s KILL -- -$$' INT
+
 cd "$(dirname "$0")"
 tests="$(find_tests "$filter")"
 if [ "$print_paths" = y ]
