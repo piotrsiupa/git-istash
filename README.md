@@ -120,12 +120,17 @@ Most of the changes here, however, are bugs that were found during tests to be p
 
 
 
-## Current limitations
+## Known problems and limitations
 
-- The script doesn't support files added with the flag `--intend to add`.
+- The command doesn't support files added with the flag `--intent-to-add` (just like the vanilla command).
   (Planned to be implemented really soon because this is one of the main goals of the project.)
-- The script refuses to apply a stash when the working directory contains any changes.
+- The command refuses to apply a stash when the working directory contains any changes.
   (Planned to be implemented soon.)
+- Not all actions from the vanilla command are present (like `git stash show`, `git stash list`...).
+  (However, most of the vanilla commands are fully compatible with stashes created by this commands.)
+- Because this command is written entirely in the shell script, it's rather slow to run.
+  The advantage of this is that it can run on every system with very little additional development cost.
+  (A few seconds to make a stash isn't that big deal, though, so it probably won't be improved any time soon, especially that this would require rewriting the command to another language.)
 
 
 

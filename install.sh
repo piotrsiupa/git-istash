@@ -24,7 +24,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'installer version 1.0.2\n'
+	printf 'installer version 1.0.3\n'
 }
 
 is_windows() {
@@ -326,7 +326,7 @@ show_tasks() {
 	installed_bin_path="$(make_target_path 'bin/git-istash')"
 	if [ -e "$installed_bin_path" ]
 	then
-		printf 'There is already "git-install" in the chosen location.\nIt will be replaced. (%s -> %s)\n' "$(get_istash_version "$installed_bin_path")" "$(get_istash_version 'bin/git-istash')"
+		printf 'There is already "git-istash" in the chosen location.\nIt will be replaced. (%s -> %s)\n' "$(get_istash_version "$installed_bin_path")" "$(get_istash_version 'bin/git-istash')"
 	else
 		printf 'No existing "git-istash" has been found in the chosen location.\nThe version %s will be installed.\n' "$(get_istash_version 'bin/git-istash')"
 	fi

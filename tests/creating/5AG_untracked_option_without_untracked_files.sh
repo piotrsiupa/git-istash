@@ -6,7 +6,7 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_CREATE_OPERATION
 PARAMETRIZE_ALL 'DEFAULT'
 PARAMETRIZE_UNTRACKED 'YES'
-PARAMETRIZE_KEEP_INDEX
+PARAMETRIZE_KEEP_INDEX 'DEFAULT'
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED
 
@@ -18,27 +18,14 @@ printf 'bbb\n' >aaa
 git add aaa
 #shellcheck disable=SC2086
 new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS)"
-if ! IS_KEEP_INDEX_ON
-then
-	assert_files_HTCO '
-	A  aaa		bbb
-	!! ignored0	ignored0
-	!! ignored1	ignored1
-	' '
-	!! ignored0	ignored0
-	!! ignored1	ignored1
-	'
-else
-	assert_files_HTCO '
-	A  aaa		bbb
-	!! ignored0	ignored0
-	!! ignored1	ignored1
-	' '
-	A  aaa		bbb
-	!! ignored0	ignored0
-	!! ignored1	ignored1
-	'
-fi
+assert_files_HTCO '
+A  aaa		bbb
+!! ignored0	ignored0
+!! ignored1	ignored1
+' '
+!! ignored0	ignored0
+!! ignored1	ignored1
+'
 store_stash_CO "$new_stash_hash_CO"
 assert_stash_untracked_HT 0 '' '
 A  aaa		bbb
