@@ -234,7 +234,7 @@ PARAMETRIZE_OPTION() { # condition name map values...
 }
 
 # It calls "PARAMETRIZE" with the name "HEAD_TYPE" and possible values "BRANCH", "DETACH" and "ORPHAN".
-# There is a bunch of functions in this and other files that use the variable "HEAD_TYPE". (They always have suffix "_H".)
+# There is a bunch of functions in this and other files that use the variable "HEAD_TYPE". (They always have suffix "_HT".)
 # (See also the function below this one.)
 PARAMETRIZE_HEAD_TYPE() { # values...
 	! printf '%s\n' "$@" | grep -vxqE "BRANCH|DETACH|ORPHAN" ||
@@ -260,7 +260,7 @@ SWITCH_HEAD_TYPE() {
 RESTORE_HEAD_TYPE() {
 	git switch 'master'
 }
-get_head_hash_H() {
+get_head_hash_HT() {
 	if ! IS_HEAD_ORPHAN
 	then
 		get_head_hash

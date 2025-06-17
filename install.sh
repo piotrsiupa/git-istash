@@ -24,7 +24,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'installer version 1.0.2\n'
+	printf 'installer version 1.0.3\n'
 }
 
 is_windows() {

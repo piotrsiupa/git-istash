@@ -107,3 +107,8 @@ get_stash_hash() { # stash_num
 	fi
 	git rev-parse "stash@{$1}"
 }
+
+remove_all_changes() {
+	git reset --hard
+	git clean -dfx
+}

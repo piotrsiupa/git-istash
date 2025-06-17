@@ -3,8 +3,9 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
-PARAMETRIZE_ALL
-PARAMETRIZE_UNTRACKED
+PARAMETRIZE_CREATE_OPERATION
+PARAMETRIZE_ALL 'YES'
+PARAMETRIZE_UNTRACKED 'YES'
 PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
@@ -35,7 +36,7 @@ git commit -m 'Added some files'
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
-__test_section__ 'Create stash'
+__test_section__ "$CAP_CREATE_OPERATION stash"
 echo yyy >'a/0/i'
 rm 'a/0/k'
 git add 'a/0'
@@ -56,15 +57,28 @@ printf '0 1/k ../b/0 ../b/1/i ' | PREPARE_PATHSPEC_FILE
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS --patch $EOI '0' '1/k' '../b/0' '../b/1/i' <../.git/answers_for_patch
+	new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS --patch $EOI '0' '1/k' '../b/0' '../b/1/i' <../.git/answers_for_patch)"
 else
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $PATHSPEC_NULL_FLAGS --patch --pathspec-from-file ../.git/pathspec_for_test -- <../.git/answers_for_patch
+	new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $PATHSPEC_NULL_FLAGS --patch --pathspec-from-file ../.git/pathspec_for_test -- <../.git/answers_for_patch)"
 fi
 cd -
 if ! IS_KEEP_INDEX_ON
 then
-	assert_files_H '
+	assert_files_HTCO '
+	M  a/0/i	yyy
+	   a/0/j	xxx
+	D  a/0/k
+	 M a/1/i	zzz	xxx
+	   a/1/j	xxx
+	 D a/1/k	xxx
+	MM b/0/i	zzz	yyy
+	   b/0/j	xxx
+	MD b/0/k	yyy
+	 M b/1/i	zzz	xxx
+	   b/1/j	xxx
+	M  b/1/k	yyy
+	' '
 	   a/0/i	xxx
 	   a/0/j	xxx
 	   a/0/k	xxx
@@ -79,7 +93,20 @@ then
 	M  b/1/k	yyy
 	'
 else
-	assert_files_H '
+	assert_files_HTCO '
+	M  a/0/i	yyy
+	   a/0/j	xxx
+	D  a/0/k
+	 M a/1/i	zzz	xxx
+	   a/1/j	xxx
+	 D a/1/k	xxx
+	MM b/0/i	zzz	yyy
+	   b/0/j	xxx
+	MD b/0/k	yyy
+	 M b/1/i	zzz	xxx
+	   b/1/j	xxx
+	M  b/1/k	yyy
+	' '
 	M  a/0/i	yyy
 	   a/0/j	xxx
 	D  a/0/k
@@ -94,7 +121,8 @@ else
 	M  b/1/k	yyy
 	'
 fi
-assert_stash_H 0 '' '
+store_stash_CO "$new_stash_hash_CO"
+assert_stash_HTCO 0 '' '
 M  a/0/i	yyy
    a/0/j	xxx
 D  a/0/k
@@ -108,17 +136,17 @@ M  b/0/k	yyy
    b/1/j	xxx
    b/1/k	xxx
 '
-assert_stash_base_H 0 'HEAD'
+assert_stash_base_HT 0 'HEAD'
 assert_stash_count 1
-assert_log_length_H 2
+assert_log_length_HT 2
 assert_branch_count 1
-assert_head_hash_H "$correct_head_hash"
-assert_head_name_H
+assert_head_hash_HT "$correct_head_hash"
+assert_head_name_HT
 assert_rebase n
-assert_branch_metadata_H
+assert_branch_metadata_HT
 assert_dotgit_contents
 
-git reset --hard
+remove_all_changes
 RESTORE_HEAD_TYPE
 
 __test_section__ 'Pop stash'
@@ -143,5 +171,5 @@ assert_branch_count 1
 assert_head_hash "$correct_head_hash"
 assert_head_name 'master'
 assert_rebase n
-assert_branch_metadata_H
+assert_branch_metadata_HT
 assert_dotgit_contents

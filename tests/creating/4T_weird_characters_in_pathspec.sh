@@ -13,6 +13,7 @@ then
 fi
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
+PARAMETRIZE_CREATE_OPERATION
 PARAMETRIZE_ALL 'DEFAULT'
 PARAMETRIZE_UNTRACKED 'YES'
 PARAMETRIZE_KEEP_INDEX
@@ -52,7 +53,7 @@ git commit -m 'Added a bunch of files'
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
-__test_section__ 'Create stash'
+__test_section__ "$CAP_CREATE_OPERATION stash"
 printf 'yyy\n' >'%^$#&#@'
 printf 'yyy\n' >'
 '
@@ -92,19 +93,44 @@ fi
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash push '*&#?' $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS 'ccc
-ddd' -m 'a fine stash' $EOI '*\?*' 'eee fff' '"ggg"' 'o%so' 'p%sp' 'r	r' 'q\tq'
+	new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" '*&#?' $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS 'ccc
+ddd' -m 'a fine stash' $EOI '*\?*' 'eee fff' '"ggg"' 'o%so' 'p%sp' 'r	r' 'q\tq')"
 elif IS_PATHSPEC_IN_STDIN
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'a fine stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test
+	new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'a fine stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test)"
 else
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'a fine stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
+	new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'a fine stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test)"
 fi
 if ! IS_KEEP_INDEX_ON
 then
-	assert_files_H '
+	assert_files_HTCO '
+	M  %%^$#&#@	yyy
+	 M \n		yyy	xxx
+	M  aaa\nbbb	yyy
+	 M ccc\r\nddd	yyy	xxx
+	 M eee		yyy	xxx
+	 M eee\040fff	yyy	xxx
+	 M fff		yyy	xxx
+	MM ggg		zzz	yyy
+	MM "ggg"	zzz	yyy
+	MM ""ggg""	zzz	yyy
+	 M xXxX*&Xx	yyy	xxx
+	 M ?*?*?*	yyy	xxx
+	M  ^&@*#	yyy
+	 M o\007o	yyy	xxx
+	 M o\007%%so	yyy	xxx
+	 M p\007p	yyy	xxx
+	 M p\007%%sp	yyy	xxx
+	 M r\tr		yyy	xxx
+	 M r\\tr	yyy	xxx
+	 M q\tq		yyy	xxx
+	 M q\\tq	yyy	xxx
+	?? ?		yyy
+	!! ignored0	ignored0
+	!! ignored1	ignored1
+	' '
 	   %%^$#&#@	xxx
 	 M \n		yyy	xxx
 	M  aaa\nbbb	yyy
@@ -130,7 +156,32 @@ then
 	!! ignored1	ignored1
 	'
 else
-	assert_files_H '
+	assert_files_HTCO '
+	M  %%^$#&#@	yyy
+	 M \n		yyy	xxx
+	M  aaa\nbbb	yyy
+	 M ccc\r\nddd	yyy	xxx
+	 M eee		yyy	xxx
+	 M eee\040fff	yyy	xxx
+	 M fff		yyy	xxx
+	MM ggg		zzz	yyy
+	MM "ggg"	zzz	yyy
+	MM ""ggg""	zzz	yyy
+	 M xXxX*&Xx	yyy	xxx
+	 M ?*?*?*	yyy	xxx
+	M  ^&@*#	yyy
+	 M o\007o	yyy	xxx
+	 M o\007%%so	yyy	xxx
+	 M p\007p	yyy	xxx
+	 M p\007%%sp	yyy	xxx
+	 M r\tr		yyy	xxx
+	 M r\\tr	yyy	xxx
+	 M q\tq		yyy	xxx
+	 M q\\tq	yyy	xxx
+	?? ?		yyy
+	!! ignored0	ignored0
+	!! ignored1	ignored1
+	' '
 	M  %%^$#&#@	yyy
 	 M \n		yyy	xxx
 	M  aaa\nbbb	yyy
@@ -156,7 +207,8 @@ else
 	!! ignored1	ignored1
 	'
 fi
-assert_stash_H 0 'a fine stash' '
+store_stash_CO "$new_stash_hash_CO"
+assert_stash_HTCO 0 'a fine stash' '
 M  %%^$#&#@	yyy
    \n		xxx
    aaa\nbbb	xxx
@@ -180,17 +232,17 @@ MM "ggg"	zzz	yyy
  M q\\tq	yyy	xxx
 ?? ?		yyy
 '
-assert_stash_base_H 0 'HEAD'
+assert_stash_base_HT 0 'HEAD'
 assert_stash_count 1
-assert_log_length_H 2
+assert_log_length_HT 2
 assert_branch_count 1
-assert_head_hash_H "$correct_head_hash"
-assert_head_name_H
+assert_head_hash_HT "$correct_head_hash"
+assert_head_name_HT
 assert_rebase n
-assert_branch_metadata_H
+assert_branch_metadata_HT
 assert_dotgit_contents
 
-git reset --hard
+remove_all_changes
 RESTORE_HEAD_TYPE
 
 __test_section__ 'Pop stash'
@@ -218,8 +270,6 @@ MM "ggg"	zzz	yyy
    q\tq		xxx
  M q\\tq	yyy	xxx
 ?? ?		yyy
-!! ignored0	ignored0
-!! ignored1	ignored1
 '
 assert_stash_count 0
 assert_log_length 2
@@ -227,5 +277,5 @@ assert_branch_count 1
 assert_head_hash "$correct_head_hash"
 assert_head_name 'master'
 assert_rebase n
-assert_branch_metadata_H
+assert_branch_metadata_HT
 assert_dotgit_contents

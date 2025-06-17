@@ -1,0 +1,36 @@
+#!/usr/bin/env sh
+
+set -e
+
+. "$(dirname "$0")/git-istash-commons"
+
+print_help() {
+	printf 'git istash save - A version of "git istash push" that doesn'\''t remove any changes\n    from the working directory.\n'
+	printf '(This is NOT an equivalent of "git stash save".)\n'
+	printf '\n'
+	printf 'This is only a rudimentary help text. Prefer "git help istash" if available.\n'
+	printf '\n'
+	printf 'Usage: git istash create\n'
+	printf '   or: git istash create -h\n'
+	printf '\n'
+	printf 'Options:\n'
+	printf '    -a, --all\t\t- Stash also untracked and ignored files.\n'
+	printf '\t--allow-empty\t- Create a stash even if there are no suitable changes.\n'
+	printf '    -h\t\t\t- Show this help text and exit.\n'
+	printf '    -l, --leave-staged\t- Don'\'' add to stash any changes already added\n\t\t\t  to the index.\n'
+	printf '    -m, --message=MSG\t- Set stash description.\n'
+	printf '\t--patch\t\t- Interactively select non-staged chunks to stash.\n'
+	printf '\t--pathspec-from-file=FILE - Read pathspec from the specified file.\n'
+	printf '\t--pathspec-file-nul - Treat the pathspec file as NUL-separated.\n\t\t\t  (Only valid with "--pathspec-from-file".)\n'
+	printf '    -S, --staged\t- Don'\''t add to stash any changes NOT already added to\n\t\t\t  the index.\n'
+	printf '    -u, --include-untracked - Stash also untracked files.\n'
+	printf '\t--no-include-untracked - Do not stash untracked files even with "--all".\n'
+}
+
+if check_for_option_h_in_make_command "$@"
+then
+	print_help
+	exit 0
+fi
+
+exec sh "$(dirname "$0")/git-istash-make-stash" "$@"

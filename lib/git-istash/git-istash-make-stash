@@ -1,0 +1,623 @@
+#!/usr/bin/env sh
+
+set -e
+
+. "$(dirname "$0")/git-istash-commons"
+
+print_help() {
+	printf 'git-istash-make-stash - An internal script of "git istash".\n'
+	printf 'If you see this, something went wrong.\n'
+	printf '\n'
+	printf 'Usage: git-istash-make-stash\n'
+	printf '   or: git-istash-make-stash -h\n'
+	printf '\n'
+	printf 'Options:\n'
+	printf '    -a, --all\t\t- Stash and clean also untracked and ignored files.\n'
+	printf '\t--allow-empty\t- Create a stash even if there are no suitable changes.\n'
+	printf '    -h\t\t\t- Show this help text and exit.\n'
+	printf '    -k, --keep-index\t- Left intact all changes already added to the index.\n'
+	printf '\t--no-keep-index\t- Cancel "--keep-index".\n'
+	printf '    -l, --leave-staged\t- Left intact all changes already added to the index\n\t\t\t  and don'\''t add them to stash.\n'
+	printf '    -m, --message=MSG\t- Set stash description.\n'
+	printf '\t--patch\t\t- Interactively select non-staged chunks to stash.\n'
+	printf '\t--pathspec-from-file=FILE - Read pathspec from the specified file.\n'
+	printf '\t--pathspec-file-nul - Treat the pathspec file as NUL-separated.\n\t\t\t  (Only valid with "--pathspec-from-file".)\n'
+	printf '\t--remove-stashed - Removes stashed changes unless there'\''s another option\n\t\t\t  to explicitely keep them.\n'
+	printf '    -S, --staged\t- Left intact all changes NOT already added to the index\n\t\t\t  and don'\''t add them to stash.\n'
+	printf '\t--no-store\t- Don'\''t store the created stash with "git stash store".\n\t\t\t  Instead write its hash to stdout.\n'
+	printf '    -u, --include-untracked - Stash and clean also untracked files.\n'
+	printf '\t--no-include-untracked - Do not touch untracked files even with "--all".\n'
+}
+
+convert_pathspec_file() {
+	if [ "$pathspec_file_nul" = y ]
+	then
+		cat
+	else
+		convert_to_octal \
+		| sed -E 's/(\\042(\\(0[0-35-7][0-7]|04[0-13-7]|1[0-24-7][0-7]|13[0-35-7]|[2-3][0-7]{2}|134\\[0-7]{1,3}))*\\042|(\\(0[02-7][0-7]|01[13-7]|[1-3][0-7]{2}))*)((\\015)?\\012|$)/\1\n/g' \
+		| sed -E 's/\\015$//' \
+		| while read -r line
+		do
+			if printf '%s\n' "$line" | grep -qEx '\\042.*\\042'
+			then
+				#shellcheck disable=SC2059
+				printf -- "$(
+					#shellcheck disable=SC2059
+					printf -- "$(
+						printf '%s' "$line" \
+						| sed -E -e 's/\\042(.*)\\042/\1/' \
+							-e 's/\\/\\\\/g' \
+							-e 's/\\134\\(\\06[0-3])\\(\\0(6[0-7]|7[0-1]))\\(\\0(6[0-7]|7[0-1]))\\/\\134\\\1\2\4\\/g' \
+							-e 's/\\134\\(\\0(6[0-7]|7[0-1]))\\(\\0(6[0-7]|7[0-1]))\\/\\134\\\1\3\\/g' \
+							-e 's/\\134\\(\\[0-7]{1,3})\\/134\1\\/g'
+					)"
+				)\\0"
+			else
+				#shellcheck disable=SC2059
+				printf -- "$line\0"
+			fi
+		done
+	fi
+}
+
+initialize_commit_layout() {
+	if [ "$include_ignored" = y ] || [ "$include_untracked" = y ]
+	then
+		has_3_commits=y
+	else
+		has_3_commits=n
+	fi
+}
+initialize_octal_conversion() {
+	if command -v od 1>/dev/null 2>&1
+	then
+		convert_to_octal() {
+			#shellcheck disable=SC1003
+			od -bvAn | tr ' ' '\\' | tr -d '\n'
+		}
+	else
+		convert_to_octal() {
+			hexdump -ve'"\\" /1 "%03o"'
+		}
+	fi
+}
+initialize_pathspec_file_path() {
+	pathspec_file="$(git rev-parse --git-dir)/ISTASH_PATHSPEC"
+}
+initialize_pathspec() { # pathspecs
+	initialize_pathspec_file_path
+	if [ "$pathspec_from_file" = '-' ]
+	then
+		convert_pathspec_file >"$pathspec_file"
+	elif [ -n "$pathspec_from_file" ]
+	then
+		convert_pathspec_file <"$pathspec_from_file" >"$pathspec_file"
+	elif [ $# -ne 0 ]
+	then
+		printf '%s\0' "$@" >"$pathspec_file"
+	else
+		pathspec_file=''
+	fi
+}
+initialize() { # pathspecs
+	initialize_commit_layout
+	initialize_octal_conversion
+	initialize_pathspec "$@"
+}
+cleanup() {
+	initialize_pathspec_file_path
+	if [ -n "$pathspec_file" ]
+	then
+		rm -f "$pathspec_file"
+	fi
+}
+
+is_pathspec_exclude() { # pathspec
+	if parse_git_bool "$GIT_LITERAL_PATHSPECS"
+	then
+		return 1
+	fi
+	#shellcheck disable=SC2059
+	! printf '%s' "$1" | grep -qE '\\012' \
+	&& printf -- "$1" | grep -qE '^:([!^]:?|\(([^()],)?exclude(,[^()])?\))'
+}
+
+check_pathspec() {
+	if [ -n "$pathspec_file" ]
+	then
+		convert_to_octal <"$pathspec_file" \
+		| sed 's/\\000/\n/g' \
+		| while read -r ps || [ -n "$ps" ]
+		do
+			good=n
+			#shellcheck disable=SC2059
+			if is_pathspec_exclude "$ps"
+			then
+				good=y
+			elif printf -- "$ps" | xargs -0 -- git commit --dry-run --short --quiet -- 1>/dev/null 2>&1
+			then
+				good=y
+			elif [ "$has_3_commits" = y ] && printf -- "$ps" | xargs -0 -- git ls-files --others --error-unmatch -- 1>/dev/null 2>&1
+			then
+				good=y
+				#shellcheck disable=SC2059
+				if [ "$include_ignored" = n ] && ! printf -- "$ps" | xargs -0 -- git ls-files --others --exclude-standard --error-unmatch -- 1>/dev/null 2>&1
+				then
+					good=n
+				elif [ "$include_untracked" = n ] && [ "$(printf -- "$ps" | xargs -0 -- git ls-files --others -z -- | tr -cd '\0' | wc -c)" -eq "$(printf -- "$ps" | xargs -0 -- git ls-files --others --exclude-standard -z -- | tr -cd '\0' | wc -c)" ] 2>/dev/null
+				then
+					good=n
+				fi
+			fi
+			if [ "$good" = n ]
+			then
+				#shellcheck disable=SC2059
+				printf 'fatal: pathspec '\'"$ps"\'' did not match any files\n' 1>&2
+				return 1
+			fi
+		done
+	fi
+}
+
+add_with_pathspec() {
+	convert_to_octal <"$pathspec_file" \
+	| sed 's/\\000/\n/g' \
+	| while read -r ps || [ -n "$ps" ]
+	do
+		#shellcheck disable=SC2059
+		if is_pathspec_exclude "$ps" || printf -- "$ps" | xargs -0 -- git add --update --dry-run -- 1>/dev/null 2>&1
+		then
+			#shellcheck disable=SC2059
+			printf -- "$ps\0"
+		fi
+	done \
+	| xargs -r0 -- git add --update --ignore-errors -- #TODO "--ignore-errors" is temporary - there is a regression in Git
+}
+
+add_with_patch_and_pathspec() {
+	exec 3<&0
+	convert_to_octal <"$pathspec_file" \
+	| sed 's/\\000/\n/g' \
+	| while read -r ps || [ -n "$ps" ]
+	do
+		#shellcheck disable=SC2059
+		if is_pathspec_exclude "$ps" || printf -- "$ps" | xargs -0 -- git add --update --dry-run -- 1>/dev/null 2>&1
+		then
+			#shellcheck disable=SC2059
+			printf -- "$ps\0"
+		fi
+	done \
+	| xargs -r0 -- sh -c 'git add --update --patch -- "$@" <&3 1>&2' --
+	exec 3<&-
+}
+
+commit_changes() {
+	# initialization
+	default_message="$(git rev-list --no-commit-header --format='%h %s' --max-count=1 HEAD)"
+	if [ "$curr_branch_type" != 'detached' ]
+	then
+		branch_name_for_msg="$(git branch --show-current)"
+	else
+		branch_name_for_msg='(no branch)'
+	fi
+	there_are_enough_changes="$allow_empty"
+	
+	# staged (initial)
+	git commit --message="index on $branch_name_for_msg: $default_message (unfinished)" --allow-empty 1>/dev/null
+	
+	# unstaged
+	if [ -n "$patch_options" ]
+	then
+		printf '### Using the interactive patch for tracked files...' 1>&2
+	fi
+	if [ "$leave_unstaged" = n ]
+	then
+		if [ -z "$pathspec_file" ]
+		then
+			git --no-literal-pathspecs add --update $patch_options :/ 1>&2 2>/dev/null || true
+		else
+			if [ -z "$patch_options" ]
+			then
+				add_with_pathspec
+			else
+				add_with_patch_and_pathspec
+			fi
+		fi
+	fi
+	if [ -n "$message" ]
+	then
+		git commit --message="On $branch_name_for_msg: $message" --allow-empty 1>/dev/null
+	else
+		git commit --message="WIP on $branch_name_for_msg: $default_message" --allow-empty 1>/dev/null
+	fi
+	if [ "$there_are_enough_changes" = n ] && [ "$(git rev-parse 'HEAD^{tree}')" != "$(git rev-parse 'HEAD~^{tree}')" ]
+	then
+		there_are_enough_changes=y
+	fi
+	git --no-literal-pathspecs add --update :/ 2>/dev/null || true
+	git commit --message="non-stashed WIP on $branch_name_for_msg: $default_message" --allow-empty 1>/dev/null
+	
+	# untracked
+	if [ "$has_3_commits" = y ]
+	then
+		if [ "$include_untracked" = n ]
+		then
+			git --no-literal-pathspecs ls-files --exclude-standard --others --ignored -z :/ | xargs -r0 -- git --literal-pathspecs add --intent-to-add --force --
+		elif [ "$include_ignored" = n ]
+		then
+			git --no-literal-pathspecs add --all --intent-to-add :/ 2>/dev/null || true
+		else
+			git --no-literal-pathspecs add --all --force --intent-to-add :/ 2>/dev/null || true
+		fi
+		if [ -n "$patch_options" ]
+		then
+			printf '### Using the interactive patch for untracked files...' 1>&2
+		fi
+		if [ -z "$pathspec_file" ]
+		then
+			git --no-literal-pathspecs add $patch_options --update :/ 1>&2 2>/dev/null || true
+		else
+			if [ -z "$patch_options" ]
+			then
+				add_with_pathspec
+			else
+				add_with_patch_and_pathspec
+			fi
+		fi
+		git commit --message="untracked files on $branch_name_for_msg: $default_message" --allow-empty 1>/dev/null
+		if [ "$there_are_enough_changes" = n ] && [ "$(git rev-parse 'HEAD^{tree}')" != "$(git rev-parse 'HEAD~^{tree}')" ]
+		then
+			there_are_enough_changes=y
+		fi
+	fi
+	git --no-literal-pathspecs add :/ 2>/dev/null || true
+	git commit --message="non-stashed untracked files on $branch_name_for_msg: $default_message" --allow-empty 1>/dev/null
+	
+	# staged (for real)
+	index_editor='sed -i -E "1 s/^(\s*)\w+(\s)/\1edit\2/"'
+	if [ "$has_3_commits" = n ]
+	then
+		GIT_EDITOR="$index_editor" git rebase --interactive --keep-empty --empty=keep -- 'HEAD~4' 1>/dev/null
+	else
+		GIT_EDITOR="$index_editor" git rebase --interactive --keep-empty --empty=keep -- 'HEAD~5' 1>/dev/null
+	fi
+	git reset --soft 'HEAD^' 1>/dev/null
+	if [ "$leave_staged" = n ]
+	then
+		if [ -z "$pathspec_file" ]
+		then
+			git commit --message="index on $branch_name_for_msg: $default_message" --allow-empty 1>/dev/null
+		else
+			base_commit_hash="$(git rev-parse HEAD)"
+			xargs -r0 -- git diff --name-only HEAD --cached -z -- <"$pathspec_file" \
+			| (
+				cd "$(git rev-parse --show-toplevel)"
+				xargs -r0 -- git --literal-pathspecs commit --message="index on $branch_name_for_msg: $default_message" --allow-empty -- 1>/dev/null
+			)
+			if [ "$(git rev-parse HEAD)" = "$base_commit_hash" ]
+			then
+				index_commit_hash="$(git commit-tree 'HEAD^{tree}' -p 'HEAD' -m "index on $branch_name_for_msg: $default_message")"
+				git reset --soft "$index_commit_hash" 1>/dev/null
+			fi
+		fi
+	else
+		index_commit_hash="$(git commit-tree 'HEAD^{tree}' -p 'HEAD' -m "index on $branch_name_for_msg: $default_message")"
+		git reset --soft "$index_commit_hash" 1>/dev/null
+	fi
+	if [ "$there_are_enough_changes" = n ] && [ "$(git rev-parse 'HEAD^{tree}')" != "$(git rev-parse 'HEAD~^{tree}')" ]
+	then
+		there_are_enough_changes=y
+	fi
+	git commit --message="non-stashed index on $branch_name_for_msg: $default_message" --allow-empty 1>/dev/null
+	git rebase --continue 1>/dev/null
+	
+	# check for empty
+	if [ "$there_are_enough_changes" = n ]
+	then
+		undo_commit_changes
+		printf 'fatal: There are no suitable changes to stash.\n' 1>&2
+		return 1
+	fi
+}
+undo_commit_changes() {
+	if [ "$has_3_commits" = y ]
+	then
+		git reset --mixed HEAD~4 1>/dev/null
+	else
+		git reset --mixed HEAD~3 1>/dev/null
+	fi
+	git reset --soft HEAD~2 1>/dev/null
+	if [ "$curr_branch_type" = 'orphan' ]
+	then
+		remove_temporary_branch
+	fi
+}
+
+handle_rebase_conflict_using_theirs() {
+	while true
+	do
+		if [ -z "$(git --no-literal-pathspecs ls-files --unmerged :/)" ]
+		then
+			return 1
+		fi
+		git --no-literal-pathspecs ls-files --unmerged --format='%(path)' -z :/ | xargs -0 -- git --literal-pathspecs restore --theirs --
+		git --no-literal-pathspecs add :/ 2>/dev/null || true
+		if GIT_EDITOR='true' git rebase --continue 1>/dev/null
+		then
+			break
+		fi
+	done
+}
+
+sort_commits() {
+	stashed_commits_editor='sed -i -En -e "1 p" -e "3 p"'
+	if [ "$has_3_commits" = y ]
+	then
+		stashed_commits_editor="$stashed_commits_editor"' -e "5 p"'
+	fi
+	if [ "$remove_stashed" = n ]
+	then
+		unstashed_commits_editor='sed -i -E -e "2 s/^pick\\>/fixup/" -e "4 s/^pick\\>/fixup/"'
+		if [ "$has_3_commits" = y ]
+		then
+			unstashed_commits_editor="$unstashed_commits_editor"' -e "6 s/^pick\\>/fixup/"'
+		fi
+	else
+		unstashed_commits_editor='sed -i -En -e "1 p" -e "2 p" -e "4 p"'
+		if [ "$has_3_commits" = y ]
+		then
+			unstashed_commits_editor="$unstashed_commits_editor"' -e "6 p"'
+		else
+			unstashed_commits_editor="$unstashed_commits_editor"' -e "5 p"'
+		fi
+	fi
+	stashed_commits_editor="$stashed_commits_editor --"
+	unstashed_commits_editor="$unstashed_commits_editor --"
+	
+	last_commit_hash="$(git rev-parse HEAD)"
+	if ! GIT_EDITOR="$unstashed_commits_editor" git -c merge.renames=false rebase --strategy=recursive --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash" 1>/dev/null
+	then
+		handle_rebase_conflict_using_theirs
+	fi
+	if [ "$remove_stashed" = y ]
+	then
+		if [ "$keep_index" = n ]
+		then
+			keep_index_editor='sed -i -E -e "1 d" --'
+		else
+			keep_index_editor='sed -i -E -e "2 s/^pick\\>/fixup/" --'
+		fi
+		if ! GIT_EDITOR="$keep_index_editor" git -c merge.renames=false rebase --strategy=recursive --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash" 1>/dev/null
+		then
+			handle_rebase_conflict_using_theirs
+		fi
+	fi
+	unstashed_changes_hash="$(git rev-parse HEAD)"
+	
+	git switch --detach "$last_commit_hash" 1>/dev/null
+	if ! GIT_EDITOR="$stashed_commits_editor" git -c merge.renames=false rebase --strategy=recursive --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash" 1>/dev/null
+	then
+		handle_rebase_conflict_using_theirs
+	fi
+}
+
+sanitize_ls_tree() {
+	convert_to_octal \
+	| sed -E 's/\\000(\\|$)/\n\1/g' \
+	| sed -E 's/(\\(0[0-35-7][0-7]|04[1-7]|[1-3][0-7]{2}))+\\040(\\(0[0-35-7][0-7]|04[1-7]|[1-3][0-7]{2}))+\\040(\\(0[02-7][0-7]|01[02-7]|[1-3][0-7]{2}))+\\011/&\n/' \
+	| while read -r data && read -r path
+	do
+		printf -- "$data%s\n" "$path"
+	done \
+	| sed -E 's/\\057\\/\/\\/g'
+}
+
+remove_tracked_files_from_untracked() ( # [path]
+	if [ $# -lt 1 ]
+	then
+		cd "$(git rev-parse --show-toplevel)"
+		set -- '\072\057'
+	fi
+	#shellcheck disable=SC2059
+	previous_files="$(printf -- "$1" | xargs -0 -- git --no-literal-pathspecs ls-tree -z HEAD~ -- | sanitize_ls_tree)"
+	#shellcheck disable=SC2059
+	printf -- "$1" | xargs -0 -- git --no-literal-pathspecs ls-tree -z HEAD -- | sanitize_ls_tree \
+	| while read -r line
+	do
+		if printf '%s' "$previous_files" | grep -qxF "$line"
+		then
+			continue
+		fi
+		if [ "$(printf '%s\n' "$line" | awk '{print $2}')" = 'blob' ]
+		then
+			printf '%s\\000' "$line"
+		else
+			#shellcheck disable=SC2059
+			subtree_sha="$(remove_tracked_files_from_untracked "$(printf '%s' "$line" | sed -E '1 s/^.*\t//')/")"
+			printf '%s\\000' "$line" | sed -E 's;^(\w+\s+\w+\s+)\w+(\s);\1'"$subtree_sha"'\2;'
+		fi | sed -E 's;^(.*\t)(.*/)?([^/]+)$;\1\3;'
+	done | xargs -r0 -- printf -- \
+	| git mktree -z
+)
+
+tangle_stash() {
+	if [ "$has_3_commits" = n ]
+	then
+		stash_sha="$(git show -s --format=%B HEAD | git commit-tree 'HEAD^{tree}' -p HEAD~2 -p HEAD~1)"
+	else
+		untracked_tree_sha="$(remove_tracked_files_from_untracked)"
+		untracked_sha="$(git show -s --format=%B HEAD | git commit-tree "$untracked_tree_sha")"
+		stash_sha="$(git show -s --format=%B HEAD~1 | git commit-tree 'HEAD~1^{tree}' -p HEAD~3 -p HEAD~2 -p "$untracked_sha")"
+	fi
+	if [ "$store_stash" = y ]
+	then
+		git stash store "$stash_sha" --message="$(git show -s --format=%B "$stash_sha")"
+	else
+		printf '%s\n' "$stash_sha"
+	fi
+}
+
+restore_working_tree() {
+	git switch --detach "$unstashed_changes_hash" 1>/dev/null
+	unstaged_commit_hash="$(git rev-parse 'HEAD~')"
+	git reset --mixed HEAD~2 1>/dev/null
+	if [ -n "$(git --no-literal-pathspecs ls-tree -r "$unstaged_commit_hash" :/)" ]
+	then
+		git --no-literal-pathspecs ls-tree -r -z "$unstaged_commit_hash" :/ | sanitize_ls_tree | awk '{print $4}' \
+		| while read -r path
+		do
+			if [ -z "$path" ]
+			then
+				continue
+			fi
+			#shellcheck disable=SC2059
+			printf -- "$path" | xargs -0 -- git --literal-pathspecs add -N --
+		done
+	fi
+	git reset --soft HEAD~1 1>/dev/null
+}
+
+create_stash() {
+	stash_base_hash="$(git rev-parse HEAD)"
+	commit_changes
+	sort_commits
+	tangle_stash
+	restore_working_tree
+}
+
+create_temporary_branch() {
+	git --no-literal-pathspecs commit --message="Base commit for stash entry on an orphan branch \"$current_branch\"" --allow-empty --no-verify --only 1>/dev/null
+}
+
+restore_branch() {
+	git switch --force-create "$current_branch" HEAD 1>/dev/null
+}
+
+remove_temporary_branch() {
+	git switch --detach HEAD 1>/dev/null
+	git branch --delete --force "$current_branch" 1>/dev/null
+	git switch --orphan "$current_branch" 1>/dev/null
+}
+
+make_stash() { # pathspecs...
+	initialize "$@"
+	find_current_branch
+	check_pathspec
+	if [ "$curr_branch_type" = 'normal' ]
+	then
+		create_stash
+		restore_branch
+	elif [ "$curr_branch_type" = 'orphan' ]
+	then
+		create_temporary_branch
+		create_stash
+		remove_temporary_branch
+	else
+		create_stash
+	fi
+}
+
+getopt_short_options='ahklm:Su'
+getopt_long_options='all,allow-empty,keep-index,no-keep-index,leave-staged,message:,patch,pathspec-file-null,pathspec-from-file:,remove-stashed,staged,no-store,include-untracked,no-include-untracked'
+getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
+eval set -- "$getopt_result"
+include_ignored=n
+allow_empty=n
+keep_index=n
+leave_staged=n
+message=''
+patch_options=''
+pathspec_from_file=''
+pathspec_file_nul=n
+remove_stashed=n
+store_stash=y
+leave_unstaged=n
+include_untracked=d
+while true
+do
+	case "$1" in
+	-a|--all)
+		include_ignored=y
+		if [ "$include_untracked" = d ]
+		then
+			include_untracked=y
+		fi
+		;;
+	--allow-empty)
+		allow_empty=y
+		;;
+	-h)
+		print_help
+		exit 0
+		;;
+	-k|--keep-index)
+		keep_index=y
+		;;
+	--no-keep-index)
+		keep_index=n
+		;;
+	-l|--leave-staged)
+		leave_staged=y
+		;;
+	-m|--message)
+		shift
+		message="$1"
+		;;
+	--patch)
+		patch_options='--patch'
+		;;
+	--pathspec-from-file)
+		shift
+		pathspec_from_file="$1"
+		;;
+	--pathspec-file-null)
+		pathspec_file_nul=y
+		;;
+	--remove-stashed)
+		remove_stashed=y
+		;;
+	-S|--staged)
+		leave_unstaged=y
+		;;
+	--no-store)
+		store_stash=n
+		;;
+	-u|--include-untracked)
+		include_untracked=y
+		;;
+	--no-include-untracked)
+		include_untracked=n
+		;;
+	--)
+		shift
+		break
+		;;
+	esac
+	shift
+done
+if [ "$include_untracked" = d ]
+then
+	include_untracked=n
+fi
+if [ -n "$patch_options" ] && [ "$pathspec_from_file" = '-' ]
+then
+	#shellcheck disable=SC2016
+	printf 'Stdin cannot be assigned to both `--patch` and the pathspec.\n' 1>&2
+	exit 1
+fi
+if [ -z "$pathspec_from_file" ] && [ "$pathspec_file_nul" = y ]
+then
+	printf 'Option "--pathspec-file-nul" is not valid without "--pathspec-from-file".\n' 1>&2
+	exit 1
+fi
+
+set +e
+(
+	set -e
+	make_stash "$@"
+)
+exit_code=$?
+set -e
+cleanup
+exit $exit_code

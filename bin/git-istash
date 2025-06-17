@@ -19,10 +19,11 @@ print_help() {
 	printf 'Sub-commands:\n'
 	printf '\tapply\t- Analog to "git stash apply --index".\n'
 	printf '\tpop\t- Analog to "git stash pop --index".\n'
+	printf '\tpush\t- Analog to "git stash push".\n'
 }
 
 print_version() {
-	printf 'git-istash version 1.1.0\n'
+	printf 'git-istash version 1.1.2\n'
 	printf 'Author: Piotr Siupa\n'
 }
 
