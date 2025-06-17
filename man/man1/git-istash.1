@@ -201,10 +201,18 @@ Cancel the operation and restore the repository to the state before it started.
 .PP
 \fB\-h\fR
 .RS 4
-Display a rudimentary help text.
+Print a rudimentary help text to stdout.
 .sp
 This is a fallback option that is to be used when the man page is not available. \
 Prefer \fBgit help istash\fR over \fBgit istash [<sub-command>] \-h\fR.
+.RE
+
+.PP
+\fB\--help\fR
+.RS 4
+Display the man page for \fBgit\~istash\fR.
+.sp
+Normally this option is handled by the Git itself, but passing it directly to the script \fBgit-istash\fR also works, and additionally it has a fallback to the option \fB-h\fR in case that running the man viewer failed for any reason.
 .RE
 
 .PP
@@ -244,7 +252,7 @@ When no \fB<stash>\fR is given, the latest stash is assumed (that is, \fBstash@{
 .nf
 \fB0\fR - command succeeded
 \fB1\fR - command failed
-\fB2\fR - command was stopped by a conflict and can be resumed with \fB\-\-continue\fR or aborted with \fB\-\-abort\fR
+\fB2\fR - command was stopped by a conflict and can be resumed with \fB\-\-continue\fR or aborted with \fB\-\-abort\fR (only \fBapply\fR and \fBpop\fR)
 .fi
 
 .SH EXAMPLES

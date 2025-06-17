@@ -185,3 +185,31 @@ are_there_conflicts() {
 parse_git_bool() { # boolean_to_parse
      test "$(git -c 'istash.bool-parsing-tmp-value'="$1" config --get --type=bool 'istash.bool-parsing-tmp-value' 2>/dev/null)" = 'true'
 }
+
+set_getopt_options_from_make_command() {
+	getopt_short_options="$(sed -E -n 's/^\s*getopt_short_options='\''([^'\'']+)'\''\s*$/\1/p' "$(dirname "$0")/git-istash-make-stash")"
+	getopt_long_options="$(sed -E -n 's/^\s*getopt_long_options='\''([^'\'']+)'\''\s*$/\1/p' "$(dirname "$0")/git-istash-make-stash")"
+	if [ "$(printf '%s\n' "$getopt_short_options" | wc -l)" -ne 1 ] || [ "$(printf '%s\n' "$getopt_long_options" | wc -l)" -ne 1 ]
+	then
+		printf 'fatal: cannot determine if there is option "-h" in the arguments\n' 1>&2
+		return 1
+	fi
+}
+
+check_for_option_h_in_make_command() ( # option...
+	if ! set_getopt_options_from_make_command
+	then
+		return 0  # Fall back to showing help, to not accidentaly break the repository.
+	fi
+	getopt_result="$(getopt -o"-$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
+	eval set -- "$getopt_result"
+	while [ $# -ne 0 ]
+	do
+		if [ "$1" = '-h' ]
+		then
+			return 0
+		fi
+		shift
+	done
+	return 1
+)

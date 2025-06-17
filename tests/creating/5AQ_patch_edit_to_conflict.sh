@@ -3,6 +3,7 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
+PARAMETRIZE_CREATE_OPERATION
 PARAMETRIZE_ALL 'DEFAULT'
 PARAMETRIZE_UNTRACKED 'YES'
 PARAMETRIZE_KEEP_INDEX
@@ -20,7 +21,7 @@ git commit -m 'Added aaa, bbb, ccc & ddd'
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
-__test_section__ 'Create stash'
+__test_section__ "$CAP_CREATE_OPERATION stash"
 printf 'aaa2\n' >aaa
 printf 'bbb2\n' >bbb
 git add aaa bbb
@@ -30,18 +31,29 @@ printf 'eee2\n' >eee
 printf 'fff2\n' >fff
 printf 'e n ' | tr ' ' '\n' >.git/answers_for_patch0
 printf 'e n ' | tr ' ' '\n' >.git/answers_for_patch1
-{
-	 cat .git/answers_for_patch0
-	 sleep 5  # On Windows a child shell tends to eat all the stdin if it's able to. This prevents it. If it still doesn't work, try to increase the time.
-	 cat .git/answers_for_patch1
-} \
-| {
-	#shellcheck disable=SC2086
-	GIT_EDITOR="sed -Ei 's/^\+[a-z]{3}2/+xxx/'" assert_exit_code 0 git istash push $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS
-}
+new_stash_hash_CO="$(
+	{
+		 cat .git/answers_for_patch0
+		 sleep 5  # On Windows a child shell tends to eat all the stdin if it's able to. This prevents it. If it still doesn't work, try to increase the time.
+		 cat .git/answers_for_patch1
+	} \
+	| {
+		#shellcheck disable=SC2086
+		GIT_EDITOR="sed -Ei 's/^\+[a-z]{3}2/+xxx/'" assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS
+	}
+)"
 if ! IS_KEEP_INDEX_ON
 then
-	assert_files_H '
+	assert_files_HTCO '
+	M  aaa		aaa2
+	M  bbb		bbb2
+	 M ccc		ccc2	ccc1
+	 M ddd		ddd2	ddd1
+	?? eee		eee2
+	?? fff		fff2
+	!! ignored0	ignored0
+	!! ignored1	ignored1
+	' '
 	   aaa		aaa1
 	   bbb		bbb1
 	 M ccc		ccc2	ccc1
@@ -52,7 +64,16 @@ then
 	!! ignored1	ignored1
 	'
 else
-	assert_files_H '
+	assert_files_HTCO '
+	M  aaa		aaa2
+	M  bbb		bbb2
+	 M ccc		ccc2	ccc1
+	 M ddd		ddd2	ddd1
+	?? eee		eee2
+	?? fff		fff2
+	!! ignored0	ignored0
+	!! ignored1	ignored1
+	' '
 	M  aaa		aaa2
 	M  bbb		bbb2
 	 M ccc		ccc2	ccc1
@@ -63,24 +84,25 @@ else
 	!! ignored1	ignored1
 	'
 fi
-assert_stash_H 0 '' '
+store_stash_CO "$new_stash_hash_CO"
+assert_stash_HTCO 0 '' '
 M  aaa		aaa2
 M  bbb		bbb2
  M ccc		xxx	ccc1
    ddd		ddd1
 ?? eee		xxx
 '
-assert_stash_base_H 0 'HEAD'
+assert_stash_base_HT 0 'HEAD'
 assert_stash_count 1
-assert_log_length_H 2
+assert_log_length_HT 2
 assert_branch_count 1
-assert_head_hash_H "$correct_head_hash"
-assert_head_name_H
+assert_head_hash_HT "$correct_head_hash"
+assert_head_name_HT
 assert_rebase n
-assert_branch_metadata_H
+assert_branch_metadata_HT
 assert_dotgit_contents
 
-git reset --hard
+remove_all_changes
 git clean -df
 RESTORE_HEAD_TYPE
 
@@ -92,8 +114,6 @@ M  bbb		bbb2
  M ccc		xxx	ccc1
    ddd		ddd1
 ?? eee		xxx
-!! ignored0	ignored0
-!! ignored1	ignored1
 '
 assert_stash_count 0
 assert_log_length 2
@@ -101,5 +121,5 @@ assert_branch_count 1
 assert_head_hash "$correct_head_hash"
 assert_head_name 'master'
 assert_rebase n
-assert_branch_metadata_H
+assert_branch_metadata_HT
 assert_dotgit_contents
