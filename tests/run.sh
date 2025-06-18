@@ -230,12 +230,7 @@ print_test_result() {
 		fi
 	fi
 	printf_color_code '\033[0;1;%im' "$test_result_color"
-	if [ -z "$parameters_string" ]
-	then
-		printf '%s - %s' "$(get_result_status "$test_passed" "$test_result_is_correct")" "$display_name"
-	else
-		printf '    %s: (%s)' "$(get_result_status "$test_passed" "$test_result_is_correct")" "$parameters_string"
-	fi
+	printf '    %s: (%s)' "$(get_result_status "$test_passed" "$test_result_is_correct")" "$parameters_string"
 	if [ "$test_passed" = n ]
 	then
 		current_section="$(printf '%s\n' "$test_result" | grep -E '^-' | tail -n1 | cut -c2-)"
@@ -361,8 +356,7 @@ run_test() ( # test_name
 		printf '\n'
 	fi
 	rm -f "$output_file"
-	if { [ "$meticulousness" -le 1 ] && [ -n "$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | tail -n+2)" ] ; } \
-		|| { [ "$test_count" -ne 0 ] && { [ "$error_count" -ne 0 ] || [ "$quiet_level" -eq 0 ] || { [ "$failed_count" -ne 0 ] && [ "$quiet_level" -eq 1 ] ; } ; } ; }
+	if [ "$test_count" -ne 0 ] && { [ "$error_count" -ne 0 ] || [ "$quiet_level" -eq 0 ] || { [ "$failed_count" -ne 0 ] && [ "$quiet_level" -eq 1 ] ; } ; }
 	then
 		test_passed="$(test "$failed_count" -eq 0 && printf 'y' || printf 'n')"
 		test_result_is_correct="$(test "$error_count" -eq 0 && printf 'y' || printf 'n')"
