@@ -633,7 +633,7 @@ do
 	-q|--quiet)
 		if [ "$quiet_level" -eq 2 ]
 		then
-			printf 'Options "--quiet" and "--quiter" are incompatible.\n' 1>&2
+			printf 'Options "--quiet" and "--quieter" are incompatible.\n' 1>&2
 			exit 1
 		fi
 		quiet_level=1
@@ -641,7 +641,7 @@ do
 	-Q|--quieter)
 		if [ "$quiet_level" -eq 1 ]
 		then
-			printf 'Options "--quiet" and "--quiter" are incompatible.\n' 1>&2
+			printf 'Options "--quiet" and "--quieter" are incompatible.\n' 1>&2
 			exit 1
 		fi
 		quiet_level=2
@@ -677,7 +677,10 @@ then
 fi
 if [ "$quiet_level" -ne 0 ] && [ "$verbose_mode" = y ]
 then
-	printf 'Options "--quiet" and "--verbose" are incompatible.\n' 1>&2
+	case "$quiet_level" in
+		1) printf 'Options "--quiet" and "--verbose" are incompatible.\n' 1>&2 ;;
+		2) printf 'Options "--quieter" and "--verbose" are incompatible.\n' 1>&2 ;;
+	esac
 	exit 1
 fi
 export meticulousness
