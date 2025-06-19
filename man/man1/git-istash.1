@@ -141,7 +141,7 @@ This is the inverse operation of \fBgit stash push\fR.
 .PP
 \fB\-a\fR, \fB\-\-all\fR
 .RS 4
-This options is only valid for \fBpush\fR command.
+This option is only valid for \fBcreate\fR, \fBsnatch\fR, \fBsave\fR and \fBpush\fR commands.
 .sp
 All ignored and untracked files are also stashed and then removed.
 .RE
@@ -149,7 +149,7 @@ All ignored and untracked files are also stashed and then removed.
 .PP
 \fB\-\-allow\-empty\fR
 .RS 4
-This options is only valid for \fBpush\fR command.
+This option is only valid for \fBcreate\fR, \fBsnatch\fR, \fBsave\fR and \fBpush\fR commands.
 .sp
 Stash is created even if there is no changes or options / pathspec exclude all of them. \
 The exit code becomes 0 in such cases.
@@ -158,10 +158,12 @@ The exit code becomes 0 in such cases.
 .PP
 \fB\-k\fR, \fB\-\-keep\-index\fR, \fB\-\-no\-keep\-index\fR
 .RS 4
-This options is only valid for \fBpush\fR command.
+This option is only valid for \fBsnatch\fR and \fBpush\fR commands, and also allowed for \fBcreate\fR and \fBsave\fR.
 .sp
 All changes already added to the index are left intact (but still staged). \
 See also \fB\-\-leave\-staged\fR.
+.br
+(For commands \fBcreate\fR and \fBsave\fR it has no effect unless \fB--remove-stashed\fR is also specified.)
 .br
 (\fB\-\-no\-keep\-index\fR not that useful; it exist mainly to comply with the standard stash command.)
 .RE
@@ -169,7 +171,7 @@ See also \fB\-\-leave\-staged\fR.
 .PP
 \fB\-l\fR, \fB\-\-leave\-staged\fR
 .RS 4
-This options is only valid for \fBpush\fR command.
+This option is only valid for \fBcreate\fR, \fBsnatch\fR, \fBsave\fR and \fBpush\fR commands.
 .sp
 All changes already added to the index are not staged and left intact. \
 See also \fB\-\-keep\-index\fR and \fB\-\-staged\fR.
@@ -178,7 +180,7 @@ See also \fB\-\-keep\-index\fR and \fB\-\-staged\fR.
 .PP
 \fB\-m\fR <\fImessage\fR>, \fB\-\-message\fR <\fImessage\fR>
 .RS 4
-This options is only valid for \fBpush\fR command.
+This option is only valid for \fBcreate\fR, \fBsnatch\fR, \fBsave\fR and \fBpush\fR commands.
 .sp
 Custom message (name) for stash is used instead of the one generated using the last commit message.
 .RE
@@ -186,7 +188,7 @@ Custom message (name) for stash is used instead of the one generated using the l
 .PP
 \fB\-\-patch\fR
 .RS 4
-This options is only valid for \fBpush\fR command.
+This option is only valid for \fBcreate\fR, \fBsnatch\fR, \fBsave\fR and \fBpush\fR commands.
 .sp
 Interactively select hunks from the diff between HEAD and the working tree to be stashed.
 .br
@@ -200,7 +202,7 @@ Unlike in the standard \fBgit stash\fR command, the option \fB\-\-keep\-index\fR
 .PP
 \fB\-\-pathspec\-from\-file\fR=<\fIfile\fR>
 .RS 4
-This options is only valid for \fBpush\fR command.
+This option is only valid for \fBcreate\fR, \fBsnatch\fR, \fBsave\fR and \fBpush\fR commands.
 .sp
 Pathspec is passed in \fB<file>\fR instead of command line arguments. \
 If \fB<file>\fR is exactly \fB\-\fR then standard input is used (so this is not allowed with \fB\-\-patch\fR). \
@@ -211,25 +213,54 @@ See also \fB\-\-pathspec\-file\-nul\fR.
 .PP
 \fB\-\-pathspec\-file\-nul\fR
 .RS 4
-This options is only valid for \fBpush\fR command.
+This option is only valid for \fBcreate\fR, \fBsnatch\fR, \fBsave\fR and \fBpush\fR commands.
 .sp
 Only meaningful with \fB\-\-pathspec\-from\-file\fR. \
 Pathspec elements are separated with NUL character and all other characters are taken literally (including newlines and quotes).
 .RE
 
 .PP
+\fB--remove-stashed\fR
+.RS 4
+This option is only valid for \fBcreate\fR and \fBsave\fR commands and also allowed for \fBsnatch\fR and \fBpush\fR.
+.sp
+Changes that are included into the stash are going to be removed from the working directory.
+.br
+Basically, this changes \fBcreate\fR\~->\~\fBsnatch\fR and \fBsave\fR\~->\~\fBpush\fR. \
+If used with \fBsnatch\fR or \fBpush\fR, this option has no effect.
+.br
+(This option is part of the internal mechanisms of \fBgit\~istash\fR but it's allowed to be utilised by users. \
+Still, prefer using \fBsnatch\fR and \fBpush\fR for a shorter syntax and a better readability.)
+.RE
+
+.PP
 \fB\-S\fR, \fB\-\-staged\fR
 .RS 4
-This options is only valid for \fBpush\fR command.
+This option is only valid for \fBcreate\fR, \fBsnatch\fR, \fBsave\fR and \fBpush\fR commands.
 .sp
 All changes that are tracked but not yet added to the index are not staged and left intact. \
 See also \fB\-\-leave\-staged\fR.
 .RE
 
 .PP
+\fB--no-store\fR
+.RS 4
+This option is only valid for \fBsave\fR and \fBpush\fR commands and also allowed for \fBcreate\fR and \fBsnatch\fR.
+.sp
+The stash won't be stored in the stash ref. \
+Instead, its hash will be outputed to stdout.
+.br
+Basically, this changes \fBsave\fR\~->\~\fBcreate\fR and \fBpush\fR\~->\~\fBsnatch\fR. \
+If used with \fBcreate\fR or \fBsnatch\fR, this option has no effect.
+.br
+(This option is part of the internal mechanisms of \fBgit\~istash\fR but it's allowed to be utilised by users. \
+Still, prefer using \fBcreate\fR and \fBsnatch\fR for a shorter syntax and a better readability.)
+.RE
+
+.PP
 \fB\-u\fR, \fB\-\-include\-untracked\fR, \fB\-\-no\-include\-untracked\fR
 .RS 4
-This options is only valid for \fBpush\fR command.
+This option is only valid for \fBcreate\fR, \fBsnatch\fR, \fBsave\fR and \fBpush\fR commands.
 .sp
 All untracked files are also stashed and then removed.
 .br
@@ -239,7 +270,7 @@ All untracked files are also stashed and then removed.
 .PP
 \fB\-\-continue\fR
 .RS 4
-This options is only valid for \fBapply\fR and \fBpop\fR commands.
+This option is only valid for \fBapply\fR and \fBpop\fR commands.
 .sp
 Resume the operation after conflicts have been resolved.
 .RE
@@ -247,7 +278,7 @@ Resume the operation after conflicts have been resolved.
 .PP
 \fB\-\-abort\fR
 .RS 4
-This options is only valid for \fBapply\fR and \fBpop\fR commands.
+This option is only valid for \fBapply\fR and \fBpop\fR commands.
 .sp
 Cancel the operation and restore the repository to the state before it started.
 .RE
@@ -284,7 +315,7 @@ Separates options from non-option arguments (like stash or pathspec) for disambi
 .PP
 \fB<pathspec>...\fR
 .RS 4
-This options is only valid for \fBpush\fR command.
+This option is only valid for \fBcreate\fR, \fBsnatch\fR, \fBsave\fR and \fBpush\fR commands.
 .sp
 The new stash entry records the modified states and roll back only for the files that match the pathspec.
 .sp
