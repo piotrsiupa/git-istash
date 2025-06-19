@@ -7,16 +7,17 @@ git\-istash \- Handle Git stashes without arbitrary limitations of the original 
 
 .SH SYNOPSIS
 .nf
-\fBgit istash\fR push [\-a\~|\~\-\-all] [\-\-allow-empty] [\-k\~|\~\-\-[no\-]keep\-index]
-              [\-l\~|\~\-\-leave\-staged] [(\-m\~|\~\-\-message)\~<\fImessage\fR>]
-              [\-\-patch] [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<\fIfile\fR>]
-              [\-S\~|\~\-\-staged] [\-u\~|\~\-\-[no\-]include\-untracked]
-              [\-\-] [<\fIpathspec\fR>...]
+\fBgit istash\fR (create\~|\~snatch\~|\~save\~|\~push) [\-a\~|\~\-\-all] [\-\-allow-empty]
+            [\-k\~|\~\-\-[no\-]keep\-index] [\-l\~|\~\-\-leave\-staged]
+            [(\-m\~|\~\-\-message)\~<\fImessage\fR>] [\-\-patch]
+            [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<\fIfile\fR>]
+            [\-S\~|\~\-\-staged] [\-u\~|\~\-\-[no\-]include\-untracked]
+            [\-\-] [<\fIpathspec\fR>...]
 \fBgit istash\fR [\-a\~|\~\-\-all] [\-\-allow\-empty] [\-k\~|\~\-\-[no\-]keep\-index]
-              [\-l\~|\~\-\-leave\-staged] [(\-m\~|\~\-\-message)\~<\fImessage\fR>]
-              [\-\-patch] [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<\fIfile\fR>]
-              [\-S\~|\~\-\-staged] [\-u\~|\~\-\-[no\-]include\-untracked]
-              [\-\-\~<\fIpathspec\fR>...]
+            [\-l\~|\~\-\-leave\-staged] [(\-m\~|\~\-\-message)\~<\fImessage\fR>] [\-\-patch]
+            [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<\fIfile\fR>]
+            [\-S\~|\~\-\-staged] [\-u\~|\~\-\-[no\-]include\-untracked]
+            [\-\-\~<\fIpathspec\fR>...]
 \fBgit istash\fR (pop\~|\~apply) [<\fIstash\fR>]
 \fBgit istash\fR (pop\~|\~apply) (\-\-continue\~|\~\-\-abort)
 .fi
@@ -26,12 +27,24 @@ git\-istash \- Handle Git stashes without arbitrary limitations of the original 
 Use \fBgit istash\fR commands as a replacement for \fBgit stash\fR commands with the same names.
 .sp
 
-\fBgit istash push\fR:
+\fBgit istash create\fR, \fBgit istash snatch\fR, \fBgit istash save\fR and \fBgit istash push\fR:
 .RS 4
-This command creates a new stash entry containing files (specified by options and pathspecs). \
-These files are then reverted in the working directory (usually, depending on options).
+All of these commands create a new stash entry containing chosen files (specified by options and pathspecs). \
+They differ in whether they store the created stash and whether they delete the stashed changed from the working directory.
+.TS
+box;
+c | c | c
+r | l | l.
+Sub-command	Keeps the changes in WD	Stores the created stash
+=
+\fBcreate\fR	YES	NO
+\fBsnatch\fR	NO (can keep index)	NO
+\fBsave\fR	YES	YES
+\fBpush\fR	NO (can keep index)	YES
+.TE
 .br
-(This is mostly the same as the \fBgit stash push\fR, except for some corner cases and combinations of options.)
+(\fBgit istash create\fB and \fBgit istash push\fR are very close equivalents of their vanilla counterparts, except for some corner cases and support for various options. \
+\fBgit istash snatch\fR and \fBgit istash save\fR have no vanilla euqivalents - there are somewhere half way between \fBcreate\fR and \fBpush\fR.)
 .RE
 
 \fBgit istash apply\fR and \fBgit istash pop\fR:
@@ -50,6 +63,47 @@ Because of the multi-stage conflict resolution, \fIthe index saved to the stash 
 .SH COMMANDS
 
 .PP
+\fBcreate\fR [\-a\~|\~\-\-all] [\-\-allow\-empty] [\-l\~|\~\-\-leave\-staged] [(\-m\~|\~\-\-message)\~<\fImessage\fR>] [\-\-patch] [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<\fIfile\fR>] [\-S\~|\~\-\-staged] [\-u\~|\~\-\-[no\-]include\-untracked] [\-\-] [<\fIpathspec\fR>...]
+.RS 4
+Like \fBgit stash create\fR, except some minor differences and support for options.
+.br
+Every sensible combination of options is supported (including \fB\-\-all\fR in conjunction with \fB\-\-no\-include\-untracked\fR which results in adding ignored files but leaving non-ignored untracked ones). \
+The option \fB\-\-patch\fR works also with untracked files. \
+Failing to create a stash is much more reliable especially in the case when there is no files to stash. \
+(There is a new option \fB\-\-allow\-empty\fR to bypass that.) \
+Stashes can be created on orphan branches. \
+The pathspec affect stashed index too. \
+And finally, the options \fB\-\-patch\fR and \fB\-\-pathspec\-from\-file\fR are allowed together.
+.RE
+
+\fBsnatch\fR [\-a\~|\~\-\-all] [\-\-allow\-empty] [\-k\~|\~\-\-[no\-]keep\-index] [\-l\~|\~\-\-leave\-staged] [(\-m\~|\~\-\-message)\~<\fImessage\fR>] [\-\-patch] [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<\fIfile\fR>] [\-S\~|\~\-\-staged] [\-u\~|\~\-\-[no\-]include\-untracked] [\-\-] [<\fIpathspec\fR>...]
+.RS 4
+Same as \fBgit istash push\fR, except the created stash ISN'T STORED.
+.br
+Every sensible combination of options is supported (including \fB\-\-all\fR in conjunction with \fB\-\-no\-include\-untracked\fR which results in adding ignored files but leaving non-ignored untracked ones). \
+The option \fB\-\-patch\fR works also with untracked files. \
+Failing to create a stash is much more reliable especially in the case when there is no files to stash. \
+(There is a new option \fB\-\-allow\-empty\fR to bypass that.) \
+Stashes can be created on orphan branches. \
+The pathspec affect stashed index too. \
+And finally, the options \fB\-\-patch\fR and \fB\-\-pathspec\-from\-file\fR are allowed together.
+.RE
+
+.PP
+\fBsave\fR [\-a\~|\~\-\-all] [\-\-allow\-empty] [\-l\~|\~\-\-leave\-staged] [(\-m\~|\~\-\-message)\~<\fImessage\fR>] [\-\-patch] [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<\fIfile\fR>] [\-S\~|\~\-\-staged] [\-u\~|\~\-\-[no\-]include\-untracked] [\-\-] [<\fIpathspec\fR>...]
+.RS 4
+This ISN'T equivalent of \fBgit stash save\fR. \
+It's similar to \fBgit istash create\fR, except that the created stash is stored.
+.br
+Every sensible combination of options is supported (including \fB\-\-all\fR in conjunction with \fB\-\-no\-include\-untracked\fR which results in adding ignored files but leaving non-ignored untracked ones). \
+The option \fB\-\-patch\fR works also with untracked files. \
+Failing to create a stash is much more reliable especially in the case when there is no files to stash. \
+(There is a new option \fB\-\-allow\-empty\fR to bypass that.) \
+Stashes can be created on orphan branches. \
+The pathspec affect stashed index too. \
+And finally, the options \fB\-\-patch\fR and \fB\-\-pathspec\-from\-file\fR are allowed together.
+.RE
+
 \fBpush\fR [\-a\~|\~\-\-all] [\-\-allow\-empty] [\-k\~|\~\-\-[no\-]keep\-index] [\-l\~|\~\-\-leave\-staged] [(\-m\~|\~\-\-message)\~<\fImessage\fR>] [\-\-patch] [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<\fIfile\fR>] [\-S\~|\~\-\-staged] [\-u\~|\~\-\-[no\-]include\-untracked] [\-\-] [<\fIpathspec\fR>...]
 .RS 4
 Like \fBgit stash push\fR, except some minor differences.
