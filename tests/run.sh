@@ -20,6 +20,7 @@ print_help() {
 	printf '    -Q, --quieter\t- Don'\''t print summaries for known failures either.\n'
 	printf '    -r, --raw-name\t- Print paths to test files instead of prettified names.\n'
 	printf '    -s, --skip-at-fail\t- Don'\''t test other sets of parameters for a test when\n\t\t\t  one already failed. (Other tests still run.)\n'
+	printf '    -S, --stop-at-fail\t- Don'\''t start other tests after one has failed; exit as\n\t\t\t  soon as all currently running ones has finished.\n'
 	printf '    -v, --verbose\t- Show each set of parameters even of if passes.\n'
 	printf '\t--version\t- Print version information and exit.\n'
 	printf '\n'
@@ -414,14 +415,19 @@ run_tests() {
 				elif [ $? != '123' ]
 				then
 					printf '%s - failed\n' "$current_category"
+					if [ "$stop_on_error" = y ]
+					then
+						break
+					fi
 				fi
 			done
 		else
+			any_test_has_failed=n
 			running_tests_count=0
 			running_tests_data=''
 			while true
 			do
-				while [ $running_tests_count -ne "$jobs_num" ]
+				while [ $running_tests_count -ne "$jobs_num" ] && { [ "$stop_on_error" = n ] || [ "$any_test_has_failed" = n ] ; }
 				do
 					if ! read -r test_name
 					then
@@ -451,6 +457,7 @@ run_tests() {
 				elif [ "$(tail -n1 "$result_file")" != '123' ]
 				then
 					printf '%s - failed\n' "$current_category"
+					any_test_has_failed=y
 				fi
 				rm -f "$result_file"
 				running_tests_count=$((running_tests_count - 1))
@@ -541,8 +548,8 @@ print_summary() {
 	printf '\n'
 }
 
-getopt_short_options='c:dfhj:l:m:pqQrsv'
-getopt_long_options='color:,debug,failed,file-name,help,jobs:,limit:,meticulousness:,print-paths,quiet,quieter,raw,raw-name,stop-at-fail,skip-at-fail,stop-at-error,skip-at-error,stop-on-fail,skip-on-fail,stop-on-error,skip-on-error,verbose,version'
+getopt_short_options='c:dfhj:l:m:pqQrsSv'
+getopt_long_options='color:,debug,failed,file-name,help,jobs:,limit:,meticulousness:,print-paths,quiet,quieter,raw,raw-name,skip-at-fail,skip-at-error,skip-on-fail,skip-on-error,stop-at-fail,stop-at-error,stop-on-fail,stop-on-error,verbose,version'
 getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 only_failed=n
@@ -552,6 +559,7 @@ verbose_mode=n
 use_color='auto'
 raw_name=n
 skip_on_fail=n
+stop_on_error=n
 test_limit=0
 print_paths=n
 jobs_num=1
@@ -643,8 +651,11 @@ do
 	-r|--raw|--raw-name|--file-name)
 		raw_name=y
 		;;
-	-s|--stop-at-fail|--skip-at-fail|--stop-at-error|--skip-at-error|--stop-on-fail|--skip-on-fail|--stop-on-error|--skip-on-error)
+	-s|--skip-at-fail|--skip-at-error|--skip-on-fail|--skip-on-error)
 		skip_on_fail=y
+		;;
+	-S|--stop-at-fail|--stop-at-error|--stop-on-fail|--stop-on-error)
+		stop_on_error=y
 		;;
 	-v|--verbose)
 		verbose_mode=y
