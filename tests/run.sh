@@ -10,6 +10,7 @@ print_help() {
 	printf 'Options:\n'
 	printf '    -h, --help\t\t- Print this help message end exit.\n'
 	printf '    -c, --color=when\t- Set color mode (always / never / auto).\n'
+	printf '    -C, --check\t\t- Only check if all tests pass. (Equivalent to "-sSQ".)\n'
 	printf '    -d, --debug\t\t- Print outputs of all commands in run in the tests.\n'
 	printf '    -f, --failed\t- Rerun only the tests that failed the last time when\n\t\t\t  they were run. (Check the presence of the test dir.)\n'
 	printf '    -j, --jobs=N\t- Run N tests in parallel. (default is sequentially)\n\t\t\t  N=0 uses all available processing units. ("nproc")\n'
@@ -548,8 +549,8 @@ print_summary() {
 	printf '\n'
 }
 
-getopt_short_options='c:dfhj:l:m:pqQrsSv'
-getopt_long_options='color:,debug,failed,file-name,help,jobs:,limit:,meticulousness:,print-paths,quiet,quieter,raw,raw-name,skip-at-fail,skip-at-error,skip-on-fail,skip-on-error,stop-at-fail,stop-at-error,stop-on-fail,stop-on-error,verbose,version'
+getopt_short_options='c:Cdfhj:l:m:pqQrsSv'
+getopt_long_options='color:,check,debug,failed,file-name,help,jobs:,limit:,meticulousness:,print-paths,quiet,quieter,raw,raw-name,skip-at-fail,skip-at-error,skip-on-fail,skip-on-error,stop-at-fail,stop-at-error,stop-on-fail,stop-on-error,verbose,version'
 getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 only_failed=n
@@ -583,6 +584,10 @@ do
 			printf '"%s" is not a valid color setting. (always / never / auto)\n' "$1" 1>&2
 			exit 1
 		fi
+		;;
+	-C|--check)
+		shift
+		set -- '-C' '--skip-at-fail' '--stop-at-fail' '--quieter' "$@"
 		;;
 	-d|--debug)
 		debug_mode=y
