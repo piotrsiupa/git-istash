@@ -446,6 +446,13 @@ Files added with the flag \fB-N\fR / \fB--intend-to-add\fR are not supported. \
 .PP
 It is not possible to \fBapply\fR or \fBpop\fR stash on top of existing changes in the working copy. \
 All modified files need to be restored or stashed away before starting the process.
+.PP
+Not all actions present in the vanilla command are avaible here (e.g. \fBgit stash show\fR, \fBgit stash list\fR...).
+(However, most of the vanilla actions are fully or at least mostly compatible with stashes created by this commands.)
+.PP
+Because this command is written entirely in the shell script, it's slow.
+The advantage of this is that it can run on every system with very little additional development cost.
+(A few seconds to make a stash isn't that a big deal, so the command probably won't be rewritten to a faster language anytime soon.)
 
 .SH AUTHOR
 git\-istash was written by Piotr Siupa. (\fIpiotr.siupa+stash@gmail.com\fR)
