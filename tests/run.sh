@@ -16,7 +16,7 @@ print_help() {
 	printf '    -l, --limit=number\t- Set maximum number of tests to be run. (It pairs well\n\t\t\t  with "--failed" to e.g. rerun the first failed test.)\n'
 	printf '    -m, --meticulous=N\t- Set how many tests will be run. Allowed values are\n\t\t\t  0..5 (default=3). (See the section "Meticulousness".)\n'
 	printf '    -p, --print-paths\t- Instead of running tests, print their paths and exit.\n\t\t\t  (The paths are relative to the directory "tests".)\n'
-	printf '\t--progress\t- Show progress information during testing. (It uses the\n\t\t\t  multi-threaded code, which adds some overhead for\n\t\t\t  a single job run.) This is the default when both color\n\t\t\t  is enabled and there are multiple jobs.\n'
+	printf '\t--progress\t- Show progress information during testing. (It uses the\n\t\t\t  multi-threaded code, which adds some overhead for\n\t\t\t  a single job run.)\n\t\t\t  This is the default when color is enabled, the quiet\n\t\t\t  mode is disabled and there are multiple jobs.\n'
 	printf '\t--no-progress\t- Don'\''t show progress information. (See "--progress".)\n\t\t\t  This is useful to avoid outputting ANSI escape codes.\n'
 	printf '    -q, --quiet\t\t- Don'\''t print summaries for passed tests.\n'
 	printf '    -Q, --quieter\t- Don'\''t print summaries for known failures either.\n'
@@ -888,7 +888,7 @@ then
 fi
 if [ "$show_progress" = auto ]
 then
-	if [ "$use_color" = y ] && [ "$jobs_num" -gt 1 ]
+	if [ "$use_color" = y ] && [ "$jobs_num" -gt 1 ] && [ "$quiet_level" -eq 0 ]
 	then
 		show_progress=y
 	else
