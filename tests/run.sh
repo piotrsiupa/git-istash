@@ -110,8 +110,8 @@ create_test_dir() { # test_name [parameters_string]
 }
 
 find_tests() { # pattern
-	find . -mindepth 2 -maxdepth 2 -type f -name '*.sh' \
-	| sed -E 's;^\./(.*)\.sh$;\1;' \
+	./list.sh \
+	| sed -E 's/\.sh$//' \
 	| grep -E "$1" \
 	| while read -r test_name
 	do
@@ -120,7 +120,6 @@ find_tests() { # pattern
 			printf '%s\n' "$test_name"
 		fi
 	done \
-	| sort \
 	| if [ "$test_limit" -eq 0 ]
 	then
 		cat

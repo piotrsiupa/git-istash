@@ -24,7 +24,7 @@ list_files() {
 	find tests -maxdepth 1 -type f -name '*.sh' | sort
 	if [ "$skip_tests" = n ]
 	then
-		find tests -mindepth 2 -maxdepth 2 -type f -name '*.sh' | sort
+		tests/list.sh --relative
 	fi
 }
 
