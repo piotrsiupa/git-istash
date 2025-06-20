@@ -13,12 +13,22 @@ It is written (almost[^1]) entirely in POSIX (Portable Operating System Interfac
 `git istash` ("incredible stash") is an extension for `git stash`, compatible with stash entries created by it.
 Use `git istash` commands as a replacement for `git stash` commands with the same names.
 
-### `git istash push`
+### `git istash create`, `git istash snatch`, `git istash save` and `git istash push`
 
-This command creates a new stash, compatible with the standard Git stash format (except for some corner cases and exceptions in the vanilla command).
-It behaves almost the same as the standard `git stash push` but it can handle some additional situation (like creating a stash from an orphan branch),
+These commands create a new stash, compatible with the standard Git stash format (except for some corner cases and exceptions in the vanilla command).
+The `git istash push` behaves almost the same as the standard `git stash push` but it can handle some additional situation (like creating a stash from an orphan branch),
 it has a few additional options (e.g. for stashing only staged / unstaged files),
-and it's generally more reliable and predictable because it has no corner cases and / or exceptions.
+and it's generally more reliable and predictable because it has no corner cases and / or exceptions. \
+The three other commands differ from the `push` in whether they store the created stash in the stash ref and whether they revert the stashed changes from the working directory.
+`git istash create` works similarly to `git stash create` except it takes options.
+`git istash snatch` and `git istash save` don't have vanilla equivalents. (`git istash save` differs a lot from `git stash save`.)
+
+| Sub-command | Keeps the changes in WD | Stores the created stash |
+|-------------|-------------------------|--------------------------|
+|    `create` | YES                     | NO                       |
+|    `snatch` | NO (can keep index)     | NO                       |
+|      `save` | YES                     | YES                      |
+|      `push` | NO (can keep index)     | YES                      |
 
 ### `git istash apply` and `git istash pop`
 
@@ -29,6 +39,11 @@ In case of conflicts, instead of refusing and demanding to run it without `--ind
 After the conflicts are resolved, the commands can be resumed with `--continue`.
 Alternatively, `--abort` can be used to cancel the operation and return to the repository state before it started.  
 Because of the multi-stage conflict resolution, *the index saved to the stash entry will be preserved*.
+
+| Sub-command | Removes the stash from the stash ref |
+|-------------|--------------------------------------|
+|     `apply` | NO                                   |
+|       `pop` | YES (if it succeeded)                |
 
 
 
@@ -117,6 +132,8 @@ Most of the changes here, however, are bugs that were found during tests to be p
 - Files in index are affected by the pathspec now.
 - Stash can be created on an orphan branch now.
 - There is an option `--allow-empty` now, that allows creation of stash when there are no changes.
+- `git istash create` supports all the options that `git istash push` does.
+- There are two additional commands (`snatch` and `save`) that aren't present in the vanilla stash.
 
 
 
