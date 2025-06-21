@@ -14,7 +14,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'shellcheck wrapper script version 1.1.1\n'
+	printf 'shellcheck wrapper script version 1.1.2\n'
 }
 
 list_files() {
@@ -24,7 +24,7 @@ list_files() {
 	find tests -maxdepth 1 -type f -name '*.sh' | sort
 	if [ "$skip_tests" = n ]
 	then
-		find tests -mindepth 2 -maxdepth 2 -type f -name '*.sh' | sort
+		tests/list.sh --relative
 	fi
 }
 

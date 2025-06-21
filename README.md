@@ -34,6 +34,9 @@ Because of the multi-stage conflict resolution, *the index saved to the stash en
 
 ## Installation
 
+This command requires Git in version `2.42.0` or higher to be present.
+Otherwise, the installation will succeed but the command will refuse to run until the required version of Git is provided.
+
 ### Every OS except Windows
 
 To install `git istash` ("ingenious stash") for the current user only, run:
