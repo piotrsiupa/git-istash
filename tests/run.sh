@@ -531,12 +531,6 @@ run_tests() {
 	else
 		SED_CALL='sed'
 	fi
-	if sleep '0.2' 2>/dev/null
-	then
-		SLEEP_TIME='0.2'
-	else
-		SLEEP_TIME='1'
-	fi
 	esc_char="$(printf '\033')"
 	exec 5>&1
 	test_results="$(
@@ -612,7 +606,7 @@ run_tests() {
 					)"
 					if [ -z "$new_dead_children" ]
 					then
-						sleep "$SLEEP_TIME"
+						sleep 1
 					else
 						dead_children="$(printf '%s\n%s' "$dead_children" "$new_dead_children" | grep -vE '^$')"
 						new_dead_children_count="$(printf '%s\n' "$new_dead_children" | wc -l)"
