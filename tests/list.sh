@@ -65,7 +65,7 @@ fi
 
 cd "$(dirname "$0")"
 
-find . -mindepth 2 -maxdepth 2 -type f -name '*.sh' ! -path './remote-for-tests/*' | cut -c3- | sort \
+find . -mindepth 2 -maxdepth 2 -type f -name '*.sh' ! -path './remote-for-tests/*' ! -path './the-actual-git/*' | cut -c3- | sort \
 | {
 	non_essential_regex='(^|;)\s*non_essential_test\s*(;|$|#)'
 	if [ "$essential" = y ]
