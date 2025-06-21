@@ -12,9 +12,15 @@ print_help() {
 	printf 'If %i mayor version didn'\''t work the script\nstops.\n' "$subsequent_failed_version_limit"
 	printf 'The goal is to determine which versions of Git are supported by istash.\n'
 	printf '\n'
-	printf 'Usage: %s [-h | --help | -Q | --quick]\n' "$(basename "$0")"
+	printf 'Usage: %s [-h | --help | -Q | --quick | --version]\n' "$(basename "$0")"
 	printf 'Options:\n'
-	printf '    -Q, --quick\t- Use binary search to try to find the oldest supported version.\n'
+	printf '    -h, --help\t\t- Print this help message end exit.\n'
+	printf '    -Q, --quick\t\t- Use binary search to try to find the oldest supported\n\t\t\t  version of Git without thoroughly testing all of them.\n'
+	printf '\t--version\t- Print version information and exit.\n'
+}
+
+print_version() {
+	printf 'Git version checking script version 1.0.0\n'
 }
 
 prepare_git_repo() {
@@ -132,7 +138,7 @@ check_versions() {
 }
 
 getopt_short_options='hQ'
-getopt_long_options='help,quickie'
+getopt_long_options='help,quickie,version'
 getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 quickie=n
@@ -145,6 +151,10 @@ do
 		;;
 	-Q|--quickie)
 		quickie=y
+		;;
+	--version)
+		print_version
+		exit 0
 		;;
 	--)
 		shift
