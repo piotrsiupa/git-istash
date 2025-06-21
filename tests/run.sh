@@ -143,13 +143,13 @@ get_test_display_name() { # raw_name
 format_time() { # seconds
 	if [ "$1" -ge 3600 ]
 	then
-		printf '%ih' $(($1 / 3600))
-	fi
-	if [ "$1" -ge 60 ]
+		printf '%ih%02im%02is' $(($1 / 3600)) $(($1 % 3600 / 60)) $(($1 % 60))
+	elif [ "$1" -ge 60 ]
 	then
-		printf '%im' $(($1 % 3600 / 60))
+		printf '%im%02is' $(($1 % 3600 / 60)) $(($1 % 60))
+	else
+		printf '%is' $(($1 % 60))
 	fi
-	printf '%is' $(($1 % 60))
 }
 
 do_run_test() { # test_name
