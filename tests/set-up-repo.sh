@@ -30,6 +30,7 @@ git config --local user.name 'test'
 
 git commit --allow-empty -m 'Initial commit'
 
+mkdir -p .git/info
 printf 'ignored?\n' >>.git/info/exclude
 printf 'ignored0\n' >ignored0
 printf 'ignored1\n' >ignored1
