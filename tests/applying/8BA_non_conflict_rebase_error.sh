@@ -21,6 +21,7 @@ git commit -am 'Changed aaa'
 SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
+mkdir -p .git/hooks
 printf '#!/usr/bin/env sh\nexit 1\n' >.git/hooks/pre-rebase
 chmod +x .git/hooks/pre-rebase
 correct_head_hash="$(get_head_hash_HT)"

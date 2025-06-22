@@ -8,6 +8,7 @@ PARAMETRIZE_APPLY_OPERATION
 __test_section__ 'Prepare repository'
 rm -rf .git
 git init
+mkdir -p .git/info
 printf 'ignored?\0n' >>.git/info/exclude
 
 SWITCH_HEAD_TYPE

@@ -2,6 +2,8 @@
 
 set -e
 
+min_git_version='2.42.0'
+
 print_help() {
 	printf 'git istash - Improved version of "git stash" that can handle more corner cases.\n'
 	printf '    (See "--help" of individual sub-commands.)\n'
@@ -18,13 +20,17 @@ print_help() {
 	printf '\n'
 	printf 'Sub-commands:\n'
 	printf '\tapply\t- Analog to "git stash apply --index".\n'
+	printf '\tcreate\t- Analog to "git stash create" (but with options).\n'
 	printf '\tpop\t- Analog to "git stash pop --index".\n'
 	printf '\tpush\t- Analog to "git stash push".\n'
+	printf '\tsave\t- Same as "git istash create" except it stores the stash.\n'
+	printf '\tsnatch\t- Same as "git istash push" except it doesn'\''t store the stash.\n'
 }
 
 print_version() {
-	printf 'git-istash version 1.1.2\n'
+	printf 'git-istash version 1.2.0\n'
 	printf 'Author: Piotr Siupa\n'
+	printf 'Requires Git in version at least %s\n' "$min_git_version"
 }
 
 run_subcommand() { # subcommand [arguments...]
@@ -84,6 +90,13 @@ elif [ "$1" = '--version' ] || [ "$2" = '--version' ]
 then
 	print_version
 	exit 0
+fi
+
+git_version="$(git --version | head -n 1 | grep -Eo '\<\S+$')"
+if ! printf '%s' "$git_version" | grep -Exq '2\.(4[2-9]|[5-9][0-9]|[0-9]{3,})(\..+)?'
+then
+	printf 'fatal: the current Git version (%s) is less than minimum required (%s)\n' "$git_version" "$min_git_version" 1>&2
+	exit 1
 fi
 
 if [ $# -eq 0 ] || printf '%s' "$1" | grep -Eq '^-'

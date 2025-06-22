@@ -1,4 +1,5 @@
 /share/man
-/tests/results.txt
-/tests/*/t_dir_*
 /tests/remote-for-tests
+/tests/results.txt
+/tests/the-actual-git
+/tests/*/t_dir_*
