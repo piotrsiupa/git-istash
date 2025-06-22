@@ -557,6 +557,7 @@ run_tests() {
 			alive_children=''
 			finalizing_tests_count=0
 			done_tests_count=0
+			output_buffer_file="$(mktemp)"
 			while true
 			do
 				while [ $running_tests_count -ne "$jobs_num" ] && { [ "$stop_on_error" = n ] || [ "$any_test_has_failed" = n ] ; }
@@ -575,13 +576,13 @@ run_tests() {
 				then
 					break
 				fi
-				update_current_category "$(printf '%s\n' "$running_tests_data" | head -n1 | cut -d' ' -f3)"
+				update_current_category "$(printf '%s\n' "$running_tests_data" | head -n1 | cut -d' ' -f3)" 5>>"$output_buffer_file"
 				test_display_name="$(get_test_display_name "$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f3)")"
 				if [ "$show_progress" = y ]
 				then
-					printf 'PENDNG - %s (?/?) \n' "$test_display_name" 1>&5
-					print_progress "$total_test_count" "$running_tests_count" "$finalizing_tests_count" "$done_tests_count" "$alive_children" 1>&5
-				fi
+					printf 'PENDNG - %s (?/?) \n' "$test_display_name"
+					print_progress "$total_test_count" "$running_tests_count" "$finalizing_tests_count" "$done_tests_count" "$alive_children"
+				fi 1>>"$output_buffer_file"
 				pending_test_start_time="$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f4)"
 				while true
 				do
@@ -592,7 +593,9 @@ run_tests() {
 						format_time $(($(date '+%s') - pending_test_start_time))
 						printf_color_code '\033[22m'
 						printf '\033[3E'
-					fi 1>&5
+					fi 1>>"$output_buffer_file"
+					cat "$output_buffer_file" 1>&5
+					: >"$output_buffer_file"
 					new_dead_children="$(
 						printf '%s\n' "$alive_children" \
 						| while read -r pid
@@ -617,8 +620,8 @@ run_tests() {
 				done
 				if [ "$show_progress" = y ]
 				then
-					printf '\033[3A\033[0J' 1>&5
-				fi
+					printf '\033[3A\033[0J'
+				fi 1>>"$output_buffer_file"
 				while printf '%s' "$dead_children" | grep -qEx "$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f1)"
 				do
 					result_file="$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f2)"
@@ -627,9 +630,11 @@ run_tests() {
 					do
 						if printf '%s' "$line" | grep -qE '^\t'
 						then
+							cat "$output_buffer_file" 1>&5
+							: >"$output_buffer_file"
 							printf '%s\n' "$line" 1>&2
 						else
-							printf '%s\n' "$line" 1>&5
+							printf '%s\n' "$line" 1>>"$output_buffer_file"
 						fi
 					done
 					if [ "$(tail -n1 "$result_file")" = '0' ]
@@ -647,11 +652,13 @@ run_tests() {
 					running_tests_data="$(printf '%s\n' "$running_tests_data" | tail -n+2)"
 					if [ -n "$running_tests_data" ]
 					then
-						update_current_category "$(printf '%s\n' "$running_tests_data" | head -n1 | cut -d' ' -f3)"
+						update_current_category "$(printf '%s\n' "$running_tests_data" | head -n1 | cut -d' ' -f3)" 5>>"$output_buffer_file"
 					fi
 				done
 			done
-			update_current_category ''
+			update_current_category '' 5>>"$output_buffer_file"
+			cat "$output_buffer_file" 1>&5
+			rm -f "$output_buffer_file"
 		fi \
 		| sort | uniq -c | sed -E 's/^.* - time = ([0-9]+)$/\1/' | awk '{print $1 - 1}'
 	)"
