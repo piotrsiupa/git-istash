@@ -20,7 +20,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'Git version checking script version 1.0.0\n'
+	printf 'Git version checking script version 1.0.1\n'
 }
 
 prepare_git_repo() {
@@ -98,10 +98,11 @@ check_versions_one_by_one() {
 check_versions_binary_search() {
 	versions="$(get_all_versions '')"
 	versions_num="$(printf '%s\n' "$versions" | wc -l)"
+	last_is_tested=0
 	while true
 	do
-		printf 'Remaining versions: %i (expected steps: %i)...\n' "$versions_num" "$(printf '(l(%i) / l(2)) + 1\n' "$versions_num" | bc -l | sed 's/\..*$//')"
-		middle=$(((versions_num + 1) / 2))
+		printf 'Remaining versions: %i (expected steps: %i)...\n' "$((versions_num - last_is_tested))" "$(printf '(l(%i) / l(2)) + 1\n' "$((versions_num - last_is_tested))" | bc -l | sed 's/\..*$//')"
+		middle=$(((versions_num - last_is_tested + 1) / 2))
 		version="$(printf '%s\n' "$versions" | tail -n "+$middle" | head -n 1)"
 		if check_version "$meticulousness"
 		then
@@ -111,10 +112,11 @@ check_versions_binary_search() {
 			then
 				break
 			fi
+			last_is_tested=1
 		else
 			versions="$(printf '%s\n' "$versions" | tail -n "+$((middle + 1))")"
 			versions_num=$((versions_num - middle))
-			if [ "$versions_num" -eq 0 ]
+			if [ "$versions_num" -eq 0 ] || { [ "$versions_num" -eq 1 ] && [ "$last_is_tested" -eq 1 ] ; }
 			then
 				break
 			fi

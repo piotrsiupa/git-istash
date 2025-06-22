@@ -5,9 +5,10 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
+PARAMETRIZE_CREATE_OPERATION
 PARAMETRIZE_ALL 'DEFAULT'
 PARAMETRIZE_UNTRACKED 'YES'
-PARAMETRIZE_KEEP_INDEX
+PARAMETRIZE_KEEP_INDEX 'DEFAULT'
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_PATHSPEC_STYLE 'STDIN' 'NULL-STDIN'
@@ -30,7 +31,7 @@ git commit -m 'Added a bunch of files'
 correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
-__test_section__ 'Create stash'
+__test_section__ "$CAP_CREATE_OPERATION stash"
 printf 'yyy\nxxx\nxxx\nyyy\n' >aaa0
 printf 'yyy\nxxx\nxxx\nyyy\n' >aaa1
 printf 'yyy\nxxx\nxxx\nyyy\n' >bbb2
@@ -48,8 +49,8 @@ rm bbb2 ddd7
 printf 'y s y n s n y n y n ' | tr ' ' '\n' >.git/patchspec_for_test
 printf 'aaa0 bbb? *5 ./?dd* fff1? ' | PREPARE_PATHSPEC_FILE
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash push $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'a very controlled stash' --patch $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/patchspec_for_test
-assert_files_H '
+assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'a very controlled stash' --patch $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/patchspec_for_test
+assert_files_HT '
 M  aaa0		yyy\nxxx\nxxx\nyyy
  M aaa1		yyy\nxxx\nxxx\nyyy	xxx\nxxx
 MD bbb2		yyy\nxxx\nxxx\nyyy
@@ -66,10 +67,10 @@ M  eee8		yyy\nxxx\nxxx\nyyy
 !! ignored1	ignored1
 '
 assert_stash_count 0
-assert_log_length_H 2
+assert_log_length_HT 2
 assert_branch_count 1
-assert_head_hash_H "$correct_head_hash"
-assert_head_name_H
+assert_head_hash_HT "$correct_head_hash"
+assert_head_name_HT
 assert_rebase n
-assert_branch_metadata_H
+assert_branch_metadata_HT
 assert_dotgit_contents

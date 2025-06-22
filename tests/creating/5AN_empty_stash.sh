@@ -3,8 +3,9 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
+PARAMETRIZE_CREATE_OPERATION
 PARAMETRIZE_ALL
-PARAMETRIZE_UNTRACKED
+PARAMETRIZE_UNTRACKED 'DEFAULT'
 PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_STAGED
 PARAMETRIZE_UNSTAGED
@@ -13,16 +14,16 @@ correct_head_hash="$(get_head_hash)"
 SWITCH_HEAD_TYPE
 
 rm -f 'ignored0' 'ignored1'
-__test_section__ 'Create stash'
+__test_section__ "$CAP_CREATE_OPERATION stash"
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash push $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'empty stash' $ALL_FLAGS $UNTRACKED_FLAGS
-assert_files_H '
+assert_exit_code 1 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'empty stash' $ALL_FLAGS $UNTRACKED_FLAGS
+assert_files_HT '
 '
 assert_stash_count 0
-assert_log_length_H 1
+assert_log_length_HT 1
 assert_branch_count 1
-assert_head_hash_H "$correct_head_hash"
-assert_head_name_H
+assert_head_hash_HT "$correct_head_hash"
+assert_head_name_HT
 assert_rebase n
-assert_branch_metadata_H
+assert_branch_metadata_HT
 assert_dotgit_contents
