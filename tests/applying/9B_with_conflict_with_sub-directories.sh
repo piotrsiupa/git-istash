@@ -80,18 +80,15 @@ assert_files_HT '
 UU aaa		eee0|ccc0
 UU xxx/aaa	eee1|ccc1
 UU yyy/aaa	eee2|ccc2
-AA zzz		yyy0|zzz0
-AA xxx/zzz	yyy1|zzz1
-AA yyy/zzz	yyy2|zzz2
+   zzz		yyy0
+   xxx/zzz	yyy1
+   yyy/zzz	yyy2
 !! ignored0	ignored0
 !! ignored1	ignored1
 ' '
 UU aaa		eee0|ccc0
 UU xxx/aaa	eee1|ccc1
 UU yyy/aaa	eee2|ccc2
-A  zzz		zzz0
-A  xxx/zzz	zzz1
-A  yyy/zzz	zzz2
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
@@ -105,10 +102,35 @@ __test_section__ "Continue $APPLY_OPERATION stash (1)"
 printf 'fff0\n' >aaa
 printf 'fff1\n' >xxx/aaa
 printf 'fff2\n' >yyy/aaa
-printf 'xxx0\n' >zzz
-printf 'xxx1\n' >xxx/zzz
-printf 'xxx2\n' >yyy/zzz
-git add aaa xxx/aaa yyy/aaa zzz xxx/zzz yyy/zzz
+git add aaa xxx/aaa yyy/aaa
+if [ "$HEAD_TYPE" != 'ORPHAN' ]
+then
+	cd xxx
+	assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION" --continue
+	cd -
+	assert_conflict_message
+	assert_files '
+	   aaa		fff0
+	   xxx/aaa	fff1
+	   yyy/aaa	fff2
+	AA zzz		yyy0|zzz0
+	AA xxx/zzz	yyy1|zzz1
+	AA yyy/zzz	yyy2|zzz2
+	!! ignored0	ignored0
+	!! ignored1	ignored1
+	'
+	assert_stash_count 1
+	assert_branch_count_HT 1
+	assert_data_files "$APPLY_OPERATION"
+	assert_rebase y
+	assert_dotgit_contents_for "$APPLY_OPERATION"
+	
+	__test_section__ "Continue $APPLY_OPERATION stash (2)"
+	printf 'xxx0\n' >zzz
+	printf 'xxx1\n' >xxx/zzz
+	printf 'xxx2\n' >yyy/zzz
+	git add zzz xxx/zzz yyy/zzz
+fi
 cd xxx
 assert_exit_code 0 git istash "$APPLY_OPERATION" --continue
 cd -
@@ -125,9 +147,9 @@ MM yyy/aaa	fff2	eee2
 AM aaa		fff0	eee0
 AM xxx/aaa	fff1	eee1
 AM yyy/aaa	fff2	eee2
-?? zzz		xxx0
-?? xxx/zzz	xxx1
-?? yyy/zzz	xxx2
+?? zzz		zzz0
+?? xxx/zzz	zzz1
+?? yyy/zzz	zzz2
 !! ignored0	ignored0
 !! ignored1	ignored1
 '

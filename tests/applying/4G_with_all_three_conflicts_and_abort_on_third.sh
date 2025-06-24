@@ -39,7 +39,7 @@ assert_data_files "$APPLY_OPERATION"
 assert_rebase y
 assert_dotgit_contents_for "$APPLY_OPERATION"
 
-__test_section__ "Continue $APPLY_OPERATION stash"
+__test_section__ "Continue $APPLY_OPERATION stash (0)"
 printf 'eee\n' >aaa
 git add aaa
 assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION" --continue
@@ -47,6 +47,23 @@ assert_conflict_message
 assert_files_HT '
 UU aaa		eee|ccc
    zzz		yyy
+!! ignored0	ignored0
+!! ignored1	ignored1
+'
+assert_stash_count 1
+assert_branch_count_HT 1
+assert_data_files "$APPLY_OPERATION"
+assert_rebase y
+assert_dotgit_contents_for "$APPLY_OPERATION"
+
+__test_section__ "Continue $APPLY_OPERATION stash (1)"
+printf 'fff\n' >aaa
+git add aaa
+assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION" --continue
+assert_conflict_message
+assert_files_HT '
+   aaa		fff
+AA zzz		yyy|zzz
 !! ignored0	ignored0
 !! ignored1	ignored1
 '

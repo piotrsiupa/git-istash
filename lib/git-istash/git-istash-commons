@@ -179,7 +179,7 @@ find_current_branch() {
 }
 
 are_there_conflicts() {
-	git status --porcelain | grep -qE '^.U|^U.'
+	git status --porcelain | grep -qE '^(.U|U.|AA) '
 }
 
 parse_git_bool() { # boolean_to_parse

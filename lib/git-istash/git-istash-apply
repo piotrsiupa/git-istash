@@ -82,20 +82,20 @@ end_with_rebase_problem() {
 }
 end_with_success() {
 	other_changes_hash="$(git rev-parse HEAD)"
-	staged_changes_hash="$(git rev-parse HEAD~)"
-	if [ "$curr_branch_type" != 'orphan' ] && [ "$(git rev-parse HEAD~2)" != "$(git rev-parse "$current_branch")" ]
+	staged_changes_hash="$(git rev-parse HEAD~2)"
+	if [ "$curr_branch_type" != 'orphan' ] && [ "$(git rev-parse HEAD~3)" != "$(git rev-parse "$current_branch")" ]
 	then
 		printf 'fatal: HEAD is not in correct position after rebasing.\n' 1>&2
 		return 1
 	fi
 	case "$curr_branch_type" in
 		orphan)
-			if [ "$(git rev-list --no-walk --count HEAD~2^@)" -ne 0 ]
+			if [ "$(git rev-list --no-walk --count HEAD~3^@)" -ne 0 ]
 			then
 				printf 'fatal: Target branch is not an orphan anymore.\n' 1>&2
 				return 1
 			fi
-			if [ -n "$(git ls-tree -r --name-only HEAD~2)" ]
+			if [ -n "$(git ls-tree -r --name-only HEAD~3)" ]
 			then
 				printf 'fatal: The empty commit created for the command is not empty.\n' 1>&2
 				return 1
@@ -107,7 +107,7 @@ end_with_success() {
 			git switch "$current_branch"
 			;;
 		detached)
-			git switch -d HEAD~2
+			git switch -d HEAD~3
 			;;
 	esac
 	git restore --source="$staged_changes_hash" -- . || true
@@ -178,14 +178,16 @@ check_data_files() { # resume
 untangle_git_stash() {
 	stash_commit="$(get_stash_commit "$stash")"
 	git switch --detach "$stash_commit^2"
-	git merge --ff-only --squash "$stash_commit"
+	git reset --hard "$(git commit-tree -p 'HEAD' -m "$(git log --format=%B --max-count=1 "$stash_commit")" "$stash_commit^{tree}")"
 	if git rev-parse "$stash_commit^3" 1>/dev/null 2>&1
 	then
 		git ls-tree -r --name-only "$stash_commit^3" -z \
 		| xargs -r0 -- git --literal-pathspecs restore --source="$stash_commit^3" --
 		git add .
+		git commit --no-edit --no-verify --allow-empty --message="$(git log --format=%B --max-count=1 "$stash_commit^3")"
+	else
+		git commit --no-edit --no-verify --allow-empty --message 'There are no untracked files'
 	fi
-	git commit --no-edit --no-verify --allow-empty
 }
 
 do_start() { # args...
@@ -202,7 +204,7 @@ do_start() { # args...
 		git commit --allow-empty --message 'Temporary commit by "git-stash"'
 	fi
 	untangle_git_stash
-	if git rebase --onto "$current_branch" "HEAD~2" "HEAD" --empty=keep --keep-empty
+	if git rebase --onto "$current_branch" "HEAD~3" "HEAD" --empty=keep --keep-empty
 	then
 		end_with_success
 	elif are_there_conflicts
