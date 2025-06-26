@@ -18,18 +18,6 @@ assert_exit_code() { # expected_code command [arguments...]
 	unset exit_code_for_assert
 }
 
-#shellcheck disable=SC2120
-assert_conflict_message() {
-	#shellcheck disable=SC2154
-	eval set -- "$last_command"
-	#shellcheck disable=SC2154
-	test "$(printf '%s' "$stderr" | tail -n4)" = "
-hint: Disregard all hints above about using \"git rebase\".
-hint: Use \"$1 $2 $3 --continue\" after fixing conflicts.
-hint: To abort and get back to the state before \"$1 $2 $3\", run \"$1 $2 $3 --abort\"." ||
-		fail 'Command %s didn'\''t print the correct conflict message!\n' "$(command_to_string "$@")"
-}
-
 _convert_zero_separated_path_list() {
 	if command -v od 1>/dev/null 2>&1
 	then
