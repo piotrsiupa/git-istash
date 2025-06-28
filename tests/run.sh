@@ -141,17 +141,41 @@ get_test_display_name() { # raw_name
 	fi
 }
 
-format_time() { # seconds
-	if [ "$1" -ge 3600 ]
+if date '+%N' 1>/dev/null 2>&1 && [ "$(date '+%N')" -ge 0 ] 2>/dev/null && [ "$(date '+%N' | tr -d '\n' | wc -c)" -eq 9 ]
+then
+	milli_timestamp=y
+	get_timestamp() {
+		date '+%s%N' | sed -E 's/......$//'
+	}
+else
+	milli_timestamp=n
+	get_timestamp() {
+		date '+%s'
+	}
+fi
+
+format_time() ( # seconds
+	seconds="$1"
+	if [ "$milli_timestamp" = y ]
 	then
-		printf '%ih%02im%02is' $(($1 / 3600)) $(($1 % 3600 / 60)) $(($1 % 60))
-	elif [ "$1" -ge 60 ]
-	then
-		printf '%im%02is' $(($1 % 3600 / 60)) $(($1 % 60))
-	else
-		printf '%is' $(($1 % 60))
+		milliseconds="$(printf '%s' "$seconds" | sed -E 's/^.*(...)$/\1/')"
+		seconds=$((seconds / 1000))
 	fi
-}
+	if [ "$seconds" -ge 3600 ]
+	then
+		printf '%ih%02im%02i' $((seconds / 3600)) $((seconds % 3600 / 60)) $((seconds % 60))
+	elif [ "$seconds" -ge 60 ]
+	then
+		printf '%im%02i' $((seconds % 3600 / 60)) $((seconds % 60))
+	else
+		printf '%i' $((seconds % 60))
+	fi
+	if [ "$milli_timestamp" = y ]
+	then
+		printf '.%s' "$milliseconds"
+	fi
+	printf 's'
+)
 
 do_run_test() { # test_name
 	exec 3>&4
@@ -282,7 +306,7 @@ print_test_result() {
 }
 
 run_test() ( # test_name
-	test_start_time="$(date '+%s')"
+	test_start_time="$(get_timestamp)"
 	test_count=0
 	failed_count=0
 	error_count=0
@@ -299,11 +323,11 @@ run_test() ( # test_name
 		ROTATE_PARAMETER=y
 		export ROTATE_PARAMETER
 		exec 4>"$output_file"
-		test_run_start_time="$(date '+%s')"
+		test_run_start_time="$(get_timestamp)"
 		test_result="$(
 			do_run_test "$1"
 		)"
-		test_run_end_time="$(date '+%s')"
+		test_run_end_time="$(get_timestamp)"
 		exec 4>&-
 		if ! printf '%s\n' "$test_result" | grep -qE '^\?'
 		then
@@ -374,7 +398,7 @@ run_test() ( # test_name
 		fi
 	done
 	rmdir "$(get_test_dir "$1")" 2>/dev/null || true
-	test_end_time="$(date '+%s')"
+	test_end_time="$(get_timestamp)"
 	if [ "$i" != x ]
 	then
 		failed_count=$((failed_count + 1))
@@ -416,7 +440,7 @@ update_current_category() { # test_name
 	then
 		if [ -n "$previous_category" ]
 		then
-			category_end_time="$(date '+%s')"
+			category_end_time="$(get_timestamp)"
 			printf '%s - time = %i\n' "$previous_category" $((category_end_time - category_start_time + 1))
 			category_start_time="$category_end_time"
 		fi
@@ -529,7 +553,7 @@ run_tests() {
 	exec 5>&1
 	test_results="$(
 		previous_category=''
-		category_start_time="$(date '+%s')"
+		category_start_time="$(get_timestamp)"
 		total_test_count="$(printf '%s\n' "$tests" | wc -l)"
 		printf '%s\n' "$tests" \
 		| if [ "$jobs_num" -eq 1 ] && [ "$show_progress" = n ]
@@ -569,7 +593,7 @@ run_tests() {
 					result_file="$(mktemp)"
 					{ run_test "$test_name" && printf '0\n' || printf '%i\n' $? ; } 1>"$result_file" 2>&1 &
 					running_tests_count=$((running_tests_count + 1))
-					running_tests_data="$(printf '%s\n%i %s %s %s' "$running_tests_data" $! "$result_file" "$test_name" "$(date '+%s')" | grep -vE '^$')"
+					running_tests_data="$(printf '%s\n%i %s %s %s' "$running_tests_data" $! "$result_file" "$test_name" "$(get_timestamp)" | grep -vE '^$')"
 					alive_children="$(printf '%s\n%i' "$alive_children" $! | grep -vE '^$')"
 				done
 				if [ $running_tests_count -eq 0 ]
@@ -590,7 +614,7 @@ run_tests() {
 					then
 						printf '\033[3A\033[%iC' $((${#test_display_name} + 16))
 						printf_color_code '\033[2m'
-						format_time $(($(date '+%s') - pending_test_start_time))
+						format_time $(($(get_timestamp) - pending_test_start_time))
 						printf_color_code '\033[22m'
 						printf '\033[3E'
 					fi 1>>"$output_buffer_file"
@@ -957,9 +981,9 @@ PATH="$(pwd):$PATH"
 cd "$OLDPWD"
 export PATH
 create_test_remote
-total_time_start="$(date '+%s')"
+total_time_start="$(get_timestamp)"
 run_tests
-total_time_end="$(date '+%s')"
+total_time_end="$(get_timestamp)"
 print_summary
 if [ "$passed_tests" -eq "$total_tests" ]
 then
