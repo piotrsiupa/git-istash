@@ -326,7 +326,17 @@ show_tasks() {
 	installed_bin_path="$(make_target_path 'bin/git-istash')"
 	if [ -e "$installed_bin_path" ]
 	then
-		printf 'There is already "git-istash" in the chosen location.\nIt will be replaced. (%s -> %s)\n' "$(get_istash_version "$installed_bin_path")" "$(get_istash_version 'bin/git-istash')"
+		old_version="$(get_istash_version "$installed_bin_path")"
+		new_version="$(get_istash_version 'bin/git-istash')"
+		printf 'There is already "git-istash" in the chosen location.\nIt will be replaced. (%s -> %s)\n' "$old_version" "$new_version"
+		short_old_version="$(printf '%s' "$old_version" | sed -E 's/^([0-9]+\.[0-9]+)\..*$/\1/')"
+		short_new_version="$(printf '%s' "$new_version" | sed -E 's/^([0-9]+\.[0-9]+)\..*$/\1/')"
+		if [ "$short_old_version" != "$short_new_version" ]
+		then
+			printf 'WARNING: '
+			printf 'This version may not be compatible with the operations started in the old one.\n'
+			printf 'Make sure to finalize or abort all "apply" / "pop" operations in progress, before continuing.\n'
+		fi
 	else
 		printf 'No existing "git-istash" has been found in the chosen location.\nThe version %s will be installed.\n' "$(get_istash_version 'bin/git-istash')"
 	fi
