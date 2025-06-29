@@ -51,6 +51,7 @@ Because of the multi-stage conflict resolution, *the index saved to the stash en
 
 This command requires Git in version `2.42.0` or higher to be present.
 Otherwise, the installation will succeed but the command will refuse to run until the required version of Git is provided.
+(Except for Windows, which needs Git to run the installer, because it uses the shell implementation provided by git.)
 
 ### Every OS except Windows
 
