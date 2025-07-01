@@ -17,6 +17,15 @@ There are also filtering and formatting options.
 A script that checks all the scripts in the projects (including the tests), using `shellcheck`.
 (For more information, run `shellcheck.sh --help`.)
 
+## `check-git-versions.sh`
+
+A script that runs the test suite with different versions of Git to determine which ones are supported by `istash`.
+
+## `vanillise-tests.sh`
+
+A simple script that modifies tests to use `git stash` in place of `git istash`.
+(Just to see how many of them still passes.)
+
 ## `list.sh`
 A helper script that just prints the list of tests and allows filtering for essential / no-essential tests.
 (It's useful mostly to check if tests were correctly marked as non-essential.)
@@ -27,7 +36,7 @@ A helper file with utility functions for implementing tests.
 This script is **not** intended to be used outside of tests.
 It should be sourced at the beginning of each test file.
 
-### All other scripts
+### All the remaining scripts
 
 At some point `commons.sh` has got too long and it was split into multiple files.
 They are sourced by `commons.sh` and they should be considered part of it.
