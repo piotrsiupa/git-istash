@@ -458,11 +458,7 @@ update_current_category() { # test_name
 	fi
 }
 print_progress() { # total_count running_count finalizing_count done_count alive_children_pids
-	printf '(Remaining tests: Waiting - %i, Running - %i' "$(($1 - $2 - $3 - $4))" "$2"
-	printf_color_code '\033[2m'
-	printf ' (%s)' "$(printf '%s' "$5" | tr '\n' ',' | sed -E -e 's/^([0-9]+,).*$/\1.../' -e 's/,/, /g')"
-	printf_color_code '\033[22m'
-	printf ', Finalizing - %i)\n' "$3"
+	printf '(Progress: Waiting - %i, Running - %i, Finalizing - %i, Done - %i)\n' "$(($1 - $2 - $3 - $4))" "$2" "$3" "$4"
 	done_bar_lenght=$(($4 * 78 / $1))
 	done_bar_lenght=$((done_bar_lenght + (done_bar_lenght == 0 && $4 != 0)))
 	finalizing_bar_lenght=$(($3 * 78 / $1))
