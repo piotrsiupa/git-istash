@@ -68,7 +68,7 @@ print_centered() { # text character
 }
 
 check_system() {
-	if echo 'test' >'file with "\" in name'
+	if printf 'test\n' >'file with "\" in name'
 	then
 		rm 'file with "\" in name'
 		limited_file_system=n
