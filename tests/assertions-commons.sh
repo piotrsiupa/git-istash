@@ -138,27 +138,27 @@ assert_files() { # expected_files (see one of the tests as an example)
 			if printf '%s' "$line" | grep -qE '^(. ) '
 			then
 				assert_file_contents \
-					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}')" \
-					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}')" \
-					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}')"
+					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}' | sed -E 's/<empty>//')" \
+					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}' | sed -E 's/<empty>//')" \
+					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}' | sed -E 's/<empty>//')"
 			elif printf '%s' "$line" | grep -qE '^(.D) '
 			then
 				assert_file_contents \
-					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}')" \
+					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}' | sed -E 's/<empty>//')" \
 					'' \
-					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}')"
+					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}' | sed -E 's/<empty>//')"
 			else
 				assert_file_contents \
-					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}')" \
-					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}')"
+					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}' | sed -E 's/<empty>//')" \
+					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}' | sed -E 's/<empty>//')"
 			fi
 		else
 			test "$(printf '%s' "$stripped_line" | awk '{printf NF}')" -eq 3 ||
 				fail 'Error in test: the file "%s" should have 2 versions of content to check!\n' "$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}')"
 			assert_file_contents \
-				"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}')" \
-				"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}')" \
-				"$(printf '%s' "$stripped_line" | awk '{printf "%s", $3}')"
+				"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}' | sed -E 's/<empty>//')" \
+				"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}' | sed -E 's/<empty>//')" \
+				"$(printf '%s' "$stripped_line" | awk '{printf "%s", $3}' | sed -E 's/<empty>//')"
 		fi
 	done
 }

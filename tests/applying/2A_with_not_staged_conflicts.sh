@@ -48,7 +48,7 @@ assert_files_HT '
 !! ignored0	ignored0
 !! ignored1	ignored1
 ' '
-?? aaa		eee
+ A aaa		eee
 !! ignored0	ignored0
 !! ignored1	ignored1
 '

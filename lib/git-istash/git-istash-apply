@@ -81,7 +81,8 @@ end_with_rebase_problem() {
 	return 2
 }
 end_with_success() {
-	other_changes_hash="$(git rev-parse HEAD)"
+	untracked_changes_hash="$(git rev-parse HEAD~0)"
+	non_staged_changes_hash="$(git rev-parse HEAD~1)"
 	staged_changes_hash="$(git rev-parse HEAD~2)"
 	if [ "$curr_branch_type" != 'orphan' ] && [ "$(git rev-parse HEAD~3)" != "$(git rev-parse "$current_branch")" ]
 	then
@@ -112,7 +113,9 @@ end_with_success() {
 	esac
 	git restore --source="$staged_changes_hash" -- . || true
 	git add -- .
-	git restore --source="$other_changes_hash" -- . || true
+	git restore --source="$untracked_changes_hash" -- . || true
+	git --no-literal-pathspecs ls-tree -r --name-only "$non_staged_changes_hash" -z :/ \
+	| xargs -r0 -- git --literal-pathspecs add --intent-to-add --
 	delete_data
 	printf '\nSuccessfully applied the stash\n'
 }

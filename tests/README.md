@@ -57,7 +57,8 @@ To run a test, use the script `run.sh` which will create and initialize a new Gi
 The current test categories are:
 - [`main`](./main/README.md) - it covers scenarios that are common to all subcommands of `git istash`.
 - [`applying`](./applying/README.md) - it covers `git istash apply` and `git istash pop`.
-- [`creating`](./creating/README.md) - it covers `git istash push`.
+- [`creating`](./creating/README.md) - it covers `git istash create`, `git istash snatch`, `git istash save` and `git istash push`.
+- [`intent-to-add`](./intent-to-add/README.md) - it covers all "applying" and "creating" operations, specifically for files added with the option `--intent-to-add`.
 
 ## Test script
 

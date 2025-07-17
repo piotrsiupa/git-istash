@@ -243,7 +243,8 @@ commit_changes() {
 	then
 		if [ "$include_untracked" = n ]
 		then
-			git --no-literal-pathspecs ls-files --exclude-standard --others --ignored -z :/ | xargs -r0 -- git --literal-pathspecs add --intent-to-add --force --
+			git --no-literal-pathspecs ls-files --exclude-standard --others --ignored -z :/ \
+			| xargs -r0 -- git --literal-pathspecs add --force --intent-to-add --
 		elif [ "$include_ignored" = n ]
 		then
 			git --no-literal-pathspecs add --all --intent-to-add :/ 2>/dev/null || true
@@ -323,10 +324,14 @@ commit_changes() {
 undo_commit_changes() {
 	if [ "$has_3_commits" = y ]
 	then
+		non_staged_changes_hash="$(git rev-parse HEAD~2)"
 		git reset --mixed HEAD~4 1>/dev/null
 	else
+		non_staged_changes_hash="$(git rev-parse HEAD~1)"
 		git reset --mixed HEAD~3 1>/dev/null
 	fi
+	git --no-literal-pathspecs ls-tree -r --name-only "$non_staged_changes_hash" -z :/ \
+	| xargs -r0 -- git --literal-pathspecs add --force --intent-to-add --
 	git reset --soft HEAD~2 1>/dev/null
 	if [ "$curr_branch_type" = 'orphan' ]
 	then
@@ -462,19 +467,8 @@ restore_working_tree() {
 	git switch --detach "$unstashed_changes_hash" 1>/dev/null
 	unstaged_commit_hash="$(git rev-parse 'HEAD~')"
 	git reset --mixed HEAD~2 1>/dev/null
-	if [ -n "$(git --no-literal-pathspecs ls-tree -r "$unstaged_commit_hash" :/)" ]
-	then
-		git --no-literal-pathspecs ls-tree -r -z "$unstaged_commit_hash" :/ | sanitize_ls_tree | awk '{print $4}' \
-		| while read -r path
-		do
-			if [ -z "$path" ]
-			then
-				continue
-			fi
-			#shellcheck disable=SC2059
-			printf -- "$path" | xargs -0 -- git --literal-pathspecs add -N --
-		done
-	fi
+	git --no-literal-pathspecs ls-tree -r --name-only "$unstaged_commit_hash" -z :/ \
+	| xargs -r0 -- git --literal-pathspecs add --force --intent-to-add --
 	git reset --soft HEAD~1 1>/dev/null
 }
 
