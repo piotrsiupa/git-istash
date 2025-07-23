@@ -116,7 +116,7 @@ assert_file_contents() { # file expected_current [expected_staged]
 
 assert_files() { # expected_files (see one of the tests as an example)
 	expected_files="$(printf '%s\n' "$1" | sed -E -e 's/^\t+//' -e '/^\s*$/ d')"
-	assert_all_files "$(printf '%s\n' "$expected_files" | grep -vE '^(D |.D) ' | sed -E 's/^...(\S+)(\s.*)?$/\1/' | _prepare_path_list_for_assertion)"
+	assert_all_files "$(printf '%s\n' "$expected_files" | grep -vE '^(D |[^U]D) ' | sed -E 's/^...(\S+)(\s.*)?$/\1/' | _prepare_path_list_for_assertion)"
 	assert_tracked_files "$(printf '%s\n' "$expected_files" | grep -vE '^(!!|\?\?|A[^A]| A|DU) ' | sed -E 's/^...(\S+)(\s.*)?$/\1/' | _prepare_path_list_for_assertion)"
 	assert_status "$(printf '%s\n' "$expected_files" | grep -vE '^(  ) ' | sed -E 's/^(...\S+)(\s.*)?$/\1/' | _prepare_path_list_for_assertion y)"
 	printf '%s\n' "$expected_files" \
@@ -141,7 +141,7 @@ assert_files() { # expected_files (see one of the tests as an example)
 					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}' | sed -E 's/<empty>//')" \
 					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}' | sed -E 's/<empty>//')" \
 					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}' | sed -E 's/<empty>//')"
-			elif printf '%s' "$line" | grep -qE '^(.D) '
+			elif printf '%s' "$line" | grep -qE '^([^U]D) '
 			then
 				assert_file_contents \
 					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}' | sed -E 's/<empty>//')" \

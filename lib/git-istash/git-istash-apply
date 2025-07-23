@@ -224,6 +224,7 @@ do_continue() { # args...
 	check_data_files y
 	load_data
 	
+	git commit --allow-empty --no-edit 2>/dev/null || true
 	if git -c 'core.editor=true' rebase --continue
 	then
 		end_with_success
@@ -231,6 +232,7 @@ do_continue() { # args...
 	then
 		end_with_rebase_problem
 	else
+		git reset --soft HEAD~
 		return 1
 	fi
 }
