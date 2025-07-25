@@ -207,7 +207,7 @@ do_start() { # args...
 		git commit --allow-empty --message 'Temporary commit by "git-stash"'
 	fi
 	untangle_git_stash
-	if git rebase --onto "$current_branch" "HEAD~3" "HEAD" --empty=keep --keep-empty
+	if git rebase --onto "$current_branch" "HEAD~3" "HEAD" --empty=keep --keep-empty --reapply-cherry-picks
 	then
 		end_with_success
 	elif are_there_conflicts
