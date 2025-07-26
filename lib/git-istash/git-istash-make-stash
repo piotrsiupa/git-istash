@@ -467,8 +467,11 @@ restore_working_tree() {
 	git switch --detach "$unstashed_changes_hash" 1>/dev/null
 	unstaged_commit_hash="$(git rev-parse 'HEAD~')"
 	git reset --mixed HEAD~2 1>/dev/null
-	git --no-literal-pathspecs ls-tree -r --name-only "$unstaged_commit_hash" -z :/ \
-	| xargs -r0 -- git --literal-pathspecs add --force --intent-to-add --
+	(
+		cd "$(git rev-parse --show-toplevel)"
+		git --no-literal-pathspecs diff-tree -r --diff-filter='A' --name-only --no-renames --no-commit-id -z "$unstaged_commit_hash~1" "$unstaged_commit_hash" -- :/ \
+		| xargs -r0 -- git --literal-pathspecs add --force --intent-to-add --
+	)
 	git reset --soft HEAD~1 1>/dev/null
 }
 
