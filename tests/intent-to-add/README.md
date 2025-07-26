@@ -10,5 +10,6 @@ The first character of the prefix (sub-category) can be:
 - `1` - Creating stashes with different flags.
 - `2` - Option `--patch`.
 - `3` - Pathspecs.
-- `4` - Tricky/corner cases and miscellaneous.
-- `5` - Sub-directories.
+- `4` - Conflicts.
+- `5` - Tricky/corner cases and miscellaneous.
+- `6` - Sub-directories.
