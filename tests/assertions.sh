@@ -11,4 +11,5 @@ fi
 case "$(basename "$(dirname "$(dirname "$OLDPWD")")")" in
 	applying) . ./assertions-for-applying.sh ;;
 	creating) . ./assertions-for-creating.sh ;;
+	intent-to-add) . ./assertions-for-applying.sh ; . ./assertions-for-creating.sh ;;
 esac

@@ -46,7 +46,7 @@ assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION" --continue
 assert_conflict_message
 assert_files_HT '
 UU aaa		eee|ccc
-AA zzz		yyy|zzz
+   zzz		yyy
 !! ignored0	ignored0
 !! ignored1	ignored1
 '

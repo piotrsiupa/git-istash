@@ -1,4 +1,4 @@
-.TH GIT-ISTASH 1 "2025-06-22" "git-istash 1.2.0"
+.TH GIT-ISTASH 1 "2025-07-27" "git-istash 1.3.0"
 .nh
 .ad l
 
@@ -449,11 +449,11 @@ $ git istash pop
 
 .SH CURRENT LIMITATIONS
 .PP
-Files added with the flag \fB-N\fR / \fB--intend-to-add\fR are not supported. \
-(This will be implemented next, since it's one of the main goals of the project.)
-.PP
 It is not possible to \fBapply\fR or \fBpop\fR stash on top of existing changes in the working copy. \
 All modified files need to be restored or stashed away before starting the process.
+.PP
+Changes are not removed from working directory when \fB--patch\fR with \fBe\fR was used to stash only some of consecutive changed lines. \
+(It will be fixed if I can figure out a way to do it in a consistent way.)
 .PP
 Not all subcommands present in the vanilla command are avaible here (e.g. \fBgit stash show\fR, \fBgit stash list\fR...).
 (However, most of the vanilla subcommands are fully or at least mostly compatible with stashes created by this commands.)

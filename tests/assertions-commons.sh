@@ -18,18 +18,6 @@ assert_exit_code() { # expected_code command [arguments...]
 	unset exit_code_for_assert
 }
 
-#shellcheck disable=SC2120
-assert_conflict_message() {
-	#shellcheck disable=SC2154
-	eval set -- "$last_command"
-	#shellcheck disable=SC2154
-	test "$(printf '%s' "$stderr" | tail -n4)" = "
-hint: Disregard all hints above about using \"git rebase\".
-hint: Use \"$1 $2 $3 --continue\" after fixing conflicts.
-hint: To abort and get back to the state before \"$1 $2 $3\", run \"$1 $2 $3 --abort\"." ||
-		fail 'Command %s didn'\''t print the correct conflict message!\n' "$(command_to_string "$@")"
-}
-
 _convert_zero_separated_path_list() {
 	if command -v od 1>/dev/null 2>&1
 	then
@@ -128,7 +116,7 @@ assert_file_contents() { # file expected_current [expected_staged]
 
 assert_files() { # expected_files (see one of the tests as an example)
 	expected_files="$(printf '%s\n' "$1" | sed -E -e 's/^\t+//' -e '/^\s*$/ d')"
-	assert_all_files "$(printf '%s\n' "$expected_files" | grep -vE '^(D |.D) ' | sed -E 's/^...(\S+)(\s.*)?$/\1/' | _prepare_path_list_for_assertion)"
+	assert_all_files "$(printf '%s\n' "$expected_files" | grep -vE '^(D |[^U]D) ' | sed -E 's/^...(\S+)(\s.*)?$/\1/' | _prepare_path_list_for_assertion)"
 	assert_tracked_files "$(printf '%s\n' "$expected_files" | grep -vE '^(!!|\?\?|A[^A]| A|DU) ' | sed -E 's/^...(\S+)(\s.*)?$/\1/' | _prepare_path_list_for_assertion)"
 	assert_status "$(printf '%s\n' "$expected_files" | grep -vE '^(  ) ' | sed -E 's/^(...\S+)(\s.*)?$/\1/' | _prepare_path_list_for_assertion y)"
 	printf '%s\n' "$expected_files" \
@@ -150,27 +138,27 @@ assert_files() { # expected_files (see one of the tests as an example)
 			if printf '%s' "$line" | grep -qE '^(. ) '
 			then
 				assert_file_contents \
-					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}')" \
-					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}')" \
-					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}')"
-			elif printf '%s' "$line" | grep -qE '^(.D) '
+					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}' | sed -E 's/<empty>//')" \
+					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}' | sed -E 's/<empty>//')" \
+					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}' | sed -E 's/<empty>//')"
+			elif printf '%s' "$line" | grep -qE '^([^U]D) '
 			then
 				assert_file_contents \
-					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}')" \
+					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}' | sed -E 's/<empty>//')" \
 					'' \
-					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}')"
+					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}' | sed -E 's/<empty>//')"
 			else
 				assert_file_contents \
-					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}')" \
-					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}')"
+					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}' | sed -E 's/<empty>//')" \
+					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}' | sed -E 's/<empty>//')"
 			fi
 		else
 			test "$(printf '%s' "$stripped_line" | awk '{printf NF}')" -eq 3 ||
 				fail 'Error in test: the file "%s" should have 2 versions of content to check!\n' "$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}')"
 			assert_file_contents \
-				"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}')" \
-				"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}')" \
-				"$(printf '%s' "$stripped_line" | awk '{printf "%s", $3}')"
+				"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}' | sed -E 's/<empty>//')" \
+				"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}' | sed -E 's/<empty>//')" \
+				"$(printf '%s' "$stripped_line" | awk '{printf "%s", $3}' | sed -E 's/<empty>//')"
 		fi
 	done
 }

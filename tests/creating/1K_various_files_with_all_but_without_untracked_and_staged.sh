@@ -46,10 +46,8 @@ assert_dotgit_contents
 remove_all_changes
 RESTORE_HEAD_TYPE
 
-known_failure 'The standard "git stash pop" doesn'\''t support files added with "git add -N".'
-
 __test_section__ 'Pop stash'
-assert_exit_code 0 git stash pop --index
+assert_exit_code 0 git istash pop  # "istash" is used here instead of "stash" because the vanilla command doesn't support files added to tracking but not to the index.
 assert_files '
  A aaa		bbb
 !! ignored0	ignored0

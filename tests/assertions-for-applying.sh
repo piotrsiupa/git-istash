@@ -7,6 +7,30 @@ then
 fi
 
 
+#shellcheck disable=SC2120
+assert_conflict_message() {
+	#shellcheck disable=SC2154
+	eval set -- "$last_command"
+	if [ "$1" = 'git' ]
+	then
+		expected_istash_command="$1 $2 $3"
+	elif [ "$(basename "$1")" = 'git-istash' ]
+	then
+		expected_istash_command="git istash $2"
+	else
+		expected_istash_command="$(basename "$1" | tr '-' ' ')"
+	fi
+	expected_error_message="
+hint: Disregard all hints above about using \"git rebase\".
+hint: Use \"$expected_istash_command --continue\" after fixing conflicts.
+hint: To abort and get back to the state before \"$expected_istash_command\", run \"$expected_istash_command --abort\"."
+	#shellcheck disable=SC2154
+	test "$(printf '%s' "$stderr" | tail -n4)" = "$expected_error_message" ||
+		fail 'Command %s didn'\''t print the correct conflict message!\nActual:\n"%s"\nExpected last 4 lines:\n"%s"\n' "$(command_to_string "$@")" "$stderr" "$expected_error_message"
+	unset expected_error_message
+	unset expected_istash_command
+}
+
 assert_data_file() { # is_expected data_point_name
 	file_path_for_assert=".git/ISTASH_$2"
 	if [ "$1" = n ]

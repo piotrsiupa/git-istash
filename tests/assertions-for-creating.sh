@@ -138,13 +138,15 @@ assert_stash_files() { # stash_num expect_untracked expected_files
 	expected_files="$(printf '%s\n' "$3" | sed -E -e 's/^\t+//' -e '/^\s*$/ d')"
 	assert_stash_commit_files_with_content "stash@{$1}" "$(
 			printf '%s\n' "$expected_files" \
-			| grep -vE '^(\?\?|!!|D.|.D) ' \
-			| cut -c4- | awk '{print $1,$2}'
+			| grep -vE '^(\?\?|!!|D[^A]|.D) ' \
+			| cut -c4- | awk '{print $1,$2}' \
+			| sed -E 's/<empty>//'
 		)"
 	assert_stash_commit_files "stash@{$1}^1" "$(
 			printf '%s\n' "$expected_files" \
-			| grep -vE '^(\?\?|!!|A.|.A) ' \
-			| cut -c4- | awk '{print $1}'
+			| grep -vE '^(\?\?|!!|A.|[^D]A) ' \
+			| cut -c4- | awk '{print $1}' \
+			| sed -E 's/<empty>//'
 		)"
 	assert_stash_commit_files_with_content "stash@{$1}^2" "$(
 			printf '%s\n' "$expected_files" \
@@ -157,7 +159,8 @@ assert_stash_files() { # stash_num expect_untracked expected_files
 				then
 					printf '%s' "$line" | cut -c4- | awk '{print $1,$2}'
 				fi
-			done
+			done \
+			| sed -E 's/<empty>//'
 		)"
 	if [ "$2" = n ]
 	then

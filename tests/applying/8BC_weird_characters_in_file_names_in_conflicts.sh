@@ -57,7 +57,7 @@ assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION" --continue
 assert_conflict_message
 assert_files_HT '
 UU bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th quux|baz
-AA bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{2}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th yyy|zzz
+   bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{2}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th yyy
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
@@ -69,8 +69,24 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 
 __test_section__ "Continue $APPLY_OPERATION stash (1)"
 printf 'fff\n' >'bo	=ÿþ€{}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'
+git add 'bo	=ÿþ€{}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'
+assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION" --continue
+assert_conflict_message
+assert_files_HT '
+   bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th fff
+AA bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{2}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th yyy|zzz
+!! ignored0	ignored0
+!! ignored1	ignored1
+'
+assert_stash_count 1
+assert_branch_count_HT 1
+assert_data_files "$APPLY_OPERATION"
+assert_rebase y
+assert_dotgit_contents_for "$APPLY_OPERATION"
+
+__test_section__ "Continue $APPLY_OPERATION stash (2)"
 printf 'xxx\n' >'bo	=ÿþ€{2}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'
-git add 'bo	=ÿþ€{}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th' 'bo	=ÿþ€{2}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'
+git add 'bo	=ÿþ€{2}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'
 assert_exit_code 0 git istash "$APPLY_OPERATION" --continue
 assert_files_HT '
 MM bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th fff	quux

@@ -51,6 +51,7 @@ Because of the multi-stage conflict resolution, *the index saved to the stash en
 
 This command requires Git in version `2.42.0` or higher to be present.
 Otherwise, the installation will succeed but the command will refuse to run until the required version of Git is provided.
+(Except for Windows, which needs Git to run the installer, because it uses the shell implementation provided by git.)
 
 ### Every OS except Windows
 
@@ -123,6 +124,8 @@ Most of the changes here, however, are bugs that were found during tests to be p
 - `push` with `--path` fails if a new file was added and then modified.
 - Pathspecs are unable to find untracked files when the option `--keep-index` is specified.
 - `push` with a pathspec creates a stash even when it fails to match a file and returns a non-0 exit code.
+- `--patch` doesn't exit with an error when `e` was used to take only some of consecutive changed lines.
+  (Although, the result isn't ideal because the stashed changes aren't remove from the working directory in this case.)
 
 ### Other things different in standard `stash` (that may or may not be considered bugs)
 - Options can now follow non-option arguments (like they are allowed to in POSIX utilities).
@@ -142,15 +145,15 @@ Most of the changes here, however, are bugs that were found during tests to be p
 
 ## Known problems and limitations
 
-- The command doesn't support files added with the flag `--intent-to-add` (just like the vanilla command).
-  (Planned to be implemented really soon because this is one of the main goals of the project.)
 - The command refuses to apply a stash when the working directory contains any changes.
   (Planned to be implemented soon.)
+- Changes are not removed from working directory when `--patch` with `e` was used to stash only some of consecutive changed lines.
+  (It will be fixed if I can figure out a way to do it in a consistent way.)
 - Not all subcommands from the vanilla command are present (like `git stash show`, `git stash list`...).
   (However, most of the vanilla subcommands are fully compatible with stashes created by this commands.)
-- Because this command is written entirely in the shell script, it's rather slow to run.
-  The advantage of this is that it can run on every system with very little additional development cost.
-  (A few seconds to make a stash isn't that big deal, though, so it probably won't be improved any time soon, especially that this would require rewriting the command to another language.)
+- Because this command is written entirely in the shell script, it's slower than standard commands (especially on Windows).
+  The advantage of it being a script is that it can run on every system with very little additional development cost.
+  (A few seconds to make a stash isn't that big deal, though, so it probably won't be improved any time soon, especially that this would likely require rewriting the command to another language.)
 
 
 

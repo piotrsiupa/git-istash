@@ -243,7 +243,8 @@ commit_changes() {
 	then
 		if [ "$include_untracked" = n ]
 		then
-			git --no-literal-pathspecs ls-files --exclude-standard --others --ignored -z :/ | xargs -r0 -- git --literal-pathspecs add --intent-to-add --force --
+			git --no-literal-pathspecs ls-files --exclude-standard --others --ignored -z :/ \
+			| xargs -r0 -- git --literal-pathspecs add --force --intent-to-add --
 		elif [ "$include_ignored" = n ]
 		then
 			git --no-literal-pathspecs add --all --intent-to-add :/ 2>/dev/null || true
@@ -278,9 +279,9 @@ commit_changes() {
 	index_editor='sed -i -E "1 s/^(\s*)\w+(\s)/\1edit\2/"'
 	if [ "$has_3_commits" = n ]
 	then
-		GIT_EDITOR="$index_editor" git rebase --interactive --keep-empty --empty=keep -- 'HEAD~4' 1>/dev/null
+		GIT_EDITOR="$index_editor" git rebase --interactive --keep-empty --empty=keep --reapply-cherry-picks -- 'HEAD~4' 1>/dev/null
 	else
-		GIT_EDITOR="$index_editor" git rebase --interactive --keep-empty --empty=keep -- 'HEAD~5' 1>/dev/null
+		GIT_EDITOR="$index_editor" git rebase --interactive --keep-empty --empty=keep --reapply-cherry-picks -- 'HEAD~5' 1>/dev/null
 	fi
 	git reset --soft 'HEAD^' 1>/dev/null
 	if [ "$leave_staged" = n ]
@@ -323,10 +324,14 @@ commit_changes() {
 undo_commit_changes() {
 	if [ "$has_3_commits" = y ]
 	then
+		non_staged_changes_hash="$(git rev-parse HEAD~2)"
 		git reset --mixed HEAD~4 1>/dev/null
 	else
+		non_staged_changes_hash="$(git rev-parse HEAD~1)"
 		git reset --mixed HEAD~3 1>/dev/null
 	fi
+	git --no-literal-pathspecs ls-tree -r --name-only "$non_staged_changes_hash" -z :/ \
+	| xargs -r0 -- git --literal-pathspecs add --force --intent-to-add --
 	git reset --soft HEAD~2 1>/dev/null
 	if [ "$curr_branch_type" = 'orphan' ]
 	then
@@ -376,7 +381,7 @@ sort_commits() {
 	unstashed_commits_editor="$unstashed_commits_editor --"
 	
 	last_commit_hash="$(git rev-parse HEAD)"
-	if ! GIT_EDITOR="$unstashed_commits_editor" git -c merge.renames=false rebase --strategy=recursive --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash" 1>/dev/null
+	if ! GIT_EDITOR="$unstashed_commits_editor" git -c merge.renames=false rebase --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_hash" 1>/dev/null
 	then
 		handle_rebase_conflict_using_theirs
 	fi
@@ -388,7 +393,7 @@ sort_commits() {
 		else
 			keep_index_editor='sed -i -E -e "2 s/^pick\\>/fixup/" --'
 		fi
-		if ! GIT_EDITOR="$keep_index_editor" git -c merge.renames=false rebase --strategy=recursive --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash" 1>/dev/null
+		if ! GIT_EDITOR="$keep_index_editor" git -c merge.renames=false rebase --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_hash" 1>/dev/null
 		then
 			handle_rebase_conflict_using_theirs
 		fi
@@ -396,7 +401,7 @@ sort_commits() {
 	unstashed_changes_hash="$(git rev-parse HEAD)"
 	
 	git switch --detach "$last_commit_hash" 1>/dev/null
-	if ! GIT_EDITOR="$stashed_commits_editor" git -c merge.renames=false rebase --strategy=recursive --interactive --keep-empty --empty=keep --strategy-option=theirs -- "$stash_base_hash" 1>/dev/null
+	if ! GIT_EDITOR="$stashed_commits_editor" git -c merge.renames=false rebase --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_hash" 1>/dev/null
 	then
 		handle_rebase_conflict_using_theirs
 	fi
@@ -462,19 +467,11 @@ restore_working_tree() {
 	git switch --detach "$unstashed_changes_hash" 1>/dev/null
 	unstaged_commit_hash="$(git rev-parse 'HEAD~')"
 	git reset --mixed HEAD~2 1>/dev/null
-	if [ -n "$(git --no-literal-pathspecs ls-tree -r "$unstaged_commit_hash" :/)" ]
-	then
-		git --no-literal-pathspecs ls-tree -r -z "$unstaged_commit_hash" :/ | sanitize_ls_tree | awk '{print $4}' \
-		| while read -r path
-		do
-			if [ -z "$path" ]
-			then
-				continue
-			fi
-			#shellcheck disable=SC2059
-			printf -- "$path" | xargs -0 -- git --literal-pathspecs add -N --
-		done
-	fi
+	(
+		cd "$(git rev-parse --show-toplevel)"
+		git --no-literal-pathspecs diff-tree -r --diff-filter='A' --name-only --no-renames --no-commit-id -z "$unstaged_commit_hash~1" "$unstaged_commit_hash" -- :/ \
+		| xargs -r0 -- git --literal-pathspecs add --force --intent-to-add --
+	)
 	git reset --soft HEAD~1 1>/dev/null
 }
 

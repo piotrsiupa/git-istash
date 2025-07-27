@@ -70,7 +70,7 @@ assert_files_HT '
 !! ignored0	ignored0
 !! ignored1	ignored1
 ' '
-?? aaa		ddd
+ A aaa		ddd
 !! ignored0	ignored0
 !! ignored1	ignored1
 '

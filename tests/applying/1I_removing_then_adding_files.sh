@@ -20,13 +20,13 @@ SWITCH_HEAD_TYPE
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_hash="$(get_head_hash_HT)"
 assert_exit_code 0 git istash "$APPLY_OPERATION"
+# "aaa" should be a new file but Git stashes untracked files as tracked ones when those files are deleted in index.
 assert_files_HT '
-D  aaa
-?? aaa		bbb
+DA aaa		bbb
 !! ignored0	ignored0
 !! ignored1	ignored1
 ' '
-?? aaa		bbb
+ A aaa		bbb
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
