@@ -15,7 +15,7 @@ __test_section__ 'Create stash'
 printf 'bbb\n' >aaa
 git stash push
 
-__test_section__ 'Create conflict'
+__test_section__ 'Create a commit to merge'
 git switch -c branch1
 git commit --allow-empty -m 'Changed nothing'
 
@@ -48,6 +48,20 @@ assert_stash_count 1
 assert_log_length_HT 2
 assert_branch_count 2
 assert_head_hash_HT "$correct_head_hash"
+assert_data_files 'none'
+assert_rebase n
+assert_dotgit_contents
+
+__test_section__ "Continue merge"
+GIT_EDITOR='true' git merge --continue
+assert_files_HT '
+   aaa		aaa
+!! ignored0	ignored0
+!! ignored1	ignored1
+'
+assert_stash_count 1
+assert_log_length_HT 4
+assert_branch_count 2
 assert_data_files 'none'
 assert_rebase n
 assert_branch_metadata_HT
