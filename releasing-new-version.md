@@ -14,6 +14,7 @@ This is a guide for the maintainer, acting as a reminder of all the necessary st
     (If there are conflicts solve them; and rerun the tests and Shellcheck as needed.)
     Do *not* finalize the merge yet.
  8. Update the version numbers in all modified scripts that have a function `print_version`.
+    (You may use the script `find-version-numbers-to-update.sh`.)
  9. Update the version number and the date in `man/man1/git-istash.1`.
 10. Finalize the merge.
     (Don't forget to include the summary of the changes in the description.)
