@@ -154,6 +154,9 @@ Most of the changes here, however, are bugs that were found during tests to be p
 - Because this command is written entirely in the shell script, it's slower than standard commands (especially on Windows).
   The advantage of it being a script is that it can run on every system with very little additional development cost.
   (A few seconds to make a stash isn't that big deal, though, so it probably won't be improved any time soon, especially that this would likely require rewriting the command to another language.)
+- There's no support for running the command while there are other unfinished operations in the repository (like rebase or merge).
+- Compatibility with submodules wasn't tested yet.
+- Compatibility with worktrees wasn't tested yet.
 
 
 

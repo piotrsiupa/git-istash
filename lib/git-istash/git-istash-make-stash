@@ -498,6 +498,9 @@ remove_temporary_branch() {
 }
 
 make_stash() { # pathspecs...
+	check_data_files
+	check_other_git_commands_state
+	
 	initialize "$@"
 	find_current_branch
 	check_pathspec

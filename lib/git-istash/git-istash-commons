@@ -65,9 +65,32 @@ check_other_git_commands_state() {
 		printf 'error: There is currently a rebase in progress.\n' 1>&2
 		return 1
 	fi
+	if [ -e "$git_dir/CHERRY_PICK_HEAD" ]
+	then
+		printf 'error: There is currently a cherry-pick in progress.\n' 1>&2
+		return 1
+	fi
+	if [ -e "$git_dir/REVERT_HEAD" ]
+	then
+		printf 'error: There is currently a revert in progress.\n' 1>&2
+		return 1
+	fi
 	if [ -e "$git_dir/MERGE_HEAD" ]
 	then
 		printf 'error: There is currently a merge in progress.\n' 1>&2
+		return 1
+	fi
+	if [ -e "$git_dir/BISECT_START" ]
+	then
+		printf 'error: There is currently a bisect in progress.\n' 1>&2
+		return 1
+	fi
+}
+
+check_data_files() {
+	if [ "$(find_data_files)" != 'nothing' ]
+	then
+		printf 'error: There is currently an istash apply in progress.\n' 1>&2
 		return 1
 	fi
 }

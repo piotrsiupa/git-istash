@@ -3,7 +3,12 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
-PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_CREATE_OPERATION
+PARAMETRIZE_ALL 'DEFAULT'
+PARAMETRIZE_UNTRACKED 'DEFAULT'
+PARAMETRIZE_KEEP_INDEX 'DEFAULT'
+PARAMETRIZE_STAGED 'YES'
+PARAMETRIZE_UNSTAGED 'YES'
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
@@ -33,13 +38,12 @@ assert_files_HT '
 '
 assert_stash_count 1
 assert_branch_count 2
-assert_data_files 'none'
 assert_rebase y
 assert_dotgit_contents
 
-__test_section__ "$CAP_APPLY_OPERATION stash"
+__test_section__ "$CAP_CREATE_OPERATION stash"
 correct_head_hash="$(get_head_hash_HT)"
-assert_exit_code 1 git istash "$APPLY_OPERATION"
+assert_exit_code 1 git istash "$CREATE_OPERATION"
 assert_files_HT '
    aaa		aaa
    xxx		xxx
@@ -49,7 +53,6 @@ assert_files_HT '
 assert_stash_count 1
 assert_branch_count 2
 assert_head_hash_HT "$correct_head_hash"
-assert_data_files 'none'
 assert_rebase y
 assert_dotgit_contents
 
@@ -64,7 +67,6 @@ assert_files_HT '
 assert_stash_count 1
 assert_branch_count 2
 assert_head_hash_HT "$correct_head_hash"
-assert_data_files 'none'
 assert_rebase n
 assert_branch_metadata_HT
 assert_dotgit_contents

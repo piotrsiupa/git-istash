@@ -1,4 +1,4 @@
-.TH GIT-ISTASH 1 "2025-07-27" "git-istash 1.3.0"
+.TH GIT-ISTASH 1 "2025-08-16" "git-istash 1.3.1"
 .nh
 .ad l
 
@@ -461,6 +461,8 @@ Not all subcommands present in the vanilla command are avaible here (e.g. \fBgit
 Because this command is written entirely in the shell script, it's slow.
 The advantage of this is that it can run on every system with very little additional development cost.
 (A few seconds to make a stash isn't that a big deal, so the command probably won't be rewritten to a faster language anytime soon.)
+.PP
+There's no support for running the command while there are other unfinished operations in the repository (like rebase or merge).
 
 .SH AUTHOR
 git\-istash was written by Piotr Siupa. (\fIpiotr.siupa+stash@gmail.com\fR)

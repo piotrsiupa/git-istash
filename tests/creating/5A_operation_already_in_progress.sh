@@ -3,7 +3,12 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
-PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_CREATE_OPERATION
+PARAMETRIZE_ALL 'DEFAULT'
+PARAMETRIZE_UNTRACKED 'DEFAULT'
+PARAMETRIZE_KEEP_INDEX 'DEFAULT'
+PARAMETRIZE_STAGED 'YES'
+PARAMETRIZE_UNSTAGED 'YES'
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
@@ -20,10 +25,9 @@ git commit -am 'Changed aaa'
 
 SWITCH_HEAD_TYPE
 
-__test_section__ "$CAP_APPLY_OPERATION stash"
+__test_section__ 'Apply stash'
 correct_head_hash_0="$(get_head_hash_HT)"
-assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION"
-assert_conflict_message
+assert_exit_code 2 capture_outputs git istash apply
 assert_files_HT '
 UU aaa		ccc|bbb
 !! ignored0	ignored0
@@ -34,13 +38,12 @@ DU aaa		bbb
 !! ignored1	ignored1
 '
 assert_stash_count 1
-assert_data_files "$APPLY_OPERATION"
 assert_rebase y
-assert_dotgit_contents_for "$APPLY_OPERATION"
+assert_dotgit_contents_for 'apply'
 
-__test_section__ "$CAP_APPLY_OPERATION stash again"
+__test_section__ "$CAP_CREATE_OPERATION stash again"
 correct_head_hash_1="$(get_head_hash_HT)"
-assert_exit_code 1 git istash "$APPLY_OPERATION"
+assert_exit_code 1 git istash "$CREATE_OPERATION"
 assert_files_HT '
 UU aaa		ccc|bbb
 !! ignored0	ignored0
@@ -52,14 +55,13 @@ DU aaa		bbb
 '
 assert_stash_count 1
 assert_head_hash_HT "$correct_head_hash_1"
-assert_data_files "$APPLY_OPERATION"
 assert_rebase y
-assert_dotgit_contents_for "$APPLY_OPERATION"
+assert_dotgit_contents_for 'apply'
 
-__test_section__ "Continue the first $APPLY_OPERATION stash"
+__test_section__ 'Continue the first apply stash'
 printf 'ddd\n' >aaa
 git add aaa
-assert_exit_code 0 git istash "$APPLY_OPERATION" --continue
+assert_exit_code 0 git istash apply --continue
 assert_files_HT '
  M aaa		ddd	ccc
 !! ignored0	ignored0
@@ -69,9 +71,8 @@ assert_files_HT '
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
-assert_stash_count_AO 1
+assert_stash_count 1
 assert_head_hash_HT "$correct_head_hash_0"
-assert_data_files 'none'
 assert_rebase n
 assert_branch_metadata_HT
 assert_dotgit_contents

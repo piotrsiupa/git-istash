@@ -3,7 +3,12 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
-PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_CREATE_OPERATION
+PARAMETRIZE_ALL 'DEFAULT'
+PARAMETRIZE_UNTRACKED 'DEFAULT'
+PARAMETRIZE_KEEP_INDEX 'DEFAULT'
+PARAMETRIZE_STAGED 'YES'
+PARAMETRIZE_UNSTAGED 'YES'
 
 __test_section__ 'Prepare repository'
 git branch -m branch0
@@ -15,54 +20,61 @@ __test_section__ 'Create stash'
 printf 'bbb\n' >aaa
 git stash push
 
-__test_section__ 'Create a commit to merge'
+__test_section__ 'Create conflicting branch'
 git switch -c branch1
-git commit --allow-empty -m 'Changed nothing'
-
+printf 'ccc\n' >aaa
+git add aaa
+git commit -m 'Changed something'
 git switch branch0
+
 SWITCH_HEAD_TYPE
 
-__test_section__ 'Merge branch'
-git merge branch1 --no-ff --no-commit
+__test_section__ 'Create conflict'
+printf 'ddd\n' >aaa
+git add aaa
+git commit -m 'Changed something in a different way'
+
+__test_section__ 'Cherry-pick branch'
+git cherry-pick branch1 || true
 assert_files_HT '
-   aaa		aaa
+UU aaa		ddd|ccc
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
 assert_stash_count 1
-assert_log_length_HT 2
+assert_log_length_HT 3
 assert_branch_count 2
-assert_data_files 'none'
 assert_rebase n
 assert_dotgit_contents
 
-__test_section__ "$CAP_APPLY_OPERATION stash"
+__test_section__ "$CAP_CREATE_OPERATION stash"
 correct_head_hash="$(get_head_hash_HT)"
-assert_exit_code 1 git istash "$APPLY_OPERATION"
+assert_exit_code 1 git istash "$CREATE_OPERATION"
 assert_files_HT '
-   aaa		aaa
+UU aaa		ddd|ccc
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
 assert_stash_count 1
-assert_log_length_HT 2
+assert_log_length_HT 3
 assert_branch_count 2
 assert_head_hash_HT "$correct_head_hash"
-assert_data_files 'none'
 assert_rebase n
 assert_dotgit_contents
 
-__test_section__ "Continue merge"
-GIT_EDITOR='true' git merge --continue
+__test_section__ "Continue cherry-pick"
+printf 'eee\n' >aaa
+git add aaa
+echo asdsadfsadf >&2
+git cherry-pick --continue
 assert_files_HT '
-   aaa		aaa
+   aaa		eee
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
 assert_stash_count 1
 assert_log_length_HT 4
 assert_branch_count 2
-assert_data_files 'none'
 assert_rebase n
 assert_branch_metadata_HT
 assert_dotgit_contents
