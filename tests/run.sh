@@ -130,11 +130,12 @@ find_tests() { # pattern
 	fi
 }
 
-get_test_display_name() { # raw_name
+get_display_name() { # raw_name
 	if [ "$raw_name" = n ]
 	then
 		printf '"'
-		printf '%s' "$1" | sed -E -e 's/_/ /g' -e 's;/; -> ;g'
+		printf '%s' "$1" | head -c1 | tr 'a-z' 'A-Z'
+		printf '%s' "$1" | tail -c+2 | sed -E -e 's/_/ /g' -e 's;/; -> ;g'
 		printf '"'
 	else
 		printf '%s' "$(dirname "$0")/$1.sh"
@@ -332,7 +333,7 @@ run_test() ( # test_name
 		if ! printf '%s\n' "$test_result" | grep -qE '^\?'
 		then
 			test_count=$((test_count + 1))
-			display_name="$(get_test_display_name "$1")"
+			display_name="$(get_display_name "$1")"
 			if [ -z "$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | tail -n+2)" ]
 			then
 				parameters_string=''
@@ -449,7 +450,7 @@ update_current_category() { # test_name
 		then
 			{
 				printf_color_code '\033[1m'
-				print_centered "$current_category" '-'
+				print_centered "$(get_display_name "$current_category")" '-'
 				printf_color_code '\033[22m'
 				printf '\n'
 			} 1>&5
@@ -597,7 +598,7 @@ run_tests() {
 					break
 				fi
 				update_current_category "$(printf '%s\n' "$running_tests_data" | head -n1 | cut -d' ' -f3)" 5>>"$output_buffer_file"
-				test_display_name="$(get_test_display_name "$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f3)")"
+				test_display_name="$(get_display_name "$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f3)")"
 				if [ "$show_progress" = y ]
 				then
 					printf 'PENDNG - %s (?/?) \n' "$test_display_name"
