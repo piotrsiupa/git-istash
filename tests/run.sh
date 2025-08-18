@@ -17,6 +17,7 @@ print_help() {
 	printf '    -l, --limit=number\t- Set maximum number of tests to be run. (It pairs well\n\t\t\t  with "--failed" to e.g. rerun the first failed test.)\n'
 	printf '    -m, --meticulous=N\t- Set how many tests will be run. Allowed values are\n\t\t\t  0..5 (default=3). (See the section "Meticulousness".)\n'
 	printf '    -p, --print-paths\t- Instead of running tests, print their paths and exit.\n\t\t\t  (The paths are relative to the directory "tests".)\n'
+	printf '    -R, --relative\t- Print paths relative to the currect directory.\n\t\t\t  (Implies "--print-paths".)\n'
 	printf '\t--progress\t- Show progress information during testing. (It uses the\n\t\t\t  multi-threaded code, which adds some overhead for\n\t\t\t  a single job run.)\n\t\t\t  This is the default when color is enabled, the quiet\n\t\t\t  mode is disabled and there are multiple jobs.\n'
 	printf '\t--no-progress\t- Don'\''t show progress information. (See "--progress".)\n\t\t\t  This is useful to avoid outputting ANSI escape codes.\n'
 	printf '    -q, --quiet\t\t- Don'\''t print summaries for passed tests.\n'
@@ -773,8 +774,8 @@ print_summary() {
 	printf '\n'
 }
 
-getopt_short_options='c:Cdfhj:l:m:pqQrsSv'
-getopt_long_options='color:,check,debug,failed,file-name,help,jobs:,limit:,meticulousness:,print-paths,progress,no-progress,quiet,quieter,raw,raw-name,skip-at-fail,skip-at-error,skip-on-fail,skip-on-error,stop-at-fail,stop-at-error,stop-on-fail,stop-on-error,verbose,version'
+getopt_short_options='c:Cdfhj:l:m:pRqQrsSv'
+getopt_long_options='color:,check,debug,failed,file-name,help,jobs:,limit:,meticulousness:,print-paths,relative-paths,progress,no-progress,quiet,quieter,raw,raw-name,skip-at-fail,skip-at-error,skip-on-fail,skip-on-error,stop-at-fail,stop-at-error,stop-on-fail,stop-on-error,verbose,version'
 getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 only_failed=n
@@ -788,6 +789,7 @@ skip_on_fail=n
 stop_on_error=n
 test_limit=0
 print_paths=n
+print_paths_prefix=''
 jobs_num=1
 max_meticulousness=5
 meticulousness=3
@@ -861,6 +863,10 @@ do
 		;;
 	-p|--print-paths)
 		print_paths=y
+		;;
+	-R|--relative-paths)
+		print_paths=y
+		print_paths_prefix="$(dirname "$0")/"
 		;;
 	--progress)
 		show_progress=y
@@ -967,7 +973,7 @@ cd "$(dirname "$0")"
 tests="$(find_tests "$filter")"
 if [ "$print_paths" = y ]
 then
-	printf '%s' "$tests" | xargs -- printf '%s.sh\n'
+	printf '%s' "$tests" | xargs -n1 -- printf '%s%s.sh\n' "$print_paths_prefix"
 	exit 0
 fi
 
