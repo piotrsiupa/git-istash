@@ -44,7 +44,7 @@ mkdir -p xxx
 cd xxx
 assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION"
 cd -
-assert_conflict_message
+assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ddd0|bbb0
 UU xxx/aaa	ddd1|bbb1

@@ -24,7 +24,7 @@ __test_section__ "$CAP_OTHER_APPLY_OPERATION stash"
 correct_head_hash="$(get_head_hash_HT)"
 #shellcheck disable=SC2086
 assert_exit_code 2 capture_outputs git istash $OTHER_APPLY_OPERATION
-assert_conflict_message
+assert_conflict_message "$OTHER_APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ccc|bbb
 !! ignored0	ignored0

@@ -37,7 +37,7 @@ SWITCH_HEAD_TYPE
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_hash="$(get_head_hash_HT)"
 assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION"
-assert_conflict_message
+assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th qux|bar
    bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{2}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th yyy
@@ -54,7 +54,7 @@ __test_section__ "Continue $APPLY_OPERATION stash (0)"
 printf 'quux\n' >'bo	=ÿþ€{}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'
 git add 'bo	=ÿþ€{}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'
 assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION" --continue
-assert_conflict_message
+assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th quux|baz
    bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{2}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th yyy
@@ -71,7 +71,7 @@ __test_section__ "Continue $APPLY_OPERATION stash (1)"
 printf 'fff\n' >'bo	=ÿþ€{}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'
 git add 'bo	=ÿþ€{}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'
 assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION" --continue
-assert_conflict_message
+assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
    bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th fff
 AA bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{2}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th yyy|zzz

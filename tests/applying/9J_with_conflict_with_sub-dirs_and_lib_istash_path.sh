@@ -44,7 +44,7 @@ mkdir -p xxx
 cd xxx
 assert_exit_code 2 capture_outputs ../../../../../lib/git-istash/git-istash-"$APPLY_OPERATION"
 cd -
-assert_conflict_message
+assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ddd0|bbb0
 UU xxx/aaa	ddd1|bbb1
@@ -75,7 +75,7 @@ git add aaa xxx/aaa yyy/aaa
 cd xxx
 assert_exit_code 2 capture_outputs ../../../../../bin/git-istash "$APPLY_OPERATION" --continue
 cd -
-assert_conflict_message
+assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		eee0|ccc0
 UU xxx/aaa	eee1|ccc1
@@ -108,7 +108,7 @@ then
 	cd xxx
 	assert_exit_code 2 capture_outputs ../../../../../bin/git-istash "$APPLY_OPERATION" --continue
 	cd -
-	assert_conflict_message
+	assert_conflict_message "$APPLY_OPERATION"
 	assert_files '
 	   aaa		fff0
 	   xxx/aaa	fff1
