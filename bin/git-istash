@@ -33,7 +33,7 @@ print_version() {
 	printf 'Requires Git in version at least %s\n' "$min_git_version"
 }
 
-run_subcommand() { # subcommand [arguments...]
+exec_subcommand() { # subcommand [arguments...]
 	subcommand="$1"
 	shift
 	subcommand_path="$(dirname "$0")/../lib/git-istash/git-istash-$subcommand"
@@ -42,7 +42,7 @@ run_subcommand() { # subcommand [arguments...]
 		printf 'git-istash: "%s" is not a sub-command. See "git istash --help".\n' "$subcommand" 1>&2
 		return 1
 	fi
-	sh "$subcommand_path" "$@"
+	exec sh "$subcommand_path" "$@"
 }
 
 show_manual() {
@@ -103,4 +103,4 @@ if [ $# -eq 0 ] || printf '%s' "$1" | grep -Eq '^-'
 then
 	set -- 'push' '--_implicit-push_' "$@"
 fi
-run_subcommand "$@"
+exec_subcommand "$@"
