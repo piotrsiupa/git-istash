@@ -1,11 +1,5 @@
 #!/usr/bin/env sh
 
-if [ "$WAS_IT_CALLED_FROM_COMMONS_SH" != 'affirmative' ]
-then
-	printf 'This script is intended only to be used by "commons.sh"!\n' 1>&2
-	exit 1
-fi
-
 
 # It calls "PARAMETRIZE" with the name "CREATE_OPERATION" and values "create" & "push".
 # It also creates a variable "CAP_CREATE_OPERATION" which stores the same operation name but capitalized.

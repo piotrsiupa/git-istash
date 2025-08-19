@@ -131,6 +131,14 @@ find_tests() { # pattern
 	fi
 }
 
+load_utils_and_assertions() {
+	set -a
+	. ./utils.sh
+	. ./assertions.sh
+	commons_path="$(pwd)/commons.sh"
+	set +a
+}
+
 get_display_name() { # raw_name
 	if [ "$raw_name" = n ]
 	then
@@ -189,7 +197,7 @@ do_run_test() { # test_name
 				printf '0' 1>&4
 			elif [ "$debug_mode" = n ]
 			then
-				if sh "../../$(basename "$(get_test_script "$1")")" 1>/dev/null 2>&1
+				if ( . "../../$(basename "$(get_test_script "$1")")" ) 1>/dev/null 2>&1
 				then
 					printf y 1>&4
 				else
@@ -197,7 +205,7 @@ do_run_test() { # test_name
 				fi
 			else
 				{
-					if sh "../../$(basename "$(get_test_script "$1")")"
+					if ( . "../../$(basename "$(get_test_script "$1")")" )
 					then
 						printf y 1>&4
 					else
@@ -541,6 +549,7 @@ run_tests() {
 	then
 		return 0
 	fi
+	load_utils_and_assertions
 	if printf '' | sed --unbuffered -E 's/^/x/' 1>/dev/null 2>&1
 	then
 		SED_CALL='sed --unbuffered'

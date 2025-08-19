@@ -1,11 +1,5 @@
 #!/usr/bin/env sh
 
-if [ "$WAS_IT_CALLED_FROM_COMMONS_SH" != 'affirmative' ]
-then
-	printf 'This script is intended only to be used by "commons.sh"!\n' 1>&2
-	exit 1
-fi
-
 
 # This serves both as a pseudo-comment in test code to make it easier to understand and as a way to more easily find where a test failed.
 # These names are not displayed during a normal run of a test but the name of the current section is included in the failure message.

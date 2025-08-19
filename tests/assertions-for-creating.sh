@@ -1,11 +1,5 @@
 #!/usr/bin/env sh
 
-if [ "$WAS_IT_CALLED_FROM_COMMONS_SH" != 'affirmative' ]
-then
-	printf 'This script is intended only to be used by "commons.sh"!\n' 1>&2
-	exit 1
-fi
-
 
 assert_stash_structure() { # stash_num expected_to_have_untracked
 	git rev-parse --quiet --verify "stash@{$1}^{commit}" 1>/dev/null ||

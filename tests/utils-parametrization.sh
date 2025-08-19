@@ -1,11 +1,5 @@
 #!/usr/bin/env sh
 
-if [ "$WAS_IT_CALLED_FROM_COMMONS_SH" != 'affirmative' ]
-then
-	printf 'This script is intended only to be used by "commons.sh"!\n' 1>&2
-	exit 1
-fi
-
 
 # This makes the test be called multiple times with the variable from the 1st argument having each of the values from the remaining arguments.
 # (Reading this code is not sufficient for understanding the function's inner working because it requires cooperation of the script `run.sh` but you don't need that; you just need to know how to use it.)

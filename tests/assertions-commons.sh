@@ -1,11 +1,5 @@
 #!/usr/bin/env sh
 
-if [ "$WAS_IT_CALLED_FROM_COMMONS_SH" != 'affirmative' ]
-then
-	printf 'This script is intended only to be used by "commons.sh"!\n' 1>&2
-	exit 1
-fi
-
 
 assert_exit_code() { # expected_code command [arguments...]
 	expected_exit_code_for_assert="$1"

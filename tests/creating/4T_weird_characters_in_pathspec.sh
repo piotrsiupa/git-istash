@@ -2,7 +2,7 @@
 # This also include carriage return characters being at ends of some lines but not others.
 # Make sure to use a text editor that will not mangle this.
 
-. "$(dirname "$0")/../commons.sh" 1>/dev/null
+. "$commons_path" 1>/dev/null
 
 non_essential_test
 
