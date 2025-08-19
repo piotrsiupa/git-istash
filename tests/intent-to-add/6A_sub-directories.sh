@@ -1,4 +1,4 @@
-. "$commons_path" 1>/dev/null
+. "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_CREATE_OPERATION

@@ -1,6 +1,6 @@
 # (This situation is also known as "patchspec", I've decided.)
 
-. "$commons_path" 1>/dev/null
+. "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 non_essential_test
 

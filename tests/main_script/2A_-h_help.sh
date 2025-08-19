@@ -1,7 +1,7 @@
 # These are only a few rudimentary checks for things that are the easiest to forgot / mess up.
 # Always validate you're documentation manually.
 
-. "$commons_path" 1>/dev/null
+. "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 PARAMETRIZE 'SUBCOMMAND' '_NONE_' 'apply' 'create' 'pop' 'push'
 if [ "$SUBCOMMAND" = '_NONE_' ]

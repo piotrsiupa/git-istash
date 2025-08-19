@@ -1,7 +1,7 @@
 # BE VERY CAREFULL EDITING THIS FILE!
 # There is a good chance your editor will mangle the characters used here.
 
-. "$commons_path" 1>/dev/null
+. "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 non_essential_test
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
-printf 'This script is not supposed to be run independently.\n'
-printf 'If you want to use it IN a test, source it with the command:\n. %s\n' '../commons.sh 1>/dev/null'
+printf 'This script is not supposed to be run.\n'
+printf 'If you want to use it IN a test, source it with the command:\n. ../commons.sh 1>/dev/null\n'
 if [ -t 1 ] ; then exit 1 ; fi
 
 if [ "$WAS_IT_CALLED_FROM_RUN_SH" != 'indeed' ]
@@ -20,5 +20,7 @@ set -e
 cd ../../..
 WAS_IT_CALLED_FROM_COMMONS_SH='affirmative'
 . ./set-up-repo.sh
+. ./utils.sh
+. ./assertions.sh
 unset WAS_IT_CALLED_FROM_COMMONS_SH
 cd -

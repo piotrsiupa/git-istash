@@ -1,4 +1,4 @@
-. "$commons_path" 1>/dev/null
+. "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 #shellcheck disable=SC2154
 if [ "$limited_file_system" = y ]
