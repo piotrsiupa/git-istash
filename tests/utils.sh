@@ -13,4 +13,5 @@ case "$(basename "$(dirname "$(dirname "$OLDPWD")")")" in
 	applying) . ./utils-for-applying.sh ;;
 	creating) . ./utils-for-creating.sh ;;
 	intent-to-add) . ./utils-for-applying.sh ; . ./utils-for-creating.sh ;;
+	main_script) . ./utils-for-creating.sh ;;
 esac

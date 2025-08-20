@@ -8,3 +8,4 @@ For example it tests what happens of a user types a non-existing name of a sub-c
 The first character of the prefix (sub-category) can be:
 - `1` - Errors for invalid arguments.
 - `2` - Help texts.
+- `3` - Implicid subcommands.
