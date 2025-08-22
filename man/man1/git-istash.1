@@ -19,7 +19,7 @@ git\-istash \- Handle Git stashes without arbitrary limitations of the original 
             [\-S\~|\~\-\-staged] [\-u\~|\~\-\-[no\-]include\-untracked]
             [\-\-\~<\fIpathspec\fR>...]
 \fBgit istash\fR (pop\~|\~apply) [<\fIstash\fR>]
-\fBgit istash\fR (pop\~|\~apply) (\-\-continue\~|\~\-\-abort)
+\fBgit istash\fR [pop\~|\~apply] (\-c\~|\~\-\-continue\~|\~\-\-abort)
 .fi
 
 .SH DESCRIPTION
@@ -126,14 +126,14 @@ And finally, the options \fB\-\-patch\fR and \fB\-\-pathspec\-from\-file\fR are 
 .RE
 
 .PP
-\fBapply\fR [<\fIstash\fR>\~|\~\-c\~|\~\-\-continue]
+\fBapply\fR [<\fIstash\fR>\~|\~\-c\~|\~\-\-continue\~|\~\-\-abort]
 .RS 4
 Like \fBgit stash apply \-\-index\fR, but it handles staged and unstaged conflicts separately, preventing those scopes from mixing. \
 \fB<stash>\fR may be any commit that looks like a commit created by \fBgit stash push\fR or \fBgit stash create\fR.
 .RE
 
 .PP
-\fBpop\fR [<\fIstash\fR>\~|\~\-c\~|\~\-\-continue]
+\fBpop\fR [<\fIstash\fR>\~|\~\-c\~|\~\-\-continue\~|\~\-\-abort]
 .RS 4
 Like \fBgit stash pop \-\-index\fR, but it handles staged and unstaged conflicts separately, preventing those scopes from mixing. \
 Unlike \fBgit stash pop\fR, it can handle stashes referenced by name (\fBstash^{/<name>}\fR).
@@ -276,9 +276,10 @@ All untracked files are also stashed and then removed.
 .RE
 
 .PP
-\fB\-\-continue\fR
+\fB\-c\fR, \fB\-\-continue\fR
 .RS 4
-This option is only valid for \fBapply\fR and \fBpop\fR subcommands.
+This option is only valid for \fBapply\fR and \fBpop\fR subcommands. \
+(You can skip the subcommand name in the command line.)
 .sp
 Resume the operation after conflicts have been resolved.
 .RE
@@ -286,7 +287,8 @@ Resume the operation after conflicts have been resolved.
 .PP
 \fB\-\-abort\fR
 .RS 4
-This option is only valid for \fBapply\fR and \fBpop\fR subcommands.
+This option is only valid for \fBapply\fR and \fBpop\fR subcommands. \
+(You can skip the subcommand name in the command line.)
 .sp
 Cancel the operation and restore the repository to the state before it started.
 .RE
@@ -413,11 +415,11 @@ $ git istash pop
 # (git\-istash will stop and report that some files have conflicts)
 # Fix the conflicts in the index
 $ git add \-u
-$ git istash pop \-\-continue
+$ git istash \-\-continue
 # (git\-istash will stop and report that some files have conflicts again)
 # Fix the conflicts in unstaged changes
 $ git add \-u
-$ git istash pop \-\-continue
+$ git istash \-\-continue
 # ... continue hacking ...
 .fi
 .RE

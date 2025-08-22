@@ -242,11 +242,11 @@ git istash pop
 # (git-istash will stop and report that some files have conflicts)
 # Fix the conflicts in the index
 git add -u
-git istash pop --continue
+git istash --continue
 # (git-istash will stop and report that some files have conflicts again)
 # Fix the conflicts in unstaged changes
 git add -u
-git istash pop --continue
+git istash --continue
 # ... continue hacking ...
 ```
 
