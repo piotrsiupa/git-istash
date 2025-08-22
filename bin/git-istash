@@ -93,7 +93,7 @@ elif [ "$1" = '--version' ] || [ "$2" = '--version' ]
 then
 	print_version
 	exit 0
-elif [ "$1" = '-c' ] || [ "$1" = '--continue' ] || [ "$1" = '-a' ] || [ "$1" = '--abort' ]
+elif printf '%s\n' "$1" | grep -Eqx -- '-c|--c(o(n(t(i(n(u(e)?)?)?)?)?)?)?|--ab(o(r(t)?)?)?'  # Not a pretty solution but one that doesn't require knowing all options of every subcommand. (Although, it needs manual updating when something changes.)
 then
 	. "$(dirname "$0")/../lib/git-istash/git-istash-commons"
 	case "$(find_data_files)" in

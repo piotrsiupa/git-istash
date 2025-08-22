@@ -4,6 +4,7 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_CONTINUE
 
 __test_section__ 'Prepare repository'
 mkdir 'aaa'
@@ -42,7 +43,7 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 __test_section__ "Continue $APPLY_OPERATION stash"
 printf 'qux\n' >ccc
 git add ccc
-assert_exit_code 0 git istash "$APPLY_OPERATION" --continue
+assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 assert_files_HT '
  D aaa/bbb	foo
  M ccc		qux		baz

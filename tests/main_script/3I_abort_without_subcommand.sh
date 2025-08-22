@@ -4,6 +4,7 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_ABORT
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
@@ -41,7 +42,7 @@ assert_rebase y
 assert_dotgit_contents_for "$APPLY_OPERATION"
 
 __test_section__ "Abort (implied) $APPLY_OPERATION stash"
-assert_exit_code 0 git istash --abort
+assert_exit_code 0 git istash "$ABORT_FLAG"
 assert_files_HT '
    aaa		ddd
 !! ignored0	ignored0

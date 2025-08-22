@@ -4,6 +4,7 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_CONTINUE
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
@@ -35,9 +36,9 @@ assert_data_files "$APPLY_OPERATION"
 assert_rebase y
 assert_dotgit_contents_for "$APPLY_OPERATION"
 
-__test_section__ "$CAP_APPLY_OPERATION stash --continue"
+__test_section__ "Continue $APPLY_OPERATION stash"
 git add aaa
-assert_exit_code 0 git istash "$APPLY_OPERATION" --continue
+assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 assert_files_HT '
    aaa		bbb
 !! ignored0	ignored0

@@ -4,6 +4,7 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_CONTINUE
 if IS_POP
 then
 	skip_silently # "pop" doesn't support hashes, which is checked in an ealier test
@@ -47,7 +48,7 @@ __test_section__ "Continue $APPLY_OPERATION stash"
 printf 'ddd\n' >aaa
 git add aaa
 printf '%s\n' "$wrong_hash" >'.git/ISTASH_TARGET'
-assert_exit_code 1 git istash "$APPLY_OPERATION" --continue
+assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 assert_file_contents ignored0 'ignored0'
 assert_file_contents ignored1 'ignored1'
 assert_branch_metadata_HT

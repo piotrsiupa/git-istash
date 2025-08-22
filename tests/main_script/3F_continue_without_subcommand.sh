@@ -2,6 +2,7 @@
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_CONTINUE
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
@@ -42,7 +43,7 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 __test_section__ "Continue (implied) $APPLY_OPERATION stash (0)"
 printf 'eee\n' >aaa
 git add aaa
-assert_exit_code 2 capture_outputs git istash --continue
+assert_exit_code 2 capture_outputs git istash "$CONTINUE_FLAG"
 assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		eee|ccc
@@ -59,7 +60,7 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 __test_section__ "Continue (implied) $APPLY_OPERATION stash (1)"
 printf 'fff\n' >aaa
 git add aaa zzz
-assert_exit_code 2 git istash --continue
+assert_exit_code 2 git istash "$CONTINUE_FLAG"
 assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
    aaa		fff
@@ -76,7 +77,7 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 __test_section__ "Continue (implied) $APPLY_OPERATION stash (2)"
 printf 'xxx\n' >zzz
 git add aaa zzz
-assert_exit_code 0 git istash --continue
+assert_exit_code 0 git istash "$CONTINUE_FLAG"
 assert_files_HT '
 MM aaa		fff	eee
  M zzz		xxx	yyy

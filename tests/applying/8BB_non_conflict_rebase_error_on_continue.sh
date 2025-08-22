@@ -4,6 +4,7 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_CONTINUE
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
@@ -41,7 +42,7 @@ __test_section__ "Continue $APPLY_OPERATION stash"
 printf 'ddd\n' >aaa
 git add aaa
 rm -rf '.git/rebase-apply' '.git/rebase-merge'
-assert_exit_code 1 git istash "$APPLY_OPERATION" --continue
+assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 assert_files_HT '
 M  aaa		ddd
 !! ignored0	ignored0

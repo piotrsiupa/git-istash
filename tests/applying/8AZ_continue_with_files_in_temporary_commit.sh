@@ -4,6 +4,7 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_CONTINUE
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
@@ -37,7 +38,7 @@ git add aaa
 printf 'zzz\n' >zzz
 git add zzz
 git commit --amend --no-edit -- zzz
-assert_exit_code 1 git istash "$APPLY_OPERATION" --continue
+assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 assert_file_contents ignored0 'ignored0'
 assert_file_contents ignored1 'ignored1'
 assert_branch_metadata_HT

@@ -4,6 +4,7 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_CONTINUE
 if IS_APPLY
 then
 	skip_silently  # this test is "pop" specific
@@ -48,7 +49,7 @@ printf 'eee\n' >aaa
 git add aaa
 mv .git/ISTASH_STASH .git/ISTASH_STASH~
 printf 'fa4e08a58\n' >.git/ISTASH_STASH
-assert_exit_code 1 git istash "$APPLY_OPERATION" --continue
+assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 assert_files_HT '
 M  aaa		eee
 !! ignored0	ignored0
@@ -66,7 +67,7 @@ assert_dotgit_contents_for "$APPLY_OPERATION" 'ISTASH_STASH~'
 
 __test_section__ "Continue $APPLY_OPERATION stash (1)"
 mv .git/ISTASH_STASH~ .git/ISTASH_STASH
-assert_exit_code 0 git istash "$APPLY_OPERATION" --continue
+assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 assert_files_HT '
  M aaa		eee	ddd
 !! ignored0	ignored0

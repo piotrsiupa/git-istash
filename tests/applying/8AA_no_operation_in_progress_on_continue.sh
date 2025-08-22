@@ -4,6 +4,7 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_CONTINUE
 
 __test_section__ 'Create stash'
 printf 'aaa\n' >aaa
@@ -15,7 +16,7 @@ SWITCH_HEAD_TYPE
 
 __test_section__ "Continue $APPLY_OPERATION stash (without changes)"
 correct_head_hash="$(get_head_hash_HT)"
-assert_exit_code 1 git istash "$APPLY_OPERATION" --continue
+assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 assert_files_HT '
 !! ignored0	ignored0
 !! ignored1	ignored1
@@ -33,7 +34,7 @@ __test_section__ "Continue $APPLY_OPERATION stash (with changes)"
 printf 'ccc\n' >aaa
 git add aaa
 printf 'ddd\n' >aaa
-assert_exit_code 1 git istash "$APPLY_OPERATION" --continue
+assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 assert_files_HT '
 AM aaa		ddd	ccc
 !! ignored0	ignored0

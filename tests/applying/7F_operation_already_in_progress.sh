@@ -4,6 +4,7 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_CONTINUE
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
@@ -59,7 +60,7 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 __test_section__ "Continue the first $APPLY_OPERATION stash"
 printf 'ddd\n' >aaa
 git add aaa
-assert_exit_code 0 git istash "$APPLY_OPERATION" --continue
+assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 assert_files_HT '
  M aaa		ddd	ccc
 !! ignored0	ignored0

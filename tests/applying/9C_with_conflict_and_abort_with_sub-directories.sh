@@ -4,6 +4,7 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_ABORT
 
 __test_section__ 'Prepare repository'
 mkdir xxx yyy
@@ -73,7 +74,7 @@ printf 'eee1\n' >xxx/aaa
 printf 'eee2\n' >yyy/aaa
 git add aaa xxx/aaa yyy/aaa
 cd xxx
-assert_exit_code 0 git istash "$APPLY_OPERATION" --abort
+assert_exit_code 0 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
 cd -
 assert_files_HT '
    aaa		ddd0

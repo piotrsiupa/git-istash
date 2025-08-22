@@ -32,3 +32,26 @@ IS_APPLY() {
 IS_POP() {
 	test "$APPLY_OPERATION" = 'pop'
 }
+
+#shellcheck disable=SC2120
+PARAMETRIZE_ABORT() { # keys
+	PARAMETRIZE_OPTION true 'ABORT' 'ABORT: ABORT-LONG && ABORT-LONGISH0 & ABORT-LONGISH1' "$@"
+	#shellcheck disable=SC2034
+	case "$ABORT" in
+		ABORT-LONG) ABORT_FLAG='--abort' ;;
+		ABORT-LONGISH0) ABORT_FLAG='--abor' ;;
+		ABORT-LONGISH1) ABORT_FLAG='--ab' ;;
+	esac
+}
+
+#shellcheck disable=SC2120
+PARAMETRIZE_CONTINUE() { # keys
+	PARAMETRIZE_OPTION true 'CONTINUE' 'CONTINUE: CONTINUE-SHORT & CONTINUE-LONG && CONTINUE-LONGISH0 & CONTINUE-LONGISH1' "$@"
+	#shellcheck disable=SC2034
+	case "$CONTINUE" in
+		CONTINUE-SHORT) CONTINUE_FLAG='-c' ;;
+		CONTINUE-LONG) CONTINUE_FLAG='--continue' ;;
+		CONTINUE-LONGISH0) CONTINUE_FLAG='--conti' ;;
+		CONTINUE-LONGISH1) CONTINUE_FLAG='--con' ;;
+	esac
+}

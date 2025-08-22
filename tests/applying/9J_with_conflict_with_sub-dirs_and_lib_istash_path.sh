@@ -4,6 +4,7 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_CONTINUE
 
 __test_section__ 'Prepare repository'
 mkdir xxx yyy
@@ -73,7 +74,7 @@ printf 'eee1\n' >xxx/aaa
 printf 'eee2\n' >yyy/aaa
 git add aaa xxx/aaa yyy/aaa
 cd xxx
-assert_exit_code 2 capture_outputs ../../../../../bin/git-istash "$APPLY_OPERATION" --continue
+assert_exit_code 2 capture_outputs ../../../../../bin/git-istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 cd -
 assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
@@ -106,7 +107,7 @@ git add aaa xxx/aaa yyy/aaa
 if [ "$HEAD_TYPE" != 'ORPHAN' ]
 then
 	cd xxx
-	assert_exit_code 2 capture_outputs ../../../../../bin/git-istash "$APPLY_OPERATION" --continue
+	assert_exit_code 2 capture_outputs ../../../../../bin/git-istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 	cd -
 	assert_conflict_message "$APPLY_OPERATION"
 	assert_files '
@@ -132,7 +133,7 @@ then
 	git add zzz xxx/zzz yyy/zzz
 fi
 cd xxx
-assert_exit_code 0 ../../../../../bin/git-istash "$APPLY_OPERATION" --continue
+assert_exit_code 0 ../../../../../bin/git-istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 cd -
 assert_files_HT '
 MM aaa		fff0	eee0

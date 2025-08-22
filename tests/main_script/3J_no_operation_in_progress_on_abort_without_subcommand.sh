@@ -3,6 +3,7 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
+PARAMETRIZE_ABORT
 
 __test_section__ 'Create stash'
 printf 'aaa\n' >aaa
@@ -14,7 +15,7 @@ SWITCH_HEAD_TYPE
 
 __test_section__ "Abort stash (without changes)"
 correct_head_hash="$(get_head_hash_HT)"
-assert_exit_code 1 git istash --abort
+assert_exit_code 1 git istash "$ABORT_FLAG"
 assert_files_HT '
 !! ignored0	ignored0
 !! ignored1	ignored1
@@ -32,7 +33,7 @@ __test_section__ "Abort stash (with changes)"
 printf 'ccc\n' >aaa
 git add aaa
 printf 'ddd\n' >aaa
-assert_exit_code 1 git istash --abort
+assert_exit_code 1 git istash "$ABORT_FLAG"
 assert_files_HT '
 AM aaa		ddd	ccc
 !! ignored0	ignored0

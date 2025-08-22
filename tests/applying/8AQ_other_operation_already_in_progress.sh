@@ -4,6 +4,7 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_ABORT
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
@@ -63,7 +64,7 @@ assert_dotgit_contents_for "$OTHER_APPLY_OPERATION"
 
 __test_section__ "Abort $OTHER_APPLY_OPERATION stash"
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash $OTHER_APPLY_OPERATION --abort
+assert_exit_code 0 git istash $OTHER_APPLY_OPERATION "$ABORT_FLAG"
 assert_files_HT '
    aaa		ccc
 !! ignored0	ignored0

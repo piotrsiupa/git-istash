@@ -3,6 +3,7 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
+PARAMETRIZE_CONTINUE
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
@@ -42,7 +43,7 @@ mv .git/ISTASH_TARGET .git/ISTASH_TARGET~
 correct_head_hash2="$(get_head_hash_HT)"
 printf 'ddd\n' >aaa
 git add aaa
-assert_exit_code 1 git istash --continue
+assert_exit_code 1 git istash "$CONTINUE_FLAG"
 assert_files_HT '
 M  aaa		ddd
 !! ignored0	ignored0
