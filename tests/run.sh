@@ -135,6 +135,7 @@ get_display_name() { # raw_name
 	if [ "$raw_name" = n ]
 	then
 		printf '"'
+		#shellcheck disable=SC2018,SC2019
 		printf '%s' "$1" | head -c1 | tr 'a-z' 'A-Z'
 		printf '%s' "$1" | tail -c+2 | sed -E -e 's/_/ /g' -e 's;/; -> ;g'
 		printf '"'
