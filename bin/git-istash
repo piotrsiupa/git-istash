@@ -13,9 +13,10 @@ print_help() {
 	printf 'Usage: git istash <sub-command> [<argument>...]\n'
 	printf '   or: git istash -h\n'
 	printf '   or: git istash --version\n'
-	printf '   or: git istash --continue\n'
+	printf '   or: git istash (--continue | --abort)\n'
 	printf '\n'
 	printf 'Options:\n'
+	printf '    -a, --abort\t\t- Abort `apply` or `pop` when one is in progress.\n'
 	printf '    -c, --continue\t- Continue `apply` or `pop` when one is in progress.\n'
 	printf '    -h\t\t\t- Show this help text and exit.\n'
 	printf '\t--version\t- Show version information and exit.\n'
@@ -92,7 +93,7 @@ elif [ "$1" = '--version' ] || [ "$2" = '--version' ]
 then
 	print_version
 	exit 0
-elif [ "$1" = '-c' ] || [ "$1" = '--continue' ]
+elif [ "$1" = '-c' ] || [ "$1" = '--continue' ] || [ "$1" = '-a' ] || [ "$1" = '--abort' ]
 then
 	. "$(dirname "$0")/../lib/git-istash/git-istash-commons"
 	case "$(find_data_files)" in
