@@ -17,6 +17,7 @@ print_help() {
 	printf '    -l, --limit=number\t- Set maximum number of tests to be run. (It pairs well\n\t\t\t  with "--failed" to e.g. rerun the first failed test.)\n'
 	printf '    -m, --meticulous=N\t- Set how many tests will be run. Allowed values are\n\t\t\t  0..5 (default=3). (See the section "Meticulousness".)\n'
 	printf '    -p, --print-paths\t- Instead of running tests, print their paths and exit.\n\t\t\t  (The paths are relative to the directory "tests".)\n'
+	printf '    -R, --relative\t- Print paths relative to the currect directory.\n\t\t\t  (Implies "--print-paths".)\n'
 	printf '\t--progress\t- Show progress information during testing. (It uses the\n\t\t\t  multi-threaded code, which adds some overhead for\n\t\t\t  a single job run.)\n\t\t\t  This is the default when color is enabled, the quiet\n\t\t\t  mode is disabled and there are multiple jobs.\n'
 	printf '\t--no-progress\t- Don'\''t show progress information. (See "--progress".)\n\t\t\t  This is useful to avoid outputting ANSI escape codes.\n'
 	printf '    -q, --quiet\t\t- Don'\''t print summaries for passed tests.\n'
@@ -50,7 +51,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'test script version 2.2.1\n'
+	printf 'test script version 2.3.0\n'
 }
 
 printf_color_code() { # code_for_printf...
@@ -130,11 +131,13 @@ find_tests() { # pattern
 	fi
 }
 
-get_test_display_name() { # raw_name
+get_display_name() { # raw_name
 	if [ "$raw_name" = n ]
 	then
 		printf '"'
-		printf '%s' "$1" | sed -E -e 's/_/ /g' -e 's;/; -> ;g'
+		#shellcheck disable=SC2018,SC2019
+		printf '%s' "$1" | head -c1 | tr 'a-z' 'A-Z'
+		printf '%s' "$1" | tail -c+2 | sed -E -e 's/_/ /g' -e 's;/; -> ;g'
 		printf '"'
 	else
 		printf '%s' "$(dirname "$0")/$1.sh"
@@ -332,7 +335,7 @@ run_test() ( # test_name
 		if ! printf '%s\n' "$test_result" | grep -qE '^\?'
 		then
 			test_count=$((test_count + 1))
-			display_name="$(get_test_display_name "$1")"
+			display_name="$(get_display_name "$1")"
 			if [ -z "$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | tail -n+2)" ]
 			then
 				parameters_string=''
@@ -449,7 +452,7 @@ update_current_category() { # test_name
 		then
 			{
 				printf_color_code '\033[1m'
-				print_centered "$current_category" '-'
+				print_centered "$(get_display_name "$current_category")" '-'
 				printf_color_code '\033[22m'
 				printf '\n'
 			} 1>&5
@@ -597,7 +600,7 @@ run_tests() {
 					break
 				fi
 				update_current_category "$(printf '%s\n' "$running_tests_data" | head -n1 | cut -d' ' -f3)" 5>>"$output_buffer_file"
-				test_display_name="$(get_test_display_name "$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f3)")"
+				test_display_name="$(get_display_name "$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f3)")"
 				if [ "$show_progress" = y ]
 				then
 					printf 'PENDNG - %s (?/?) \n' "$test_display_name"
@@ -772,8 +775,8 @@ print_summary() {
 	printf '\n'
 }
 
-getopt_short_options='c:Cdfhj:l:m:pqQrsSv'
-getopt_long_options='color:,check,debug,failed,file-name,help,jobs:,limit:,meticulousness:,print-paths,progress,no-progress,quiet,quieter,raw,raw-name,skip-at-fail,skip-at-error,skip-on-fail,skip-on-error,stop-at-fail,stop-at-error,stop-on-fail,stop-on-error,verbose,version'
+getopt_short_options='c:Cdfhj:l:m:pRqQrsSv'
+getopt_long_options='color:,check,debug,failed,file-name,help,jobs:,limit:,meticulousness:,print-paths,relative-paths,progress,no-progress,quiet,quieter,raw,raw-name,skip-at-fail,skip-at-error,skip-on-fail,skip-on-error,stop-at-fail,stop-at-error,stop-on-fail,stop-on-error,verbose,version'
 getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 only_failed=n
@@ -787,6 +790,7 @@ skip_on_fail=n
 stop_on_error=n
 test_limit=0
 print_paths=n
+print_paths_prefix=''
 jobs_num=1
 max_meticulousness=5
 meticulousness=3
@@ -860,6 +864,10 @@ do
 		;;
 	-p|--print-paths)
 		print_paths=y
+		;;
+	-R|--relative-paths)
+		print_paths=y
+		print_paths_prefix="$(dirname "$0")/"
 		;;
 	--progress)
 		show_progress=y
@@ -966,7 +974,7 @@ cd "$(dirname "$0")"
 tests="$(find_tests "$filter")"
 if [ "$print_paths" = y ]
 then
-	printf '%s' "$tests" | xargs -- printf '%s.sh\n'
+	printf '%s' "$tests" | xargs -n1 -- printf '%s%s.sh\n' "$print_paths_prefix"
 	exit 0
 fi
 

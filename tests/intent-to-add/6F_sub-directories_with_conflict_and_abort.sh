@@ -29,7 +29,7 @@ mkdir -p xxx
 cd xxx
 assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION"
 cd -
-assert_conflict_message
+assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 AA aaa		bbb0|aaa0
 AA xxx/aaa	bbb1|aaa1

@@ -4,11 +4,7 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
-PARAMETRIZE_CONTINUE
-if IS_APPLY
-then
-	skip_silently  # this test is "pop" specific
-fi
+PARAMETRIZE_ABORT
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
@@ -17,6 +13,7 @@ git commit -m 'Added aaa'
 
 __test_section__ 'Create stash'
 printf 'bbb\n' >aaa
+git add aaa
 git stash push
 
 __test_section__ 'Create conflict'
@@ -39,44 +36,22 @@ DU aaa		bbb
 !! ignored1	ignored1
 '
 assert_stash_count 1
+assert_branch_count_HT 1
 assert_data_files "$APPLY_OPERATION"
 assert_rebase y
 assert_dotgit_contents_for "$APPLY_OPERATION"
 
-__test_section__ "Continue $APPLY_OPERATION stash (0)"
-correct_head_hash2="$(get_head_hash_HT)"
-printf 'eee\n' >aaa
-git add aaa
-mv .git/ISTASH_STASH .git/ISTASH_STASH~
-touch .git/ISTASH_STASH
-assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
+__test_section__ "Abort (implied) $APPLY_OPERATION stash"
+assert_exit_code 0 git istash "$ABORT_FLAG"
 assert_files_HT '
-M  aaa		eee
+   aaa		ddd
 !! ignored0	ignored0
 !! ignored1	ignored1
 ' '
-A  aaa		eee
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
 assert_stash_count 1
-assert_head_hash_HT "$correct_head_hash2"
-assert_rebase y
-assert_dotgit_contents_for "$APPLY_OPERATION" 'ISTASH_STASH~'
-
-__test_section__ "Continue $APPLY_OPERATION stash (1)"
-mv .git/ISTASH_STASH~ .git/ISTASH_STASH
-assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
-assert_files_HT '
- M aaa		eee	ddd
-!! ignored0	ignored0
-!! ignored1	ignored1
-' '
- A aaa		eee
-!! ignored0	ignored0
-!! ignored1	ignored1
-'
-assert_stash_count 0
 assert_log_length_HT 3
 assert_branch_count 1
 assert_head_hash_HT "$correct_head_hash"

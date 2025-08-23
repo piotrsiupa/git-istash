@@ -4,6 +4,7 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_CONTINUE
 
 __test_section__ 'Prepare repository'
 mkdir xxx yyy
@@ -44,7 +45,7 @@ mkdir -p xxx
 cd xxx
 assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION"
 cd -
-assert_conflict_message
+assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ddd0|bbb0
 UU xxx/aaa	ddd1|bbb1
@@ -73,9 +74,9 @@ printf 'eee1\n' >xxx/aaa
 printf 'eee2\n' >yyy/aaa
 git add aaa xxx/aaa yyy/aaa
 cd xxx
-assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION" --continue
+assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 cd -
-assert_conflict_message
+assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		eee0|ccc0
 UU xxx/aaa	eee1|ccc1
@@ -106,9 +107,9 @@ git add aaa xxx/aaa yyy/aaa
 if [ "$HEAD_TYPE" != 'ORPHAN' ]
 then
 	cd xxx
-	assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION" --continue
+	assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 	cd -
-	assert_conflict_message
+	assert_conflict_message "$APPLY_OPERATION"
 	assert_files '
 	   aaa		fff0
 	   xxx/aaa	fff1
@@ -132,7 +133,7 @@ then
 	git add zzz xxx/zzz yyy/zzz
 fi
 cd xxx
-assert_exit_code 0 git istash "$APPLY_OPERATION" --continue
+assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 cd -
 assert_files_HT '
 MM aaa		fff0	eee0

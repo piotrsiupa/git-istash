@@ -3,8 +3,7 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
-PARAMETRIZE_APPLY_OPERATION
-PARAMETRIZE_CONTINUE
+PARAMETRIZE_ABORT
 
 __test_section__ 'Create stash'
 printf 'aaa\n' >aaa
@@ -14,9 +13,9 @@ git stash push -m 'the only stash'
 
 SWITCH_HEAD_TYPE
 
-__test_section__ "Continue $APPLY_OPERATION stash (without changes)"
+__test_section__ "Abort stash (without changes)"
 correct_head_hash="$(get_head_hash_HT)"
-assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
+assert_exit_code 1 git istash "$ABORT_FLAG"
 assert_files_HT '
 !! ignored0	ignored0
 !! ignored1	ignored1
@@ -30,11 +29,11 @@ assert_data_files 'none'
 assert_rebase n
 assert_dotgit_contents
 
-__test_section__ "Continue $APPLY_OPERATION stash (with changes)"
+__test_section__ "Abort stash (with changes)"
 printf 'ccc\n' >aaa
 git add aaa
 printf 'ddd\n' >aaa
-assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
+assert_exit_code 1 git istash "$ABORT_FLAG"
 assert_files_HT '
 AM aaa		ddd	ccc
 !! ignored0	ignored0

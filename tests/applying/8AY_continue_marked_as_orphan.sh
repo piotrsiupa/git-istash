@@ -4,6 +4,7 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH'
 PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_CONTINUE
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
@@ -22,7 +23,7 @@ SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
 assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION"
-assert_conflict_message
+assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ccc|bbb
 !! ignored0	ignored0
@@ -39,7 +40,7 @@ printf 'ddd\n' >aaa
 git add aaa
 mv '.git/ISTASH_TARGET' '.git/ISTASH_TARGET~'
 { printf '~' ; cat '.git/ISTASH_TARGET~' ; } >'.git/ISTASH_TARGET'
-assert_exit_code 1 git istash "$APPLY_OPERATION" --continue
+assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 assert_file_contents ignored0 'ignored0'
 assert_file_contents ignored1 'ignored1'
 assert_branch_metadata_HT

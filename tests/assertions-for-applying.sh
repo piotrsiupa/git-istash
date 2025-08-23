@@ -8,18 +8,8 @@ fi
 
 
 #shellcheck disable=SC2120
-assert_conflict_message() {
-	#shellcheck disable=SC2154
-	eval set -- "$last_command"
-	if [ "$1" = 'git' ]
-	then
-		expected_istash_command="$1 $2 $3"
-	elif [ "$(basename "$1")" = 'git-istash' ]
-	then
-		expected_istash_command="git istash $2"
-	else
-		expected_istash_command="$(basename "$1" | tr '-' ' ')"
-	fi
+assert_conflict_message() { # istash_command
+	expected_istash_command="git istash $1"
 	expected_error_message="
 hint: Disregard all hints above about using \"git rebase\".
 hint: Use \"$expected_istash_command --continue\" after fixing conflicts.
