@@ -2,31 +2,35 @@
 
 non_essential_test
 
-PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
+PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_APPLY_OPERATION
 
-__test_section__ 'Create stash'
+__test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
 git add aaa
+git commit -m 'Added aaa'
+
+__test_section__ 'Create stash'
 printf 'bbb\n' >aaa
-git stash push -m 'the stash'
-assert_branch_count 1
-assert_dotgit_contents
+git add aaa
+git stash push
 
 SWITCH_HEAD_TYPE
 
+__test_section__ 'Dirty the working directory & create conflict'
+printf 'bbb\n' >aaa
+git add aaa
+
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_hash="$(get_head_hash_HT)"
-printf 'xxx\n' >xxx
-git add -N xxx
-assert_exit_code 1 git istash "$APPLY_OPERATION" 1
+assert_exit_code 0 git istash "$APPLY_OPERATION"
 assert_files_HT '
- A xxx		xxx
+M  aaa		bbb
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
-assert_stash_count 1
-assert_log_length_HT 1
+assert_stash_count_AO 1
+assert_log_length_HT 2
 assert_branch_count 1
 assert_head_hash_HT "$correct_head_hash"
 assert_head_name_HT

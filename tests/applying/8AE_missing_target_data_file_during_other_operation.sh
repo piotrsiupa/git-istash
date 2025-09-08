@@ -62,9 +62,9 @@ assert_head_hash_HT "$correct_head_hash2"
 assert_rebase y
 if IS_APPLY
 then
-	assert_dotgit_contents 'ISTASH_STASH' 'ISTASH_TARGET~'
+	assert_dotgit_contents 'ISTASH_STASH' 'ISTASH_TARGET~' 'ISTASH_WORKING-DIR'
 else
-	assert_dotgit_contents 'ISTASH_TARGET~'
+	assert_dotgit_contents 'ISTASH_TARGET~' 'ISTASH_WORKING-DIR'
 fi
 
 __test_section__ "Continue $OTHER_APPLY_OPERATION stash (1)"

@@ -4,29 +4,42 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_ABORT
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
 git add aaa
-git commit -m 'added aaa'
+git commit -m 'Added aaa'
 
 __test_section__ 'Create stash'
 printf 'bbb\n' >aaa
 git add aaa
-printf 'ccc\n' >aaa
-git stash push -m 'the stash'
-assert_branch_count 1
-assert_dotgit_contents
+git stash push
 
 SWITCH_HEAD_TYPE
 
+__test_section__ 'Dirty the working directory & create conflict'
+printf 'ddd\n' >aaa
+
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_hash="$(get_head_hash_HT)"
-printf 'xxx\n' >aaa
-git add aaa
-assert_exit_code 1 git istash "$APPLY_OPERATION" 1
+assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION"
+assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
-M  aaa		xxx
+UU aaa		bbb|ddd
+!! ignored0	ignored0
+!! ignored1	ignored1
+'
+assert_stash_count 1
+assert_branch_count_HT 1
+assert_data_files "$APPLY_OPERATION"
+assert_rebase y
+assert_dotgit_contents_for "$APPLY_OPERATION"
+
+__test_section__ "Abort $APPLY_OPERATION stash"
+assert_exit_code 0 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
+assert_files_HT '
+ M aaa		ddd	aaa
 !! ignored0	ignored0
 !! ignored1	ignored1
 '

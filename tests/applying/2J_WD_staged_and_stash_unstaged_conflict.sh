@@ -2,13 +2,9 @@
 
 non_essential_test
 
-PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
+PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_CONTINUE
-if IS_APPLY
-then
-	skip_silently  # this test is "pop" specific
-fi
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
@@ -19,11 +15,11 @@ __test_section__ 'Create stash'
 printf 'bbb\n' >aaa
 git stash push
 
-__test_section__ 'Create conflict'
-printf 'ddd\n' >aaa
-git commit -am 'Changed aaa'
-
 SWITCH_HEAD_TYPE
+
+__test_section__ 'Dirty the working directory & create conflict'
+printf 'ddd\n' >aaa
+git add aaa
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_hash="$(get_head_hash_HT)"
@@ -33,50 +29,24 @@ assert_files_HT '
 UU aaa		ddd|bbb
 !! ignored0	ignored0
 !! ignored1	ignored1
-' '
-DU aaa		bbb
-!! ignored0	ignored0
-!! ignored1	ignored1
 '
 assert_stash_count 1
+assert_branch_count_HT 1
 assert_data_files "$APPLY_OPERATION"
 assert_rebase y
 assert_dotgit_contents_for "$APPLY_OPERATION"
 
-__test_section__ "Continue $APPLY_OPERATION stash (0)"
-correct_head_hash2="$(get_head_hash_HT)"
+__test_section__ "Continue $APPLY_OPERATION stash"
 printf 'eee\n' >aaa
 git add aaa
-mv .git/ISTASH_STASH .git/ISTASH_STASH~
-assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
-assert_files_HT '
-M  aaa		eee
-!! ignored0	ignored0
-!! ignored1	ignored1
-' '
-A  aaa		eee
-!! ignored0	ignored0
-!! ignored1	ignored1
-'
-assert_stash_count 1
-assert_head_hash_HT "$correct_head_hash2"
-assert_rebase y
-assert_dotgit_contents 'ISTASH_STASH~' 'ISTASH_TARGET' 'ISTASH_WORKING-DIR'
-
-__test_section__ "Continue $APPLY_OPERATION stash (1)"
-mv .git/ISTASH_STASH~ .git/ISTASH_STASH
 assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 assert_files_HT '
- M aaa		eee	ddd
-!! ignored0	ignored0
-!! ignored1	ignored1
-' '
- A aaa		eee
+MM aaa		eee	ddd
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
-assert_stash_count 0
-assert_log_length_HT 3
+assert_stash_count_AO 1
+assert_log_length_HT 2
 assert_branch_count 1
 assert_head_hash_HT "$correct_head_hash"
 assert_head_name_HT

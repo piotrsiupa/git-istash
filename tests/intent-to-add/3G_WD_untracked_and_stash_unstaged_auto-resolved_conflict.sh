@@ -6,24 +6,24 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
 
 __test_section__ 'Create stash'
-printf 'aaa\n' >aaa
-git add aaa
 printf 'bbb\n' >aaa
-git stash push -m 'the stash'
+git add -N aaa
+git istash push
 
 SWITCH_HEAD_TYPE
 
+__test_section__ 'Dirty the working directory & create conflict'
+printf 'bbb\n' >aaa
+
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_hash="$(get_head_hash_HT)"
-printf 'xxx\n' >xxx
-git add xxx
-assert_exit_code 1 git istash "$APPLY_OPERATION" 1
+assert_exit_code 0 git istash "$APPLY_OPERATION"
 assert_files_HT '
-A  xxx		xxx
+ A aaa		bbb
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
-assert_stash_count 1
+assert_stash_count_AO 1
 assert_log_length_HT 1
 assert_branch_count 1
 assert_head_hash_HT "$correct_head_hash"

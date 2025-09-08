@@ -57,7 +57,7 @@ assert_stash_count 1
 assert_branch_count_HT 1
 assert_head_hash_HT "$correct_head_hash2"
 assert_rebase y
-assert_dotgit_contents 'ISTASH_STASH' 'ISTASH_TARGET~'
+assert_dotgit_contents 'ISTASH_STASH' 'ISTASH_TARGET~' 'ISTASH_WORKING-DIR'
 
 __test_section__ 'Abort popping stash'
 mv .git/ISTASH_TARGET~ .git/ISTASH_TARGET

@@ -13,6 +13,9 @@ make_data_file_path() { # name
 make_target_data_file_path() {
 	make_data_file_path 'target'
 }
+make_working_dir_hash_file_path() {
+	make_data_file_path 'working-dir'
+}
 make_stash_data_file_path() {
 	make_data_file_path 'stash'
 }
@@ -44,16 +47,6 @@ check_args() { # max_free_args args...
 	then
 		printf 'error: Too many arguments.\n' 1>&2
 		printf 'error: Type "git %s --help" for more information.\n' "$_script_name" 1>&2
-		return 1
-	fi
-}
-
-check_repository_state() {
-	if [ -n "$(git status --porcelain)" ]
-	then
-		# There are still are some limitations.
-		printf 'error: There are uncommitted changes in the working directory.\n' 1>&2
-		printf 'error: Please commit or stash them.\n' 1>&2
 		return 1
 	fi
 }

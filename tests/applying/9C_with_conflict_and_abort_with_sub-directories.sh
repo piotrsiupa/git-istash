@@ -12,7 +12,7 @@ printf 'aaa0\n' >aaa
 printf 'aaa1\n' >xxx/aaa
 printf 'aaa2\n' >yyy/aaa
 git add aaa xxx/aaa yyy/aaa
-git commit -m 'Added aaa'
+git commit -m 'Added a few files'
 
 __test_section__ 'Create stash'
 printf 'bbb0\n' >aaa
