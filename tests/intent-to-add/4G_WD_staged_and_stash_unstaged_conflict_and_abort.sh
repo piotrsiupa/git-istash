@@ -18,7 +18,7 @@ printf 'ddd\n' >aaa
 git add aaa
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
-correct_head_hash="$(get_head_hash_HT)"
+correct_head_sha="$(get_head_sha_HT)"
 assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION"
 assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
@@ -42,7 +42,7 @@ A  aaa		ddd
 assert_stash_count 1
 assert_log_length_HT 1
 assert_branch_count 1
-assert_head_hash_HT "$correct_head_hash"
+assert_head_sha_HT "$correct_head_sha"
 assert_head_name_HT
 assert_data_files 'none'
 assert_rebase n

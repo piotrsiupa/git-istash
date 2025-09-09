@@ -12,7 +12,7 @@ PARAMETRIZE_UNSTAGED 'NO'
 PARAMETRIZE_PATHSPEC_STYLE
 PARAMETRIZE_OPTIONS_INDICATOR IS_PATHSPEC_IN_ARGS
 
-correct_head_hash="$(get_head_hash)"
+correct_head_sha="$(get_head_sha)"
 SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_CREATE_OPERATION stash"
@@ -85,7 +85,7 @@ assert_files_HTCO '
 assert_stash_count 0
 assert_log_length_HT 1
 assert_branch_count 1
-assert_head_hash_HT "$correct_head_hash"
+assert_head_sha_HT "$correct_head_sha"
 assert_head_name_HT
 assert_rebase n
 assert_branch_metadata_HT

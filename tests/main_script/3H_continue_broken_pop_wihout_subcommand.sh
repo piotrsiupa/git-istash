@@ -21,7 +21,7 @@ git commit -am 'Changed aaa'
 SWITCH_HEAD_TYPE
 
 __test_section__ 'Pop stash'
-correct_head_hash="$(get_head_hash_HT)"
+correct_head_sha="$(get_head_sha_HT)"
 assert_exit_code 2 capture_outputs git istash pop
 assert_conflict_message 'pop'
 assert_files_HT '
@@ -40,7 +40,7 @@ assert_rebase y
 assert_dotgit_contents_for 'pop'
 
 mv .git/ISTASH_TARGET .git/ISTASH_TARGET~
-correct_head_hash2="$(get_head_hash_HT)"
+correct_head_sha2="$(get_head_sha_HT)"
 printf 'ddd\n' >aaa
 git add aaa
 assert_exit_code 1 git istash "$CONTINUE_FLAG"
@@ -55,7 +55,7 @@ A  aaa		ddd
 '
 assert_stash_count 1
 assert_branch_count_HT 1
-assert_head_hash_HT "$correct_head_hash2"
+assert_head_sha_HT "$correct_head_sha2"
 assert_rebase y
 assert_dotgit_contents 'ISTASH_STASH' 'ISTASH_TARGET~' 'ISTASH_WORKING-DIR'
 
@@ -73,7 +73,7 @@ assert_files_HT '
 assert_stash_count 1
 assert_log_length_HT 3
 assert_branch_count 1
-assert_head_hash_HT "$correct_head_hash"
+assert_head_sha_HT "$correct_head_sha"
 assert_head_name_HT
 assert_data_files 'none'
 assert_rebase n

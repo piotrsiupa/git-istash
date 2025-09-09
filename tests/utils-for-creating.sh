@@ -212,7 +212,7 @@ PARAMETRIZE_EXCLUDE() {
 	esac
 }
 
-store_stash_CO() { # new_stash_hash
+store_stash_CO() { # new_stash_sha
 	if CO_STORES_STASH
 	then
 		test -z "$1" ||
@@ -220,7 +220,7 @@ store_stash_CO() { # new_stash_hash
 	else
 		stash_count_before="$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)"
 		git stash store "$1" ||
-			fail 'Cannot store stash using hash returned by "%s"! ("%s")\n' "$CREATE_OPERATION" "$1"
+			fail 'Cannot store stash using sha returned by "%s"! ("%s")\n' "$CREATE_OPERATION" "$1"
 		stash_count_after="$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)"
 		test "$stash_count_after" -gt "$stash_count_before" ||
 			fail 'Storing stash produced by "%s" quietly failed! (Possibly a duplicated entry.)\n' "$CREATE_OPERATION"

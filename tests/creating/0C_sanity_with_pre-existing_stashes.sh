@@ -30,9 +30,9 @@ assert_dotgit_contents
 SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_CREATE_OPERATION stash"
-correct_pre_stash_hash_0="$(git rev-parse 'stash@{1}')"
-correct_pre_stash_hash_1="$(git rev-parse 'stash@{0}')"
-correct_head_hash="$(get_head_hash_HT)"
+correct_pre_stash_sha_0="$(git rev-parse 'stash@{1}')"
+correct_pre_stash_sha_1="$(git rev-parse 'stash@{0}')"
+correct_head_sha="$(get_head_sha_HT)"
 printf 'bbb\n' >aaa
 if ! IS_HEAD_ORPHAN
 then
@@ -49,9 +49,9 @@ then
 	assert_stash_count 3
 	assert_log_length_HT 2
 	assert_branch_count 1
-	assert_head_hash_HT "$correct_head_hash"
-	assert_stash_hash 2 "$correct_pre_stash_hash_0"
-	assert_stash_hash 1 "$correct_pre_stash_hash_1"
+	assert_head_sha_HT "$correct_head_sha"
+	assert_stash_sha 2 "$correct_pre_stash_sha_0"
+	assert_stash_sha 1 "$correct_pre_stash_sha_1"
 	assert_head_name_HT
 	assert_rebase n
 	assert_branch_metadata_HT

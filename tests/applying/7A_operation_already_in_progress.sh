@@ -22,7 +22,7 @@ git commit -am 'Changed aaa'
 SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
-correct_head_hash_0="$(get_head_hash_HT)"
+correct_head_sha_0="$(get_head_sha_HT)"
 assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION"
 assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
@@ -40,7 +40,7 @@ assert_rebase y
 assert_dotgit_contents_for "$APPLY_OPERATION"
 
 __test_section__ "$CAP_APPLY_OPERATION stash again"
-correct_head_hash_1="$(get_head_hash_HT)"
+correct_head_sha_1="$(get_head_sha_HT)"
 assert_exit_code 1 git istash "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ccc|bbb
@@ -52,7 +52,7 @@ DU aaa		bbb
 !! ignored1	ignored1
 '
 assert_stash_count 1
-assert_head_hash_HT "$correct_head_hash_1"
+assert_head_sha_HT "$correct_head_sha_1"
 assert_data_files "$APPLY_OPERATION"
 assert_rebase y
 assert_dotgit_contents_for "$APPLY_OPERATION"
@@ -71,7 +71,7 @@ assert_files_HT '
 !! ignored1	ignored1
 '
 assert_stash_count_AO 1
-assert_head_hash_HT "$correct_head_hash_0"
+assert_head_sha_HT "$correct_head_sha_0"
 assert_data_files 'none'
 assert_rebase n
 assert_branch_metadata_HT

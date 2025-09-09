@@ -26,7 +26,7 @@ printf 'xxx\nxxx\n' >eee9
 git add .
 git commit -m 'Added a bunch of files'
 
-correct_head_hash="$(get_head_hash)"
+correct_head_sha="$(get_head_sha)"
 SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_CREATE_OPERATION stash"
@@ -49,10 +49,10 @@ printf 'aaa0 bbb? *5 ./?dd* fff1? ' | PREPARE_PATHSPEC_FILE
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086
-	new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" 'aaa0' $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS 'bbb?' --patch $EOI '*5' './?dd*' 'fff1?' <.git/answers_for_patch)"
+	new_stash_sha_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" 'aaa0' $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS 'bbb?' --patch $EOI '*5' './?dd*' 'fff1?' <.git/answers_for_patch)"
 else
 	#shellcheck disable=SC2086
-	new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS --patch $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test <.git/answers_for_patch)"
+	new_stash_sha_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS --patch $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test <.git/answers_for_patch)"
 fi
 if ! IS_KEEP_INDEX_ON
 then
@@ -120,7 +120,7 @@ else
 	!! ignored1	ignored1
 	'
 fi
-store_stash_CO "$new_stash_hash_CO"
+store_stash_CO "$new_stash_sha_CO"
 assert_stash_HTCO 0 '' '
 M  aaa0		yyy\nxxx\nxxx\nyyy
    aaa1		xxx\nxxx
@@ -137,7 +137,7 @@ assert_stash_base_HT 0 'HEAD'
 assert_stash_count 1
 assert_log_length_HT 2
 assert_branch_count 1
-assert_head_hash_HT "$correct_head_hash"
+assert_head_sha_HT "$correct_head_sha"
 assert_head_name_HT
 assert_rebase n
 assert_branch_metadata_HT
@@ -163,7 +163,7 @@ M  ddd6		yyy\nxxx\nxxx\nyyy
 assert_stash_count 0
 assert_log_length 2
 assert_branch_count 1
-assert_head_hash "$correct_head_hash"
+assert_head_sha "$correct_head_sha"
 assert_head_name 'master'
 assert_rebase n
 assert_branch_metadata_HT

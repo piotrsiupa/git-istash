@@ -17,7 +17,7 @@ printf 'X' >.gitignore
 git add .
 git commit -m 'Added an empty .gitignore'
 
-correct_head_hash="$(get_head_hash)"
+correct_head_sha="$(get_head_sha)"
 SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_CREATE_OPERATION stash"
@@ -31,14 +31,14 @@ printf '*1 .gitignore ' | PREPARE_PATHSPEC_FILE
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086
-	new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS -mX $EOI '*1' '.gitignore')"
+	new_stash_sha_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS -mX $EOI '*1' '.gitignore')"
 elif IS_PATHSPEC_IN_STDIN
 then
 	#shellcheck disable=SC2086
-	new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS -mX $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test)"
+	new_stash_sha_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS -mX $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test)"
 else
 	#shellcheck disable=SC2086
-	new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS -mX $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test)"
+	new_stash_sha_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS -mX $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test)"
 fi
 if ! IS_KEEP_INDEX_ON
 then
@@ -76,7 +76,7 @@ else
 	!! ignored1	ignored1
 	'
 fi
-store_stash_CO "$new_stash_hash_CO"
+store_stash_CO "$new_stash_sha_CO"
 assert_stash_HTCO 0 'X' '
 M  .gitignore	aaa?
 ?? bbb1		bbb
@@ -85,7 +85,7 @@ assert_stash_base_HT 0 'HEAD'
 assert_stash_count 1
 assert_log_length_HT 2
 assert_branch_count 1
-assert_head_hash_HT "$correct_head_hash"
+assert_head_sha_HT "$correct_head_sha"
 assert_head_name_HT
 assert_rebase n
 assert_branch_metadata_HT
@@ -103,7 +103,7 @@ M  .gitignore	aaa?
 assert_stash_count 0
 assert_log_length 2
 assert_branch_count 1
-assert_head_hash "$correct_head_hash"
+assert_head_sha "$correct_head_sha"
 assert_head_name 'master'
 assert_rebase n
 assert_branch_metadata_HT

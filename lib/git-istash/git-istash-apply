@@ -32,7 +32,7 @@ save_data() {
 	target_data="$(if [ "$curr_branch_type" = 'orphan' ] ; then printf '~' ; fi ; printf '%s' "$current_branch")"
 	printf '%s\n' "$target_data" >"$target_data_file"
 	
-	printf '%s\n' "$working_dir_changes_hash" >"$working_dir_hash_file"
+	printf '%s\n' "$working_dir_changes_sha" >"$working_dir_sha_file"
 }
 load_data() {
 	if [ "$(wc -l <"$target_data_file")" -ne 1 ]
@@ -58,17 +58,17 @@ load_data() {
 		curr_branch_type='detached'
 	fi
 	
-	working_dir_changes_hash="$(cat "$working_dir_hash_file")"
+	working_dir_changes_sha="$(cat "$working_dir_sha_file")"
 }
 delete_data() {
-	rm -f "$target_data_file" "$working_dir_hash_file"
+	rm -f "$target_data_file" "$working_dir_sha_file"
 }
 
 check_args_for_apply() { # max_free_args args...
 	check_args 'istash apply' "$@"
 }
 
-put_files_into_working_copy() { # untracked_changes_hash non_staged_changes_hash staged_changes_hash
+put_files_into_working_copy() { # untracked_changes_sha non_staged_changes_sha staged_changes_sha
 	git restore --source="$3" -- . || true
 	git add -- .
 	git restore --source="$1" -- . || true
@@ -99,9 +99,9 @@ end_with_success() {
 		printf 'fatal: HEAD is not in correct position after rebasing.\n' 1>&2
 		return 1
 	fi
-	untracked_changes_hash="$(git rev-parse HEAD~0)"
-	non_staged_changes_hash="$(git rev-parse HEAD~2)"
-	staged_changes_hash="$(git rev-parse HEAD~4)"
+	untracked_changes_sha="$(git rev-parse HEAD~0)"
+	non_staged_changes_sha="$(git rev-parse HEAD~2)"
+	staged_changes_sha="$(git rev-parse HEAD~4)"
 	case "$curr_branch_type" in
 		orphan)
 			if [ -n "$(git ls-tree -r --name-only HEAD~6)" ]
@@ -119,7 +119,7 @@ end_with_success() {
 			git switch -d HEAD~6
 			;;
 	esac
-	put_files_into_working_copy "$untracked_changes_hash" "$non_staged_changes_hash" "$staged_changes_hash"
+	put_files_into_working_copy "$untracked_changes_sha" "$non_staged_changes_sha" "$staged_changes_sha"
 	delete_data
 	printf '\nSuccessfully applied the stash\n'
 }
@@ -213,15 +213,15 @@ commit_working_directory() {
 	git --no-literal-pathspecs add --update :/ 1>&2 2>/dev/null || true
 	git commit --message='untracked' --allow-empty 1>/dev/null
 	
-	# save hash
-	working_dir_changes_hash="$(git rev-parse 'HEAD')"
+	# save sha
+	working_dir_changes_sha="$(git rev-parse 'HEAD')"
 }
 
 start_rebase() {
 	todo_list_editor="sed -i -E \
-			-e '1 i pick $working_dir_changes_hash~2 Staged working directory' \
-			-e '2 i pick $working_dir_changes_hash~1 Unstaged working directory' \
-			-e '3 i pick $working_dir_changes_hash~0 Untracked working directory'"
+			-e '1 i pick $working_dir_changes_sha~2 Staged working directory' \
+			-e '2 i pick $working_dir_changes_sha~1 Unstaged working directory' \
+			-e '3 i pick $working_dir_changes_sha~0 Untracked working directory'"
 	GIT_EDITOR="$todo_list_editor" git rebase --onto "$current_branch" "HEAD~3" "HEAD" --empty=keep --keep-empty --reapply-cherry-picks --interactive
 }
 
@@ -298,7 +298,7 @@ do_abort() { # args...
 	esac
 	if [ "$succeeded_switch" = y ]
 	then
-		put_files_into_working_copy "$(git rev-parse "$working_dir_changes_hash~0")" "$(git rev-parse "$working_dir_changes_hash~1")" "$(git rev-parse "$working_dir_changes_hash~2")"
+		put_files_into_working_copy "$(git rev-parse "$working_dir_changes_sha~0")" "$(git rev-parse "$working_dir_changes_sha~1")" "$(git rev-parse "$working_dir_changes_sha~2")"
 		delete_data
 		printf 'Aborted "git istash"\n' 1>&2
 	else
@@ -311,9 +311,9 @@ do_abort() { # args...
 		printf 'hint: Fix problems and rerun "git istash %s --abort"\n' "$(get_sub_command_name)" 1>&2
 		if [ "$is_pop" = n ]
 		then
-			printf 'hint: or delete the files "%s" and "%s" to cancel manually.\n' "$target_data_file" "$working_dir_hash_file" 1>&2
+			printf 'hint: or delete the files "%s" and "%s" to cancel manually.\n' "$target_data_file" "$working_dir_sha_file" 1>&2
 		else
-			printf 'hint: or delete the files "%s", "%s" and "%s" to cancel manually.\n' "$(make_stash_data_file_path)" "$target_data_file" "$working_dir_hash_file" 1>&2
+			printf 'hint: or delete the files "%s", "%s" and "%s" to cancel manually.\n' "$(make_stash_data_file_path)" "$target_data_file" "$working_dir_sha_file" 1>&2
 		fi
 		if is_color_allowed 2
 		then
@@ -373,5 +373,5 @@ fi
 
 cd "$(git rev-parse --show-toplevel)"
 target_data_file="$(make_target_data_file_path)"
-working_dir_hash_file="$(make_working_dir_hash_file_path)"
+working_dir_sha_file="$(make_working_dir_sha_file_path)"
 do_apply "$@"

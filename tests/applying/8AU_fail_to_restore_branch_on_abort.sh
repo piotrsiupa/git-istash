@@ -22,7 +22,7 @@ git commit -am 'Changed aaa'
 SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
-correct_head_hash="$(git rev-parse HEAD)"
+correct_head_sha="$(git rev-parse HEAD)"
 assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION"
 assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
@@ -37,7 +37,7 @@ assert_rebase y
 assert_dotgit_contents_for "$APPLY_OPERATION"
 
 __test_section__ "Abort $APPLY_OPERATION stash (0)"
-master_hash="$(git rev-parse master)"
+master_sha="$(git rev-parse master)"
 git branch -D master
 assert_exit_code 1 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
 assert_all_files 'aaa|ignored0|ignored1'
@@ -50,7 +50,7 @@ assert_rebase y
 assert_dotgit_contents_for "$APPLY_OPERATION"
 
 __test_section__ "Abort $APPLY_OPERATION stash (1)"
-git branch master "$master_hash"
+git branch master "$master_sha"
 if IS_HEAD_BRANCH
 then
 	git branch --set-upstream-to='my-origin/my-branch' master
@@ -64,7 +64,7 @@ assert_files_HT '
 assert_stash_count 1
 assert_log_length_HT 3
 assert_branch_count 1
-assert_head_hash "$correct_head_hash"
+assert_head_sha "$correct_head_sha"
 assert_head_name_HT
 assert_data_files 'none'
 assert_rebase n

@@ -28,7 +28,7 @@ printf 'ddd\n' >bbb
 printf 'eee\n' >ccc
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
-correct_head_hash="$(get_head_hash_HT)"
+correct_head_sha="$(get_head_sha_HT)"
 assert_exit_code 0 git istash "$APPLY_OPERATION"
 assert_files_HT '
 MM aaa		ccc	bbb
@@ -40,7 +40,7 @@ MM aaa		ccc	bbb
 assert_stash_count_AO 1
 assert_log_length_HT 2
 assert_branch_count 1
-assert_head_hash_HT "$correct_head_hash"
+assert_head_sha_HT "$correct_head_sha"
 assert_head_name_HT
 assert_data_files 'none'
 assert_rebase n

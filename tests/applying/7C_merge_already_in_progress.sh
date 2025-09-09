@@ -37,7 +37,7 @@ assert_rebase n
 assert_dotgit_contents
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
-correct_head_hash="$(get_head_hash_HT)"
+correct_head_sha="$(get_head_sha_HT)"
 assert_exit_code 1 git istash "$APPLY_OPERATION"
 assert_files_HT '
    aaa		aaa
@@ -47,7 +47,7 @@ assert_files_HT '
 assert_stash_count 1
 assert_log_length_HT 2
 assert_branch_count 2
-assert_head_hash_HT "$correct_head_hash"
+assert_head_sha_HT "$correct_head_sha"
 assert_data_files 'none'
 assert_rebase n
 assert_dotgit_contents

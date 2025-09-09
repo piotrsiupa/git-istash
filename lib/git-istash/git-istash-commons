@@ -13,7 +13,7 @@ make_data_file_path() { # name
 make_target_data_file_path() {
 	make_data_file_path 'target'
 }
-make_working_dir_hash_file_path() {
+make_working_dir_sha_file_path() {
 	make_data_file_path 'working-dir'
 }
 make_stash_data_file_path() {
@@ -112,8 +112,8 @@ find_stash() { # [arg]
 	elif printf '%s' "$1" | grep -xqE 'stash\^\{/.*\}'
 	then
 		stash_text="$(printf '%s' "$1" | sed -E 's/^stash\^\{\/(.*)\}$/\1/')"
-		stash_hash="$(git rev-list --walk-reflogs --grep-reflog="$stash_text" --ignore-missing refs/stash | head -n1)"
-		stash="$(($(git rev-list --walk-reflogs refs/stash | grep -Fxn "$stash_hash" | cut -d: -f1) - 1))"
+		stash_sha="$(git rev-list --walk-reflogs --grep-reflog="$stash_text" --ignore-missing refs/stash | head -n1)"
+		stash="$(($(git rev-list --walk-reflogs refs/stash | grep -Fxn "$stash_sha" | cut -d: -f1) - 1))"
 	elif printf '%s' "$1" | grep -xqE 'stash@\{[0-9]+\}'
 	then
 		stash="$(printf '%s' "$1" | sed -E 's/^stash@\{(.*)\}$/\1/')"

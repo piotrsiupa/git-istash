@@ -27,7 +27,7 @@ printf 'ddd1\n' >'bo	=ÿþ€{d}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'
 git add 'bo	=ÿþ€{a}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th' 'bo	=ÿþ€{b}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th' 'bo	=ÿþ€{c}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th' 'bo	=ÿþ€{d}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'
 git commit -m 'Added some files'
 
-correct_head_hash="$(get_head_hash)"
+correct_head_sha="$(get_head_sha)"
 SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_CREATE_OPERATION stash"
@@ -40,7 +40,7 @@ printf 'eee2\n' >'bo	=ÿþ€{e}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'
 printf 'fff2\n' >'bo	=ÿþ€{f}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'
 printf 'e n e n ' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
-new_stash_hash_CO="$(GIT_EDITOR="sed -Ei 's/^\+[a-z]{3}2/+xxx/'" assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS <.git/answers_for_patch)"
+new_stash_sha_CO="$(GIT_EDITOR="sed -Ei 's/^\+[a-z]{3}2/+xxx/'" assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS <.git/answers_for_patch)"
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_HTCO '
@@ -83,7 +83,7 @@ else
 	!! ignored1	ignored1
 	'
 fi
-store_stash_CO "$new_stash_hash_CO"
+store_stash_CO "$new_stash_sha_CO"
 assert_stash_HTCO 0 '' '
 M  bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{a}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th aaa2
 M  bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{b}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th bbb2
@@ -95,7 +95,7 @@ assert_stash_base_HT 0 'HEAD'
 assert_stash_count 1
 assert_log_length_HT 2
 assert_branch_count 1
-assert_head_hash_HT "$correct_head_hash"
+assert_head_sha_HT "$correct_head_sha"
 assert_head_name_HT
 assert_rebase n
 assert_branch_metadata_HT
@@ -117,7 +117,7 @@ M  bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{b}\\*?#@!\033[1;35;4;5m
 assert_stash_count 0
 assert_log_length 2
 assert_branch_count 1
-assert_head_hash "$correct_head_hash"
+assert_head_sha "$correct_head_sha"
 assert_head_name 'master'
 assert_rebase n
 assert_branch_metadata_HT

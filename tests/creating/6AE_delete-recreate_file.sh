@@ -15,14 +15,14 @@ printf 'aaa\n' >aaa
 git add aaa
 git commit -m 'Added aaa'
 
-correct_head_hash="$(get_head_hash)"
+correct_head_sha="$(get_head_sha)"
 SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_CREATE_OPERATION stash"
 git rm aaa
 printf 'bbb\n' >aaa
 #shellcheck disable=SC2086
-new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $ALL_FLAGS $UNTRACKED_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS --message 'stash, not a trash')"
+new_stash_sha_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $ALL_FLAGS $UNTRACKED_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS --message 'stash, not a trash')"
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_HTCO '
@@ -47,7 +47,7 @@ else
 	!! ignored1	ignored1
 	'
 fi
-store_stash_CO "$new_stash_hash_CO"
+store_stash_CO "$new_stash_sha_CO"
 assert_stash_HTCO 0 'stash, not a trash' '
 D  aaa
 ?? aaa		bbb
@@ -56,7 +56,7 @@ assert_stash_base_HT 0 'HEAD'
 assert_stash_count 1
 assert_log_length_HT 2
 assert_branch_count 1
-assert_head_hash_HT "$correct_head_hash"
+assert_head_sha_HT "$correct_head_sha"
 assert_head_name_HT
 assert_rebase n
 assert_branch_metadata_HT
@@ -74,7 +74,7 @@ D  aaa
 assert_stash_count 0
 assert_log_length 2
 assert_branch_count 1
-assert_head_hash "$correct_head_hash"
+assert_head_sha "$correct_head_sha"
 assert_head_name 'master'
 assert_rebase n
 assert_branch_metadata_HT

@@ -193,14 +193,14 @@ assert_branch_count() { # expected
 	unset value_for_assert
 }
 
-assert_head_hash() { # expected
-	value_for_assert="$(get_head_hash)"
+assert_head_sha() { # expected
+	value_for_assert="$(get_head_sha)"
 	test "$value_for_assert" = "$1" ||
 		fail 'Expected HEAD to be at %s but it is at %s!\n' "$1" "$value_for_assert"
 	unset value_for_assert
 }
 
-assert_stash_hash() { # stash_num expected
+assert_stash_sha() { # stash_num expected
 	value_for_assert="$(git rev-parse "stash@{$1}")"
 	test "$value_for_assert" = "$2" ||
 		fail 'Expected stash entry #%i to be %s but it is %s!\n' "$1" "$2" "$value_for_assert"
@@ -277,10 +277,10 @@ assert_branch_count_HT() { # expected_for_not_orphan
 	fi
 	assert_branch_count "$1"
 }
-assert_head_hash_HT() { # expected_for_not_orphan
+assert_head_sha_HT() { # expected_for_not_orphan
 	if ! IS_HEAD_ORPHAN
 	then
-		value_for_assert="$(get_head_hash)"
+		value_for_assert="$(get_head_sha)"
 		test "$value_for_assert" = "$1" ||
 			fail 'Expected HEAD to be at %s but it is at %s!\n' "$1" "$value_for_assert"
 		unset value_for_assert

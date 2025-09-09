@@ -24,7 +24,7 @@ print_help() {
 	printf '\t--pathspec-file-nul - Treat the pathspec file as NUL-separated.\n\t\t\t  (Only valid with "--pathspec-from-file".)\n'
 	printf '\t--remove-stashed - Removes stashed changes unless there'\''s another option\n\t\t\t  to explicitely keep them.\n'
 	printf '    -S, --staged\t- Left intact all changes NOT already added to the index\n\t\t\t  and don'\''t add them to stash.\n'
-	printf '\t--no-store\t- Don'\''t store the created stash with "git stash store".\n\t\t\t  Instead write its hash to stdout.\n'
+	printf '\t--no-store\t- Don'\''t store the created stash with "git stash store".\n\t\t\t  Instead write its sha to stdout.\n'
 	printf '    -u, --include-untracked - Stash and clean also untracked files.\n'
 	printf '\t--no-include-untracked - Do not touch untracked files even with "--all".\n'
 }
@@ -290,21 +290,21 @@ commit_changes() {
 		then
 			git commit --message="index on $branch_name_for_msg: $default_message" --allow-empty 1>/dev/null
 		else
-			base_commit_hash="$(git rev-parse HEAD)"
+			base_commit_sha="$(git rev-parse HEAD)"
 			xargs -r0 -- git diff --name-only HEAD --cached -z -- <"$pathspec_file" \
 			| (
 				cd "$(git rev-parse --show-toplevel)"
 				xargs -r0 -- git --literal-pathspecs commit --message="index on $branch_name_for_msg: $default_message" --allow-empty -- 1>/dev/null
 			)
-			if [ "$(git rev-parse HEAD)" = "$base_commit_hash" ]
+			if [ "$(git rev-parse HEAD)" = "$base_commit_sha" ]
 			then
-				index_commit_hash="$(git commit-tree 'HEAD^{tree}' -p 'HEAD' -m "index on $branch_name_for_msg: $default_message")"
-				git reset --soft "$index_commit_hash" 1>/dev/null
+				index_commit_sha="$(git commit-tree 'HEAD^{tree}' -p 'HEAD' -m "index on $branch_name_for_msg: $default_message")"
+				git reset --soft "$index_commit_sha" 1>/dev/null
 			fi
 		fi
 	else
-		index_commit_hash="$(git commit-tree 'HEAD^{tree}' -p 'HEAD' -m "index on $branch_name_for_msg: $default_message")"
-		git reset --soft "$index_commit_hash" 1>/dev/null
+		index_commit_sha="$(git commit-tree 'HEAD^{tree}' -p 'HEAD' -m "index on $branch_name_for_msg: $default_message")"
+		git reset --soft "$index_commit_sha" 1>/dev/null
 	fi
 	if [ "$there_are_enough_changes" = n ] && [ "$(git rev-parse 'HEAD^{tree}')" != "$(git rev-parse 'HEAD~^{tree}')" ]
 	then
@@ -324,13 +324,13 @@ commit_changes() {
 undo_commit_changes() {
 	if [ "$has_3_commits" = y ]
 	then
-		non_staged_changes_hash="$(git rev-parse HEAD~2)"
+		non_staged_changes_sha="$(git rev-parse HEAD~2)"
 		git reset --mixed HEAD~4 1>/dev/null
 	else
-		non_staged_changes_hash="$(git rev-parse HEAD~1)"
+		non_staged_changes_sha="$(git rev-parse HEAD~1)"
 		git reset --mixed HEAD~3 1>/dev/null
 	fi
-	git --no-literal-pathspecs ls-tree -r --name-only "$non_staged_changes_hash" -z :/ \
+	git --no-literal-pathspecs ls-tree -r --name-only "$non_staged_changes_sha" -z :/ \
 	| xargs -r0 -- git --literal-pathspecs add --force --intent-to-add --
 	git reset --soft HEAD~2 1>/dev/null
 	if [ "$curr_branch_type" = 'orphan' ]
@@ -380,8 +380,8 @@ sort_commits() {
 	stashed_commits_editor="$stashed_commits_editor --"
 	unstashed_commits_editor="$unstashed_commits_editor --"
 	
-	last_commit_hash="$(git rev-parse HEAD)"
-	if ! GIT_EDITOR="$unstashed_commits_editor" git -c merge.renames=false rebase --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_hash" 1>/dev/null
+	last_commit_sha="$(git rev-parse HEAD)"
+	if ! GIT_EDITOR="$unstashed_commits_editor" git -c merge.renames=false rebase --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_sha" 1>/dev/null
 	then
 		handle_rebase_conflict_using_theirs
 	fi
@@ -393,15 +393,15 @@ sort_commits() {
 		else
 			keep_index_editor='sed -i -E -e "2 s/^pick\\>/fixup/" --'
 		fi
-		if ! GIT_EDITOR="$keep_index_editor" git -c merge.renames=false rebase --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_hash" 1>/dev/null
+		if ! GIT_EDITOR="$keep_index_editor" git -c merge.renames=false rebase --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_sha" 1>/dev/null
 		then
 			handle_rebase_conflict_using_theirs
 		fi
 	fi
-	unstashed_changes_hash="$(git rev-parse HEAD)"
+	unstashed_changes_sha="$(git rev-parse HEAD)"
 	
-	git switch --detach "$last_commit_hash" 1>/dev/null
-	if ! GIT_EDITOR="$stashed_commits_editor" git -c merge.renames=false rebase --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_hash" 1>/dev/null
+	git switch --detach "$last_commit_sha" 1>/dev/null
+	if ! GIT_EDITOR="$stashed_commits_editor" git -c merge.renames=false rebase --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_sha" 1>/dev/null
 	then
 		handle_rebase_conflict_using_theirs
 	fi
@@ -464,19 +464,19 @@ tangle_stash() {
 }
 
 restore_working_tree() {
-	git switch --detach "$unstashed_changes_hash" 1>/dev/null
-	unstaged_commit_hash="$(git rev-parse 'HEAD~')"
+	git switch --detach "$unstashed_changes_sha" 1>/dev/null
+	unstaged_commit_sha="$(git rev-parse 'HEAD~')"
 	git reset --mixed HEAD~2 1>/dev/null
 	(
 		cd "$(git rev-parse --show-toplevel)"
-		git --no-literal-pathspecs diff-tree -r --diff-filter='A' --name-only --no-renames --no-commit-id -z "$unstaged_commit_hash~1" "$unstaged_commit_hash" -- :/ \
+		git --no-literal-pathspecs diff-tree -r --diff-filter='A' --name-only --no-renames --no-commit-id -z "$unstaged_commit_sha~1" "$unstaged_commit_sha" -- :/ \
 		| xargs -r0 -- git --literal-pathspecs add --force --intent-to-add --
 	)
 	git reset --soft HEAD~1 1>/dev/null
 }
 
 create_stash() {
-	stash_base_hash="$(git rev-parse HEAD)"
+	stash_base_sha="$(git rev-parse HEAD)"
 	commit_changes
 	sort_commits
 	tangle_stash

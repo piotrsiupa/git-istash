@@ -22,7 +22,7 @@ git commit -am 'Changed aaa'
 SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_OTHER_APPLY_OPERATION stash"
-correct_head_hash="$(get_head_hash_HT)"
+correct_head_sha="$(get_head_sha_HT)"
 #shellcheck disable=SC2086
 assert_exit_code 2 capture_outputs git istash $OTHER_APPLY_OPERATION
 assert_conflict_message "$OTHER_APPLY_OPERATION"
@@ -42,7 +42,7 @@ assert_rebase y
 assert_dotgit_contents_for "$OTHER_APPLY_OPERATION"
 
 __test_section__ "Abort $APPLY_OPERATION stash"
-correct_head_hash2="$(get_head_hash_HT)"
+correct_head_sha2="$(get_head_sha_HT)"
 printf 'ddd\n' >aaa
 git add aaa
 assert_exit_code 1 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
@@ -57,7 +57,7 @@ A  aaa		ddd
 '
 assert_stash_count 1
 assert_branch_count_HT 1
-assert_head_hash_HT "$correct_head_hash2"
+assert_head_sha_HT "$correct_head_sha2"
 assert_data_files "$OTHER_APPLY_OPERATION"
 assert_rebase y
 assert_dotgit_contents_for "$OTHER_APPLY_OPERATION"
@@ -76,7 +76,7 @@ assert_files_HT '
 assert_stash_count 1
 assert_log_length_HT 3
 assert_branch_count 1
-assert_head_hash_HT "$correct_head_hash"
+assert_head_sha_HT "$correct_head_sha"
 assert_head_name_HT
 assert_data_files 'none'
 assert_rebase n

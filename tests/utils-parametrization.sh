@@ -260,9 +260,9 @@ SWITCH_HEAD_TYPE() {
 RESTORE_HEAD_TYPE() {
 	git switch 'master'
 }
-get_head_hash_HT() {
+get_head_sha_HT() {
 	if ! IS_HEAD_ORPHAN
 	then
-		get_head_hash
+		get_head_sha
 	fi
 }

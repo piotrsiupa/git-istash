@@ -22,7 +22,7 @@ PARAMETRIZE_UNSTAGED 'YES'
 # We don't need thos in this test.
 rm ignored0 ignored1
 
-correct_head_hash="$(get_head_hash)"
+correct_head_sha="$(get_head_sha)"
 SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_CREATE_OPERATION stash"
@@ -36,7 +36,7 @@ printf 'x\n' >'tra	=ÿþ€{}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©cked-dir1/tra
 printf 'x\n' >'tra	=ÿþ€{}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©cked-dir1/tracked-dir2/bo	=ÿþ€{}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'
 git add --intent-to-add .
 #shellcheck disable=SC2086
-new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS)"
+new_stash_sha_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS)"
 assert_files_HTCO '
  A file						x
  A bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th x
@@ -46,7 +46,7 @@ assert_files_HTCO '
  A tra\001\002\003\004\005\006\007\010\t=\377\376\177\200{}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251cked-dir1/tracked-dir2/bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th x
 ' '
 '
-store_stash_CO "$new_stash_hash_CO"
+store_stash_CO "$new_stash_sha_CO"
 assert_stash_HTCO 0 '' '
  A file						x
  A bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th x
@@ -59,7 +59,7 @@ assert_stash_base_HT 0 'HEAD'
 assert_stash_count 1
 assert_log_length_HT 1
 assert_branch_count 1
-assert_head_hash_HT "$correct_head_hash"
+assert_head_sha_HT "$correct_head_sha"
 assert_head_name_HT
 assert_rebase n
 assert_branch_metadata_HT
@@ -81,7 +81,7 @@ assert_files '
 assert_stash_count 0
 assert_log_length 1
 assert_branch_count 1
-assert_head_hash "$correct_head_hash"
+assert_head_sha "$correct_head_sha"
 assert_head_name 'master'
 assert_rebase n
 assert_branch_metadata_HT

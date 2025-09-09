@@ -96,11 +96,11 @@ make_stash_name_regex() { # stash_name
 	fi
 }
 
-get_head_hash() {
+get_head_sha() {
 	git rev-parse 'HEAD'
 }
 
-get_stash_hash() { # stash_num
+get_stash_sha() { # stash_num
 	if [ $# -eq 0 ]
 	then
 		set -- 0
