@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-set -e
+set -eu
 
 print_help() {
 	printf 'This script helps find all the scripts that should have the version number updated.\n'

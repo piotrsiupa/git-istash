@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-set -e
+set -eu
 
 print_help() {
 	printf '%s - An installation script for "git istash".\n' "$(basename "$0")"

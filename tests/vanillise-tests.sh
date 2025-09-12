@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-set -e
+set -eu
 
 print_help() {
 	printf 'This replaces all calls to the "istash" in tests with the classic "stash".\n'

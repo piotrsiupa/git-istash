@@ -10,10 +10,9 @@ fi
 assert_exit_code() { # expected_code command [arguments...]
 	expected_exit_code_for_assert="$1"
 	shift
-	exit_code_for_assert=0
-	"$@" || exit_code_for_assert=$?
+	"$@" && exit_code_for_assert=0 || exit_code_for_assert=$?
 	test "$exit_code_for_assert" -eq "$expected_exit_code_for_assert" ||
-		fail 'Command %s returned exit code %i but %i was expected!\n' "$(command_to_string "$@")" $exit_code_for_assert "$expected_exit_code_for_assert"
+		fail 'Command %s returned exit code %i but %i was expected!\n' "$(command_to_string "$@")" "$exit_code_for_assert" "$expected_exit_code_for_assert"
 	unset expected_exit_code_for_assert
 	unset exit_code_for_assert
 }
@@ -34,7 +33,7 @@ _convert_zero_separated_path_list() {
 }
 
 _prepare_path_list_for_assertion() { # [has_prefix]
-	if [ "$1" = y ]
+	if [ "${1-n}" = y ]
 	then
 		sed -E -e 's/^\\040/ /g' -e 's/^(.)\\040/\1 /g' -e 's/^(..)\\040/\1 /g' \
 			-e 's/^(...)(.*)$/\2 \1/' \

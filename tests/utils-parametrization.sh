@@ -58,7 +58,6 @@ _SKIP_PARAMETER() { # name first_value
 		} >"$TMP_FILE"
 		mv "$TMP_FILE" "$PARAMETERS_FILE"
 		unset TMP_FILE
-		unset "$1"
 	else
 		skip_silently
 	fi

@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-set -e
+set -eu
 
 . "$(dirname "$0")/git-istash-commons"
 
@@ -114,7 +114,7 @@ cleanup() {
 }
 
 is_pathspec_exclude() { # pathspec
-	if parse_git_bool "$GIT_LITERAL_PATHSPECS"
+	if parse_git_bool ${GIT_LITERAL_PATHSPECS+"$GIT_LITERAL_PATHSPECS"}
 	then
 		return 1
 	fi

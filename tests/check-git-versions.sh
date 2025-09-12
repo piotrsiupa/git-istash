@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-set -e
+set -eu
 
 actual_git_repo_path='./the-actual-git'
 subsequent_failed_version_limit=5

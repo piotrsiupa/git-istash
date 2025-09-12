@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-set -e
+set -eu
 
 . "$(dirname "$0")/git-istash-commons"
 
@@ -19,7 +19,7 @@ print_help() {
 	printf '    -h\t\t\t- Show this help text and exit.\n'
 }
 
-get_sub_command_name() { #
+get_sub_command_name() {
 	if [ "$is_pop" = n ]
 	then
 		printf 'apply'

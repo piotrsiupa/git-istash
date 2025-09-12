@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-set -e
+set -eu
 
 print_help() {
 	printf '%s - A test script that runs "shellcheck" on all shell scripts in\n    this repository.\n' "$(basename "$0")"

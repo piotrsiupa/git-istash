@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-set -e
+set -eu
 
 print_help() {
 	printf '%s - A script to remove all the tests results.\n' "$(basename "$0")"

@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-set -e
+set -eu
 
 print_help() {
 	printf '%s - Script that runs tests from sub-directories of this directory.\n' "$(basename "$0")"
@@ -99,7 +99,7 @@ get_test_script() { # test_name
 	printf '%s.sh' "$1"
 }
 get_test_dir() { # test_name [parameters_string]
-	printf '%s/t_dir__%s/%s' "$(basename "$(dirname "$1")")" "$(basename "$1")" "$2"
+	printf '%s/t_dir__%s/%s' "$(basename "$(dirname "$1")")" "$(basename "$1")" ${2+"$2"}
 }
 
 cleanup_test() { # test_name [parameters_string]
@@ -108,7 +108,7 @@ cleanup_test() { # test_name [parameters_string]
 create_test_dir() { # test_name [parameters_string]
 	test_dir="$(get_test_dir "$1")"
 	mkdir -p "$test_dir"
-	test_dir="$(get_test_dir "$1" "$2")"
+	test_dir="$(get_test_dir "$1" ${2+"$2"})"
 	mkdir "$test_dir"
 }
 
@@ -578,6 +578,7 @@ run_tests() {
 			running_tests_count=0
 			running_tests_data=''
 			alive_children=''
+			dead_children=''
 			finalizing_tests_count=0
 			done_tests_count=0
 			output_buffer_file="$(mktemp)"
