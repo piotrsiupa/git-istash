@@ -3,6 +3,7 @@
 set -eu
 
 . "$(dirname "$0")/git-istash-commons"
+. "$(dirname "$0")/git-istash-vanilla-format"
 
 print_help() {
 	printf 'git istash apply - Improved version of "git stash apply" that can handle\n    conflicts without loosing information about the files in index.\n'
@@ -122,6 +123,7 @@ end_with_success() {
 	put_files_into_working_copy "$untracked_changes_sha" "$non_staged_changes_sha" "$staged_changes_sha"
 	delete_data
 	printf '\nSuccessfully applied the stash\n'
+	printf 'Stash of the old working dir: %s\n' "$(prepare_stash_of_working_dir)"
 }
 
 check_data_files() { # resume
@@ -182,47 +184,56 @@ check_data_files() { # resume
 	esac
 }
 
-untangle_git_stash() {
-	stash_commit="$(get_stash_commit "$stash")"
-	git switch --detach "$stash_commit^2"
-	git reset --hard "$(git commit-tree -p 'HEAD' -m "$(git log --format=%B --max-count=1 "$stash_commit")" "$stash_commit^{tree}")"
-	if git rev-parse "$stash_commit^3" 1>/dev/null 2>&1
+prepare_current_branch() {
+	if [ "$curr_branch_type" = 'orphan' ]
 	then
-		git ls-tree -r --name-only "$stash_commit^3" -z \
-		| xargs -r0 -- git --literal-pathspecs restore --source="$stash_commit^3" --
-		git add .
-		git commit --no-edit --no-verify --allow-empty --message="$(git log --format=%B --max-count=1 "$stash_commit^3")"
-	else
-		git commit --no-edit --no-verify --allow-empty --message 'There are no untracked files'
+		git commit --only --allow-empty --message 'Temporary commit by "git-stash"'
 	fi
 }
 
 commit_working_directory() {
 	# initialization
+	default_message="$(git rev-list --no-commit-header --format='%h %s' --max-count=1 HEAD)"
+	message="Working directory changes prior to applying stash $(git rev-parse "$(get_stash_commit "$stash")")"
+	if [ "$curr_branch_type" != 'detached' ]
+	then
+		branch_name_for_msg="$(git branch --show-current)"
+	else
+		branch_name_for_msg='(no branch)'
+	fi
 	git switch --detach HEAD
 	
 	# staged
-	git commit --message='staged' --allow-empty 1>/dev/null
+	git commit --message="index on $branch_name_for_msg: $default_message" --allow-empty 1>/dev/null
 	
 	# unstaged
 	git --no-literal-pathspecs add --update :/ 1>&2 2>/dev/null || true
-	git commit --message='unstaged' --allow-empty 1>/dev/null
+	git commit --message="On $branch_name_for_msg: $message" --allow-empty 1>/dev/null
 	
 	# untracked
 	git --no-literal-pathspecs add --all --intent-to-add :/ 2>/dev/null || true
 	git --no-literal-pathspecs add --update :/ 1>&2 2>/dev/null || true
-	git commit --message='untracked' --allow-empty 1>/dev/null
+	git commit --message="untracked files on $branch_name_for_msg: $default_message" --allow-empty 1>/dev/null
 	
 	# save sha
 	working_dir_changes_sha="$(git rev-parse 'HEAD')"
 }
 
-start_rebase() {
+prepare_stash_of_working_dir() {
+	if [ "$(git rev-parse "$working_dir_changes_sha^{tree}")" = "$(git rev-parse "$working_dir_changes_sha~1^{tree}")" ]
+	then
+		tangle_stash "$working_dir_changes_sha~1" n
+	else
+		tangle_stash "$working_dir_changes_sha" y
+	fi
+}
+
+start_rebase() { # untangled_stash_sha
 	todo_list_editor="sed -i -E \
 			-e '1 i pick $working_dir_changes_sha~2 Staged working directory' \
 			-e '2 i pick $working_dir_changes_sha~1 Unstaged working directory' \
 			-e '3 i pick $working_dir_changes_sha~0 Untracked working directory'"
-	GIT_EDITOR="$todo_list_editor" git rebase --onto "$current_branch" "HEAD~3" "HEAD" --empty=keep --keep-empty --reapply-cherry-picks --interactive
+	GIT_EDITOR="$todo_list_editor" git rebase --onto "$current_branch" "$1~3" "$1" --empty=keep --keep-empty --reapply-cherry-picks --interactive
 }
 
 do_start() { # args...
@@ -231,14 +242,12 @@ do_start() { # args...
 	check_other_git_commands_state
 	find_stash "$@"
 	find_current_branch
-	if [ "$curr_branch_type" = 'orphan' ]
-	then
-		git commit --only --allow-empty --message 'Temporary commit by "git-stash"'
-	fi
+	prepare_current_branch
 	commit_working_directory
 	save_data
-	untangle_git_stash
-	if start_rebase
+	stash_sha="$(get_stash_commit "$stash")"
+	untangled_stash_sha="$(untangle_git_stash "$stash_sha")"
+	if start_rebase "$untangled_stash_sha"
 	then
 		end_with_success
 	elif are_there_conflicts
