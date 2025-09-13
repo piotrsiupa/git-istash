@@ -307,7 +307,8 @@ Prefer \fBgit help istash\fR over \fBgit istash [<subcommand>] \-h\fR.
 .RS 4
 Display the man page for \fBgit\~istash\fR.
 .sp
-Normally this option is handled by the Git itself, but passing it directly to the script \fBgit-istash\fR also works, and additionally it has a fallback to the option \fB-h\fR in case that running the man viewer failed for any reason.
+Normally this option is handled by the Git itself, but this doesn't work on Windows because Git expects HTML documentation there. \
+Passing it directly to the script \fBgit-istash\fR works better, and additionally it has a fallback to the option \fB-h\fR in case that running the man viewer failed for any reason.
 .RE
 
 .PP

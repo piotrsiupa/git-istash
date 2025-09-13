@@ -19,6 +19,7 @@ print_help() {
 	printf '    -a, --abort\t\t- Abort "apply" or "pop" when one is in progress.\n'
 	printf '    -c, --continue\t- Continue "apply" or "pop" when one is in progress.\n'
 	printf '    -h\t\t\t- Show this help text and exit.\n'
+	printf '\t--help\t\t- Show manual page if possible.\n\t\t\t  (If you run "git istash --help", Git will handle this\n\t\t\t  option which doesn'\''t work on Windows. Instead, run\n\t\t\t  "git-istash --help".)\n'
 	printf '\t--version\t- Show version information and exit.\n'
 	printf '\n'
 	printf 'Sub-commands:\n'
