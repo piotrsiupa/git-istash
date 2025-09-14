@@ -3,6 +3,12 @@
 
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
+#shellcheck disable=SC2154
+if [ "$limited_file_system" = y ]
+then
+	known_failure 'Editing PATH doesn'\''t seem to work on Windows for some reason.'
+fi
+
 PARAMETRIZE_SUBCOMMAND
 
 
