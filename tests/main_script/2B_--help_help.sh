@@ -13,6 +13,7 @@ PARAMETRIZE_SUBCOMMAND
 
 
 __test_section__ "Displaying manual with \"$SUBCOMMAND --help\""
+#shellcheck disable=SC2016
 printf '%s\n' '#/usr/bin/env sh' 'cd "$(dirname "$0")" || exit' 'printf '\''"%s"\n'\'' "$@" >'\''./call-to-man.txt'\' >'./man'
 chmod +x './man'
 PATH="$(pwd):$PATH"
@@ -21,4 +22,4 @@ assert_exit_code 0 git istash "$SUBCOMMAND" --help
 test -f './call-to-man.txt' ||
 	fail '"man" was not called!\n'
 test "$(cat './call-to-man.txt')" = '"git-istash"' ||
-	fail '"man" was called with arguments "%s" instead of "%s"!\n' "$(cat './call-to-man.txt' | tr -d '"' | tr '\n' ' ' | sed 's/ $//')" 'git-istash'
+	fail '"man" was called with arguments "%s" instead of "%s"!\n' "$(tr -d '"' <'./call-to-man.txt' | tr '\n' ' ' | sed 's/ $//')" 'git-istash'
