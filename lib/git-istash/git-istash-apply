@@ -59,7 +59,17 @@ load_data() {
 		curr_branch_type='detached'
 	fi
 	
+	if [ "$(wc -l <"$working_dir_sha_file")" -ne 1 ]
+	then
+		printf 'fatal: "%s" is should contain exactly 1 line.\n' "$working_dir_sha_file" 1>&2
+		return 1
+	fi
 	working_dir_changes_sha="$(cat "$working_dir_sha_file")"
+	if ! git rev-parse --quiet --verify "$working_dir_changes_sha^{commit}" 1>/dev/null
+	then
+		printf 'fatal: "%s" says "%s" but there is no such commit.\n' "$working_dir_sha_file" "$working_dir_changes_sha" 1>&2
+		return 1
+	fi
 }
 delete_data() {
 	rm -f "$target_data_file" "$working_dir_sha_file"
