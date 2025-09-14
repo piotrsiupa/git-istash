@@ -1,4 +1,4 @@
-.TH GIT-ISTASH 1 "2025-08-23" "git-istash 1.4.0"
+.TH GIT-ISTASH 1 "2025-09-14" "git-istash 1.4.1"
 .nh
 .ad l
 
@@ -7,6 +7,7 @@ git\-istash \- Handle Git stashes without arbitrary limitations of the original 
 
 .SH SYNOPSIS
 .nf
+\fBgit istash\fR [<subcommand>] (-h\~|\~--help\~|\~--man)
 \fBgit istash\fR (create\~|\~snatch\~|\~save\~|\~push) [\-a\~|\~\-\-all] [\-\-allow-empty]
             [\-k\~|\~\-\-[no\-]keep\-index] [\-l\~|\~\-\-leave\-staged]
             [(\-m\~|\~\-\-message)\~<\fImessage\fR>] [\-\-patch]
@@ -296,18 +297,30 @@ Cancel the operation and restore the repository to the state before it started.
 .PP
 \fB\-h\fR
 .RS 4
-Print a rudimentary help text to stdout.
+Print a rudimentary help text to stdout. \
+(Each subcommand has its own version.)
 .sp
 This is a fallback option that is to be used when the man page is not available. \
-Prefer \fBgit help istash\fR over \fBgit istash [<subcommand>] \-h\fR.
+Prefer \fBgit\~help\~istash\fR (or \fBgit\~istash\~--man\fR) over \fBgit\~istash\~[<subcommand>]\~\-h\fR.
 .RE
 
 .PP
-\fB\--help\fR
+\fB\-\-help\fR
 .RS 4
-Display the man page for \fBgit\~istash\fR.
+Display the man page for \fBgit\~istash\fR. \
+(It it's not possible, fall back to \fB\-h\fR.)
 .sp
-Normally this option is handled by the Git itself, but passing it directly to the script \fBgit-istash\fR also works, and additionally it has a fallback to the option \fB-h\fR in case that running the man viewer failed for any reason.
+Normally this option is handled by the Git itself, but this doesn't work on Windows because Git expects HTML documentation there. \
+See also \fB\-\-man\fR.
+.RE
+
+.PP
+\fB\-\-man\fR
+.RS 4
+Display the man page for \fBgit\~istash\fR. \
+(It it's not possible, fall back to \fB\-h\fR.)
+.sp
+This is exactly the same as \fB\-\-help\fR except it doesn't get intercepted by \fBgit\fR, which makes it work correctly on Windows.
 .RE
 
 .PP
