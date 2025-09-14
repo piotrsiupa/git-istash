@@ -10,7 +10,7 @@ The script that runs all the tests placed in this directory.
 Executing it without parameters will run all the tests.
 (Although, you probably want to add an option `-j0`.)
 There are also filtering and formatting options.
-(For more information, run `run.sh --help`. Some options can improve the speed significantly.)
+(For more information, run `run.sh --help`. You really should; this is the most important script and there is quite a lot to it.)
 
 ## `shellcheck.sh`
 
