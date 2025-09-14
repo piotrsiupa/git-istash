@@ -9,7 +9,7 @@ print_help() {
 	printf '\n'
 	printf 'This is only a rudimentary help text. Prefer "git help istash" if available.\n'
 	printf '\n'
-	printf 'Usage: git istash push\n'
+	printf 'Usage: git istash push [<option>...]\n'
 	printf '   or: git istash push -h\n'
 	printf '\n'
 	printf 'Options:\n'

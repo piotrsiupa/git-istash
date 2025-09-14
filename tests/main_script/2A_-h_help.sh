@@ -3,12 +3,9 @@
 
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
-PARAMETRIZE 'SUBCOMMAND' '_NONE_' 'apply' 'create' 'pop' 'push'
-if [ "$SUBCOMMAND" = '_NONE_' ]
-then
-	SUBCOMMAND=''
-fi
+PARAMETRIZE_SUBCOMMAND
 
+__test_section__ "Show short help for subcommand \"$SUBCOMMAND\""
 #shellcheck disable=SC2086
 output="$(assert_exit_code 0 git istash $SUBCOMMAND -h)"
 mentions_of_this_subcommand="$(printf '%s\n' "$output" | grep -Fc "git istash $SUBCOMMAND")"

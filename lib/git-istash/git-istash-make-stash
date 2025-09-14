@@ -6,9 +6,9 @@ set -e
 
 print_help() {
 	printf 'git-istash-make-stash - An internal script of "git istash".\n'
-	printf 'If you see this, something went wrong.\n'
+	printf 'If you see this, something probably went wrong.\n'
 	printf '\n'
-	printf 'Usage: git-istash-make-stash\n'
+	printf 'Usage: git-istash-make-stash [<option>...]\n'
 	printf '   or: git-istash-make-stash -h\n'
 	printf '\n'
 	printf 'Options:\n'
