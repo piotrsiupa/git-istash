@@ -64,7 +64,7 @@ _merge_tracked_and_untracked() ( # tracked_sha [path]
 		printf -- "$2" | xargs -0 -- git --no-literal-pathspecs ls-tree -z "$1" -- | _sanitize_ls_tree || true
 		#shellcheck disable=SC2059
 		printf -- "$2" | xargs -0 -- git --no-literal-pathspecs ls-tree -z "$1^3" -- | _sanitize_ls_tree || true
-	} | sort -u -k 4 \
+	} | awk '!seen[$4]++' \
 	| while read -r line
 	do
 		if [ "$(printf '%s\n' "$line" | awk '{print $2}')" = 'blob' ]
