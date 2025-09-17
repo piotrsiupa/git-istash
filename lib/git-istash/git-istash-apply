@@ -293,6 +293,7 @@ do_abort() { # args...
 	load_data
 	
 	git rebase --abort || true  # Errors are ignored because if rebase is not in progress, we still want to try to restore HEAD.
+	git reset --hard
 	succeeded_switch=n
 	case "$curr_branch_type" in
 		orphan)
