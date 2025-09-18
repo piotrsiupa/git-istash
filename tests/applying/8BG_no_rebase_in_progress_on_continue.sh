@@ -21,15 +21,23 @@ git commit -am 'Changed aaa'
 
 SWITCH_HEAD_TYPE
 
+__test_section__ 'Dirty the working directory'
+printf 'wdf0a\n' >wdf0
+git add wdf0
+printf 'wdf0b\n' >wdf0
+printf 'wdf1a\n' >wdf1
+
 __test_section__ "$CAP_APPLY_OPERATION stash"
 assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION"
 assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ccc|bbb
+   wdf0		wdf0b
 !! ignored0	ignored0
 !! ignored1	ignored1
 ' '
 DU aaa		bbb
+   wdf0		wdf0b
 !! ignored0	ignored0
 !! ignored1	ignored1
 '

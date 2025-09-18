@@ -20,6 +20,12 @@ git commit -am 'Changed aaa'
 
 SWITCH_HEAD_TYPE
 
+__test_section__ 'Dirty the working directory'
+printf 'wdf0a\n' >wdf0
+git add wdf0
+printf 'wdf0b\n' >wdf0
+printf 'wdf1a\n' >wdf1
+
 __test_section__ "$CAP_APPLY_OPERATION stash"
 mkdir -p .git/hooks
 printf '#!/usr/bin/env sh\nexit 1\n' >.git/hooks/pre-rebase
@@ -28,9 +34,13 @@ correct_head_sha="$(get_head_sha_HT)"
 assert_exit_code 1 git istash "$APPLY_OPERATION"
 assert_files_HT '
    aaa		ccc
+AM wdf0		wdf0b	wdf0a
+?? wdf1		wdf1a
 !! ignored0	ignored0
 !! ignored1	ignored1
 ' '
+AM wdf0		wdf0b	wdf0a
+?? wdf1		wdf1a
 !! ignored0	ignored0
 !! ignored1	ignored1
 '

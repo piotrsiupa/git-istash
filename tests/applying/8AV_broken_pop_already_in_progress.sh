@@ -21,16 +21,24 @@ git commit -am 'Changed aaa'
 
 SWITCH_HEAD_TYPE
 
+__test_section__ 'Dirty the working directory'
+printf 'wdf0a\n' >wdf0
+git add wdf0
+printf 'wdf0b\n' >wdf0
+printf 'wdf1a\n' >wdf1
+
 __test_section__ 'Pop stash'
 correct_head_sha="$(get_head_sha_HT)"
 assert_exit_code 2 capture_outputs git istash pop
 assert_conflict_message 'pop'
 assert_files_HT '
 UU aaa		ccc|bbb
+   wdf0		wdf0b
 !! ignored0	ignored0
 !! ignored1	ignored1
 ' '
 DU aaa		bbb
+   wdf0		wdf0b
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
@@ -53,10 +61,12 @@ git add aaa
 assert_exit_code 1 git istash "$APPLY_OPERATION"
 assert_files_HT '
 M  aaa		ddd
+   wdf0		wdf0b
 !! ignored0	ignored0
 !! ignored1	ignored1
 ' '
 A  aaa		ddd
+   wdf0		wdf0b
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
@@ -71,9 +81,13 @@ mv .git/ISTASH_TARGET~ .git/ISTASH_TARGET
 assert_exit_code 0 git istash pop "$ABORT_FLAG"
 assert_files_HT '
    aaa		ccc
+AM wdf0		wdf0b	wdf0a
+?? wdf1		wdf1a
 !! ignored0	ignored0
 !! ignored1	ignored1
 ' '
+AM wdf0		wdf0b	wdf0a
+?? wdf1		wdf1a
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
