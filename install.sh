@@ -28,7 +28,7 @@ print_version() {
 }
 
 is_windows() {
-	test "$OS" = 'Windows_NT'
+	test "${OS-'not-windows'}" = 'Windows_NT'
 }
 
 check_root() {
