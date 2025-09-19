@@ -24,11 +24,11 @@ print_help() {
 }
 
 print_version() {
-	printf 'installer version 1.0.5\n'
+	printf 'installer version 1.0.6\n'
 }
 
 is_windows() {
-	test "$OS" = 'Windows_NT'
+	test "${OS-'not-windows'}" = 'Windows_NT'
 }
 
 check_root() {
