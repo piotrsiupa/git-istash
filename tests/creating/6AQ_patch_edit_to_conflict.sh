@@ -18,7 +18,7 @@ printf 'ddd1\n' >ddd
 git add aaa bbb ccc ddd
 git commit -m 'Added aaa, bbb, ccc & ddd'
 
-correct_head_hash="$(get_head_hash)"
+correct_head_sha="$(get_head_sha)"
 SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_CREATE_OPERATION stash"
@@ -31,7 +31,7 @@ printf 'eee2\n' >eee
 printf 'fff2\n' >fff
 printf 'e n ' | tr ' ' '\n' >.git/answers_for_patch0
 printf 'e n ' | tr ' ' '\n' >.git/answers_for_patch1
-new_stash_hash_CO="$(
+new_stash_sha_CO="$(
 	{
 		 cat .git/answers_for_patch0
 		 sleep 5  # On Windows a child shell tends to eat all the stdin if it's able to. This prevents it. If it still doesn't work, try to increase the time.
@@ -84,7 +84,7 @@ else
 	!! ignored1	ignored1
 	'
 fi
-store_stash_CO "$new_stash_hash_CO"
+store_stash_CO "$new_stash_sha_CO"
 assert_stash_HTCO 0 '' '
 M  aaa		aaa2
 M  bbb		bbb2
@@ -96,7 +96,7 @@ assert_stash_base_HT 0 'HEAD'
 assert_stash_count 1
 assert_log_length_HT 2
 assert_branch_count 1
-assert_head_hash_HT "$correct_head_hash"
+assert_head_sha_HT "$correct_head_sha"
 assert_head_name_HT
 assert_rebase n
 assert_branch_metadata_HT
@@ -118,7 +118,7 @@ M  bbb		bbb2
 assert_stash_count 0
 assert_log_length 2
 assert_branch_count 1
-assert_head_hash "$correct_head_hash"
+assert_head_sha "$correct_head_sha"
 assert_head_name 'master'
 assert_rebase n
 assert_branch_metadata_HT

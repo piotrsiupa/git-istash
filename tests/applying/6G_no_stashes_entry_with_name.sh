@@ -14,7 +14,7 @@ git stash push -m 'the only stash'
 SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_APPLY_OPERATION stash (without changes)"
-correct_head_hash="$(get_head_hash_HT)"
+correct_head_sha="$(get_head_sha_HT)"
 assert_exit_code 1 git istash "$APPLY_OPERATION" "stash^{/second}"
 assert_files_HT '
 !! ignored0	ignored0
@@ -23,7 +23,7 @@ assert_files_HT '
 assert_stash_count 1
 assert_log_length_HT 1
 assert_branch_count 1
-assert_head_hash_HT "$correct_head_hash"
+assert_head_sha_HT "$correct_head_sha"
 assert_head_name_HT
 assert_data_files 'none'
 assert_rebase n
@@ -42,7 +42,7 @@ AM aaa		ddd	ccc
 assert_stash_count 1
 assert_log_length_HT 1
 assert_branch_count 1
-assert_head_hash_HT "$correct_head_hash"
+assert_head_sha_HT "$correct_head_sha"
 assert_head_name_HT
 assert_data_files 'none'
 assert_rebase n

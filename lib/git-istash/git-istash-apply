@@ -1,8 +1,9 @@
 #!/usr/bin/env sh
 
-set -e
+set -eu
 
 . "$(dirname "$0")/git-istash-commons"
+. "$(dirname "$0")/git-istash-vanilla-format"
 
 print_help() {
 	printf 'git istash apply - Improved version of "git stash apply" that can handle\n    conflicts without loosing information about the files in index.\n'
@@ -19,7 +20,7 @@ print_help() {
 	printf '    -h\t\t\t- Show this help text and exit.\n'
 }
 
-get_sub_command_name() { #
+get_sub_command_name() {
 	if [ "$is_pop" = n ]
 	then
 		printf 'apply'
@@ -31,6 +32,8 @@ get_sub_command_name() { #
 save_data() {
 	target_data="$(if [ "$curr_branch_type" = 'orphan' ] ; then printf '~' ; fi ; printf '%s' "$current_branch")"
 	printf '%s\n' "$target_data" >"$target_data_file"
+	
+	printf '%s\n' "$working_dir_changes_sha" >"$working_dir_sha_file"
 }
 load_data() {
 	if [ "$(wc -l <"$target_data_file")" -ne 1 ]
@@ -55,13 +58,33 @@ load_data() {
 	then
 		curr_branch_type='detached'
 	fi
+	
+	if [ "$(wc -l <"$working_dir_sha_file")" -ne 1 ]
+	then
+		printf 'fatal: "%s" is should contain exactly 1 line.\n' "$working_dir_sha_file" 1>&2
+		return 1
+	fi
+	working_dir_changes_sha="$(cat "$working_dir_sha_file")"
+	if ! git rev-parse --quiet --verify "$working_dir_changes_sha^{commit}" 1>/dev/null
+	then
+		printf 'fatal: "%s" says "%s" but there is no such commit.\n' "$working_dir_sha_file" "$working_dir_changes_sha" 1>&2
+		return 1
+	fi
 }
 delete_data() {
-	rm -f "$target_data_file"
+	rm -f "$target_data_file" "$working_dir_sha_file"
 }
 
 check_args_for_apply() { # max_free_args args...
 	check_args 'istash apply' "$@"
+}
+
+put_files_into_working_copy() { # untracked_changes_sha non_staged_changes_sha staged_changes_sha
+	git restore --source="$3" -- . || true
+	git add -- .
+	git restore --source="$1" -- . || true
+	git --no-literal-pathspecs ls-tree -r --name-only "$2" -z :/ \
+	| xargs -r0 -- git --literal-pathspecs add --intent-to-add --
 }
 
 end_with_rebase_problem() {
@@ -81,22 +104,18 @@ end_with_rebase_problem() {
 	return 2
 }
 end_with_success() {
-	untracked_changes_hash="$(git rev-parse HEAD~0)"
-	non_staged_changes_hash="$(git rev-parse HEAD~1)"
-	staged_changes_hash="$(git rev-parse HEAD~2)"
-	if [ "$curr_branch_type" != 'orphan' ] && [ "$(git rev-parse HEAD~3)" != "$(git rev-parse "$current_branch")" ]
+	if { [ "$curr_branch_type" != 'orphan' ] && [ "$(git rev-parse HEAD~6)" != "$(git rev-parse "$current_branch")" ] ; } \
+		|| { [ "$curr_branch_type" = 'orphan' ] && [ "$(git rev-list --no-walk --count HEAD~6^@)" != '0' ] ; }
 	then
 		printf 'fatal: HEAD is not in correct position after rebasing.\n' 1>&2
 		return 1
 	fi
+	untracked_changes_sha="$(git rev-parse HEAD~0)"
+	non_staged_changes_sha="$(git rev-parse HEAD~2)"
+	staged_changes_sha="$(git rev-parse HEAD~4)"
 	case "$curr_branch_type" in
 		orphan)
-			if [ "$(git rev-list --no-walk --count HEAD~3^@)" -ne 0 ]
-			then
-				printf 'fatal: Target branch is not an orphan anymore.\n' 1>&2
-				return 1
-			fi
-			if [ -n "$(git ls-tree -r --name-only HEAD~3)" ]
+			if [ -n "$(git ls-tree -r --name-only HEAD~6)" ]
 			then
 				printf 'fatal: The empty commit created for the command is not empty.\n' 1>&2
 				return 1
@@ -108,16 +127,13 @@ end_with_success() {
 			git switch "$current_branch"
 			;;
 		detached)
-			git switch -d HEAD~3
+			git switch -d HEAD~6
 			;;
 	esac
-	git restore --source="$staged_changes_hash" -- . || true
-	git add -- .
-	git restore --source="$untracked_changes_hash" -- . || true
-	git --no-literal-pathspecs ls-tree -r --name-only "$non_staged_changes_hash" -z :/ \
-	| xargs -r0 -- git --literal-pathspecs add --intent-to-add --
+	put_files_into_working_copy "$untracked_changes_sha" "$non_staged_changes_sha" "$staged_changes_sha"
 	delete_data
 	printf '\nSuccessfully applied the stash\n'
+	printf 'Stash of the old working dir: %s\n' "$(prepare_stash_of_working_dir)"
 }
 
 check_data_files() { # resume
@@ -178,36 +194,56 @@ check_data_files() { # resume
 	esac
 }
 
-untangle_git_stash() {
-	stash_commit="$(get_stash_commit "$stash")"
-	git switch --detach "$stash_commit^2"
-	git reset --hard "$(git commit-tree -p 'HEAD' -m "$(git log --format=%B --max-count=1 "$stash_commit")" "$stash_commit^{tree}")"
-	if git rev-parse "$stash_commit^3" 1>/dev/null 2>&1
+prepare_current_branch() {
+	if [ "$curr_branch_type" = 'orphan' ]
 	then
-		git ls-tree -r --name-only "$stash_commit^3" -z \
-		| xargs -r0 -- git --literal-pathspecs restore --source="$stash_commit^3" --
-		git add .
-		git commit --no-edit --no-verify --allow-empty --message="$(git log --format=%B --max-count=1 "$stash_commit^3")"
-	else
-		git commit --no-edit --no-verify --allow-empty --message 'There are no untracked files'
+		git commit --only --allow-empty --message 'Temporary commit by "git-stash"'
 	fi
 }
 
-do_start() { # args...
-	check_args_for_apply 1 "$@"
-	check_data_files n
-	check_other_git_commands_state
-	check_repository_state
-	find_stash "$@"
-	find_current_branch
-	save_data
-	
-	if [ "$curr_branch_type" = 'orphan' ]
+commit_working_directory() {
+	# initialization
+	default_message="$(git rev-list --no-commit-header --format='%h %s' --max-count=1 HEAD)"
+	message="Working directory changes prior to applying stash $(git rev-parse "$(get_stash_commit "$stash")")"
+	if [ "$curr_branch_type" != 'detached' ]
 	then
-		git commit --allow-empty --message 'Temporary commit by "git-stash"'
+		branch_name_for_msg="$(git branch --show-current)"
+	else
+		branch_name_for_msg='(no branch)'
 	fi
-	untangle_git_stash
-	if git rebase --onto "$current_branch" "HEAD~3" "HEAD" --empty=keep --keep-empty --reapply-cherry-picks
+	git switch --detach HEAD
+	
+	# staged
+	git commit --message="index on $branch_name_for_msg: $default_message" --allow-empty 1>/dev/null
+	
+	# unstaged
+	git --no-literal-pathspecs add --update :/ 1>&2 2>/dev/null || true
+	git commit --message="On $branch_name_for_msg: $message" --allow-empty 1>/dev/null
+	
+	# untracked
+	git --no-literal-pathspecs add --all --intent-to-add :/ 2>/dev/null || true
+	git --no-literal-pathspecs add --update :/ 1>&2 2>/dev/null || true
+	git commit --message="untracked files on $branch_name_for_msg: $default_message" --allow-empty 1>/dev/null
+	
+	# save sha
+	working_dir_changes_sha="$(git rev-parse 'HEAD')"
+}
+
+prepare_stash_of_working_dir() {
+	if [ "$(git rev-parse "$working_dir_changes_sha^{tree}")" = "$(git rev-parse "$working_dir_changes_sha~1^{tree}")" ]
+	then
+		tangle_stash "$working_dir_changes_sha~1" n
+	else
+		tangle_stash "$working_dir_changes_sha" y
+	fi
+}
+
+start_rebase() { # untangled_stash_sha
+	todo_list_editor="sed -i -E \
+			-e '1 i pick $working_dir_changes_sha~2 Staged working directory' \
+			-e '2 i pick $working_dir_changes_sha~1 Unstaged working directory' \
+			-e '3 i pick $working_dir_changes_sha~0 Untracked working directory'"
+	if GIT_EDITOR="$todo_list_editor" git rebase --onto "$current_branch" "$1~3" "$1" --empty=keep --keep-empty --reapply-cherry-picks --interactive
 	then
 		end_with_success
 	elif are_there_conflicts
@@ -217,6 +253,20 @@ do_start() { # args...
 		do_abort
 		return 1
 	fi
+}
+
+do_start() { # args...
+	check_args_for_apply 1 "$@"
+	check_data_files n
+	check_other_git_commands_state
+	find_stash "$@"
+	find_current_branch
+	prepare_current_branch
+	commit_working_directory
+	save_data
+	stash_sha="$(get_stash_commit "$stash")"
+	untangled_stash_sha="$(untangle_git_stash "$stash_sha")"
+	start_rebase "$untangled_stash_sha"
 }
 
 do_continue() { # args...
@@ -243,6 +293,7 @@ do_abort() { # args...
 	load_data
 	
 	git rebase --abort || true  # Errors are ignored because if rebase is not in progress, we still want to try to restore HEAD.
+	git reset --hard
 	succeeded_switch=n
 	case "$curr_branch_type" in
 		orphan)
@@ -267,6 +318,7 @@ do_abort() { # args...
 	esac
 	if [ "$succeeded_switch" = y ]
 	then
+		put_files_into_working_copy "$(git rev-parse "$working_dir_changes_sha~0")" "$(git rev-parse "$working_dir_changes_sha~1")" "$(git rev-parse "$working_dir_changes_sha~2")"
 		delete_data
 		printf 'Aborted "git istash"\n' 1>&2
 	else
@@ -279,9 +331,9 @@ do_abort() { # args...
 		printf 'hint: Fix problems and rerun "git istash %s --abort"\n' "$(get_sub_command_name)" 1>&2
 		if [ "$is_pop" = n ]
 		then
-			printf 'hint: or delete the file "%s" to cancel manually.\n' "$target_data_file" 1>&2
+			printf 'hint: or delete the files "%s" and "%s" to cancel manually.\n' "$target_data_file" "$working_dir_sha_file" 1>&2
 		else
-			printf 'hint: or delete the files "%s" and "%s" to cancel manually.\n' "$(make_stash_data_file_path)" "$target_data_file" 1>&2
+			printf 'hint: or delete the files "%s", "%s" and "%s" to cancel manually.\n' "$(make_stash_data_file_path)" "$target_data_file" "$working_dir_sha_file" 1>&2
 		fi
 		if is_color_allowed 2
 		then
@@ -341,4 +393,5 @@ fi
 
 cd "$(git rev-parse --show-toplevel)"
 target_data_file="$(make_target_data_file_path)"
+working_dir_sha_file="$(make_working_dir_sha_file_path)"
 do_apply "$@"

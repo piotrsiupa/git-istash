@@ -24,14 +24,14 @@ assert_dotgit_contents
 SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_CREATE_OPERATION stash"
-correct_head_hash="$(get_head_hash_HT)"
+correct_head_sha="$(get_head_sha_HT)"
 printf 'bbb\n' >aaa
 if ! IS_HEAD_ORPHAN
 then
-	new_stash_hash_CO="$(assert_exit_code 0 git stash "$CREATE_OPERATION")"
+	new_stash_sha_CO="$(assert_exit_code 0 git stash "$CREATE_OPERATION")"
 	if [ "$CREATE_OPERATION" = 'push' ]
 	then
-		new_stash_hash_CO=''
+		new_stash_sha_CO=''
 	fi
 	assert_files_HTCO '
 	 M aaa		bbb	aaa
@@ -42,7 +42,7 @@ then
 	!! ignored0	ignored0
 	!! ignored1	ignored1
 	'
-	store_stash_CO "$new_stash_hash_CO"
+	store_stash_CO "$new_stash_sha_CO"
 	assert_stash_HTCO 0 '' '
 	 M aaa		bbb	aaa
 	'
@@ -50,7 +50,7 @@ then
 	assert_stash_count 1
 	assert_log_length_HT 2
 	assert_branch_count 1
-	assert_head_hash_HT "$correct_head_hash"
+	assert_head_sha_HT "$correct_head_sha"
 	assert_head_name_HT 
 	assert_rebase n
 	assert_branch_metadata_HT

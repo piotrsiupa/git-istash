@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-set -e
+set -eu
 
 actual_git_repo_path='./the-actual-git'
 subsequent_failed_version_limit=5
@@ -20,7 +20,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'Git version checking script version 1.0.1\n'
+	printf 'Git version checking script version 1.0.2\n'
 }
 
 prepare_git_repo() {

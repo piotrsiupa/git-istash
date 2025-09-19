@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-set -e
+set -eu
 
 print_help() {
 	printf 'This is a simple script that just prints the list of all tests.\n'
@@ -15,7 +15,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'test listing script version 1.0.1\n'
+	printf 'test listing script version 1.0.2\n'
 }
 
 getopt_short_options='eEhRv'

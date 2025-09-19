@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-set -e
+set -eu
 
 print_help() {
 	printf 'This script helps find all the scripts that should have the version number updated.\n'
@@ -13,7 +13,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'version number update reminder script version 1.0.0\n'
+	printf 'version number update reminder script version 1.0.1\n'
 }
 
 find_scripts_to_update_versions() {

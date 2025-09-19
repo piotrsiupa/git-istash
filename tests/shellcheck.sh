@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-set -e
+set -eu
 
 print_help() {
 	printf '%s - A test script that runs "shellcheck" on all shell scripts in\n    this repository.\n' "$(basename "$0")"
@@ -14,7 +14,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'shellcheck wrapper script version 1.1.2\n'
+	printf 'shellcheck wrapper script version 1.1.3\n'
 }
 
 list_files() {

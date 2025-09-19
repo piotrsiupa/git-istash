@@ -32,7 +32,7 @@ printf 'x\n' >tracked-dir1/tracked-dir2/both
 git add .
 git commit -m 'Added some files'
 
-correct_head_hash="$(get_head_hash)"
+correct_head_sha="$(get_head_sha)"
 SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_CREATE_OPERATION stash"
@@ -69,7 +69,7 @@ printf 'uf0\n' >tracked-dir1/ignored-dir2/some-file0
 printf 'uf1\n' >tracked-dir1/ignored-dir2/some-file1
 printf '%s\n' '*ignored*' >.git/info/exclude
 #shellcheck disable=SC2086
-new_stash_hash_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS)"
+new_stash_sha_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS)"
 assert_files_HTCO '
    unchanged					x
 M  index						y
@@ -109,7 +109,7 @@ AM tracked-dir1/tracked-dir2/changed-new	z	y
    tracked-dir1/tracked-dir2/normal		x
    tracked-dir1/tracked-dir2/both		x
 '
-store_stash_CO "$new_stash_hash_CO"
+store_stash_CO "$new_stash_sha_CO"
 assert_stash_HTCO 0 '' '
    unchanged					x
 M  index						y
@@ -140,7 +140,7 @@ assert_stash_base_HT 0 'HEAD'
 assert_stash_count 1
 assert_log_length_HT 2
 assert_branch_count 1
-assert_head_hash_HT "$correct_head_hash"
+assert_head_sha_HT "$correct_head_sha"
 assert_head_name_HT
 assert_rebase n
 assert_branch_metadata_HT
@@ -180,7 +180,7 @@ AM tracked-dir1/tracked-dir2/changed-new	z	y
 assert_stash_count 0
 assert_log_length 2
 assert_branch_count 1
-assert_head_hash "$correct_head_hash"
+assert_head_sha "$correct_head_sha"
 assert_head_name 'master'
 assert_rebase n
 assert_branch_metadata_HT

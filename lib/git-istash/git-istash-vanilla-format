@@ -1,0 +1,91 @@
+# Managing the stash format of the vanilla Git (which is needlessly complicated and should be just 3 linear commits).
+
+_sanitize_ls_tree() {
+	convert_to_octal \
+	| sed -E 's/\\000(\\|$)/\n\1/g' \
+	| sed -E 's/(\\(0[0-35-7][0-7]|04[1-7]|[1-3][0-7]{2}))+\\040(\\(0[0-35-7][0-7]|04[1-7]|[1-3][0-7]{2}))+\\040(\\(0[02-7][0-7]|01[02-7]|[1-3][0-7]{2}))+\\011/&\n/' \
+	| while read -r data && read -r path
+	do
+		printf -- "$data%s\n" "$path"
+	done \
+	| sed -E 's/\\057\\/\/\\/g'
+}
+
+_remove_tracked_files_from_untracked() ( # untracked_sha [path]
+	if [ $# -lt 2 ]
+	then
+		#shellcheck disable=SC2164
+		cd "$(git rev-parse --show-toplevel)"
+		set -- "$1" '\072\057'
+	fi
+	#shellcheck disable=SC2059
+	tracked_files="$(printf -- "$2" | xargs -0 -- git --no-literal-pathspecs ls-tree -z "$1~" -- | _sanitize_ls_tree)"
+	#shellcheck disable=SC2059
+	printf -- "$2" | xargs -0 -- git --no-literal-pathspecs ls-tree -z "$1" -- | _sanitize_ls_tree \
+	| while read -r line
+	do
+		if printf '%s' "$tracked_files" | grep -qxF "$line"
+		then
+			continue
+		fi
+		if [ "$(printf '%s\n' "$line" | awk '{print $2}')" = 'blob' ]
+		then
+			printf '%s\\000' "$line"
+		else
+			#shellcheck disable=SC2059
+			subtree_sha="$(_remove_tracked_files_from_untracked "$1" "$(printf '%s' "$line" | sed -E '1 s/^.*\t//')/")"
+			printf '%s\\000' "$line" | sed -E 's;^(\w+\s+\w+\s+)\w+(\s);\1'"$subtree_sha"'\2;'
+		fi | sed -E 's;^(.*\t)(.*/)?([^/]+)$;\1\3;'
+	done | xargs -r0 -- printf -- \
+	| git mktree -z
+)
+
+# This function changes neither the HEAD nor the working directory.
+tangle_stash() ( # last_sha_of_linear_stash has_3_commits
+	if [ "$2" = n ]
+	then
+		git show -s --format=%B "$1" | git commit-tree "$1^{tree}" -p "$1~2" -p "$1~1"
+	else
+		untracked_tree_sha="$(_remove_tracked_files_from_untracked "$1")"
+		untracked_sha="$(git show -s --format=%B "$1" | git commit-tree "$untracked_tree_sha")"
+		git show -s --format=%B "$1~1" | git commit-tree "$1~1^{tree}" -p "$1~3" -p "$1~2" -p "$untracked_sha"
+	fi
+)
+
+_merge_tracked_and_untracked() ( # tracked_sha [path]
+	if [ $# -lt 2 ]
+	then
+		#shellcheck disable=SC2164
+		cd "$(git rev-parse --show-toplevel)"
+		set -- "$1" '\072\057'
+	fi
+	{
+		#shellcheck disable=SC2059
+		printf -- "$2" | xargs -0 -- git --no-literal-pathspecs ls-tree -z "$1" -- | _sanitize_ls_tree || true
+		#shellcheck disable=SC2059
+		printf -- "$2" | xargs -0 -- git --no-literal-pathspecs ls-tree -z "$1^3" -- | _sanitize_ls_tree || true
+	} | awk '!seen[$4]++' \
+	| while read -r line
+	do
+		if [ "$(printf '%s\n' "$line" | awk '{print $2}')" = 'blob' ]
+		then
+			printf '%s\\000' "$line"
+		else
+			#shellcheck disable=SC2059
+			subtree_sha="$(_merge_tracked_and_untracked "$1" "$(printf '%s' "$line" | sed -E '1 s/^.*\t//')/")"
+			printf '%s\\000' "$line" | sed -E 's;^(\w+\s+\w+\s+)\w+(\s);\1'"$subtree_sha"'\2;'
+		fi | sed -E 's;^(.*\t)(.*/)?([^/]+)$;\1\3;'
+	done | xargs -r0 -- printf -- \
+	| git mktree -z
+)
+
+untangle_git_stash() ( # stash_commit
+	unstaged_sha="$(git commit-tree -p "$1^2" -m "$(git log --format=%B --max-count=1 "$1")" "$1^{tree}")"
+	if git rev-parse "$1^3" 1>/dev/null 2>&1
+	then
+		untracked_tree_sha="$(_merge_tracked_and_untracked "$1")"
+		git commit-tree -p "$unstaged_sha" -m "$(git log --format=%B --max-count=1 "$1^3")" "$untracked_tree_sha"
+	else
+		git commit-tree -p "$unstaged_sha" -m "$(git log --format=%B --max-count=1 "$unstaged_sha")" "$unstaged_sha^{tree}"
+	fi
+)

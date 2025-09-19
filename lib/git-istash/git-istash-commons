@@ -1,3 +1,5 @@
+# A set of utility functions for istash scripts.
+
 is_color_allowed() { # stream_num
 	case "$(git config --get color.ui)" in
 		always|true|1) return 0 ;;
@@ -6,12 +8,27 @@ is_color_allowed() { # stream_num
 	esac
 }
 
+if command -v od 1>/dev/null 2>&1
+then
+	convert_to_octal() {
+		#shellcheck disable=SC1003
+		od -bvAn | tr ' ' '\\' | tr -d '\n'
+	}
+else
+	convert_to_octal() {
+		hexdump -ve'"\\" /1 "%03o"'
+	}
+fi
+
 make_data_file_path() { # name
 	git rev-parse --git-dir | tr -d '\n'
 	printf '/istash %s' "$1" | tr ' a-z' '_A-Z'
 }
 make_target_data_file_path() {
 	make_data_file_path 'target'
+}
+make_working_dir_sha_file_path() {
+	make_data_file_path 'working-dir'
 }
 make_stash_data_file_path() {
 	make_data_file_path 'stash'
@@ -44,16 +61,6 @@ check_args() { # max_free_args args...
 	then
 		printf 'error: Too many arguments.\n' 1>&2
 		printf 'error: Type "git %s --help" for more information.\n' "$_script_name" 1>&2
-		return 1
-	fi
-}
-
-check_repository_state() {
-	if [ -n "$(git status --porcelain)" ]
-	then
-		# There are still are some limitations.
-		printf 'error: There are uncommitted changes in the working directory.\n' 1>&2
-		printf 'error: Please commit or stash them.\n' 1>&2
 		return 1
 	fi
 }
@@ -119,8 +126,8 @@ find_stash() { # [arg]
 	elif printf '%s' "$1" | grep -xqE 'stash\^\{/.*\}'
 	then
 		stash_text="$(printf '%s' "$1" | sed -E 's/^stash\^\{\/(.*)\}$/\1/')"
-		stash_hash="$(git rev-list --walk-reflogs --grep-reflog="$stash_text" --ignore-missing refs/stash | head -n1)"
-		stash="$(($(git rev-list --walk-reflogs refs/stash | grep -Fxn "$stash_hash" | cut -d: -f1) - 1))"
+		stash_sha="$(git rev-list --walk-reflogs --grep-reflog="$stash_text" --ignore-missing refs/stash | head -n1)"
+		stash="$(($(git rev-list --walk-reflogs refs/stash | grep -Fxn "$stash_sha" | cut -d: -f1) - 1))"
 	elif printf '%s' "$1" | grep -xqE 'stash@\{[0-9]+\}'
 	then
 		stash="$(printf '%s' "$1" | sed -E 's/^stash@\{(.*)\}$/\1/')"

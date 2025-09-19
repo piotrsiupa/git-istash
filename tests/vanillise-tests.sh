@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-set -e
+set -eu
 
 print_help() {
 	printf 'This replaces all calls to the "istash" in tests with the classic "stash".\n'
@@ -14,7 +14,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'test vanillisation script version 1.0.0\n'
+	printf 'test vanillisation script version 1.0.1\n'
 }
 
 getopt_short_options='hv'

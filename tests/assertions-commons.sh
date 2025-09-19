@@ -10,10 +10,9 @@ fi
 assert_exit_code() { # expected_code command [arguments...]
 	expected_exit_code_for_assert="$1"
 	shift
-	exit_code_for_assert=0
-	"$@" || exit_code_for_assert=$?
+	"$@" && exit_code_for_assert=0 || exit_code_for_assert=$?
 	test "$exit_code_for_assert" -eq "$expected_exit_code_for_assert" ||
-		fail 'Command %s returned exit code %i but %i was expected!\n' "$(command_to_string "$@")" $exit_code_for_assert "$expected_exit_code_for_assert"
+		fail 'Command %s returned exit code %i but %i was expected!\n' "$(command_to_string "$@")" "$exit_code_for_assert" "$expected_exit_code_for_assert"
 	unset expected_exit_code_for_assert
 	unset exit_code_for_assert
 }
@@ -34,7 +33,7 @@ _convert_zero_separated_path_list() {
 }
 
 _prepare_path_list_for_assertion() { # [has_prefix]
-	if [ "$1" = y ]
+	if [ "${1-n}" = y ]
 	then
 		sed -E -e 's/^\\040/ /g' -e 's/^(.)\\040/\1 /g' -e 's/^(..)\\040/\1 /g' \
 			-e 's/^(...)(.*)$/\2 \1/' \
@@ -193,14 +192,14 @@ assert_branch_count() { # expected
 	unset value_for_assert
 }
 
-assert_head_hash() { # expected
-	value_for_assert="$(get_head_hash)"
+assert_head_sha() { # expected
+	value_for_assert="$(get_head_sha)"
 	test "$value_for_assert" = "$1" ||
 		fail 'Expected HEAD to be at %s but it is at %s!\n' "$1" "$value_for_assert"
 	unset value_for_assert
 }
 
-assert_stash_hash() { # stash_num expected
+assert_stash_sha() { # stash_num expected
 	value_for_assert="$(git rev-parse "stash@{$1}")"
 	test "$value_for_assert" = "$2" ||
 		fail 'Expected stash entry #%i to be %s but it is %s!\n' "$1" "$2" "$value_for_assert"
@@ -277,10 +276,10 @@ assert_branch_count_HT() { # expected_for_not_orphan
 	fi
 	assert_branch_count "$1"
 }
-assert_head_hash_HT() { # expected_for_not_orphan
+assert_head_sha_HT() { # expected_for_not_orphan
 	if ! IS_HEAD_ORPHAN
 	then
-		value_for_assert="$(get_head_hash)"
+		value_for_assert="$(get_head_sha)"
 		test "$value_for_assert" = "$1" ||
 			fail 'Expected HEAD to be at %s but it is at %s!\n' "$1" "$value_for_assert"
 		unset value_for_assert
@@ -313,8 +312,8 @@ assert_dotgit_contents_for() { # operation [additional_expected_file_names...]
 	operation_for_assert="$1"
 	shift
 	case "$operation_for_assert" in
-		'apply') assert_dotgit_contents 'ISTASH_TARGET' "$@" ;;
-		'pop') assert_dotgit_contents 'ISTASH_TARGET' 'ISTASH_STASH' "$@" ;;
+		'apply') assert_dotgit_contents 'ISTASH_TARGET' 'ISTASH_WORKING-DIR' "$@" ;;
+		'pop') assert_dotgit_contents 'ISTASH_TARGET' 'ISTASH_STASH' 'ISTASH_WORKING-DIR' "$@" ;;
 		*) fail 'Unknown operation "%s"!' "$operation_for_assert" ;;
 	esac
 	unset operation_for_assert

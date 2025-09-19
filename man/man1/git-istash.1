@@ -1,4 +1,4 @@
-.TH GIT-ISTASH 1 "2025-09-14" "git-istash 1.4.1"
+.TH GIT-ISTASH 1 "2025-09-19" "git-istash 1.5.0"
 .nh
 .ad l
 
@@ -62,14 +62,16 @@ Subcommand	Removes the stash from the stash ref
 \fBapply\fR	NO
 \fBpop\fR	YES (if it succeeded)
 .TE
-In case of conflicts, instead of refusing and demanding to run it without \fB\-\-index\fR, they apply index and working directory changes separately and stop to resolve conflicts when needed, similarly to \fBgit rebase\fR. \
+In case of conflicts, instead of refusing and demanding to run it without \fB\-\-index\fR, they temporarily apply index and working directory changes as separate commits, stopping to resolve conflicts whenever it's necessary (similarly to \fBgit rebase\fR). \
 After the conflicts are resolved, the subcommands can be resumed with \fB\-\-continue\fR. \
 Alternatively, \fB\-\-abort\fR can be used to cancel the operation and return to the repository state before it started.
 .br
 Because of the multi-stage conflict resolution, \fIthe index saved to the stash entry will be preserved\fR (unlike in \fBgit stash\fR equivalent subcommands).
+.br
+Additionally, the state of working copy, from before the \fBapply\fR / \fBpop\fR has started, is backed up as a separate stash entry (which is not stored anywhere but it can be found in the command's output if needed).
 .RE
 
-.SH COMMANDS
+.SH SUBCOMMANDS
 
 .PP
 \fBcreate\fR [\-a\~|\~\-\-all] [\-\-allow\-empty] [\-l\~|\~\-\-leave\-staged] [(\-m\~|\~\-\-message)\~<\fImessage\fR>] [\-\-patch] [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<\fIfile\fR>] [\-S\~|\~\-\-staged] [\-u\~|\~\-\-[no\-]include\-untracked] [\-\-] [<\fIpathspec\fR>...]
@@ -140,7 +142,7 @@ Like \fBgit stash pop \-\-index\fR, but it handles staged and unstaged conflicts
 Unlike \fBgit stash pop\fR, it can handle stashes referenced by name (\fBstash^{/<name>}\fR).
 .sp
 The only differences from \fBgit istash apply\fR are that \fBpop\fR cannot use an arbitrary commit as \fB<stash>\fR and it removes the stash entry on success. \
-In case of conflicts, the stash is dropped after all conflicts are successfully resolved.
+In case of conflicts, the stash is dropped only after all conflicts are successfully resolved.
 .sp
 This is the inverse operation of \fBgit stash push\fR.
 .RE
@@ -257,7 +259,7 @@ See also \fB\-\-leave\-staged\fR.
 This option is only valid for \fBsave\fR and \fBpush\fR subcommands and also allowed for \fBcreate\fR and \fBsnatch\fR.
 .sp
 The stash won't be stored in the stash ref. \
-Instead, its hash will be outputted to stdout.
+Instead, its SHA will be outputted to stdout.
 .br
 Basically, this changes \fBsave\fR\~->\~\fBcreate\fR and \fBpush\fR\~->\~\fBsnatch\fR. \
 If used with \fBcreate\fR or \fBsnatch\fR, this option has no effect.
@@ -463,9 +465,6 @@ $ git istash pop
 \fBgit\-stash\fR(1), \fBgit\-rebase\fR(1)
 
 .SH CURRENT LIMITATIONS
-.PP
-It is not possible to \fBapply\fR or \fBpop\fR stash on top of existing changes in the working copy. \
-All modified files need to be restored or stashed away before starting the process.
 .PP
 Changes are not removed from working directory when \fB--patch\fR with \fBe\fR was used to stash only some of consecutive changed lines. \
 (It will be fixed if I can figure out a way to do it in a consistent way.)

@@ -43,7 +43,7 @@ assert_rebase n
 assert_dotgit_contents
 
 __test_section__ "$CAP_CREATE_OPERATION stash"
-correct_head_hash="$(get_head_hash_HT)"
+correct_head_sha="$(get_head_sha_HT)"
 assert_exit_code 1 git istash "$CREATE_OPERATION"
 assert_files_HT '
 UU aaa		ddd|aaa
@@ -53,7 +53,7 @@ UU aaa		ddd|aaa
 assert_stash_count 1
 assert_log_length_HT 4
 assert_branch_count 1
-assert_head_hash_HT "$correct_head_hash"
+assert_head_sha_HT "$correct_head_sha"
 assert_rebase n
 assert_dotgit_contents
 

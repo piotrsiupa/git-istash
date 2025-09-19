@@ -26,7 +26,7 @@ printf 'xxx\nxxx\n' >eee9
 git add .
 git commit -m 'Added a bunch of files'
 
-correct_head_hash="$(get_head_hash)"
+correct_head_sha="$(get_head_sha)"
 SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_CREATE_OPERATION stash"
@@ -47,7 +47,7 @@ rm bbb2 ddd7
 printf 'y s y n s n y n ' | tr ' ' '\n' >.git/answers_for_patch0
 printf 'y n ' | tr ' ' '\n' >.git/answers_for_patch1
 printf 'aaa0 bbb? *5 ./?dd* fff1? ' | PREPARE_PATHSPEC_FILE
-new_stash_hash_CO="$(
+new_stash_sha_CO="$(
 	{
 		cat .git/answers_for_patch0
 		# A child shell tends to eat all the stdin if it's able to. This prevents it. If it still doesn't work, try to increase the time.
@@ -132,7 +132,7 @@ else
 	!! ignored1	ignored1
 	'
 fi
-store_stash_CO "$new_stash_hash_CO"
+store_stash_CO "$new_stash_sha_CO"
 assert_stash_HTCO 0 'a very controlled stash' '
 M  aaa0		yyy\nxxx\nxxx\nyyy
    aaa1		xxx\nxxx
@@ -150,7 +150,7 @@ assert_stash_base_HT 0 'HEAD'
 assert_stash_count 1
 assert_log_length_HT 2
 assert_branch_count 1
-assert_head_hash_HT "$correct_head_hash"
+assert_head_sha_HT "$correct_head_sha"
 assert_head_name_HT
 assert_rebase n
 assert_branch_metadata_HT
@@ -177,7 +177,7 @@ M  ddd6		yyy\nxxx\nxxx\nyyy
 assert_stash_count 0
 assert_log_length 2
 assert_branch_count 1
-assert_head_hash "$correct_head_hash"
+assert_head_sha "$correct_head_sha"
 assert_head_name 'master'
 assert_rebase n
 assert_branch_metadata_HT

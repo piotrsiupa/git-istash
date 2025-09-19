@@ -21,16 +21,24 @@ git commit -am 'Changed aaa'
 
 SWITCH_HEAD_TYPE
 
+__test_section__ 'Dirty the working directory'
+printf 'wdf0a\n' >wdf0
+git add wdf0
+printf 'wdf0b\n' >wdf0
+printf 'wdf1a\n' >wdf1
+
 __test_section__ "$CAP_APPLY_OPERATION stash"
-correct_head_hash="$(get_head_hash_HT)"
+correct_head_sha="$(get_head_sha_HT)"
 assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION"
 assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ccc|bbb
+   wdf0		wdf0b
 !! ignored0	ignored0
 !! ignored1	ignored1
 ' '
 DU aaa		bbb
+   wdf0		wdf0b
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
@@ -41,29 +49,31 @@ assert_rebase y
 assert_dotgit_contents_for "$APPLY_OPERATION"
 
 __test_section__ "Continue $APPLY_OPERATION stash (0)"
-correct_head_hash2="$(get_head_hash_HT)"
+correct_head_sha2="$(get_head_sha_HT)"
 printf 'ddd\n' >aaa
 git add aaa
 mv .git/ISTASH_TARGET .git/ISTASH_TARGET~
 assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 assert_files_HT '
 M  aaa		ddd
+   wdf0		wdf0b
 !! ignored0	ignored0
 !! ignored1	ignored1
 ' '
 A  aaa		ddd
+   wdf0		wdf0b
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
 assert_stash_count 1
 assert_branch_count_HT 1
-assert_head_hash_HT "$correct_head_hash2"
+assert_head_sha_HT "$correct_head_sha2"
 assert_rebase y
 if IS_APPLY
 then
-	assert_dotgit_contents 'ISTASH_TARGET~'
+	assert_dotgit_contents 'ISTASH_TARGET~' 'ISTASH_WORKING-DIR'
 else
-	assert_dotgit_contents 'ISTASH_STASH' 'ISTASH_TARGET~'
+	assert_dotgit_contents 'ISTASH_STASH' 'ISTASH_TARGET~' 'ISTASH_WORKING-DIR'
 fi
 
 __test_section__ "Continue $APPLY_OPERATION stash (1)"
@@ -71,17 +81,21 @@ mv .git/ISTASH_TARGET~ .git/ISTASH_TARGET
 assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 assert_files_HT '
  M aaa		ddd	ccc
+AM wdf0		wdf0b	wdf0a
+?? wdf1		wdf1a
 !! ignored0	ignored0
 !! ignored1	ignored1
 ' '
  A aaa		ddd
+AM wdf0		wdf0b	wdf0a
+?? wdf1		wdf1a
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
 assert_stash_count_AO 1
 assert_log_length_HT 3
 assert_branch_count 1
-assert_head_hash_HT "$correct_head_hash"
+assert_head_sha_HT "$correct_head_sha"
 assert_head_name_HT
 assert_data_files 'none'
 assert_rebase n

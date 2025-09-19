@@ -57,10 +57,10 @@ PARAMETRIZE_KEEP_INDEX() { # keys
 	esac
 }
 IS_KEEP_INDEX_ON() {
-	printf '%s' "$KEEP_INDEX" | grep -Eq '^INDEX-YES-'
+	printf '%s' "${KEEP_INDEX-'INDEX-DEFAULT'}" | grep -Eq '^INDEX-YES-'
 }
 IS_KEEP_INDEX_OFF() {
-	printf '%s' "$KEEP_INDEX" | grep -Eq '^INDEX-NO-'
+	printf '%s' "${KEEP_INDEX-'INDEX-DEFAULT'}" | grep -Eq '^INDEX-NO-'
 }
 
 
@@ -77,7 +77,7 @@ PARAMETRIZE_STAGED() { # keys
 	esac
 }
 IS_STAGED_ON() {
-	printf '%s' "$STAGED" | grep -Eq '^STAGED-YES$'
+	printf '%s' "${STAGED-'STAGED-YES'}" | grep -Eq '^STAGED-YES$'
 }
 
 
@@ -94,7 +94,7 @@ PARAMETRIZE_UNSTAGED() { # keys
 	esac
 }
 IS_UNSTAGED_ON() {
-	printf '%s' "$UNSTAGED" | grep -Eq '^UNSTGD-YES$'
+	printf '%s' "${UNSTAGED-'UNSTGD-YES'}" | grep -Eq '^UNSTGD-YES$'
 }
 
 #shellcheck disable=SC2120
@@ -108,7 +108,7 @@ PARAMETRIZE_ALL() { # keys
 	esac
 }
 IS_ALL_ON() {
-	printf '%s' "$ALL" | grep -Eq '^ALL-YES-'
+	printf '%s' "${ALL-'ALL-DEFAULT'}" | grep -Eq '^ALL-YES-'
 }
 
 #shellcheck disable=SC2120
@@ -127,10 +127,10 @@ PARAMETRIZE_UNTRACKED() { # keys
 	esac
 }
 IS_UNTRACKED_ON() {
-	printf '%s' "$UNTRACKED" | grep -Eq '^UNTR-YES-'
+	printf '%s' "${UNTRACKED-'UNTR-DEFAULT'}" | grep -Eq '^UNTR-YES-'
 }
 IS_UNTRACKED_OFF() {
-	printf '%s' "$UNTRACKED" | grep -Eq '^UNTR-NO-'
+	printf '%s' "${UNTRACKED-'UNTR-DEFAULT'}" | grep -Eq '^UNTR-NO-'
 }
 
 PARAMETRIZE_OPTIONS_INDICATOR() { # condition
@@ -148,10 +148,10 @@ PARAMETRIZE_OPTIONS_INDICATOR() { # condition
 	esac
 }
 IS_OPTIONS_INDICATOR_ON() {
-	test "$END_OPTIONS_INDICATOR" = 'EOI-YES'
+	test "${END_OPTIONS_INDICATOR-'EIO-NO'}" = 'EOI-YES'
 }
 IS_OPTIONS_INDICATOR_OFF() {
-	test "$END_OPTIONS_INDICATOR" = 'EOI-NO'
+	test "${END_OPTIONS_INDICATOR-'EIO-NO'}" = 'EOI-NO'
 }
 
 PARAMETRIZE_PATHSPEC_STYLE() { # keys
@@ -212,7 +212,7 @@ PARAMETRIZE_EXCLUDE() {
 	esac
 }
 
-store_stash_CO() { # new_stash_hash
+store_stash_CO() { # new_stash_sha
 	if CO_STORES_STASH
 	then
 		test -z "$1" ||
@@ -220,7 +220,7 @@ store_stash_CO() { # new_stash_hash
 	else
 		stash_count_before="$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)"
 		git stash store "$1" ||
-			fail 'Cannot store stash using hash returned by "%s"! ("%s")\n' "$CREATE_OPERATION" "$1"
+			fail 'Cannot store stash using sha returned by "%s"! ("%s")\n' "$CREATE_OPERATION" "$1"
 		stash_count_after="$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)"
 		test "$stash_count_after" -gt "$stash_count_before" ||
 			fail 'Storing stash produced by "%s" quietly failed! (Possibly a duplicated entry.)\n' "$CREATE_OPERATION"

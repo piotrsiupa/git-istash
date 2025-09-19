@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-set -e
+set -eu
 
 print_help() {
 	printf '%s - Script that runs tests from sub-directories of this directory.\n' "$(basename "$0")"
@@ -43,7 +43,7 @@ print_help() {
 	printf 'The exact metrics depend strongly on which specific tests are run.\n'
 	printf 'The levels are:\n'
 	printf '    0 - Most of the tests (marked as non-essential) are skipped. It can be used\n\tto check if the most important functionality is implemented but it'\''s\n\tnot very useful overall. (Extremely fast, though.)\n'
-	printf '    1 - Only the first set of parameters is run for each parametric test. Almost\n\tall tests are parametric so a lot is skipped but this should suffice to\n\tdo a quick test. It won'\''t catch most of the corner cases, though.\n'
+	printf '    1 - Only the first set of parameters is run for each parametric test. Almost\n\tall tests are parametric so a lot is skipped but this should suffice to\n\tdo a quick test. It won'\''t catch most of the corner cases, though.\n\t(It'\''s a good mode for checking which tests are related to specific line\n\tof code. Just break that line and run the tests. This is also a way to\n\tget some idea about what a piece of code is needed for.)\n'
 	printf '    2 - When an option has a few spellings (e.g. "-m" and "--message") only one\n\tof them will be tested. Beside that, other things from parametric tests\n\tare tested in all combinations, except not all the ways to specify\n\tpathspecs because there is a lot. (Null-separated stdin and non-null-\n\t-separated file are skipped but it probably should still test all\n\texecution paths.) This is relatively thorough and it should be enough\n\tfor testing on the fly, while writing code.\n'
 	printf '    3 - When an option has multiple spellings, all of them are tested but not\n\tnecessarily all combinations of spellings of different options.\n\tThis level should be run before every commit!\n'
 	printf '    4 - All combinations of parameters are run in parametric tests.\n\t(A bit of an overkill but it is run from time to time, just to be sure.)\n'
@@ -51,7 +51,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'test script version 2.3.1\n'
+	printf 'test script version 2.3.2\n'
 }
 
 printf_color_code() { # code_for_printf...
@@ -99,7 +99,7 @@ get_test_script() { # test_name
 	printf '%s.sh' "$1"
 }
 get_test_dir() { # test_name [parameters_string]
-	printf '%s/t_dir__%s/%s' "$(basename "$(dirname "$1")")" "$(basename "$1")" "$2"
+	printf '%s/t_dir__%s/%s' "$(basename "$(dirname "$1")")" "$(basename "$1")" ${2+"$2"}
 }
 
 cleanup_test() { # test_name [parameters_string]
@@ -108,7 +108,7 @@ cleanup_test() { # test_name [parameters_string]
 create_test_dir() { # test_name [parameters_string]
 	test_dir="$(get_test_dir "$1")"
 	mkdir -p "$test_dir"
-	test_dir="$(get_test_dir "$1" "$2")"
+	test_dir="$(get_test_dir "$1" ${2+"$2"})"
 	mkdir "$test_dir"
 }
 
@@ -578,6 +578,7 @@ run_tests() {
 			running_tests_count=0
 			running_tests_data=''
 			alive_children=''
+			dead_children=''
 			finalizing_tests_count=0
 			done_tests_count=0
 			output_buffer_file="$(mktemp)"

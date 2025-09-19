@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-set -e
+set -eu
 
 print_help() {
 	printf '%s - A script to remove all the tests results.\n' "$(basename "$0")"
@@ -15,7 +15,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'shellcheck wrapper script version 1.0.0\n'
+	printf 'shellcheck wrapper script version 1.0.1\n'
 }
 
 clear_results() {

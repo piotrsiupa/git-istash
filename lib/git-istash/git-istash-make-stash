@@ -1,8 +1,9 @@
 #!/usr/bin/env sh
 
-set -e
+set -eu
 
 . "$(dirname "$0")/git-istash-commons"
+. "$(dirname "$0")/git-istash-vanilla-format"
 
 print_help() {
 	printf 'git-istash-make-stash - An internal script of "git istash".\n'
@@ -24,7 +25,7 @@ print_help() {
 	printf '\t--pathspec-file-nul - Treat the pathspec file as NUL-separated.\n\t\t\t  (Only valid with "--pathspec-from-file".)\n'
 	printf '\t--remove-stashed - Removes stashed changes unless there'\''s another option\n\t\t\t  to explicitely keep them.\n'
 	printf '    -S, --staged\t- Left intact all changes NOT already added to the index\n\t\t\t  and don'\''t add them to stash.\n'
-	printf '\t--no-store\t- Don'\''t store the created stash with "git stash store".\n\t\t\t  Instead write its hash to stdout.\n'
+	printf '\t--no-store\t- Don'\''t store the created stash with "git stash store".\n\t\t\t  Instead write its sha to stdout.\n'
 	printf '    -u, --include-untracked - Stash and clean also untracked files.\n'
 	printf '\t--no-include-untracked - Do not touch untracked files even with "--all".\n'
 }
@@ -69,19 +70,6 @@ initialize_commit_layout() {
 		has_3_commits=n
 	fi
 }
-initialize_octal_conversion() {
-	if command -v od 1>/dev/null 2>&1
-	then
-		convert_to_octal() {
-			#shellcheck disable=SC1003
-			od -bvAn | tr ' ' '\\' | tr -d '\n'
-		}
-	else
-		convert_to_octal() {
-			hexdump -ve'"\\" /1 "%03o"'
-		}
-	fi
-}
 initialize_pathspec_file_path() {
 	pathspec_file="$(git rev-parse --git-dir)/ISTASH_PATHSPEC"
 }
@@ -102,7 +90,6 @@ initialize_pathspec() { # pathspecs
 }
 initialize() { # pathspecs
 	initialize_commit_layout
-	initialize_octal_conversion
 	initialize_pathspec "$@"
 }
 cleanup() {
@@ -114,7 +101,7 @@ cleanup() {
 }
 
 is_pathspec_exclude() { # pathspec
-	if parse_git_bool "$GIT_LITERAL_PATHSPECS"
+	if parse_git_bool ${GIT_LITERAL_PATHSPECS+"$GIT_LITERAL_PATHSPECS"}
 	then
 		return 1
 	fi
@@ -290,21 +277,21 @@ commit_changes() {
 		then
 			git commit --message="index on $branch_name_for_msg: $default_message" --allow-empty 1>/dev/null
 		else
-			base_commit_hash="$(git rev-parse HEAD)"
+			base_commit_sha="$(git rev-parse HEAD)"
 			xargs -r0 -- git diff --name-only HEAD --cached -z -- <"$pathspec_file" \
 			| (
 				cd "$(git rev-parse --show-toplevel)"
 				xargs -r0 -- git --literal-pathspecs commit --message="index on $branch_name_for_msg: $default_message" --allow-empty -- 1>/dev/null
 			)
-			if [ "$(git rev-parse HEAD)" = "$base_commit_hash" ]
+			if [ "$(git rev-parse HEAD)" = "$base_commit_sha" ]
 			then
-				index_commit_hash="$(git commit-tree 'HEAD^{tree}' -p 'HEAD' -m "index on $branch_name_for_msg: $default_message")"
-				git reset --soft "$index_commit_hash" 1>/dev/null
+				index_commit_sha="$(git commit-tree 'HEAD^{tree}' -p 'HEAD' -m "index on $branch_name_for_msg: $default_message")"
+				git reset --soft "$index_commit_sha" 1>/dev/null
 			fi
 		fi
 	else
-		index_commit_hash="$(git commit-tree 'HEAD^{tree}' -p 'HEAD' -m "index on $branch_name_for_msg: $default_message")"
-		git reset --soft "$index_commit_hash" 1>/dev/null
+		index_commit_sha="$(git commit-tree 'HEAD^{tree}' -p 'HEAD' -m "index on $branch_name_for_msg: $default_message")"
+		git reset --soft "$index_commit_sha" 1>/dev/null
 	fi
 	if [ "$there_are_enough_changes" = n ] && [ "$(git rev-parse 'HEAD^{tree}')" != "$(git rev-parse 'HEAD~^{tree}')" ]
 	then
@@ -324,13 +311,13 @@ commit_changes() {
 undo_commit_changes() {
 	if [ "$has_3_commits" = y ]
 	then
-		non_staged_changes_hash="$(git rev-parse HEAD~2)"
+		non_staged_changes_sha="$(git rev-parse HEAD~2)"
 		git reset --mixed HEAD~4 1>/dev/null
 	else
-		non_staged_changes_hash="$(git rev-parse HEAD~1)"
+		non_staged_changes_sha="$(git rev-parse HEAD~1)"
 		git reset --mixed HEAD~3 1>/dev/null
 	fi
-	git --no-literal-pathspecs ls-tree -r --name-only "$non_staged_changes_hash" -z :/ \
+	git --no-literal-pathspecs ls-tree -r --name-only "$non_staged_changes_sha" -z :/ \
 	| xargs -r0 -- git --literal-pathspecs add --force --intent-to-add --
 	git reset --soft HEAD~2 1>/dev/null
 	if [ "$curr_branch_type" = 'orphan' ]
@@ -380,8 +367,8 @@ sort_commits() {
 	stashed_commits_editor="$stashed_commits_editor --"
 	unstashed_commits_editor="$unstashed_commits_editor --"
 	
-	last_commit_hash="$(git rev-parse HEAD)"
-	if ! GIT_EDITOR="$unstashed_commits_editor" git -c merge.renames=false rebase --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_hash" 1>/dev/null
+	last_commit_sha="$(git rev-parse HEAD)"
+	if ! GIT_EDITOR="$unstashed_commits_editor" git -c merge.renames=false rebase --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_sha" 1>/dev/null
 	then
 		handle_rebase_conflict_using_theirs
 	fi
@@ -393,93 +380,47 @@ sort_commits() {
 		else
 			keep_index_editor='sed -i -E -e "2 s/^pick\\>/fixup/" --'
 		fi
-		if ! GIT_EDITOR="$keep_index_editor" git -c merge.renames=false rebase --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_hash" 1>/dev/null
+		if ! GIT_EDITOR="$keep_index_editor" git -c merge.renames=false rebase --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_sha" 1>/dev/null
 		then
 			handle_rebase_conflict_using_theirs
 		fi
 	fi
-	unstashed_changes_hash="$(git rev-parse HEAD)"
+	unstashed_changes_sha="$(git rev-parse HEAD)"
 	
-	git switch --detach "$last_commit_hash" 1>/dev/null
-	if ! GIT_EDITOR="$stashed_commits_editor" git -c merge.renames=false rebase --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_hash" 1>/dev/null
+	git switch --detach "$last_commit_sha" 1>/dev/null
+	if ! GIT_EDITOR="$stashed_commits_editor" git -c merge.renames=false rebase --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_sha" 1>/dev/null
 	then
 		handle_rebase_conflict_using_theirs
 	fi
 }
 
-sanitize_ls_tree() {
-	convert_to_octal \
-	| sed -E 's/\\000(\\|$)/\n\1/g' \
-	| sed -E 's/(\\(0[0-35-7][0-7]|04[1-7]|[1-3][0-7]{2}))+\\040(\\(0[0-35-7][0-7]|04[1-7]|[1-3][0-7]{2}))+\\040(\\(0[02-7][0-7]|01[02-7]|[1-3][0-7]{2}))+\\011/&\n/' \
-	| while read -r data && read -r path
-	do
-		printf -- "$data%s\n" "$path"
-	done \
-	| sed -E 's/\\057\\/\/\\/g'
-}
-
-remove_tracked_files_from_untracked() ( # [path]
-	if [ $# -lt 1 ]
-	then
-		cd "$(git rev-parse --show-toplevel)"
-		set -- '\072\057'
-	fi
-	#shellcheck disable=SC2059
-	previous_files="$(printf -- "$1" | xargs -0 -- git --no-literal-pathspecs ls-tree -z HEAD~ -- | sanitize_ls_tree)"
-	#shellcheck disable=SC2059
-	printf -- "$1" | xargs -0 -- git --no-literal-pathspecs ls-tree -z HEAD -- | sanitize_ls_tree \
-	| while read -r line
-	do
-		if printf '%s' "$previous_files" | grep -qxF "$line"
-		then
-			continue
-		fi
-		if [ "$(printf '%s\n' "$line" | awk '{print $2}')" = 'blob' ]
-		then
-			printf '%s\\000' "$line"
-		else
-			#shellcheck disable=SC2059
-			subtree_sha="$(remove_tracked_files_from_untracked "$(printf '%s' "$line" | sed -E '1 s/^.*\t//')/")"
-			printf '%s\\000' "$line" | sed -E 's;^(\w+\s+\w+\s+)\w+(\s);\1'"$subtree_sha"'\2;'
-		fi | sed -E 's;^(.*\t)(.*/)?([^/]+)$;\1\3;'
-	done | xargs -r0 -- printf -- \
-	| git mktree -z
-)
-
-tangle_stash() {
-	if [ "$has_3_commits" = n ]
-	then
-		stash_sha="$(git show -s --format=%B HEAD | git commit-tree 'HEAD^{tree}' -p HEAD~2 -p HEAD~1)"
-	else
-		untracked_tree_sha="$(remove_tracked_files_from_untracked)"
-		untracked_sha="$(git show -s --format=%B HEAD | git commit-tree "$untracked_tree_sha")"
-		stash_sha="$(git show -s --format=%B HEAD~1 | git commit-tree 'HEAD~1^{tree}' -p HEAD~3 -p HEAD~2 -p "$untracked_sha")"
-	fi
+handle_stash_sha() { # stash_sha
 	if [ "$store_stash" = y ]
 	then
-		git stash store "$stash_sha" --message="$(git show -s --format=%B "$stash_sha")"
+		git stash store "$1" --message="$(git show -s --format=%B "$1")"
 	else
-		printf '%s\n' "$stash_sha"
+		printf '%s\n' "$1"
 	fi
 }
 
 restore_working_tree() {
-	git switch --detach "$unstashed_changes_hash" 1>/dev/null
-	unstaged_commit_hash="$(git rev-parse 'HEAD~')"
+	git switch --detach "$unstashed_changes_sha" 1>/dev/null
+	unstaged_commit_sha="$(git rev-parse 'HEAD~')"
 	git reset --mixed HEAD~2 1>/dev/null
 	(
 		cd "$(git rev-parse --show-toplevel)"
-		git --no-literal-pathspecs diff-tree -r --diff-filter='A' --name-only --no-renames --no-commit-id -z "$unstaged_commit_hash~1" "$unstaged_commit_hash" -- :/ \
+		git --no-literal-pathspecs diff-tree -r --diff-filter='A' --name-only --no-renames --no-commit-id -z "$unstaged_commit_sha~1" "$unstaged_commit_sha" -- :/ \
 		| xargs -r0 -- git --literal-pathspecs add --force --intent-to-add --
 	)
 	git reset --soft HEAD~1 1>/dev/null
 }
 
 create_stash() {
-	stash_base_hash="$(git rev-parse HEAD)"
+	stash_base_sha="$(git rev-parse HEAD)"
 	commit_changes
 	sort_commits
-	tangle_stash
+	stash_sha="$(tangle_stash HEAD "$has_3_commits")"
+	handle_stash_sha "$stash_sha"
 	restore_working_tree
 }
 
