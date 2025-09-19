@@ -45,6 +45,8 @@ Because of the multi-stage conflict resolution, *the index saved to the stash en
 |    `apply` | NO                                   |
 |      `pop` | YES (if it succeeded)                |
 
+Additionally, the state of working copy, from before the `apply` / `pop` has started, is backed up as a separate stash entry (which is not stored anywhere but it can be found in the command's output if needed).
+
 
 
 ## Installation
@@ -145,8 +147,6 @@ Most of the changes here, however, are bugs that were found during tests to be p
 
 ## Known problems and limitations
 
-- The command refuses to apply a stash when the working directory contains any changes.
-  (Planned to be implemented soon.)
 - Changes are not removed from working directory when `--patch` with `e` was used to stash only some of consecutive changed lines.
   (It will be fixed if I can figure out a way to do it in a consistent way.)
 - Not all subcommands from the vanilla command are present (like `git stash show`, `git stash list`...).
