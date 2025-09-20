@@ -3,6 +3,7 @@
 set -eu
 
 min_git_version='2.42.0'
+min_git_version_regex='2\.(4[2-9]|[5-9][0-9]|[1-9][0-9]{2,})(\..+)?'
 
 print_help() {
 	printf 'git istash - Improved version of "git stash" that can handle more corner cases.\n'
@@ -121,7 +122,7 @@ fi
 set -u
 
 git_version="$(git --version | head -n 1 | grep -Eo '\<\S+$')"
-if ! printf '%s' "$git_version" | grep -Exq '2\.(4[2-9]|[5-9][0-9]|[1-9][0-9]{2,})(\..+)?'
+if ! printf '%s' "$git_version" | grep -Exq "$min_git_version_regex"
 then
 	printf 'fatal: the current Git version (%s) is less than minimum required (%s)\n' "$git_version" "$min_git_version" 1>&2
 	exit 1
