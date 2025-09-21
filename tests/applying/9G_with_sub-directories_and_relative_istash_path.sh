@@ -23,7 +23,7 @@ __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 mkdir xxx
 cd xxx
-assert_exit_code 0 ../../../../../bin/git-istash "$APPLY_OPERATION"
+assert_exit_code 0 "$(get_relative_istash_path)" "$APPLY_OPERATION"
 cd -
 assert_files_HT '
 AM aaa		bbb0	aaa0

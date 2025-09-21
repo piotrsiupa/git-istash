@@ -26,6 +26,7 @@ print_help() {
 	printf '    -s, --skip-at-fail\t- Don'\''t test other sets of parameters for a test when\n\t\t\t  one already failed. (Other tests still run.)\n'
 	printf '    -S, --stop-at-fail\t- Don'\''t start other tests after one has failed; exit as\n\t\t\t  soon as all currently running ones has finished.\n'
 	printf '    -v, --verbose\t- Show each set of parameters even of if passes.\n'
+	printf '    -V, --skip-version\t- Set "git istash" to not check Git version.\n\t\t\t  (For reevaluating the minimum required Git version.)\n'
 	printf '\t--version\t- Print version information and exit.\n'
 	printf '\n'
 	printf 'Filters:\n'
@@ -51,7 +52,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'test script version 2.3.2\n'
+	printf 'test script version 2.4.0\n'
 }
 
 printf_color_code() { # code_for_printf...
@@ -776,8 +777,8 @@ print_summary() {
 	printf '\n'
 }
 
-getopt_short_options='c:Cdfhj:l:m:pRqQrsSv'
-getopt_long_options='color:,check,debug,failed,file-name,help,jobs:,limit:,meticulousness:,print-paths,relative-paths,progress,no-progress,quiet,quieter,raw,raw-name,skip-at-fail,skip-at-error,skip-on-fail,skip-on-error,stop-at-fail,stop-at-error,stop-on-fail,stop-on-error,verbose,version'
+getopt_short_options='c:Cdfhj:l:m:pRqQrsSvV'
+getopt_long_options='color:,check,debug,failed,file-name,help,jobs:,limit:,meticulousness:,print-paths,relative-paths,progress,no-progress,quiet,quieter,raw,raw-name,skip-at-fail,skip-at-error,skip-on-fail,skip-on-error,stop-at-fail,stop-at-error,stop-on-fail,stop-on-error,verbose,version,skip-version'
 getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 only_failed=n
@@ -795,6 +796,7 @@ print_paths_prefix=''
 jobs_num=1
 max_meticulousness=5
 meticulousness=3
+skip_version=n
 while true
 do
 	case "$1" in
@@ -908,6 +910,9 @@ do
 		print_version
 		exit 0
 		;;
+	-V|--skip-version)
+		skip_version=y
+		;;
 	--)
 		shift
 		break
@@ -981,10 +986,22 @@ fi
 
 check_system
 
-cd '../bin'
-PATH="$(pwd):$PATH"
-cd "$OLDPWD"
-export PATH
+if [ "$skip_version" = n ]
+then
+	cd '../bin'
+	PATH="$(pwd):$PATH"
+	cd "$OLDPWD"
+	export PATH
+else
+	mkdir -p 'skip-version-bin'
+	cd 'skip-version-bin'
+	#shellcheck disable=SC2016
+	printf '%s\n' '#!/usr/bin/env sh' 'exec "$(dirname "$0")/../../bin/git-istash" --_skip-version-check_ "$@"' >'git-istash'
+	chmod +x 'git-istash'
+	PATH="$(pwd):$PATH"
+	cd "$OLDPWD"
+	export PATH
+fi
 create_test_remote
 total_time_start="$(get_timestamp)"
 run_tests
@@ -993,5 +1010,9 @@ print_summary
 if [ "$passed_tests" -eq "$total_tests" ]
 then
 	delete_test_remote
+fi
+if [ "$skip_version" = y ]
+then
+	rm -rf 'skip-version-bin'
 fi
 [ "$total_tests" -ne 0 ] && [ "$passed_tests" -eq "$total_tests" ]

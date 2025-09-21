@@ -20,7 +20,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'Git version checking script version 1.0.2\n'
+	printf 'Git version checking script version 1.1.0\n'
 }
 
 prepare_git_repo() {
@@ -56,7 +56,7 @@ check_version() { # meticulousnesses...
 	else
 		for i in "$@"
 		do
-			if ! PATH="$abs_actual_git_repo_path:$PATH" ./run.sh --meticulousness="$i" --check --jobs=0 1>/dev/null 2>&1
+			if ! PATH="$abs_actual_git_repo_path:$PATH" ./run.sh --meticulousness="$i" --check --skip-version --jobs=0 1>/dev/null 2>&1
 			then
 				print_failure "Failed at meticulousness $i"
 				return 1
@@ -126,7 +126,7 @@ check_versions_binary_search() {
 	then
 		printf '\033[1mThe first compatible version seems to be \033[32m%s\033[39m.\033[0m\n' "$(strip_tag_version "$versions")"
 	else
-		printf '\033[1mIt seems that there \033[31mNO\033[39m compatible versions.\033[0m\n'
+		printf '\033[1mIt seems that there are \033[31mNO\033[39m compatible versions.\033[0m\n'
 	fi
 }
 check_versions() {

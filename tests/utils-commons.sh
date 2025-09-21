@@ -112,3 +112,19 @@ remove_all_changes() {
 	git reset --hard
 	git clean -dfx
 }
+
+get_relative_path() { # absolute_path
+	current_dir="$(pwd)"
+	istash_abs_path="$1"
+	while [ "$(printf '%s' "$current_dir" | sed -E 's;^([^/]*/).*$;\1;')" = "$(printf '%s' "$istash_abs_path" | sed -E 's;^([^/]*/).*$;\1;')" ]
+	do
+		current_dir="$(printf '%s' "$current_dir" | sed -E 's;^[^/]*/(.*)$;\1;')"
+		istash_abs_path="$(printf '%s' "$istash_abs_path" | sed -E 's;^[^/]*/(.*)$;\1;')"
+	done
+	printf '%s' "$current_dir" | sed -E 's;[^/]+;..;g'
+	printf '/%s\n' "$istash_abs_path"
+}
+
+get_relative_istash_path() { # absolute_path
+	get_relative_path "$(command -v git-istash)"
+}
