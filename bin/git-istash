@@ -76,6 +76,12 @@ show_manual() {
 }
 
 set +u
+skip_version_check=n
+if [ "$1" = '--_skip-version-check_' ]
+then
+	shift
+	skip_version_check=y
+fi
 if [ "$1" = '--help' ] || [ "$2" = '--help' ] || [ "$1" = '--man' ] || [ "$2" = '--man' ]
 then
 	if show_manual
@@ -122,7 +128,7 @@ fi
 set -u
 
 git_version="$(git --version | head -n 1 | grep -Eo '\<\S+$')"
-if ! printf '%s' "$git_version" | grep -Exq "$min_git_version_regex"
+if [ "$skip_version_check" = n ] && ! printf '%s' "$git_version" | grep -Exq "$min_git_version_regex"
 then
 	printf 'fatal: the current Git version (%s) is less than minimum required (%s)\n' "$git_version" "$min_git_version" 1>&2
 	exit 1
