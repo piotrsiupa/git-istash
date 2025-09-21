@@ -313,7 +313,8 @@ gather_tasks() {
 }
 
 get_istash_version() { # path_to_main_bin_file
-	"$1" --version | awk 'NR==1{print $NF}'
+	sed -E -n '/^\s*print_version\s*\(\)\s*\{\s*$/,/^\s*\}\s*$/ s/^\s*printf\>.*istash.*\<version\>.*\s(\S+)\\n'\''\s*$/\1/p' "$1" \
+	| head -n1
 }
 
 show_tasks() {
