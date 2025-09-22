@@ -29,7 +29,7 @@ printf 'wdf1a\n' >wdf1
 
 __test_section__ 'Pop stash'
 correct_head_sha="$(get_head_sha_HT)"
-assert_exit_code 2 capture_outputs git istash pop
+assert_exit_code 2 git istash pop
 assert_conflict_message 'pop'
 assert_files_HT '
 UU aaa		ccc|bbb

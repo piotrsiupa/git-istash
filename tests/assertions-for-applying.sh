@@ -16,7 +16,7 @@ hint: Use \"$expected_istash_command --continue\" after fixing conflicts.
 hint: To abort and get back to the state before \"$expected_istash_command\", run \"$expected_istash_command --abort\"."
 	#shellcheck disable=SC2154
 	test "$(printf '%s' "$stderr" | tail -n4)" = "$expected_error_message" ||
-		fail 'Command %s didn'\''t print the correct conflict message!\nActual:\n"%s"\nExpected last 4 lines:\n"%s"\n' "$(command_to_string "$@")" "$stderr" "$expected_error_message"
+		fail 'Command "%s" didn'\''t print the correct conflict message!\nActual:\n"%s"\nExpected last 4 lines:\n"%s"\n' "$*" "$stderr" "$expected_error_message"
 	unset expected_error_message
 	unset expected_istash_command
 }

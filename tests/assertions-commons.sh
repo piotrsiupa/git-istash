@@ -7,12 +7,13 @@ then
 fi
 
 
+# It also captures the command stdout and stderr for "assert_output" (just because it would be too much boiler plate to call "capture_outputs" every time).
 assert_exit_code() { # expected_code command [arguments...]
 	expected_exit_code_for_assert="$1"
 	shift
-	"$@" && exit_code_for_assert=0 || exit_code_for_assert=$?
+	capture_outputs "$@" && exit_code_for_assert=0 || exit_code_for_assert=$?
 	test "$exit_code_for_assert" -eq "$expected_exit_code_for_assert" ||
-		fail 'Command %s returned exit code %i but %i was expected!\n' "$(command_to_string "$@")" "$exit_code_for_assert" "$expected_exit_code_for_assert"
+		fail 'Command "%s" returned exit code %i but %i was expected!\n' "$*" "$exit_code_for_assert" "$expected_exit_code_for_assert"
 	unset expected_exit_code_for_assert
 	unset exit_code_for_assert
 }

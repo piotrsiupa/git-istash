@@ -72,14 +72,6 @@ capture_outputs() { # command [arguments...]
 	return "$error_code"
 }
 
-command_to_string() { # command [arguments...]
-	if [ "$1" = 'capture_outputs' ]
-	then
-		shift
-	fi
-	printf '"%s"' "$*"
-}
-
 sanitize_for_ere() { # string
 	printf '%s' "$1" | sed -E 's/[.[\()*+?{|^$]/\\&/g'
 }

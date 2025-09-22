@@ -27,7 +27,7 @@ SWITCH_HEAD_TYPE
 
 __test_section__ 'Apply stash'
 correct_head_sha_0="$(get_head_sha_HT)"
-assert_exit_code 2 capture_outputs git istash apply
+assert_exit_code 2 git istash apply
 assert_files_HT '
 UU aaa		ccc|bbb
 !! ignored0	ignored0

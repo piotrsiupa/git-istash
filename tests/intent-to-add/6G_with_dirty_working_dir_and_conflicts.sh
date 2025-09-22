@@ -47,7 +47,7 @@ __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 mkdir -p xxx
 cd xxx
-assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION"
+assert_exit_code 2 git istash "$APPLY_OPERATION"
 cd -
 assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
@@ -69,7 +69,7 @@ printf 'fff1\n' >xxx/aaa
 printf 'fff2\n' >yyy/aaa
 git add aaa xxx/aaa yyy/aaa
 cd xxx
-assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
+assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 cd -
 assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
@@ -94,7 +94,7 @@ printf 'ggg1\n' >xxx/aaa
 printf 'ggg2\n' >yyy/aaa
 git add aaa xxx/aaa yyy/aaa
 cd xxx
-assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
+assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 cd -
 assert_conflict_message "$APPLY_OPERATION"
 assert_files '
@@ -122,7 +122,7 @@ printf 'hhh4\n' >xxx/bbb
 printf 'hhh5\n' >yyy/bbb
 git add aaa xxx/aaa yyy/aaa bbb xxx/bbb yyy/bbb
 cd xxx
-assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
+assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 cd -
 assert_conflict_message "$APPLY_OPERATION"
 assert_files '

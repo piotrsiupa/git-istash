@@ -43,7 +43,7 @@ __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 mkdir -p xxx
 cd xxx
-assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION"
+assert_exit_code 2 git istash "$APPLY_OPERATION"
 cd -
 assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '

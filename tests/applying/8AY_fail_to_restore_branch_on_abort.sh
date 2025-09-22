@@ -29,7 +29,7 @@ printf 'wdf1a\n' >wdf1
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(git rev-parse HEAD)"
-assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION"
+assert_exit_code 2 git istash "$APPLY_OPERATION"
 assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ccc|bbb

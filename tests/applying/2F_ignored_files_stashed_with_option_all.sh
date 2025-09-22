@@ -24,7 +24,7 @@ SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
-assert_exit_code 0 capture_outputs git istash "$APPLY_OPERATION"
+assert_exit_code 0 git istash "$APPLY_OPERATION"
 assert_files_HT '
 MM aaa		ccc	bbb
 ?? zzz		zzz
