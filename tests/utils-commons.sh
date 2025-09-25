@@ -38,6 +38,7 @@ non_essential_test() {
 	fi
 }
 
+# Captures stdout, stderr and also saves the command
 capture_outputs() { # command [arguments...]
 	stdout_file="$(mktemp)"
 	stderr_file="$(mktemp)"
@@ -62,13 +63,7 @@ capture_outputs() { # command [arguments...]
 	stderr="$(cat "$stderr_file")"
 	rm "$stderr_file"
 	unset stderr_file
-	last_command=''
-	while [ $# -ne 0 ]
-	do
-		last_command="$last_command '$(printf '%s' "$1" | sed "s/'/'\\\\''/g")'"
-		shift
-	done
-	last_command="$(printf '%s' "$last_command" | tail -c+2)"
+	last_command="$*"
 	return "$error_code"
 }
 
