@@ -12,6 +12,7 @@ assert_exit_code() { # expected_code command [arguments...]
 	expected_exit_code_for_assert="$1"
 	shift
 	capture_outputs "$@" && exit_code_for_assert=0 || exit_code_for_assert=$?
+	#shellcheck disable=SC2154
 	test "$exit_code_for_assert" -eq "$expected_exit_code_for_assert" ||
 		fail 'Command "%s" returned exit code %i but %i was expected!\n' "$last_command" "$exit_code_for_assert" "$expected_exit_code_for_assert"
 	unset expected_exit_code_for_assert

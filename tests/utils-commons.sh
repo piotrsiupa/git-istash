@@ -63,6 +63,7 @@ capture_outputs() { # command [arguments...]
 	stderr="$(cat "$stderr_file")"
 	rm "$stderr_file"
 	unset stderr_file
+	#shellcheck disable=SC2034
 	last_command="$*"
 	return "$error_code"
 }
