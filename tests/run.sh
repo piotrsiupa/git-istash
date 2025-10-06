@@ -263,7 +263,7 @@ print_test_result() {
 		fi <"$output_file" \
 		| while IFS= read -r line
 		do
-			if printf '%s' "$line" | grep -qE '^\t'
+			if printf '%s' "$line" | grep -qE '^	'  # Line starts with TAB
 			then
 				printf '%s\n' "$line" 1>&2
 			else
@@ -653,7 +653,7 @@ run_tests() {
 					head -n-1 "$result_file" \
 					| while IFS= read -r line
 					do
-						if printf '%s' "$line" | grep -qE '^\t'
+						if printf '%s' "$line" | grep -qE '^	'  # Line starts with TAB
 						then
 							cat "$output_buffer_file" 1>&5
 							: >"$output_buffer_file"
