@@ -8,6 +8,27 @@ It is written (almost[^1]) entirely in POSIX (Portable Operating System Interfac
 [^1]: The scripts use the program `getopt` for parsing options and the `-r` flag for `xargs`, both of which are not part of the standard but are widely supported.
 
 
+- [Overview](#overview)
+- [Installation](#installation)
+  - [Every OS except Windows](#every-os-except-windows)
+  - [Windows](#windows)
+  - [Testing without Installation](#testing-without-installation)
+- [License](#license)
+- [Differences from the official `git stash`](#differences-from-the-official-git-stash)
+  - [Main changes](#main-changes)
+  - [Fixed bugs](#fixed-bugs)
+  - [Other things different in standard `stash` (that may or may not be considered bugs)](#other-things-different-in-standard-stash-that-may-or-may-not-be-considered-bugs)
+- [Known problems and limitations](#known-problems-and-limitations)
+- [Displaying help / additional information](#displaying-help--additional-information)
+  - [Manual](#manual)
+  - [Brief help text](#brief-help-text)
+- [Examples](#examples)
+  - [Interrupted workflow, without losing index](#interrupted-workflow-without-losing-index)
+  - [Applying stash with conflicts both in staged and unstaged changes](#applying-stash-with-conflicts-both-in-staged-and-unstaged-changes)
+- [Stashing away untracked files](#stashing-away-untracked-files)
+- [Testing](#testing)
+
+
 ## Overview
 
 `git istash` ("incredible stash") is an extension for `git stash`, compatible with stash entries created by it.
