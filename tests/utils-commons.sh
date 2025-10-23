@@ -68,8 +68,35 @@ capture_outputs() { # command [arguments...]
 	return "$error_code"
 }
 
+dedent_regex() ( # text
+	text="$(printf '%s\n' "$1" | sed -E -e '1 {/^\s*$/ d}' -e '$ {/^\s*$/ d}')"
+	indent="$(printf '%s\n' "$text" | sed -E -n '1 s/^(\s+)(\S.*)?$/'\''\1'\''/p')"
+	printf '%s' "$text" | eval 'sed' '-E' \''s/^'\'"$indent"\''//'\' | tr -d '\n'
+)
+
+match_multiline_regex() { # text regex
+	test 'success' = "$(
+		#shellcheck disable=SC2016
+		printf '%s\n' "$1" \
+		| sed -n -E \
+			-e '1h' -e '1!H' -e '$g' \
+			-e '${s/^'"$2"'$//;ts;bf;}' \
+			-e 'd' -e ':s;isuccess' -e 'q' -e ':f;ifailure'
+		)"
+}
+
 sanitize_for_ere() { # string
-	printf '%s' "$1" | sed -E 's/[.[\()*+?{|^$]/\\&/g'
+	printf '%s' "$1" | sed -E 's/[.[\()*+?{|^$\/]/\\&/g'
+}
+
+# Interpret certain escape sequences using "printf". (octal encoded characters, "\t" and "\\")
+# The stream must be already sanitized for ERE.
+convert_escapes() {
+	sed -E -e 's/\\/\\\\/g' -e 's/\\\\\\\\([0-9t])/\\\1/g' -e 's/\\\\\\\\\\\\\\\\/\\\\\\\\/g' | xargs -0 -- printf
+}
+
+sanitize_for_sed() { # string
+	sanitize_for_ere "$1" | convert_escapes
 }
 
 make_stash_name_regex() { # stash_name

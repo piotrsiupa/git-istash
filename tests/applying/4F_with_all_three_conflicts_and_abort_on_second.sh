@@ -28,6 +28,9 @@ SWITCH_HEAD_TYPE
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 assert_exit_code 2 git istash "$APPLY_OPERATION"
+assert_outputs__apply__conflict "$APPLY_OPERATION" '
+UU aaa
+'
 assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ddd|bbb
@@ -45,6 +48,9 @@ __test_section__ "Continue $APPLY_OPERATION stash"
 printf 'eee\n' >aaa
 git add aaa
 assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
+assert_outputs__apply__conflict "$APPLY_OPERATION" '
+UU aaa
+'
 assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		eee|ccc
@@ -60,6 +66,7 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 
 __test_section__ "Abort $APPLY_OPERATION stash"
 assert_exit_code 0 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
+assert_outputs__apply__abort "$APPLY_OPERATION"
 assert_files_HT '
    aaa		ddd
    zzz		yyy

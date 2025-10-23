@@ -25,7 +25,7 @@ save_data() {
 load_data() {
 	if [ "$(wc -l <"$stash_data_file")" -ne 1 ]
 	then
-		printf 'fatal: "%s" is should contain exactly 1 line.\n' "$stash_data_file" 1>&2
+		printf 'fatal: "%s" should have exactly 1 line.\n' "$stash_data_file" 1>&2
 		return 1
 	fi
 	stash="$(cat "$stash_data_file")"
@@ -65,16 +65,16 @@ check_stash_for_pop() {
 }
 
 check_data_files() { # resume
-	case "$(find_data_files)" in
+	operation_in_progress="$(find_data_files)"
+	case "$operation_in_progress" in
 		pop)
 			if [ "$1" = y ] ; then return 0 ; fi
-			printf '\n' 1>&2
 			if is_color_allowed 2
 			then
 				printf '\033[33m'
 			fi
-			printf 'fatal: "git istash pop" is already in progress?\n' 1>&2
-			printf 'hint: Use "git istash pop --continue" or "git istash pop --abort".\n' 1>&2
+			printf 'fatal: "git istash %s" is already in progress?\n' "$operation_in_progress" 1>&2
+			printf 'hint: Use "git istash %s --continue" or "git istash %s --abort".\n' "$operation_in_progress" "$operation_in_progress" 1>&2
 			if is_color_allowed 2
 			then
 				printf '\033[39m'
@@ -82,32 +82,60 @@ check_data_files() { # resume
 			return 1
 			;;
 		apply)
-			printf '\n' 1>&2
 			if is_color_allowed 2
 			then
 				printf '\033[33m'
 			fi
-			printf 'fatal: "git istash apply" is already in progress?\n' 1>&2
-			printf 'hint: Finish that operation before starting "git istash pop".\n' 1>&2
+			printf 'error: There is currently a istash %s in progress.\n' "$operation_in_progress" 1>&2
 			if is_color_allowed 2
 			then
 				printf '\033[39m'
 			fi
 			return 1
 			;;
-		error)
-			printf '\n' 1>&2
+		error-*)
+			operation_in_progress="$(printf '%s' "$operation_in_progress" | tail -c +7)"
 			if is_color_allowed 2
 			then
 				printf '\033[31m'
 			fi
-			printf 'fatal: "git istash pop" seems to be in progress but "%s" is missing!\n' "$(make_target_data_file)" 1>&2
+			if [ -f "$(make_target_data_file_path)" ]
+			then
+				printf 'fatal: "git istash %s" seems to be in progress but "%s" is missing!\n' "$operation_in_progress" "$(make_working_dir_sha_file_path)" 1>&2
+			elif [ -f "$(make_working_dir_sha_file_path)" ]
+			then
+				printf 'fatal: "git istash %s" seems to be in progress but "%s" is missing!\n' "$operation_in_progress" "$(make_target_data_file_path)" 1>&2
+			else
+				printf 'fatal: "git istash %s" seems to be in progress but "%s" and "%s" are missing!\n' "$operation_in_progress" "$(make_target_data_file_path)" "$(make_working_dir_sha_file_path)" 1>&2
+			fi
 			if is_color_allowed 2
 			then
 				printf '\033[33m'
 			fi
-			printf 'hint: Fix the problem and finish that operation before starting a new one\n' 1>&2
-			printf 'hint: or remove the file "%s" to manually cancel it.\n' "$(make_stash_data_file_path)" 1>&2
+			if [ "$operation_in_progress" = 'pop' ]
+			then
+				printf 'hint: Fix the problem and finish that operation before starting a new one\n' 1>&2
+			else
+				printf 'hint: Fix the problem and finish that operation before starting "git istash pop"\n' 1>&2
+			fi
+			if [ -f "$(make_target_data_file_path)" ] && [ -f "$(make_stash_data_file_path)" ]
+			then
+				printf 'hint: or remove the files "%s" and "%s" to manually cancel it.\n' "$(make_target_data_file_path)" "$(make_stash_data_file_path)" 1>&2
+			elif [ -f "$(make_working_dir_sha_file_path)" ] && [ -f "$(make_stash_data_file_path)" ]
+			then
+				printf 'hint: or remove the files "%s" and "%s" to manually cancel it.\n' "$(make_working_dir_sha_file_path)" "$(make_stash_data_file_path)" 1>&2
+			elif [ -f "$(make_stash_data_file_path)" ]
+			then
+				printf 'hint: or remove the file "%s" to manually cancel it.\n' "$(make_stash_data_file_path)" 1>&2
+			elif [ -f "$(make_target_data_file_path)" ]
+			then
+				printf 'hint: or remove the file "%s" to manually cancel it.\n' "$(make_target_data_file_path)" 1>&2
+			elif [ -f "$(make_working_dir_sha_file_path)" ]
+			then
+				printf 'hint: or remove the file "%s" to manually cancel it.\n' "$(make_working_dir_sha_file_path)" 1>&2
+			else
+				printf 'hint: or remove <ERROR> to manually cancel it.\n' 1>&2
+			fi
 			if is_color_allowed 2
 			then
 				printf '\033[39m'

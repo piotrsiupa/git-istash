@@ -58,6 +58,11 @@ mkdir -p xxx
 cd xxx
 assert_exit_code 2 git istash "$APPLY_OPERATION"
 cd -
+assert_outputs__apply__conflict "$APPLY_OPERATION" '
+UU aaa
+UU xxx/aaa
+UU yyy/aaa
+'
 assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ddd0|bbb0
@@ -83,6 +88,14 @@ git add aaa xxx/aaa yyy/aaa
 cd xxx
 assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 cd -
+assert_outputs__apply__conflict "$APPLY_OPERATION" '
+UU aaa
+UU xxx/aaa
+UU yyy/aaa
+UU bbb
+UU xxx/bbb
+UU yyy/bbb
+'
 assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		fff0|ccc0
@@ -111,6 +124,11 @@ git add aaa xxx/aaa yyy/aaa bbb xxx/bbb yyy/bbb
 cd xxx
 assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 cd -
+assert_outputs__apply__conflict "$APPLY_OPERATION" '
+AA zzz
+AA xxx/zzz
+AA yyy/zzz
+'
 assert_conflict_message "$APPLY_OPERATION"
 assert_files '
    aaa		ggg0
@@ -135,6 +153,7 @@ __test_section__ "Abort $APPLY_OPERATION stash"
 cd xxx
 assert_exit_code 0 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
 cd -
+assert_outputs__apply__abort "$APPLY_OPERATION"
 assert_files_HT '
 M  aaa		ddd0
 M  xxx/aaa	ddd1

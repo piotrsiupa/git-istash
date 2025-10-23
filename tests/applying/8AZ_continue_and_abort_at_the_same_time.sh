@@ -31,6 +31,11 @@ printf 'wdf1a\n' >wdf1
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 assert_exit_code 2 git istash "$APPLY_OPERATION"
+assert_outputs__apply__conflict_HT "$APPLY_OPERATION" '
+UU aaa
+' '
+DU aaa
+'
 assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ccc|bbb
@@ -52,6 +57,10 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 __test_section__ "Continue & abort $APPLY_OPERATION stash"
 correct_head_sha2="$(get_head_sha_HT)"
 assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" "$ABORT_FLAG"
+assert_outputs '
+' '
+error: Unclear whether to continue aborting or to abort continuing\.
+'
 assert_files_HT '
 UU aaa		ccc|bbb
    wdf0		wdf0b
@@ -72,6 +81,7 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 
 __test_section__ "Abort $APPLY_OPERATION stash"
 assert_exit_code 0 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
+assert_outputs__apply__abort "$APPLY_OPERATION"
 assert_files_HT '
    aaa		ccc
 AM wdf0		wdf0b	wdf0a

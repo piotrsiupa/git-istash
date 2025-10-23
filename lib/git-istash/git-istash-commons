@@ -35,7 +35,7 @@ make_stash_data_file_path() {
 }
 
 find_data_files() {
-	if [ -f "$(make_target_data_file_path)" ]
+	if [ -f "$(make_target_data_file_path)" ] && [ -f "$(make_working_dir_sha_file_path)" ]
 	then
 		if [ -f "$(make_stash_data_file_path)" ]
 		then
@@ -46,7 +46,10 @@ find_data_files() {
 	else
 		if [ -f "$(make_stash_data_file_path)" ]
 		then
-			printf 'error'
+			printf 'error-pop'
+		elif [ -f "$(make_target_data_file_path)" ] || [ -f "$(make_working_dir_sha_file_path)" ]
+		then
+			printf 'error-apply'
 		else
 			printf 'nothing'
 		fi

@@ -31,6 +31,11 @@ __test_section__ "$CAP_OTHER_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 #shellcheck disable=SC2086
 assert_exit_code 2 git istash $OTHER_APPLY_OPERATION
+assert_outputs__apply__conflict_HT "$OTHER_APPLY_OPERATION" '
+UU aaa
+' '
+DU aaa
+'
 assert_conflict_message "$OTHER_APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ccc|bbb
@@ -54,6 +59,7 @@ correct_head_sha2="$(get_head_sha_HT)"
 printf 'ddd\n' >aaa
 git add aaa
 assert_exit_code 1 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
+assert_outputs__apply__other_operation_in_progress "istash $OTHER_APPLY_OPERATION"
 assert_files_HT '
 M  aaa		ddd
    wdf0		wdf0b
@@ -75,6 +81,7 @@ assert_dotgit_contents_for "$OTHER_APPLY_OPERATION"
 __test_section__ "Abort $OTHER_APPLY_OPERATION stash"
 #shellcheck disable=SC2086
 assert_exit_code 0 git istash $OTHER_APPLY_OPERATION "$ABORT_FLAG"
+assert_outputs__apply__abort "$OTHER_APPLY_OPERATION"
 assert_files_HT '
    aaa		ccc
 AM wdf0		wdf0b	wdf0a

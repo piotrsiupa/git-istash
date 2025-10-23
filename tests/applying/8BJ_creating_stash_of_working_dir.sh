@@ -21,7 +21,9 @@ printf 'yyy1\n' >bbb
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
+stash_sha="$(git rev-parse stash)"
 assert_exit_code 0 git istash "$APPLY_OPERATION"
+assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
 assert_files_HT '
 AM aaa		xxx1	xxx0
 AM bbb		yyy1	yyy0
@@ -48,7 +50,9 @@ assert_stash_count_AO 2
 
 __test_section__ 'Restore old working directory'
 remove_all_changes
+stash_sha="$(git rev-parse stash)"
 assert_exit_code 0 git istash pop
+assert_outputs__apply__success 'pop' 0 "$stash_sha"
 assert_files_HT '
 AM bbb		yyy1	yyy0
 '

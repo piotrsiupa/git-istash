@@ -27,6 +27,9 @@ SWITCH_HEAD_TYPE
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 assert_exit_code 2 git istash "$APPLY_OPERATION"
+assert_outputs__apply__conflict "$APPLY_OPERATION" '
+UU aaa
+'
 assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ddd|bbb
@@ -44,6 +47,9 @@ __test_section__ "Continue $APPLY_OPERATION stash (0)"
 printf 'eee\n' >aaa
 git add aaa
 assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
+assert_outputs__apply__conflict "$APPLY_OPERATION" '
+UU aaa
+'
 assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		eee|ccc
@@ -61,6 +67,9 @@ __test_section__ "Continue $APPLY_OPERATION stash (1)"
 printf 'fff\n' >aaa
 git add aaa zzz
 assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
+assert_outputs__apply__conflict "$APPLY_OPERATION" '
+AA zzz
+'
 assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
    aaa		fff
@@ -77,7 +86,9 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 __test_section__ "Continue $APPLY_OPERATION stash (2)"
 printf 'xxx\n' >zzz
 git add aaa zzz
+stash_sha="$(git rev-parse stash)"
 assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
+assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
 assert_files_HT '
 MM aaa		fff	eee
  M zzz		xxx	yyy

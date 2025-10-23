@@ -30,6 +30,9 @@ printf 'wdf1a\n' >wdf1
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(git rev-parse HEAD)"
 assert_exit_code 2 git istash "$APPLY_OPERATION"
+assert_outputs__apply__conflict "$APPLY_OPERATION" '
+UU aaa
+'
 assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ccc|bbb
@@ -44,26 +47,47 @@ assert_rebase y
 assert_dotgit_contents_for "$APPLY_OPERATION"
 
 __test_section__ "Abort $APPLY_OPERATION stash (0)"
-master_sha="$(git rev-parse master)"
-git branch -D master
+git worktree add block-master master
 assert_exit_code 1 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
-assert_all_files 'aaa|ignored0|ignored1|wdf0'
-assert_file_contents wdf0 'wdf0b'
+if IS_APPLY
+then
+	assert_outputs '
+	' '
+	fatal: '\''master'\'' is already used by worktree at '\''.*'\''\n
+	\n
+	fatal: Failed to restore HEAD\.\n
+	hint: Fix problems and rerun "git istash apply --abort"\n
+	hint: or delete the files "\.git\/ISTASH_TARGET" and "\.git\/ISTASH_WORKING-DIR" to cancel manually.
+	'
+else
+	assert_outputs '
+	' '
+	fatal: '\''master'\'' is already used by worktree at '\''.*'\''\n
+	\n
+	fatal: Failed to restore HEAD\.\n
+	hint: Fix problems and rerun "git istash pop --abort"\n
+	hint: or delete the files "\.git\/ISTASH_TARGET", "\.git\/ISTASH_WORKING-DIR" and "\.git\/ISTASH_STASH" to cancel manually.
+	'
+fi
+assert_all_files '
+aaa
+block-master/.git
+block-master/aaa
+ignored0
+ignored1
+'
 assert_file_contents ignored0 'ignored0'
 assert_file_contents ignored1 'ignored1'
 assert_stash_count 1
-assert_branch_count 0
+assert_branch_count 1
 assert_data_files "$APPLY_OPERATION"
-assert_rebase y
+assert_rebase n
 assert_dotgit_contents_for "$APPLY_OPERATION"
 
 __test_section__ "Abort $APPLY_OPERATION stash (1)"
-git branch master "$master_sha"
-if IS_HEAD_BRANCH
-then
-	git branch --set-upstream-to='my-origin/my-branch' master
-fi
+git worktree remove block-master
 assert_exit_code 0 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
+assert_outputs__apply__no_rebase_in_progress_on_abort "$APPLY_OPERATION"
 assert_files_HT '
    aaa		ccc
 AM wdf0		wdf0b	wdf0a

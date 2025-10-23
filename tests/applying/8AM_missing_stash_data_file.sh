@@ -34,6 +34,11 @@ printf 'wdf1a\n' >wdf1
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 assert_exit_code 2 git istash "$APPLY_OPERATION"
+assert_outputs__apply__conflict_HT "$APPLY_OPERATION" '
+UU aaa
+' '
+DU aaa
+'
 assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ddd|bbb
@@ -57,6 +62,7 @@ printf 'eee\n' >aaa
 git add aaa
 mv .git/ISTASH_STASH .git/ISTASH_STASH~
 assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
+assert_outputs__apply__other_operation_in_progress "istash $OTHER_APPLY_OPERATION"
 assert_files_HT '
 M  aaa		eee
    wdf0		wdf0b
@@ -75,7 +81,9 @@ assert_dotgit_contents 'ISTASH_STASH~' 'ISTASH_TARGET' 'ISTASH_WORKING-DIR'
 
 __test_section__ "Continue $APPLY_OPERATION stash (1)"
 mv .git/ISTASH_STASH~ .git/ISTASH_STASH
+stash_sha="$(git rev-parse stash)"
 assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
+assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
 assert_files_HT '
  M aaa		eee	ddd
 AM wdf0		wdf0b	wdf0a

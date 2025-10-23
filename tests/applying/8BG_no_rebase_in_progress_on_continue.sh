@@ -29,6 +29,11 @@ printf 'wdf1a\n' >wdf1
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
 assert_exit_code 2 git istash "$APPLY_OPERATION"
+assert_outputs__apply__conflict_HT "$APPLY_OPERATION" '
+UU aaa
+' '
+DU aaa
+'
 assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ccc|bbb
@@ -51,6 +56,7 @@ git rebase --abort
 printf 'ddd\n' >aaa
 git add aaa
 assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
+assert_outputs__apply__no_rebase_in_progress
 assert_files_HT '
 M  aaa		ddd
 !! ignored0	ignored0

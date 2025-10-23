@@ -9,4 +9,5 @@ fi
 
 . ./assertions-commons.sh
 . ./assertions-for-applying.sh
+. ./assertions-for-outputs-of-applying.sh
 . ./assertions-for-creating.sh

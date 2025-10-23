@@ -18,6 +18,9 @@ printf 'ddd\n' >aaa
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 assert_exit_code 2 git istash "$APPLY_OPERATION"
+assert_outputs__apply__conflict "$APPLY_OPERATION" '
+AA aaa
+'
 assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 AA aaa		ddd|bbb
@@ -32,6 +35,7 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 
 __test_section__ "Abort $APPLY_OPERATION stash"
 assert_exit_code 0 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
+assert_outputs__apply__abort "$APPLY_OPERATION"
 assert_files_HT '
 ?? aaa		ddd
 !! ignored0	ignored0

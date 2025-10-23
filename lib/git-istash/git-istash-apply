@@ -38,7 +38,7 @@ save_data() {
 load_data() {
 	if [ "$(wc -l <"$target_data_file")" -ne 1 ]
 	then
-		printf 'fatal: "%s" is should contain exactly 1 line.\n' "$target_data_file" 1>&2
+		printf 'fatal: "%s" should have exactly 1 line.\n' "$target_data_file" 1>&2
 		return 1
 	fi
 	current_branch="$(cat "$target_data_file")"
@@ -61,7 +61,7 @@ load_data() {
 	
 	if [ "$(wc -l <"$working_dir_sha_file")" -ne 1 ]
 	then
-		printf 'fatal: "%s" is should contain exactly 1 line.\n' "$working_dir_sha_file" 1>&2
+		printf 'fatal: "%s" should have exactly 1 line.\n' "$working_dir_sha_file" 1>&2
 		return 1
 	fi
 	working_dir_changes_sha="$(cat "$working_dir_sha_file")"
@@ -80,9 +80,9 @@ check_args_for_apply() { # max_free_args args...
 }
 
 put_files_into_working_copy() { # untracked_changes_sha non_staged_changes_sha staged_changes_sha
-	git restore --source="$3" -- . || true
+	git restore --quiet --source="$3" -- . 2>/dev/null || true
 	git add -- .
-	git restore --source="$1" -- . || true
+	git restore --quiet --source="$1" -- . 2>/dev/null || true
 	git --no-literal-pathspecs ls-tree -r --name-only "$2" -z :/ \
 	| xargs -r0 -- git --literal-pathspecs add --intent-to-add --
 }
@@ -107,7 +107,7 @@ end_with_success() {
 	if { [ "$curr_branch_type" != 'orphan' ] && [ "$(git rev-parse HEAD~6)" != "$(git rev-parse "$current_branch")" ] ; } \
 		|| { [ "$curr_branch_type" = 'orphan' ] && [ "$(git rev-list --no-walk --count HEAD~6^@)" != '0' ] ; }
 	then
-		printf 'fatal: HEAD is not in correct position after rebasing.\n' 1>&2
+		printf 'fatal: HEAD is not in the correct position after rebasing.\n' 1>&2
 		return 1
 	fi
 	untracked_changes_sha="$(git rev-parse HEAD~0)"
@@ -120,14 +120,14 @@ end_with_success() {
 				printf 'fatal: The empty commit created for the command is not empty.\n' 1>&2
 				return 1
 			fi
-			git branch --delete --force "$current_branch"
-			git switch --orphan "$current_branch"
+			git branch --quiet --delete --force "$current_branch"
+			git switch --quiet --orphan "$current_branch"
 			;;
 		normal)
-			git switch "$current_branch"
+			git switch --quiet "$current_branch"
 			;;
 		detached)
-			git switch -d HEAD~6
+			git switch --quiet --detach HEAD~6
 			;;
 	esac
 	put_files_into_working_copy "$untracked_changes_sha" "$non_staged_changes_sha" "$staged_changes_sha"
@@ -138,15 +138,14 @@ end_with_success() {
 
 check_data_files() { # resume
 	if [ "$is_pop" = y ] ; then return 0 ; fi
-	case "$(find_data_files)" in
+	operation_in_progress="$(find_data_files)"
+	case "$operation_in_progress" in
 		pop)
-			printf '\n' 1>&2
 			if is_color_allowed 2
 			then
 				printf '\033[33m'
 			fi
-			printf 'fatal: "git istash pop" is already in progress?\n' 1>&2
-			printf 'hint: Finish that operation before starting "git istash apply".\n' 1>&2
+			printf 'error: There is currently a istash %s in progress.\n' "$operation_in_progress" 1>&2
 			if is_color_allowed 2
 			then
 				printf '\033[39m'
@@ -160,26 +159,56 @@ check_data_files() { # resume
 				printf '\033[33m'
 			fi
 			printf 'fatal: "git istash apply" is already in progress?\n' 1>&2
-			printf 'hint: Use "git istash apply --continue" or "git istash apply --abort".\n' 1>&2
+			printf 'hint: Use "git istash %s --continue" or "git istash %s --abort".\n' "$operation_in_progress" "$operation_in_progress" 1>&2
 			if is_color_allowed 2
 			then
 				printf '\033[39m'
 			fi
 			return 1
 			;;
-		error)
-			printf '\n' 1>&2
+		error-*)
+			operation_in_progress="$(printf '%s' "$operation_in_progress" | tail -c +7)"
 			if is_color_allowed 2
 			then
 				printf '\033[31m'
 			fi
-			printf 'fatal: "git istash pop" seems to be in progress but "%s" is missing!\n' "$target_data_file" 1>&2
+			if [ -f "$(make_target_data_file_path)" ]
+			then
+				printf 'fatal: "git istash %s" seems to be in progress but "%s" is missing!\n' "$operation_in_progress" "$(make_working_dir_sha_file_path)" 1>&2
+			elif [ -f "$(make_working_dir_sha_file_path)" ]
+			then
+				printf 'fatal: "git istash %s" seems to be in progress but "%s" is missing!\n' "$operation_in_progress" "$(make_target_data_file_path)" 1>&2
+			else
+				printf 'fatal: "git istash %s" seems to be in progress but "%s" and "%s" are missing!\n' "$operation_in_progress" "$(make_target_data_file_path)" "$(make_working_dir_sha_file_path)" 1>&2
+			fi
 			if is_color_allowed 2
 			then
 				printf '\033[33m'
 			fi
-			printf 'hint: Fix the problem and finish that operation before starting "git istash apply"\n' 1>&2
-			printf 'hint: or remove the file "%s" to manually cancel it.\n' "$(make_stash_data_file_path)" 1>&2
+			if [ "$operation_in_progress" = 'apply' ]
+			then
+				printf 'hint: Fix the problem and finish that operation before starting a new one\n' 1>&2
+			else
+				printf 'hint: Fix the problem and finish that operation before starting "git istash apply"\n' 1>&2
+			fi
+			if [ -f "$(make_target_data_file_path)" ] && [ -f "$(make_stash_data_file_path)" ]
+			then
+				printf 'hint: or remove the files "%s" and "%s" to manually cancel it.\n' "$(make_target_data_file_path)" "$(make_stash_data_file_path)" 1>&2
+			elif [ -f "$(make_working_dir_sha_file_path)" ] && [ -f "$(make_stash_data_file_path)" ]
+			then
+				printf 'hint: or remove the files "%s" and "%s" to manually cancel it.\n' "$(make_working_dir_sha_file_path)" "$(make_stash_data_file_path)" 1>&2
+			elif [ -f "$(make_stash_data_file_path)" ]
+			then
+				printf 'hint: or remove the file "%s" to manually cancel it.\n' "$(make_stash_data_file_path)" 1>&2
+			elif [ -f "$(make_target_data_file_path)" ]
+			then
+				printf 'hint: or remove the file "%s" to manually cancel it.\n' "$(make_target_data_file_path)" 1>&2
+			elif [ -f "$(make_working_dir_sha_file_path)" ]
+			then
+				printf 'hint: or remove the file "%s" to manually cancel it.\n' "$(make_working_dir_sha_file_path)" 1>&2
+			else
+				printf 'hint: or remove <ERROR> to manually cancel it.\n' 1>&2
+			fi
 			if is_color_allowed 2
 			then
 				printf '\033[39m'
@@ -197,7 +226,7 @@ check_data_files() { # resume
 prepare_current_branch() {
 	if [ "$curr_branch_type" = 'orphan' ]
 	then
-		git commit --only --allow-empty --message 'Temporary commit by "git-stash"'
+		git commit --quiet --only --allow-empty --message 'Temporary commit by "git-stash"'
 	fi
 }
 
@@ -211,19 +240,19 @@ commit_working_directory() {
 	else
 		branch_name_for_msg='(no branch)'
 	fi
-	git switch --detach HEAD
+	git switch --quiet --detach HEAD
 	
 	# staged
-	git commit --message="index on $branch_name_for_msg: $default_message" --allow-empty 1>/dev/null
+	git commit --quiet --message="index on $branch_name_for_msg: $default_message" --allow-empty
 	
 	# unstaged
 	git --no-literal-pathspecs add --update :/ 1>&2 2>/dev/null || true
-	git commit --message="On $branch_name_for_msg: $message" --allow-empty 1>/dev/null
+	git commit --quiet --message="On $branch_name_for_msg: $message" --allow-empty
 	
 	# untracked
 	git --no-literal-pathspecs add --all --intent-to-add :/ 2>/dev/null || true
 	git --no-literal-pathspecs add --update :/ 1>&2 2>/dev/null || true
-	git commit --message="untracked files on $branch_name_for_msg: $default_message" --allow-empty 1>/dev/null
+	git commit --quiet --message="untracked files on $branch_name_for_msg: $default_message" --allow-empty
 	
 	# save sha
 	working_dir_changes_sha="$(git rev-parse 'HEAD')"
@@ -243,7 +272,7 @@ start_rebase() { # untangled_stash_sha
 			-e '1 i pick $working_dir_changes_sha~2 Staged working directory' \
 			-e '2 i pick $working_dir_changes_sha~1 Unstaged working directory' \
 			-e '3 i pick $working_dir_changes_sha~0 Untracked working directory'"
-	if GIT_EDITOR="$todo_list_editor" git rebase --onto "$current_branch" "$1~3" "$1" --empty=keep --keep-empty --reapply-cherry-picks --interactive
+	if GIT_EDITOR="$todo_list_editor" git rebase --onto "$current_branch" "$1~3" "$1" --empty=keep --keep-empty --reapply-cherry-picks --interactive 2>/dev/null
 	then
 		end_with_success
 	elif are_there_conflicts
@@ -274,17 +303,21 @@ do_continue() { # args...
 	check_data_files y
 	load_data
 	
-	git commit --allow-empty --no-edit 2>/dev/null || true
-	if git -c 'core.editor=true' rebase --continue
+	git commit --quiet --allow-empty --no-edit 1>/dev/null 2>&1 || true
+	exec 3>&1
+	if stderr="$(git -c 'core.editor=true' rebase --continue 2>&1 1>&3)"
 	then
 		end_with_success
 	elif are_there_conflicts
 	then
 		end_with_rebase_problem
 	else
-		git reset --soft HEAD~
+		exec 3>&-
+		printf '%s\n' "$stderr" 1>&2
+		git reset --quiet --soft HEAD~
 		return 1
 	fi
+	exec 3>&-
 }
 
 do_abort() { # args...
@@ -293,12 +326,12 @@ do_abort() { # args...
 	load_data
 	
 	git rebase --abort || true  # Errors are ignored because if rebase is not in progress, we still want to try to restore HEAD.
-	git reset --hard
+	git reset --quiet --hard
 	succeeded_switch=n
 	case "$curr_branch_type" in
 		orphan)
-			git branch --delete --force "$current_branch"
-			if git switch --orphan "$current_branch"
+			git branch --quiet --delete --force "$current_branch"
+			if git switch --quiet --orphan "$current_branch"
 			then
 				succeeded_switch=y
 			fi
@@ -310,7 +343,7 @@ do_abort() { # args...
 			fi
 			;;
 		detached)
-			if git switch --detach --quiet "$current_branch"
+			if git switch --quiet --detach --quiet "$current_branch"
 			then
 				succeeded_switch=y
 			fi
@@ -320,7 +353,12 @@ do_abort() { # args...
 	then
 		put_files_into_working_copy "$(git rev-parse "$working_dir_changes_sha~0")" "$(git rev-parse "$working_dir_changes_sha~1")" "$(git rev-parse "$working_dir_changes_sha~2")"
 		delete_data
-		printf 'Aborted "git istash"\n' 1>&2
+		if [ "$is_pop" = n ]
+		then
+			printf 'Aborted "git istash apply"\n' 1>&2
+		else
+			printf 'Aborted "git istash pop"\n' 1>&2
+		fi
 	else
 		printf '\n' 1>&2
 		printf 'fatal: Failed to restore HEAD.\n' 1>&2
@@ -333,7 +371,7 @@ do_abort() { # args...
 		then
 			printf 'hint: or delete the files "%s" and "%s" to cancel manually.\n' "$target_data_file" "$working_dir_sha_file" 1>&2
 		else
-			printf 'hint: or delete the files "%s", "%s" and "%s" to cancel manually.\n' "$(make_stash_data_file_path)" "$target_data_file" "$working_dir_sha_file" 1>&2
+			printf 'hint: or delete the files "%s", "%s" and "%s" to cancel manually.\n' "$target_data_file" "$working_dir_sha_file" "$(make_stash_data_file_path)" 1>&2
 		fi
 		if is_color_allowed 2
 		then

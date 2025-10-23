@@ -31,6 +31,11 @@ printf 'wdf1a\n' >wdf1
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
 assert_exit_code 2 git istash "$APPLY_OPERATION"
+assert_outputs__apply__conflict_HT "$APPLY_OPERATION" '
+UU aaa
+' '
+DU aaa
+'
 assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ccc|bbb
@@ -53,6 +58,7 @@ printf 'ddd\n' >aaa
 git add aaa
 printf 'wrong_branch\n' >'.git/ISTASH_TARGET'
 assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
+assert_outputs__apply__wrong_head_position_after_rebase
 assert_file_contents wdf0 'wdf0b'
 assert_file_contents wdf1 'wdf1a'
 assert_file_contents ignored0 'ignored0'

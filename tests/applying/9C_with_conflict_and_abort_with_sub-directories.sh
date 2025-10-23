@@ -45,6 +45,15 @@ mkdir -p xxx
 cd xxx
 assert_exit_code 2 git istash "$APPLY_OPERATION"
 cd -
+assert_outputs__apply__conflict_HT "$APPLY_OPERATION" '
+UU aaa
+UU xxx/aaa
+UU yyy/aaa
+' '
+DU aaa
+DU xxx/aaa
+DU yyy/aaa
+'
 assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ddd0|bbb0
@@ -76,6 +85,7 @@ git add aaa xxx/aaa yyy/aaa
 cd xxx
 assert_exit_code 0 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
 cd -
+assert_outputs__apply__abort "$APPLY_OPERATION"
 assert_files_HT '
    aaa		ddd0
    xxx/aaa	ddd1

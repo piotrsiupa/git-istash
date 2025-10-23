@@ -44,6 +44,7 @@ assert_dotgit_contents
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha_1="$(get_head_sha_HT)"
 assert_exit_code 1 git istash "$APPLY_OPERATION"
+assert_outputs__apply__other_operation_in_progress 'bisect'
 assert_files_HT '
    aaa		ccc
 !! ignored0	ignored0
