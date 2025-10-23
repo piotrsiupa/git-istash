@@ -99,7 +99,7 @@ get_test_script() { # test_name
 	printf '%s.sh' "$1"
 }
 get_test_dir() { # test_name [parameters_string]
-	printf '%s/t_dir__%s/%s' "$(basename "$(dirname "$1")")" "$(basename "$1")" ${2+"$2"}
+	printf '%s/t_dir__%s/%s' "$(basename "$(dirname "$1")")" "$(basename "$1")" "${2+"$2"}"
 }
 
 cleanup_test() { # test_name [parameters_string]
@@ -108,7 +108,7 @@ cleanup_test() { # test_name [parameters_string]
 create_test_dir() { # test_name [parameters_string]
 	test_dir="$(get_test_dir "$1")"
 	mkdir -p "$test_dir"
-	test_dir="$(get_test_dir "$1" ${2+"$2"})"
+	test_dir="$(get_test_dir "$1" "${2+"$2"}")"
 	mkdir "$test_dir"
 }
 
