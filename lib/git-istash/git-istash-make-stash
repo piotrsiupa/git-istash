@@ -101,7 +101,7 @@ cleanup() {
 }
 
 is_pathspec_exclude() { # pathspec
-	if parse_git_bool ${GIT_LITERAL_PATHSPECS+"$GIT_LITERAL_PATHSPECS"}
+	if parse_git_bool "${GIT_LITERAL_PATHSPECS+"$GIT_LITERAL_PATHSPECS"}"
 	then
 		return 1
 	fi
