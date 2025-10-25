@@ -88,19 +88,15 @@ put_files_into_working_copy() { # untracked_changes_sha non_staged_changes_sha s
 }
 
 end_with_rebase_problem() {
-	printf '\n' 1>&2
-	if is_color_allowed 2
-	then
-		printf '\033[33m'
-	fi
-	sub_command_name="$(get_sub_command_name)"
-	printf 'hint: Disregard all hints above about using "git rebase".\n' 1>&2
-	printf 'hint: Use "git istash %s --continue" after fixing conflicts.\n' "$sub_command_name" 1>&2
-	printf 'hint: To abort and get back to the state before "git istash %s", run "git istash %s --abort".\n' "$sub_command_name" "$sub_command_name" 1>&2
-	if is_color_allowed 2
-	then
-		printf '\033[39m'
-	fi
+	{
+		printf '\n'
+		printf_color 2 '\033[33m'
+		sub_command_name="$(get_sub_command_name)"
+		printf 'hint: Disregard all hints above about using "git rebase".\n'
+		printf 'hint: Use "git istash %s --continue" after fixing conflicts.\n' "$sub_command_name"
+		printf 'hint: To abort and get back to the state before "git istash %s", run "git istash %s --abort".\n' "$sub_command_name" "$sub_command_name"
+		printf_color 2 '\033[39m'
+	} 1>&2
 	return 2
 }
 end_with_success() {
@@ -140,50 +136,35 @@ check_data_files() { # resume
 	if [ "$is_pop" = y ] ; then return 0 ; fi
 	case "$(find_data_files)" in
 		pop)
-			printf '\n' 1>&2
-			if is_color_allowed 2
-			then
-				printf '\033[33m'
-			fi
-			printf 'fatal: "git istash pop" is already in progress?\n' 1>&2
-			printf 'hint: Finish that operation before starting "git istash apply".\n' 1>&2
-			if is_color_allowed 2
-			then
-				printf '\033[39m'
-			fi
+			{
+				printf '\n'
+				printf_color 2 '\033[33m'
+				printf 'fatal: "git istash pop" is already in progress?\n'
+				printf 'hint: Finish that operation before starting "git istash apply".\n'
+				printf_color 2 '\033[39m'
+			} 1>&2
 			return 1
 			;;
 		apply)
 			if [ "$1" = y ] ; then return 0 ; fi
-			if is_color_allowed 2
-			then
-				printf '\033[33m'
-			fi
-			printf 'fatal: "git istash apply" is already in progress?\n' 1>&2
-			printf 'hint: Use "git istash apply --continue" or "git istash apply --abort".\n' 1>&2
-			if is_color_allowed 2
-			then
-				printf '\033[39m'
-			fi
+			{
+				printf_color 2 '\033[33m'
+				printf 'fatal: "git istash apply" is already in progress?\n'
+				printf 'hint: Use "git istash apply --continue" or "git istash apply --abort".\n'
+				printf_color 2 '\033[39m'
+			} 1>&2
 			return 1
 			;;
 		error)
-			printf '\n' 1>&2
-			if is_color_allowed 2
-			then
-				printf '\033[31m'
-			fi
-			printf 'fatal: "git istash pop" seems to be in progress but "%s" is missing!\n' "$target_data_file" 1>&2
-			if is_color_allowed 2
-			then
-				printf '\033[33m'
-			fi
-			printf 'hint: Fix the problem and finish that operation before starting "git istash apply"\n' 1>&2
-			printf 'hint: or remove the file "%s" to manually cancel it.\n' "$(make_stash_data_file_path)" 1>&2
-			if is_color_allowed 2
-			then
-				printf '\033[39m'
-			fi
+			{
+				printf '\n'
+				printf_color 2 '\033[31m'
+				printf 'fatal: "git istash pop" seems to be in progress but "%s" is missing!\n' "$target_data_file"
+				printf_color 2 '\033[33m'
+				printf 'hint: Fix the problem and finish that operation before starting "git istash apply"\n'
+				printf 'hint: or remove the file "%s" to manually cancel it.\n' "$(make_stash_data_file_path)"
+				printf_color 2 '\033[39m'
+			} 1>&2
 			return 1
 			;;
 		nothing)
@@ -322,23 +303,19 @@ do_abort() { # args...
 		delete_data
 		printf 'Aborted "git istash"\n' 1>&2
 	else
-		printf '\n' 1>&2
-		printf 'fatal: Failed to restore HEAD.\n' 1>&2
-		if is_color_allowed 2
-		then
-			printf '\033[33m'
-		fi
-		printf 'hint: Fix problems and rerun "git istash %s --abort"\n' "$(get_sub_command_name)" 1>&2
-		if [ "$is_pop" = n ]
-		then
-			printf 'hint: or delete the files "%s" and "%s" to cancel manually.\n' "$target_data_file" "$working_dir_sha_file" 1>&2
-		else
-			printf 'hint: or delete the files "%s", "%s" and "%s" to cancel manually.\n' "$(make_stash_data_file_path)" "$target_data_file" "$working_dir_sha_file" 1>&2
-		fi
-		if is_color_allowed 2
-		then
-			printf '\033[39m'
-		fi
+		{
+			printf '\n'
+			printf 'fatal: Failed to restore HEAD.\n'
+			printf_color 2 '\033[33m'
+			printf 'hint: Fix problems and rerun "git istash %s --abort"\n' "$(get_sub_command_name)"
+			if [ "$is_pop" = n ]
+			then
+				printf 'hint: or delete the files "%s" and "%s" to cancel manually.\n' "$target_data_file" "$working_dir_sha_file"
+			else
+				printf 'hint: or delete the files "%s", "%s" and "%s" to cancel manually.\n' "$(make_stash_data_file_path)" "$target_data_file" "$working_dir_sha_file"
+			fi
+			printf_color 2 '\033[39m'
+		} 1>&2
 		return 1
 	fi
 }
