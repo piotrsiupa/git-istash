@@ -8,6 +8,16 @@ is_color_allowed() { # stream_num
 	esac
 }
 
+# Runs "printf" with the given args only if color is allowed for given stream.
+printf_color() { # stream_num args...
+	if is_color_allowed "$1"
+	then
+		shift
+		#shellcheck disable=SC2059
+		printf "$@"
+	fi
+}
+
 if command -v od 1>/dev/null 2>&1
 then
 	convert_to_octal() {

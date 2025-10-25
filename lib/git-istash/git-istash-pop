@@ -68,50 +68,35 @@ check_data_files() { # resume
 	case "$(find_data_files)" in
 		pop)
 			if [ "$1" = y ] ; then return 0 ; fi
-			printf '\n' 1>&2
-			if is_color_allowed 2
-			then
-				printf '\033[33m'
-			fi
-			printf 'fatal: "git istash pop" is already in progress?\n' 1>&2
-			printf 'hint: Use "git istash pop --continue" or "git istash pop --abort".\n' 1>&2
-			if is_color_allowed 2
-			then
-				printf '\033[39m'
-			fi
+			{
+				printf '\n'
+				printf_color 2 '\033[33m'
+				printf 'fatal: "git istash pop" is already in progress?\n'
+				printf 'hint: Use "git istash pop --continue" or "git istash pop --abort".\n'
+				printf_color 2 '\033[39m'
+			} 1>&2
 			return 1
 			;;
 		apply)
-			printf '\n' 1>&2
-			if is_color_allowed 2
-			then
-				printf '\033[33m'
-			fi
-			printf 'fatal: "git istash apply" is already in progress?\n' 1>&2
-			printf 'hint: Finish that operation before starting "git istash pop".\n' 1>&2
-			if is_color_allowed 2
-			then
-				printf '\033[39m'
-			fi
+			{
+				printf '\n'
+				printf_color 2 '\033[33m'
+				printf 'fatal: "git istash apply" is already in progress?\n'
+				printf 'hint: Finish that operation before starting "git istash pop".\n'
+				printf_color 2 '\033[39m'
+			} 1>&2
 			return 1
 			;;
 		error)
-			printf '\n' 1>&2
-			if is_color_allowed 2
-			then
-				printf '\033[31m'
-			fi
-			printf 'fatal: "git istash pop" seems to be in progress but "%s" is missing!\n' "$(make_target_data_file)" 1>&2
-			if is_color_allowed 2
-			then
-				printf '\033[33m'
-			fi
-			printf 'hint: Fix the problem and finish that operation before starting a new one\n' 1>&2
-			printf 'hint: or remove the file "%s" to manually cancel it.\n' "$(make_stash_data_file_path)" 1>&2
-			if is_color_allowed 2
-			then
-				printf '\033[39m'
-			fi
+			{
+				printf '\n'
+				printf_color 2 '\033[31m'
+				printf 'fatal: "git istash pop" seems to be in progress but "%s" is missing!\n' "$(make_target_data_file)"
+				printf_color 2 '\033[33m'
+				printf 'hint: Fix the problem and finish that operation before starting a new one\n'
+				printf 'hint: or remove the file "%s" to manually cancel it.\n' "$(make_stash_data_file_path)"
+				printf_color 2 '\033[39m'
+			} 1>&2
 			return 1
 			;;
 		nothing)
