@@ -12,6 +12,12 @@ Executing it without parameters will run all the tests.
 There are also filtering and formatting options.
 (For more information, run `run.sh --help`. You really should; this is the most important script and there is quite a lot to it.)
 
+## `monitor.sh`
+
+A simple wrapper for `run.sh`, which at first runs all specified tests to check which ones are not passing, and then it reruns them every time when any relevant file has changed.
+The goal of this is to have tests running in another window, without the need to constantly switch to it and back to the editor.
+(For more information, run `monitor.sh --help`.)
+
 ## `shellcheck.sh`
 
 A script that checks all the scripts in the projects (including the tests), using `shellcheck`.
