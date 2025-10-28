@@ -61,7 +61,7 @@ check_pathspec_for_implicit_push() ( # args...
 )
 
 set_getopt_options_from_make_command
-if [ ${1+"$1"} = '--_implicit-push_' ]
+if [ "${1+"$1"}" = '--_implicit-push_' ]
 then
 	shift
 	check_pathspec_for_implicit_push "$@"

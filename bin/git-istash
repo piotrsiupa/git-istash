@@ -35,7 +35,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'git-istash version 1.5.1\n'
+	printf 'git-istash version 1.5.2\n'
 	printf 'Author: Piotr Siupa\n'
 	printf 'Requires Git in version at least %s\n' "$min_git_version"
 }
