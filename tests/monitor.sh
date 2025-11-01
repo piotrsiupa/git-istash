@@ -21,6 +21,14 @@ print_version() {
 	printf 'test monitoring script version 1.0.0\n'
 }
 
+get_all_tests_count() { # [filter]...
+	./run.sh --print-paths -- "$@" | wc -l
+}
+
+get_failing_tests_count() { # [filter]...
+	./run.sh --failed --print-paths -- "$@" | wc -l
+}
+
 get_first_failing_test() { # [filter]...
 	./run.sh --failed --print-paths -- "$@" | head -n 1
 }
@@ -38,8 +46,10 @@ get_times() { # file_lists...
 }
 
 wait_for_change() { # [filter]...
+	printf '\n\n' 1>&2
+	printf 'Failing tests count: %i/%i\n' "$(get_failing_tests_count "$@")" "$(get_all_tests_count "$@")" 1>&2
 	first_failing_test="$(get_first_failing_test "$@")"
-	printf '\n\nNext to fix: "%s"...' "$first_failing_test" 1>&2
+	printf 'Next to fix: "%s"...' "$first_failing_test" 1>&2
 	previous_istash_files="$(get_istash_files)"
 	previous_test_files="$(get_common_test_files)"
 	previous_times="$(get_times "$first_failing_test" "$previous_test_files" "$previous_istash_files")"
