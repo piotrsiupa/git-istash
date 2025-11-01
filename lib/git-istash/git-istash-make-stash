@@ -266,9 +266,9 @@ commit_changes() {
 	index_editor='sed -i -E "1 s/^(\s*)\w+(\s)/\1edit\2/"'
 	if [ "$has_3_commits" = n ]
 	then
-		GIT_EDITOR="$index_editor" git rebase --interactive --keep-empty --empty=keep --reapply-cherry-picks -- 'HEAD~4' 1>/dev/null
+		GIT_EDITOR="$index_editor" git rebase --quiet --interactive --keep-empty --empty=keep --reapply-cherry-picks -- 'HEAD~4' 1>/dev/null 2>&1
 	else
-		GIT_EDITOR="$index_editor" git rebase --interactive --keep-empty --empty=keep --reapply-cherry-picks -- 'HEAD~5' 1>/dev/null
+		GIT_EDITOR="$index_editor" git rebase --quiet --interactive --keep-empty --empty=keep --reapply-cherry-picks -- 'HEAD~5' 1>/dev/null 2>&1
 	fi
 	git reset --soft 'HEAD^' 1>/dev/null
 	if [ "$leave_staged" = n ]
@@ -335,7 +335,7 @@ handle_rebase_conflict_using_theirs() {
 		fi
 		git --no-literal-pathspecs ls-files --unmerged --format='%(path)' -z :/ | xargs -0 -- git --literal-pathspecs restore --theirs --
 		git --no-literal-pathspecs add :/ 2>/dev/null || true
-		if GIT_EDITOR='true' git rebase --continue 1>/dev/null
+		if GIT_EDITOR='true' git rebase --continue 1>/dev/null 2>&1
 		then
 			break
 		fi
@@ -368,7 +368,7 @@ sort_commits() {
 	unstashed_commits_editor="$unstashed_commits_editor --"
 	
 	last_commit_sha="$(git rev-parse HEAD)"
-	if ! GIT_EDITOR="$unstashed_commits_editor" git -c merge.renames=false rebase --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_sha" 1>/dev/null
+	if ! GIT_EDITOR="$unstashed_commits_editor" git -c merge.renames=false rebase --quiet --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_sha" 1>/dev/null 2>&1
 	then
 		handle_rebase_conflict_using_theirs
 	fi
@@ -380,15 +380,15 @@ sort_commits() {
 		else
 			keep_index_editor='sed -i -E -e "2 s/^pick\\>/fixup/" --'
 		fi
-		if ! GIT_EDITOR="$keep_index_editor" git -c merge.renames=false rebase --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_sha" 1>/dev/null
+		if ! GIT_EDITOR="$keep_index_editor" git -c merge.renames=false rebase --quiet --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_sha" 1>/dev/null 2>&1
 		then
 			handle_rebase_conflict_using_theirs
 		fi
 	fi
 	unstashed_changes_sha="$(git rev-parse HEAD)"
 	
-	git switch --detach "$last_commit_sha" 1>/dev/null
-	if ! GIT_EDITOR="$stashed_commits_editor" git -c merge.renames=false rebase --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_sha" 1>/dev/null
+	git switch --quiet --detach "$last_commit_sha"
+	if ! GIT_EDITOR="$stashed_commits_editor" git -c merge.renames=false rebase --quiet --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_sha" 1>/dev/null 2>&1
 	then
 		handle_rebase_conflict_using_theirs
 	fi
@@ -404,7 +404,7 @@ handle_stash_sha() { # stash_sha
 }
 
 restore_working_tree() {
-	git switch --detach "$unstashed_changes_sha" 1>/dev/null
+	git switch --quiet --detach "$unstashed_changes_sha"
 	unstaged_commit_sha="$(git rev-parse 'HEAD~')"
 	git reset --mixed HEAD~2 1>/dev/null
 	(
@@ -429,13 +429,13 @@ create_temporary_branch() {
 }
 
 restore_branch() {
-	git switch --force-create "$current_branch" HEAD 1>/dev/null
+	git switch --quiet --force-create "$current_branch" HEAD
 }
 
 remove_temporary_branch() {
-	git switch --detach HEAD 1>/dev/null
+	git switch --quiet --detach HEAD
 	git branch --delete --force "$current_branch" 1>/dev/null
-	git switch --orphan "$current_branch" 1>/dev/null
+	git switch --quiet --orphan "$current_branch"
 }
 
 make_stash() { # pathspecs...

@@ -98,9 +98,10 @@ check_other_git_commands_state() {
 }
 
 check_data_files() {
-	if [ "$(find_data_files)" != 'nothing' ]
+	current_operation="$(find_data_files)"
+	if [ "$current_operation" != 'nothing' ]
 	then
-		printf 'error: There is currently an istash apply in progress.\n' 1>&2
+		printf 'error: There is currently an istash %s in progress.\n' "$current_operation" 1>&2
 		return 1
 	fi
 }

@@ -24,7 +24,9 @@ printf 'bbb\n' >bbb
 printf 'aaa\n' >.gitignore
 git add .gitignore
 #shellcheck disable=SC2086
-new_stash_sha_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS -mX)"
+assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS -mX
+assert_outputs__create__success
+new_stash_sha_CO="$stdout"
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_HTCO '

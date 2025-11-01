@@ -110,7 +110,9 @@ printf 'uf1\n' >'tracked-dir1 /
 ignored-dir2/ some-file1   '
 printf '%s\n' '*ignored*' >.git/info/exclude
 #shellcheck disable=SC2086
-new_stash_sha_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS)"
+assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
+assert_outputs__create__success
+new_stash_sha_CO="$stdout"
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_HTCO '

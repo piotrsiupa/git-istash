@@ -49,8 +49,9 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 
 __test_section__ "$CAP_CREATE_OPERATION stash again"
 correct_head_sha_1="$(get_head_sha_HT)"
+mv .git/ISTASH_TARGET .git/ISTASH_TARGET~
 assert_exit_code 1 git istash "$CREATE_OPERATION"
-assert_outputs__create__operation_in_progress "an istash $APPLY_OPERATION"
+assert_outputs__create__broken_operation_in_progress "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ccc|bbb
 !! ignored0	ignored0
@@ -63,12 +64,18 @@ DU aaa		bbb
 assert_stash_count 1
 assert_head_sha_HT "$correct_head_sha_1"
 assert_rebase y
-assert_dotgit_contents_for "$APPLY_OPERATION"
+if IS_APPLY
+then
+	assert_dotgit_contents 'ISTASH_TARGET~' 'ISTASH_WORKING-DIR'
+else
+	assert_dotgit_contents 'ISTASH_TARGET~' 'ISTASH_STASH' 'ISTASH_WORKING-DIR'
+fi
 
 __test_section__ "Continue the first $APPLY_OPERATION stash"
 printf 'ddd\n' >aaa
 git add aaa
 stash_sha="$(git rev-parse stash)"
+mv .git/ISTASH_TARGET~ .git/ISTASH_TARGET
 assert_exit_code 0 git istash "$APPLY_OPERATION" --continue
 assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
 assert_files_HT '

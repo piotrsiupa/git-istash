@@ -11,3 +11,4 @@ fi
 . ./assertions-for-applying.sh
 . ./assertions-for-outputs-of-applying.sh
 . ./assertions-for-creating.sh
+. ./assertions-for-outputs-of-creating.sh

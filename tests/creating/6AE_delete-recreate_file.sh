@@ -22,7 +22,9 @@ __test_section__ "$CAP_CREATE_OPERATION stash"
 git rm aaa
 printf 'bbb\n' >aaa
 #shellcheck disable=SC2086
-new_stash_sha_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $ALL_FLAGS $UNTRACKED_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS --message 'stash, not a trash')"
+assert_exit_code 0 git istash "$CREATE_OPERATION" $ALL_FLAGS $UNTRACKED_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS --message 'stash, not a trash'
+assert_outputs__create__success
+new_stash_sha_CO="$stdout"
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_HTCO '

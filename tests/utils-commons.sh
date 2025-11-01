@@ -69,9 +69,7 @@ capture_outputs() { # command [arguments...]
 }
 
 dedent_regex() ( # text
-	text="$(printf '%s\n' "$1" | sed -E -e '1 {/^\s*$/ d}' -e '$ {/^\s*$/ d}')"
-	indent="$(printf '%s\n' "$text" | sed -E -n '1 s/^(\s+)(\S.*)?$/'\''\1'\''/p')"
-	printf '%s' "$text" | eval 'sed' '-E' \''s/^'\'"$indent"\''//'\' | tr -d '\n'
+	printf '%s' "$1" | sed -E 's/^\t+//' | tr -d '\n'
 )
 
 match_multiline_regex() { # text regex

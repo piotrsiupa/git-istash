@@ -19,6 +19,7 @@ printf 'bbb\n' >bbb
 printf 'y n ' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
 assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS --patch $KEEP_INDEX_FLAGS <.git/answers_for_patch
+assert_outputs__create__no_changes_to_stash ''
 assert_files_HT '
 ?? aaa		aaa
 ?? bbb		bbb

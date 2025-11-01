@@ -17,6 +17,7 @@ __test_section__ "$CAP_CREATE_OPERATION stash"
 printf 'aaa\n' >aaa
 #shellcheck disable=SC2086
 assert_exit_code 1 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'empty stash' $ALL_FLAGS $UNTRACKED_FLAGS
+assert_outputs__create__no_changes_to_stash
 assert_files_HT '
 ?? aaa		aaa
 !! ignored0	ignored0

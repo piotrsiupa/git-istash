@@ -19,56 +19,55 @@ __test_section__ 'Create stash'
 printf 'bbb\n' >aaa
 git stash push
 
-__test_section__ 'Create a few commits'
-printf 'ccc\n' >aaa
-git add aaa
-git commit -m 'Changed something'
-printf 'ddd\n' >aaa
-git add aaa
-git commit -m 'Changed something again'
+__test_section__ 'Create a commit to reabse'
+git branch branch0
+git branch -m branch1
+printf 'xxx\n' >xxx
+git add xxx
+git commit -m 'Changed xxx'
 
 SWITCH_HEAD_TYPE
 
-__test_section__ 'Start bisect'
-git bisect start
-git bisect bad
-git bisect good HEAD~2
+__test_section__ 'Rebase branch'
+git rebase branch0 --exec='return 1' || true
 assert_files_HT '
-   aaa		ccc
+   aaa		aaa
+   xxx		xxx
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
 assert_stash_count 1
-assert_log_length_HT 3
-assert_branch_count 1
-assert_rebase n
+assert_branch_count 2
+assert_rebase y
 assert_dotgit_contents
 
 __test_section__ "$CAP_CREATE_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 assert_exit_code 1 git istash "$CREATE_OPERATION"
+assert_outputs__create__operation_in_progress 'a rebase'
 assert_files_HT '
-   aaa		ccc
+   aaa		aaa
+   xxx		xxx
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
 assert_stash_count 1
-assert_log_length_HT 3
-assert_branch_count 1
+assert_branch_count 2
 assert_head_sha_HT "$correct_head_sha"
-assert_rebase n
+assert_rebase y
 assert_dotgit_contents
 
-__test_section__ 'Reset bisect'
-git bisect reset
+__test_section__ 'Continue rebase'
+git rebase --continue
 assert_files_HT '
-   aaa		ddd
+   aaa		aaa
+   xxx		xxx
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
 assert_stash_count 1
-assert_log_length_HT 4
-assert_branch_count 1
+assert_branch_count 2
+assert_head_sha_HT "$correct_head_sha"
 assert_rebase n
 assert_branch_metadata_HT
 assert_dotgit_contents

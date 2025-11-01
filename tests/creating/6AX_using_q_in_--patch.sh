@@ -26,7 +26,9 @@ printf 'yyy\n' >ccc
 printf 'yyy\n' >ddd
 printf 'q q y y y y ' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
-new_stash_sha_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS --allow-empty <.git/answers_for_patch)"
+assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS --allow-empty <.git/answers_for_patch
+assert_outputs__create__success '1' '1'
+new_stash_sha_CO="$stdout"
 assert_files_HTCO '
  M aaa		yyy	xxx
  M bbb		yyy	xxx

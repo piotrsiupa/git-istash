@@ -48,8 +48,10 @@ rm 'b/0/k'
 printf 'zzz\n' >'b/0/l'
 cd 'a'
 #shellcheck disable=SC2086
-new_stash_sha_CO="$(assert_exit_code 0 ../../../../../lib/git-istash/git-istash-"$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS)"
+assert_exit_code 0 ../../../../../lib/git-istash/git-istash-"$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
 cd -
+assert_outputs__create__success
+new_stash_sha_CO="$stdout"
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_HTCO '
