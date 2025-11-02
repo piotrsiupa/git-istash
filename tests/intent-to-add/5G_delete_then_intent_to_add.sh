@@ -23,7 +23,9 @@ git rm aaa
 printf 'bbb\n' >aaa
 git add --intent-to-add aaa
 #shellcheck disable=SC2086
-new_stash_sha_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $ALL_FLAGS $UNTRACKED_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS --message 'stash, not a trash')"
+assert_exit_code 0 git istash "$CREATE_OPERATION" $ALL_FLAGS $UNTRACKED_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS --message 'stash, not a trash'
+assert_outputs__create__success
+new_stash_sha_CO="$stdout"
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_HTCO '
@@ -64,7 +66,9 @@ remove_all_changes
 RESTORE_HEAD_TYPE
 
 __test_section__ 'Pop stash'
+stash_sha="$(git rev-parse stash)"
 assert_exit_code 0 git istash pop
+assert_outputs__apply__success 'pop' 0 "$stash_sha"
 assert_files '
 DA aaa		bbb
 '

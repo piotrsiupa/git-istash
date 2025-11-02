@@ -24,7 +24,9 @@ printf 'foo\nbar\n' >ccc
 git add --intent-to-add ccc
 printf '' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
-new_stash_sha_CO="$(GIT_EDITOR="sed -Ei '/^\+bar$/ d'" assert_exit_code 0 git istash "$CREATE_OPERATION" $STAGED_FLAGS $UNSTAGED_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS --patch --message 'some nice stash name' --allow-empty <.git/answers_for_patch)"
+GIT_EDITOR="sed -Ei '/^\+bar$/ d'" assert_exit_code 0 git istash "$CREATE_OPERATION" $STAGED_FLAGS $UNSTAGED_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS --patch --message 'some nice stash name' --allow-empty <.git/answers_for_patch
+assert_outputs__create__success ''
+new_stash_sha_CO="$stdout"
 assert_files '
 M  aaa		foo\nbar
  M bbb		foo\nbar	<empty>
@@ -51,7 +53,9 @@ remove_all_changes
 RESTORE_HEAD_TYPE
 
 __test_section__ 'Pop stash'
+stash_sha="$(git rev-parse stash)"
 assert_exit_code 0 git istash pop
+assert_outputs__apply__success 'pop' 0 "$stash_sha"
 assert_files '
    aaa		<empty>
    bbb		<empty>

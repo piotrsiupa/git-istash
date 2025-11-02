@@ -19,7 +19,9 @@ printf 'xxx\n' >aaa1
 git add --intent-to-add aaa0 aaa1
 printf '*0\n' >.gitignore
 #shellcheck disable=SC2086
-new_stash_sha_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS --message 'name')"
+assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS --message 'name'
+assert_outputs__create__success
+new_stash_sha_CO="$stdout"
 assert_files_HTCO '
  A aaa0		xxx
  A aaa1		xxx
@@ -50,7 +52,9 @@ remove_all_changes
 RESTORE_HEAD_TYPE
 
 __test_section__ 'Pop stash'
+stash_sha="$(git rev-parse stash)"
 assert_exit_code 0 git istash pop
+assert_outputs__apply__success 'pop' 0 "$stash_sha"
 assert_files '
  A aaa0		xxx
  A aaa1		xxx
