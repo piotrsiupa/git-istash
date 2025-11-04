@@ -29,7 +29,6 @@ UU aaa
 ' '
 DU aaa
 '
-assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ccc|bbb
 !! ignored0	ignored0

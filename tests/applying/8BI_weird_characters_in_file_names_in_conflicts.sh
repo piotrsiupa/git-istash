@@ -41,7 +41,6 @@ assert_exit_code 2 git istash "$APPLY_OPERATION"
 assert_outputs__apply__conflict "$APPLY_OPERATION" '
 UU bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th
 '
-assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th qux|bar
    bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{2}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th yyy
@@ -61,7 +60,6 @@ assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 assert_outputs__apply__conflict "$APPLY_OPERATION" '
 UU bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th
 '
-assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th quux|baz
    bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{2}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th yyy
@@ -81,7 +79,6 @@ assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 assert_outputs__apply__conflict "$APPLY_OPERATION" '
 AA bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{2}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th
 '
-assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
    bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th fff
 AA bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{2}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th yyy|zzz

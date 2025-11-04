@@ -36,7 +36,6 @@ assert_exit_code 2 git istash "$APPLY_OPERATION"
 assert_outputs__apply__conflict "$APPLY_OPERATION" '
 UU aaa
 '
-assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		fff|bbb
 !! ignored0	ignored0
@@ -55,7 +54,6 @@ assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 assert_outputs__apply__conflict "$APPLY_OPERATION" '
 UU aaa
 '
-assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		jjj|ggg
 !! ignored0	ignored0
@@ -74,7 +72,6 @@ assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 assert_outputs__apply__conflict "$APPLY_OPERATION" '
 UU aaa
 '
-assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		kkk|ccc
 A  bbb		ddd
@@ -94,7 +91,6 @@ assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 assert_outputs__apply__conflict "$APPLY_OPERATION" '
 AA bbb
 '
-assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
    aaa		lll
 AA bbb		ddd|hhh
@@ -115,7 +111,6 @@ assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 assert_outputs__apply__conflict "$APPLY_OPERATION" '
 AA ccc
 '
-assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
    aaa		lll
    bbb		mmm

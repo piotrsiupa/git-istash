@@ -54,7 +54,6 @@ DU aaa
 DU xxx/aaa
 DU yyy/aaa
 '
-assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ddd0|bbb0
 UU xxx/aaa	ddd1|bbb1

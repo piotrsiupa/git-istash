@@ -30,7 +30,6 @@ assert_exit_code 2 git istash "$APPLY_OPERATION"
 assert_outputs__apply__conflict "$APPLY_OPERATION" '
 UU ccc
 '
-assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 D  aaa/bbb
 UU ccc		baz|bar

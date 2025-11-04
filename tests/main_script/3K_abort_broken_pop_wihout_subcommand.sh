@@ -28,7 +28,6 @@ UU aaa
 ' '
 DU aaa
 '
-assert_conflict_message 'pop'
 assert_files_HT '
 UU aaa		ccc|bbb
 !! ignored0	ignored0

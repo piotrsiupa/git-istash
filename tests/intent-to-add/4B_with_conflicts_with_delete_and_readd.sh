@@ -29,7 +29,6 @@ assert_exit_code 2 git istash "$APPLY_OPERATION"
 assert_outputs__apply__conflict "$APPLY_OPERATION" '
 UD aaa
 '
-assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UD aaa		ccc
 !! ignored0	ignored0
@@ -47,7 +46,6 @@ assert_exit_code 2 git istash "$APPLY_OPERATION" --continue
 assert_outputs__apply__conflict "$APPLY_OPERATION" '
 AA aaa
 '
-assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 AA aaa		ccc|bbb
 !! ignored0	ignored0

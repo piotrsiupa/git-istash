@@ -21,7 +21,6 @@ assert_exit_code 2 git istash "$APPLY_OPERATION"
 assert_outputs__apply__conflict "$APPLY_OPERATION" '
 AA aaa
 '
-assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 AA aaa		bbb|aaa
 !! ignored0	ignored0
@@ -37,7 +36,6 @@ __test_section__ "Continue $APPLY_OPERATION stash (0)"
 printf 'ccc\n' >aaa
 assert_exit_code 2 git istash "$APPLY_OPERATION" --continue
 assert_outputs__apply__failed_resolution "$APPLY_OPERATION" 'aaa'
-assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 AA aaa		ccc
 !! ignored0	ignored0

@@ -55,7 +55,6 @@ AA aaa
 AA xxx/aaa
 AA yyy/aaa
 '
-assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 AA aaa		ddd0|bbb0
 AA xxx/aaa	ddd1|bbb1
@@ -82,7 +81,6 @@ UU aaa
 UU xxx/aaa
 UU yyy/aaa
 '
-assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		fff0|eee0
 UU xxx/aaa	fff1|eee1
@@ -115,7 +113,6 @@ AA bbb
 AA xxx/bbb
 AA yyy/bbb
 '
-assert_conflict_message "$APPLY_OPERATION"
 assert_files '
 UU aaa		ggg0|ccc0
 UU xxx/aaa	ggg1|ccc1

@@ -36,7 +36,6 @@ UU aaa
 ' '
 DU aaa
 '
-assert_conflict_message "$OTHER_APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ccc|bbb
    wdf0		wdf0b

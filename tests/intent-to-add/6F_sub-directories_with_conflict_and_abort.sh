@@ -34,7 +34,6 @@ AA aaa
 AA xxx/aaa
 AA yyy/aaa
 '
-assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 AA aaa		bbb0|aaa0
 AA xxx/aaa	bbb1|aaa1

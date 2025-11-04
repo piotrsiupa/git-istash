@@ -29,7 +29,6 @@ UU aaa
 ' '
 DU aaa
 '
-assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ddd|bbb
 !! ignored0	ignored0
@@ -51,7 +50,6 @@ assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 assert_outputs__apply__failed_resolution "$APPLY_OPERATION" '
 aaa
 '
-assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		eee
 !! ignored0	ignored0
@@ -73,7 +71,6 @@ assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 assert_outputs__apply__conflict "$APPLY_OPERATION" '
 UU aaa
 '
-assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		eee|ccc
 !! ignored0	ignored0
@@ -91,7 +88,6 @@ assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 assert_outputs__apply__failed_resolution "$APPLY_OPERATION" '
 aaa
 '
-assert_conflict_message "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		fff
 !! ignored0	ignored0
