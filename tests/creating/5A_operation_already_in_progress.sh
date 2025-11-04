@@ -3,6 +3,7 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
+PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_CREATE_OPERATION
 PARAMETRIZE_ALL 'DEFAULT'
 PARAMETRIZE_UNTRACKED 'DEFAULT'
@@ -25,9 +26,14 @@ git commit -am 'Changed aaa'
 
 SWITCH_HEAD_TYPE
 
-__test_section__ 'Apply stash'
+__test_section__ "Apply $CAP_APPLY_OPERATION"
 correct_head_sha_0="$(get_head_sha_HT)"
-assert_exit_code 2 git istash apply
+assert_exit_code 2 git istash "$APPLY_OPERATION"
+assert_outputs__apply__conflict_HT "$APPLY_OPERATION" '
+UU aaa
+' '
+DU aaa
+'
 assert_files_HT '
 UU aaa		ccc|bbb
 !! ignored0	ignored0
@@ -39,11 +45,12 @@ DU aaa		bbb
 '
 assert_stash_count 1
 assert_rebase y
-assert_dotgit_contents_for 'apply'
+assert_dotgit_contents_for "$APPLY_OPERATION"
 
 __test_section__ "$CAP_CREATE_OPERATION stash again"
 correct_head_sha_1="$(get_head_sha_HT)"
 assert_exit_code 1 git istash "$CREATE_OPERATION"
+assert_outputs__create__operation_in_progress "an istash $APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ccc|bbb
 !! ignored0	ignored0
@@ -56,12 +63,14 @@ DU aaa		bbb
 assert_stash_count 1
 assert_head_sha_HT "$correct_head_sha_1"
 assert_rebase y
-assert_dotgit_contents_for 'apply'
+assert_dotgit_contents_for "$APPLY_OPERATION"
 
-__test_section__ 'Continue the first apply stash'
+__test_section__ "Continue the first $APPLY_OPERATION stash"
 printf 'ddd\n' >aaa
 git add aaa
-assert_exit_code 0 git istash apply --continue
+stash_sha="$(git rev-parse stash)"
+assert_exit_code 0 git istash "$APPLY_OPERATION" --continue
+assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
 assert_files_HT '
  M aaa		ddd	ccc
 !! ignored0	ignored0
@@ -71,7 +80,7 @@ assert_files_HT '
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
-assert_stash_count 1
+assert_stash_count_AO 1
 assert_head_sha_HT "$correct_head_sha_0"
 assert_rebase n
 assert_branch_metadata_HT

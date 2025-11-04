@@ -58,15 +58,17 @@ new_stash_sha_CO="$(
 			sleep 5
 		fi
 		cat .git/answers_for_patch1
-	} \
-	| if IS_PATHSPEC_IN_ARGS
-	then
-		#shellcheck disable=SC2086
-		assert_exit_code 0 git istash "$CREATE_OPERATION" 'aaa0' $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS 'bbb?' --patch -m 'a very controlled stash' $EOI '*5' './?dd*' 'fff1?'
-	else
-		#shellcheck disable=SC2086
-		assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'a very controlled stash' --patch $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
-	fi
+	} | {
+		if IS_PATHSPEC_IN_ARGS
+		then
+			#shellcheck disable=SC2086
+			assert_exit_code 0 git istash "$CREATE_OPERATION" 'aaa0' $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS 'bbb?' --patch -m 'a very controlled stash' $EOI '*5' './?dd*' 'fff1?'
+		else
+			#shellcheck disable=SC2086
+			assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'a very controlled stash' --patch $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
+		fi
+		assert_outputs__create__success '1,3,3,1' '1,1'
+	}
 )"
 if ! IS_KEEP_INDEX_ON
 then

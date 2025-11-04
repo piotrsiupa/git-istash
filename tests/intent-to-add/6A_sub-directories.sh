@@ -50,8 +50,10 @@ rm 'b/0/k'
 printf 'zzz\n' >'b/0/l'
 cd 'b'
 #shellcheck disable=SC2086
-new_stash_sha_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS)"
+assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
 cd -
+assert_outputs__create__success
+new_stash_sha_CO="$stdout"
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_HTCO '
@@ -150,7 +152,9 @@ remove_all_changes
 RESTORE_HEAD_TYPE
 
 __test_section__ 'Pop stash'
+stash_sha="$(git rev-parse stash)"
 assert_exit_code 0 git istash pop
+assert_outputs__apply__success 'pop' 0 "$stash_sha"
 assert_files '
 M  a/0/i	yyy
    a/0/j	xxx

@@ -35,7 +35,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'git-istash version 1.5.1\n'
+	printf 'git-istash version 1.5.2\n'
 	printf 'Author: Piotr Siupa\n'
 	printf 'Requires Git in version at least %s\n' "$min_git_version"
 }
@@ -109,17 +109,17 @@ then
 	set -u
 	. "$(dirname "$0")/../lib/git-istash/git-istash-commons"
 	case "$(find_data_files)" in
-		'nothing')
+		nothing)
 			printf 'fatal: There doesn'\''t seem to be any operation in progress.\n' 1>&2
 			exit 1
 			;;
-		'apply')
+		apply)
 			exec_subcommand 'apply' "$@"
 			;;
-		'pop')
+		pop)
 			exec_subcommand 'pop' "$@"
 			;;
-		'error')
+		error-*)
 			printf 'fatal: The operation in progress seems damaged.\n' 1>&2
 			exit 1
 			;;

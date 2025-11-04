@@ -18,7 +18,9 @@ printf 'aaa\n' >aaa
 printf 'bbb\n' >bbb
 printf 'y n ' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
-new_stash_sha_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS <.git/answers_for_patch)"
+assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS <.git/answers_for_patch
+assert_outputs__create__success '1,1'
+new_stash_sha_CO="$stdout"
 assert_files_HTCO '
 ?? aaa		aaa
 ?? bbb		bbb

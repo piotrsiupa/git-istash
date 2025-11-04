@@ -10,3 +10,6 @@ fi
 . ./assertions-commons.sh
 . ./assertions-for-applying.sh
 . ./assertions-for-creating.sh
+. ./output-assertions-for-applying.sh
+. ./output-assertions-for-creating.sh
+. ./output-assertions-for-main-script.sh

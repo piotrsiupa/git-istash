@@ -49,7 +49,11 @@ mkdir -p xxx
 cd xxx
 assert_exit_code 2 git istash "$APPLY_OPERATION"
 cd -
-assert_conflict_message "$APPLY_OPERATION"
+assert_outputs__apply__conflict "$APPLY_OPERATION" '
+AA aaa
+AA xxx/aaa
+AA yyy/aaa
+'
 assert_files_HT '
 AA aaa		ddd0|bbb0
 AA xxx/aaa	ddd1|bbb1
@@ -71,7 +75,11 @@ git add aaa xxx/aaa yyy/aaa
 cd xxx
 assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 cd -
-assert_conflict_message "$APPLY_OPERATION"
+assert_outputs__apply__conflict "$APPLY_OPERATION" '
+UU aaa
+UU xxx/aaa
+UU yyy/aaa
+'
 assert_files_HT '
 UU aaa		fff0|eee0
 UU xxx/aaa	fff1|eee1
@@ -96,7 +104,14 @@ git add aaa xxx/aaa yyy/aaa
 cd xxx
 assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 cd -
-assert_conflict_message "$APPLY_OPERATION"
+assert_outputs__apply__conflict "$APPLY_OPERATION" '
+UU aaa
+UU xxx/aaa
+UU yyy/aaa
+AA bbb
+AA xxx/bbb
+AA yyy/bbb
+'
 assert_files '
 UU aaa		ggg0|ccc0
 UU xxx/aaa	ggg1|ccc1
@@ -124,7 +139,11 @@ git add aaa xxx/aaa yyy/aaa bbb xxx/bbb yyy/bbb
 cd xxx
 assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 cd -
-assert_conflict_message "$APPLY_OPERATION"
+assert_outputs__apply__conflict "$APPLY_OPERATION" '
+AA zzz
+AA xxx/zzz
+AA yyy/zzz
+'
 assert_files '
    aaa		hhh0
    xxx/aaa	hhh1
@@ -149,9 +168,11 @@ printf 'xxx0\n' >zzz
 printf 'xxx1\n' >xxx/zzz
 printf 'xxx2\n' >yyy/zzz
 git add zzz xxx/zzz yyy/zzz
+stash_sha="$(git rev-parse stash)"
 cd xxx
 assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 cd -
+assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
 assert_files_HT '
 AM aaa		hhh0	fff0
 AM xxx/aaa	hhh1	fff1

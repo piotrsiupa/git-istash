@@ -21,6 +21,10 @@ printf 'ccc\n' >ccc
 printf 'ddd\n' >ddd
 #shellcheck disable=SC2086
 assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS --pathspec-file-nul $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS
+assert_outputs '
+' '
+	Option "--pathspec-file-nul" is not valid without "--pathspec-from-file"\.
+'
 assert_files_HT '
 A  aaa		aaa
 A  bbb		bbb

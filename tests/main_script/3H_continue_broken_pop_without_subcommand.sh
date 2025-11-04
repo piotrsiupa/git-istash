@@ -23,7 +23,11 @@ SWITCH_HEAD_TYPE
 __test_section__ 'Pop stash'
 correct_head_sha="$(get_head_sha_HT)"
 assert_exit_code 2 git istash pop
-assert_conflict_message 'pop'
+assert_outputs__apply__conflict_HT 'pop' '
+UU aaa
+' '
+DU aaa
+'
 assert_files_HT '
 UU aaa		ccc|bbb
 !! ignored0	ignored0
@@ -44,6 +48,7 @@ correct_head_sha2="$(get_head_sha_HT)"
 printf 'ddd\n' >aaa
 git add aaa
 assert_exit_code 1 git istash "$CONTINUE_FLAG"
+assert_outputs__main_script__damaged_operation_in_progress
 assert_files_HT '
 M  aaa		ddd
 !! ignored0	ignored0
@@ -62,6 +67,7 @@ assert_dotgit_contents 'ISTASH_STASH' 'ISTASH_TARGET~' 'ISTASH_WORKING-DIR'
 __test_section__ 'Abort popping stash'
 mv .git/ISTASH_TARGET~ .git/ISTASH_TARGET
 assert_exit_code 0 git istash pop --abort
+assert_outputs__apply__abort 'pop'
 assert_files_HT '
    aaa		ccc
 !! ignored0	ignored0

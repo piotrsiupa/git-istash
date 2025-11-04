@@ -26,7 +26,9 @@ printf 'yyy1\n' >bbb
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha)"
+stash_sha="$(git rev-parse stash)"
 assert_exit_code 0 git istash "$APPLY_OPERATION"
+assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
 assert_files_HT '
 MM aaa		xxx1	xxx0
 MM bbb		yyy1	yyy0

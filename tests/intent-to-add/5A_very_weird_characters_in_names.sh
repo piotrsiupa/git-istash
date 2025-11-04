@@ -36,7 +36,9 @@ printf 'x\n' >'tra	=ÿþ€{}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©cked-dir1/tra
 printf 'x\n' >'tra	=ÿþ€{}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©cked-dir1/tracked-dir2/bo	=ÿþ€{}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'
 git add --intent-to-add .
 #shellcheck disable=SC2086
-new_stash_sha_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS)"
+assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
+assert_outputs__create__success
+new_stash_sha_CO="$stdout"
 assert_files_HTCO '
  A file						x
  A bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th x
@@ -69,7 +71,9 @@ remove_all_changes
 RESTORE_HEAD_TYPE
 
 __test_section__ 'Pop stash'
+stash_sha="$(git rev-parse stash)"
 assert_exit_code 0 git istash pop
+assert_outputs__apply__success 'pop' 0 "$stash_sha"
 assert_files '
  A file						x
  A bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th x

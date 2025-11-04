@@ -32,7 +32,9 @@ printf 'iii\n' >ccc
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 assert_exit_code 2 git istash "$APPLY_OPERATION"
-assert_conflict_message "$APPLY_OPERATION"
+assert_outputs__apply__conflict "$APPLY_OPERATION" '
+UU aaa
+'
 assert_files_HT '
 UU aaa		fff|bbb
 !! ignored0	ignored0
@@ -48,7 +50,9 @@ __test_section__ "Continue $APPLY_OPERATION stash (0)"
 printf 'jjj\n' >aaa
 git add aaa
 assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
-assert_conflict_message "$APPLY_OPERATION"
+assert_outputs__apply__conflict "$APPLY_OPERATION" '
+UU aaa
+'
 assert_files_HT '
 UU aaa		jjj|ggg
 !! ignored0	ignored0
@@ -64,7 +68,9 @@ __test_section__ "Continue $APPLY_OPERATION stash (1)"
 printf 'kkk\n' >aaa
 git add aaa
 assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
-assert_conflict_message "$APPLY_OPERATION"
+assert_outputs__apply__conflict "$APPLY_OPERATION" '
+UU aaa
+'
 assert_files_HT '
 UU aaa		kkk|ccc
 A  bbb		ddd
@@ -81,7 +87,9 @@ __test_section__ "Continue $APPLY_OPERATION stash (2)"
 printf 'lll\n' >aaa
 git add aaa
 assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
-assert_conflict_message "$APPLY_OPERATION"
+assert_outputs__apply__conflict "$APPLY_OPERATION" '
+AA bbb
+'
 assert_files_HT '
    aaa		lll
 AA bbb		ddd|hhh
@@ -99,7 +107,9 @@ __test_section__ "Continue $APPLY_OPERATION stash (3)"
 printf 'mmm\n' >bbb
 git add bbb
 assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
-assert_conflict_message "$APPLY_OPERATION"
+assert_outputs__apply__conflict "$APPLY_OPERATION" '
+AA ccc
+'
 assert_files_HT '
    aaa		lll
    bbb		mmm
@@ -116,7 +126,9 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 __test_section__ "Continue $APPLY_OPERATION stash (4)"
 printf 'nnn\n' >ccc
 git add ccc
+stash_sha="$(git rev-parse stash)"
 assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
+assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
 assert_files_HT '
 MM aaa		lll	jjj
  A bbb		mmm

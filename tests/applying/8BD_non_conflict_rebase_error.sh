@@ -32,6 +32,7 @@ printf '#!/usr/bin/env sh\nexit 1\n' >.git/hooks/pre-rebase
 chmod +x .git/hooks/pre-rebase
 correct_head_sha="$(get_head_sha_HT)"
 assert_exit_code 1 git istash "$APPLY_OPERATION"
+assert_outputs__apply__no_rebase_in_progress_on_abort "$APPLY_OPERATION"
 assert_files_HT '
    aaa		ccc
 AM wdf0		wdf0b	wdf0a

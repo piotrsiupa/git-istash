@@ -28,7 +28,9 @@ printf 'fff\n' >'bo	=ÿþ€{f}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'
 git add -N .
 printf 'y n ' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
-new_stash_sha_CO="$(GIT_EDITOR="sed -Ei 's/^\+[a-z]{3}2/+xxx/'" assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS <.git/answers_for_patch)"
+GIT_EDITOR="sed -Ei 's/^\+[a-z]{3}2/+xxx/'" assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS <.git/answers_for_patch
+assert_outputs__create__success '1,1' ''
+new_stash_sha_CO="$stdout"
 assert_files_HTCO '
  A bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{e}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th eee
  A bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{f}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th fff
@@ -58,7 +60,9 @@ git clean -df
 RESTORE_HEAD_TYPE
 
 __test_section__ 'Pop stash'
+stash_sha="$(git rev-parse stash)"
 assert_exit_code 0 git istash pop
+assert_outputs__apply__success 'pop' 0 "$stash_sha"
 assert_files '
  A bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{e}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th eee
 '

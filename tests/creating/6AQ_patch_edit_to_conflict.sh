@@ -36,10 +36,10 @@ new_stash_sha_CO="$(
 		 cat .git/answers_for_patch0
 		 sleep 5  # On Windows a child shell tends to eat all the stdin if it's able to. This prevents it. If it still doesn't work, try to increase the time.
 		 cat .git/answers_for_patch1
-	} \
-	| {
+	} | {
 		#shellcheck disable=SC2086
 		GIT_EDITOR="sed -Ei 's/^\+[a-z]{3}2/+xxx/'" assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS
+		assert_outputs__create__success '1,1' '1,1'
 	}
 )"
 if ! IS_KEEP_INDEX_ON

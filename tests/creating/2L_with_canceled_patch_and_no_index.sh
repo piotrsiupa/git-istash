@@ -25,6 +25,15 @@ printf 'zzz\nbbb\nbbb\nzzz\n' >bbb
 printf 'q q ' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
 assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $KEEP_INDEX_FLAGS --patch --message 'some nicer stash name' <.git/answers_for_patch
+if IS_ALL_ON
+then
+	assert_outputs__create__no_changes_to_stash '1' '1'
+elif IS_UNTRACKED_ON
+then
+	assert_outputs__create__no_changes_to_stash '1' ''
+else
+	assert_outputs__create__no_changes_to_stash '1'
+fi
 assert_files_HT '
  M aaa		yyy\naaa\naaa\nyyy	aaa\naaa
  M bbb		zzz\nbbb\nbbb\nzzz	bbb\nbbb

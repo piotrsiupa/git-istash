@@ -29,7 +29,11 @@ mkdir -p xxx
 cd xxx
 assert_exit_code 2 git istash "$APPLY_OPERATION"
 cd -
-assert_conflict_message "$APPLY_OPERATION"
+assert_outputs__apply__conflict "$APPLY_OPERATION" '
+AA aaa
+AA xxx/aaa
+AA yyy/aaa
+'
 assert_files_HT '
 AA aaa		bbb0|aaa0
 AA xxx/aaa	bbb1|aaa1
@@ -48,9 +52,11 @@ printf 'ccc0\n' >aaa
 printf 'ccc1\n' >xxx/aaa
 printf 'ccc2\n' >yyy/aaa
 git add aaa xxx/aaa yyy/aaa
+stash_sha="$(git rev-parse stash)"
 cd xxx
 assert_exit_code 0 git istash "$APPLY_OPERATION" --continue
 cd -
+assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
 assert_files_HT '
  M aaa		ccc0	bbb0
  M xxx/aaa	ccc1	bbb1

@@ -11,7 +11,9 @@ SWITCH_HEAD_TYPE
 __test_section__ "$CAP_CREATE_OPERATION stash"
 printf 'bbb\n' >aaa
 git add aaa
-new_stash_sha_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" -kSmabc)"
+assert_exit_code 0 git istash "$CREATE_OPERATION" -kSmabc
+assert_outputs__create__success
+new_stash_sha_CO="$stdout"
 assert_files_HTCO '
 A  aaa		bbb
 !! ignored0	ignored0

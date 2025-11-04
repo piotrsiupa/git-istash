@@ -30,6 +30,7 @@ else
 	#shellcheck disable=SC2086
 	assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS -m 'whatever' $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
 fi
+assert_outputs__create__unmatching_pathspec 'bbb'
 assert_files_HT '
 ?? aaa		xxx
 ?? ccc		xxx

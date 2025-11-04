@@ -23,6 +23,7 @@ printf 'wdf1a\n' >wdf1
 __test_section__ "Abort $APPLY_OPERATION stash (without changes)"
 correct_head_sha="$(get_head_sha_HT)"
 assert_exit_code 1 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
+assert_outputs__apply__no_operation_in_progress "istash $APPLY_OPERATION"
 assert_files_HT '
 AM wdf0		wdf0b	wdf0a
 ?? wdf1		wdf1a
@@ -43,6 +44,7 @@ printf 'ccc\n' >aaa
 git add aaa
 printf 'ddd\n' >aaa
 assert_exit_code 1 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
+assert_outputs__apply__no_operation_in_progress "istash $APPLY_OPERATION"
 assert_files_HT '
 AM aaa		ddd	ccc
 AM wdf0		wdf0b	wdf0a

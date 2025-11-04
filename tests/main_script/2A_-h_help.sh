@@ -8,6 +8,7 @@ PARAMETRIZE_SUBCOMMAND
 __test_section__ "Show short help for subcommand \"$SUBCOMMAND\""
 #shellcheck disable=SC2086
 assert_exit_code 0 git istash $SUBCOMMAND -h
+assert_outputs__main_script__help
 mentions_of_this_subcommand="$(printf '%s\n' "$stdout" | grep -Fc "git istash $SUBCOMMAND")"
 mentions_of_any_subcommand="$(printf '%s\n' "$stdout" | grep -Ec 'git istash \w+' || true)"
 test "$mentions_of_this_subcommand" -ge 1 ||

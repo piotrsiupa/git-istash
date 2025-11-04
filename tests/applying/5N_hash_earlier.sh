@@ -27,6 +27,7 @@ correct_head_sha="$(get_head_sha_HT)"
 if IS_APPLY
 then
 	assert_exit_code 0 git istash apply "$earlier_stash_sha"
+	assert_outputs__apply__success "$APPLY_OPERATION" 0 "$earlier_stash_sha"
 	assert_files_HT '
 	?? aaa		aaa
 	!! ignored0	ignored0
@@ -34,6 +35,7 @@ then
 	'
 else
 	assert_exit_code 1 git istash pop "$earlier_stash_sha"
+	assert_outputs__apply__non_stash_on_pop
 	assert_files_HT '
 	!! ignored0	ignored0
 	!! ignored1	ignored1

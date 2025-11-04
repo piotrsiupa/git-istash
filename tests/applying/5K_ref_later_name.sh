@@ -25,7 +25,9 @@ __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 if IS_APPLY
 then
+	stash_sha="$(git rev-parse 'later')"
 	assert_exit_code 0 git istash apply 'later'
+	assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
 	assert_files_HT '
 	?? bbb		bbb
 	!! ignored0	ignored0
@@ -33,6 +35,7 @@ then
 	'
 else
 	assert_exit_code 1 git istash pop 'later'
+	assert_outputs__apply__non_stash_on_pop
 	assert_files_HT '
 	!! ignored0	ignored0
 	!! ignored1	ignored1
