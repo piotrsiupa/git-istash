@@ -16,6 +16,7 @@ SWITCH_HEAD_TYPE
 __test_section__ "Continue stash (without changes)"
 correct_head_sha="$(get_head_sha_HT)"
 assert_exit_code 1 git istash "$CONTINUE_FLAG"
+assert_outputs__main_script__no_operation_in_progress
 assert_files_HT '
 !! ignored0	ignored0
 !! ignored1	ignored1
@@ -34,6 +35,7 @@ printf 'ccc\n' >aaa
 git add aaa
 printf 'ddd\n' >aaa
 assert_exit_code 1 git istash "$CONTINUE_FLAG"
+assert_outputs__main_script__no_operation_in_progress
 assert_files_HT '
 AM aaa		ddd	ccc
 !! ignored0	ignored0

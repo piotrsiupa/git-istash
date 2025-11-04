@@ -42,6 +42,7 @@ printf 'zzz\n' >bbb2
 printf 'zzz\n' >ccc4
 #shellcheck disable=SC2086
 assert_exit_code 1 git istash $UNTRACKED_FLAGS $ALL_FLAGS 'aaa0' $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS 'bbb?' -m 'new stash' $EOI '*5' './?dd*'
+assert_outputs__main_script__missing_arg_separator 'aaa0'
 assert_files_HT '
 M  aaa0		yyy
  M aaa1		yyy	xxx

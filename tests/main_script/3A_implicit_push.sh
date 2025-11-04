@@ -12,6 +12,7 @@ printf 'bbb\n' >aaa
 printf 'ddd\n' >ddd
 #shellcheck disable=SC2086
 assert_exit_code 0 git istash
+assert_outputs__create__success
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_HT '
