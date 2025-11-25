@@ -9,6 +9,8 @@ print_help() {
 	printf '\n'
 	printf 'Options:\n'
 	printf '    -h, --help\t\t- Print this help message end exit.\n'
+	printf '    -a, --altered\t- Run only the tests changed since the last commit.\n\t\t\t  (Only changes in individual test files count, not in\n\t\t\t  the common test utilities that affect every test.)\n\t\t\t  (See also "--since".)\n'
+	printf '    -A, --since=X\t- Selects the commit used as reference by "--altered".\n\t\t\t  Empty string means INDEX. (It implies "--altered".)\n'
 	printf '    -c, --color=when\t- Set color mode (always / never / auto).\n'
 	printf '    -C, --check\t\t- Only check if all tests pass. (Equivalent to "-sSQ".)\n'
 	printf '    -d, --debug\t\t- Print outputs of all commands in run in the tests.\n'
@@ -114,7 +116,14 @@ create_test_dir() { # test_name [parameters_string]
 }
 
 find_tests() { # pattern
-	./list.sh \
+	{
+		if [ "$only_altered" = n ]
+		then
+			./list.sh
+		else
+			./list.sh --since="$altered_reference"
+		fi
+	} \
 	| sed -E 's/\.sh$//' \
 	| grep -E "$1" \
 	| while read -r test_name
@@ -777,10 +786,12 @@ print_summary() {
 	printf '\n'
 }
 
-getopt_short_options='c:Cdfhj:l:m:pRqQrsSvV'
-getopt_long_options='color:,check,debug,failed,file-name,help,jobs:,limit:,meticulousness:,print-paths,relative-paths,progress,no-progress,quiet,quieter,raw,raw-name,skip-at-fail,skip-at-error,skip-on-fail,skip-on-error,stop-at-fail,stop-at-error,stop-on-fail,stop-on-error,verbose,version,skip-version'
+getopt_short_options='aA:c:Cdfhj:l:m:pRqQrsSvV'
+getopt_long_options='altered,since:,color:,check,debug,failed,file-name,help,jobs:,limit:,meticulousness:,print-paths,relative-paths,progress,no-progress,quiet,quieter,raw,raw-name,skip-at-fail,skip-at-error,skip-on-fail,skip-on-error,stop-at-fail,stop-at-error,stop-on-fail,stop-on-error,verbose,version,skip-version'
 getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
+only_altered=n
+altered_reference=HEAD
 only_failed=n
 debug_mode=n
 quiet_level=0
@@ -800,6 +811,14 @@ skip_version=n
 while true
 do
 	case "$1" in
+	-a|--altered)
+		only_altered=y
+		;;
+	-A|--since)
+		shift
+		altered_reference="$1"
+		only_altered=y
+		;;
 	-c|--color)
 		shift
 		if printf '%s' "$1" | grep -ixqE 'auto|default'
