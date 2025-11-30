@@ -35,11 +35,16 @@ print_help() {
 	printf 'You can specify one or more filters in the command call. '
 	printf 'The filters are ERE\nregexps that match test names that should be run. '
 	printf '(A test name is the name of\nthe inluding the sub-directory but without the file extension.) '
-	printf 'A test will be\nrun if it matches any of the filters. '
-	printf 'If there are no filters, all tests are\nrun. '
-	printf 'This can be used to either list individual tests or choose some categories.\n'
+	printf 'A test will be\nrun if it matches any of the filters.\n'
+	printf 'Filters starting with "-" are negative filters that are applied after the normal\nones. '
+	printf '(To have a normal filter starting with "-", prefix it with "\\".) '
+	printf 'A test\nwill be skipped if it matches any negative filter.\n'
+	printf 'If there are no filters at all, all tests are taken. '
+	printf 'If there are only negative\nfilters, only tests that don'\''t match them are taken.\n'
+	printf 'If a filter doesn'\''t match anything, it will be ignored.\n'
+	printf '(This can be used to either list individual tests or to choose some categories.)\n'
 	printf '(See "README.md" in the test directory for more information about test names.)\n'
-	printf 'Paths to specific test files are also accepted.\n'
+	printf 'Paths to specific test files are also accepted; they will be converted into\ncorrect filters.\n'
 	printf '\n'
 	printf 'Meticulousness:\n'
 	printf 'This controls the balance between the speed and how detailed the tests are.\n'
@@ -115,20 +120,19 @@ create_test_dir() { # test_name [parameters_string]
 	mkdir "$test_dir"
 }
 
-find_tests() { # pattern
+find_tests() { # [filters...]
 	{
 		if [ "$only_altered" = n ]
 		then
-			./list.sh
+			"$(dirname "$0")/list.sh" -- "$@"
 		else
-			./list.sh --since="$altered_reference"
+			"$(dirname "$0")/list.sh" --since="$altered_reference" -- "$@"
 		fi
 	} \
 	| sed -E 's/\.sh$//' \
-	| grep -E "$1" \
 	| while read -r test_name
 	do
-		if [ "$only_failed" = n ] || [ -d "$(get_test_dir "$test_name")" ]
+		if [ "$only_failed" = n ] || [ -d "$(dirname "$0")/$(get_test_dir "$test_name")" ]
 		then
 			printf '%s\n' "$test_name"
 		fi
@@ -967,39 +971,13 @@ then
 fi
 export meticulousness
 
-normalize_filter_entry() { # filter_entry
-	if [ -f "$1" ]
-	then
-		printf '%s' "$1" \
-		| sed -E -e 's;^.*/([^/]+/[^/]+)$;\1;' \
-			-e 's;^[^/]+$;./&;' \
-			-e "s;^\\./;$(basename "$(pwd)")/;" \
-			-e 's/\.sh$//' \
-			-e 's/^/^/' -e 's/$/$/'
-	else
-		printf '%s' "$1"
-	fi
-}
-if [ $# -eq 0 ]
-then
-	filter=''
-else
-	filter="($(normalize_filter_entry "$1"))"
-	shift
-	while [ $# -ne 0 ]
-	do
-		filter="$filter|($(normalize_filter_entry "$1"))"
-		shift
-	done
-fi
-
 trap 'trap - INT ; kill -s KILL -- -$$' INT
 
+tests="$(find_tests "$@")"
 cd "$(dirname "$0")"
-tests="$(find_tests "$filter")"
 if [ "$print_paths" = y ]
 then
-	printf '%s' "$tests" | xargs -n1 -- printf '%s%s.sh\n' "$print_paths_prefix"
+	printf '%s' "$tests" | xargs -rn1 -- printf '%s%s.sh\n' "$print_paths_prefix"
 	exit 0
 fi
 
