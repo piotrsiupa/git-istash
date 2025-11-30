@@ -999,7 +999,7 @@ cd "$(dirname "$0")"
 tests="$(find_tests "$filter")"
 if [ "$print_paths" = y ]
 then
-	printf '%s' "$tests" | xargs -n1 -- printf '%s%s.sh\n' "$print_paths_prefix"
+	printf '%s' "$tests" | xargs -rn1 -- printf '%s%s.sh\n' "$print_paths_prefix"
 	exit 0
 fi
 
