@@ -156,7 +156,6 @@ do_continue() { # args...
 do_abort() { # args...
 	check_args_for_pop 0 "$@"
 	check_data_files y
-	load_data
 	run_apply --abort
 	delete_data
 }
