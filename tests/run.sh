@@ -115,17 +115,16 @@ create_test_dir() { # test_name [parameters_string]
 	mkdir "$test_dir"
 }
 
-find_tests() { # pattern
+find_tests() { # [filters...]
 	{
 		if [ "$only_altered" = n ]
 		then
-			./list.sh
+			./list.sh -- "$@"
 		else
-			./list.sh --since="$altered_reference"
+			./list.sh --since="$altered_reference" -- "$@"
 		fi
 	} \
 	| sed -E 's/\.sh$//' \
-	| grep -E "$1" \
 	| while read -r test_name
 	do
 		if [ "$only_failed" = n ] || [ -d "$(get_test_dir "$test_name")" ]
@@ -967,36 +966,10 @@ then
 fi
 export meticulousness
 
-normalize_filter_entry() { # filter_entry
-	if [ -f "$1" ]
-	then
-		printf '%s' "$1" \
-		| sed -E -e 's;^.*/([^/]+/[^/]+)$;\1;' \
-			-e 's;^[^/]+$;./&;' \
-			-e "s;^\\./;$(basename "$(pwd)")/;" \
-			-e 's/\.sh$//' \
-			-e 's/^/^/' -e 's/$/$/'
-	else
-		printf '%s' "$1"
-	fi
-}
-if [ $# -eq 0 ]
-then
-	filter=''
-else
-	filter="($(normalize_filter_entry "$1"))"
-	shift
-	while [ $# -ne 0 ]
-	do
-		filter="$filter|($(normalize_filter_entry "$1"))"
-		shift
-	done
-fi
-
 trap 'trap - INT ; kill -s KILL -- -$$' INT
 
 cd "$(dirname "$0")"
-tests="$(find_tests "$filter")"
+tests="$(find_tests "$@")"
 if [ "$print_paths" = y ]
 then
 	printf '%s' "$tests" | xargs -rn1 -- printf '%s%s.sh\n' "$print_paths_prefix"

@@ -5,7 +5,7 @@ set -eu
 print_help() {
 	printf 'This is a simple script that just prints the list of all tests.\n'
 	printf '\n'
-	printf 'Usage: %s [-h | --help | -e | --essential | -E | --non_essential]\n\t[ -R | --relative] [-c | --changed] [-C X | --changed-since=X]\n' "$(basename "$0")"
+	printf 'Usage: %s [-h | --help | -e | --essential | -E | --non_essential]\n\t[ -R | --relative] [-c | --changed] [-C X | --changed-since=X]\n\t[--] [<filter>...]\n' "$(basename "$0")"
 	printf 'Options:\n'
 	printf '    -a, --altered\t- Print only the tests changed since the last commit.\n\t\t\t  (Only changes in individual test files count, not in\n\t\t\t  the common test utilities that affect every test.)\n\t\t\t  (See also "--since".)\n'
 	printf '    -A, --since=X\t- Selects the commit used as reference by "--altered".\n\t\t\t  Empty string means INDEX. (It implies "--altered".)\n'
@@ -14,6 +14,10 @@ print_help() {
 	printf '    -h, --help\t\t- Print this help text.\n'
 	printf '    -R, --relative\t- Print paths relative to the current directory.\n'
 	printf '    -v, --version\t- Print version information and exit.\n'
+	printf '\n'
+	printf 'Filters:\n'
+	printf 'Filters can be used to print only some of the tests.\n'
+	printf 'See "%s/run.sh --help" for more information.\n' "$(dirname "$0")"
 }
 
 print_version() {
@@ -69,11 +73,31 @@ then
 	printf 'Options "--essential" and "--non-essential" are incompatible!\n' 1>&2
 	exit 1
 fi
-if [ $# -ne 0 ]
-then
-	printf 'Non-option arguments are not allowed!\n' 1>&2
-	exit 1
-fi
+
+normalize_filter_entry() { # filter_entry
+	if [ -f "$1" ]
+	then
+		printf '%s' "$1" \
+		| sed -E -e 's;^.*/([^/]+/[^/]+)$;\1;' \
+			-e 's;^[^/]+$;./&;' \
+			-e "s;^\\./;$(basename "$(pwd)")/;" \
+			-e 's/\.sh$//' \
+			-e 's/^/^/' -e 's/$/$/'
+	else
+		printf '%s' "$1"
+	fi
+}
+filter=''
+while [ $# -ne 0 ]
+do
+	if [ -z "$filter" ]
+	then
+		filter="($(normalize_filter_entry "$1"))"
+	else
+		filter="$filter|($(normalize_filter_entry "$1"))"
+	fi
+	shift
+done
 
 cd "$(dirname "$0")"
 
@@ -88,6 +112,15 @@ find . -mindepth 2 -maxdepth 2 -type f -name '*.sh' ! -path './remote-for-tests/
 		xargs -- git --literal-pathspecs diff --no-renames --name-only --
 	else
 		xargs -- git --literal-pathspecs diff --no-renames --name-only "$changed_reference" --
+	fi
+} | {
+	if [ -n "$filter" ]
+	then
+		sed -E 's/\.sh$//' \
+		| grep -E "$filter" \
+		| sed -E 's/$/.sh/'
+	else
+		cat
 	fi
 } | {
 	non_essential_regex='(^|;)\s*non_essential_test\s*(;|$|#)'
