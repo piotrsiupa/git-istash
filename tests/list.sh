@@ -88,13 +88,22 @@ normalize_filter_entry() { # filter_entry
 	fi
 }
 filter=''
+negative_filter=''
 while [ $# -ne 0 ]
 do
-	if [ -z "$filter" ]
+	if printf '%s' "$1" | grep -E -v -q '^-'
 	then
-		filter="($(normalize_filter_entry "$1"))"
+		if [ -n "$filter" ]
+		then
+			filter="$filter|"
+		fi
+		filter="$filter($(normalize_filter_entry "$(printf '%s' "$1" | sed 's/^\\-/-/')"))"
 	else
-		filter="$filter|($(normalize_filter_entry "$1"))"
+		if [ -n "$negative_filter" ]
+		then
+			negative_filter="$negative_filter|"
+		fi
+		negative_filter="$negative_filter($(normalize_filter_entry "$(printf '%s' "$1" | cut -c2-)"))"
 	fi
 	shift
 done
@@ -114,10 +123,15 @@ find . -mindepth 2 -maxdepth 2 -type f -name '*.sh' ! -path './remote-for-tests/
 		xargs -- git --literal-pathspecs diff --no-renames --name-only "$changed_reference" --
 	fi
 } | {
-	if [ -n "$filter" ]
+	if [ -n "$filter" ] || [ -n "$negative_filter" ]
 	then
+		if [ -z "$negative_filter" ]
+		then
+			negative_filter='^$'
+		fi
 		sed -E 's/\.sh$//' \
-		| grep -E "$filter" \
+		| grep -E -- "$filter" \
+		| grep -E -v -- "$negative_filter" \
 		| sed -E 's/$/.sh/'
 	else
 		cat
