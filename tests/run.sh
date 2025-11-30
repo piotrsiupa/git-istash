@@ -124,15 +124,15 @@ find_tests() { # [filters...]
 	{
 		if [ "$only_altered" = n ]
 		then
-			./list.sh -- "$@"
+			"$(dirname "$0")/list.sh" -- "$@"
 		else
-			./list.sh --since="$altered_reference" -- "$@"
+			"$(dirname "$0")/list.sh" --since="$altered_reference" -- "$@"
 		fi
 	} \
 	| sed -E 's/\.sh$//' \
 	| while read -r test_name
 	do
-		if [ "$only_failed" = n ] || [ -d "$(get_test_dir "$test_name")" ]
+		if [ "$only_failed" = n ] || [ -d "$(dirname "$0")/$(get_test_dir "$test_name")" ]
 		then
 			printf '%s\n' "$test_name"
 		fi
@@ -973,8 +973,8 @@ export meticulousness
 
 trap 'trap - INT ; kill -s KILL -- -$$' INT
 
-cd "$(dirname "$0")"
 tests="$(find_tests "$@")"
+cd "$(dirname "$0")"
 if [ "$print_paths" = y ]
 then
 	printf '%s' "$tests" | xargs -rn1 -- printf '%s%s.sh\n' "$print_paths_prefix"
