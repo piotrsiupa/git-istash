@@ -39,6 +39,7 @@ assert_data_files 'pop'
 assert_rebase y
 assert_dotgit_contents_for 'pop'
 
+__test_section__ 'Abort popping stash'
 mv .git/ISTASH_TARGET .git/ISTASH_TARGET~
 correct_head_sha2="$(get_head_sha_HT)"
 printf 'ddd\n' >aaa

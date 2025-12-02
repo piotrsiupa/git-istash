@@ -47,7 +47,7 @@ assert_data_files "$APPLY_OPERATION"
 assert_rebase y
 assert_dotgit_contents_for "$APPLY_OPERATION"
 
-__test_section__ "Continue $APPLY_OPERATION stash"
+__test_section__ "Abort $APPLY_OPERATION stash"
 rm -rf '.git/rebase-apply' '.git/rebase-merge'
 assert_exit_code 0 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
 assert_files_HT '
