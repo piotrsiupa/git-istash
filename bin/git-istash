@@ -15,14 +15,15 @@ print_help() {
 	printf 'Usage: git istash <sub-command> [<argument>...]\n'
 	printf '   or: git istash (-h | --help | --man)\n'
 	printf '   or: git istash --version\n'
-	printf '   or: git istash (--continue | --abort)\n'
+	printf '   or: git istash (-c | --continue | --abort | --quit)\n'
 	printf '\n'
 	printf 'Options:\n'
-	printf '    -a, --abort\t\t- Abort "apply" or "pop" when one is in progress.\n'
+	printf '\t--abort\t\t- Abort "apply" or "pop" when one is in progress.\n'
 	printf '    -c, --continue\t- Continue "apply" or "pop" when one is in progress.\n'
 	printf '    -h\t\t\t- Show this help text and exit.\n'
 	printf '\t--help\t\t- Show manual page if possible.\n\t\t\t  (If you run it through "git", it will handle this in\n\t\t\t  its own way, which fails on Windows. See "--man".)\n'
 	printf '\t--man\t\t- Alias for "--help" that is not intercepted by "git".\n\t\t\t  (Which makes it work on Windows.)\n'
+	printf '\t--quit\t\t- Like "abort" but don'\''t restore the repository state\n\t\t\t  nor move the HEAD.\n'
 	printf '\t--version\t- Show version information and exit.\n'
 	printf '\n'
 	printf 'Sub-commands:\n'
@@ -104,7 +105,7 @@ elif [ "$1" = '--version' ] || [ "$2" = '--version' ]
 then
 	print_version
 	exit 0
-elif printf '%s\n' "$1" | grep -Eqx -- '-c|--c(o(n(t(i(n(u(e)?)?)?)?)?)?)?|--ab(o(r(t)?)?)?'  # Not a pretty solution but one that doesn't require knowing all options of every subcommand. (Although, it needs manual updating when something changes.)
+elif printf '%s\n' "$1" | grep -Eqx -- '-c|--c(o(n(t(i(n(u(e)?)?)?)?)?)?)?|--ab(o(r(t)?)?)?|--q(u(i(t)?)?)?'  # Not a pretty solution but one that doesn't require knowing all options of every subcommand. (Although, it needs manual updating when something changes.)
 then
 	set -u
 	. "$(dirname "$0")/../lib/git-istash/git-istash-commons"

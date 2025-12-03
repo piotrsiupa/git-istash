@@ -11,13 +11,14 @@ print_help() {
 	printf 'This is only a rudimentary help text. Prefer "git help istash" if available.\n'
 	printf '\n'
 	printf 'Usage: git istash apply [<option>...] [<stash>]\n'
-	printf '   or: git istash apply (-c | --continue | --abort)\n'
+	printf '   or: git istash apply (-c | --continue | --abort | --quit)\n'
 	printf '   or: git istash apply -h\n'
 	printf '\n'
 	printf 'Options:\n'
 	printf '\t--abort\t\t- Abort the previous operation and return the repository\n\t\t\t  to the state before it started.\n'
 	printf '    -c, --continue\t- Resume the previous operation.\n\t\t\t  (Conflicts need to be resolved before that.)\n'
 	printf '    -h\t\t\t- Show this help text and exit.\n'
+	printf '\t--quit\t\t- Abort the operation but don'\''t restore the repository\n\t\t\t  state nor move the HEAD.\n'
 }
 
 get_sub_command_name() {
@@ -343,6 +344,14 @@ do_abort() { # args...
 	fi
 }
 
+do_quit() { # args...
+	check_args_for_apply 0 "$@"
+	check_data_files y
+	
+	git rebase --quit || true  # Errors are ignored because if rebase is not in progress or broken, we still want to remove the data files.
+	delete_data
+}
+
 do_apply() { # args...
 	if [ "$continue_set" = y ]
 	then
@@ -350,18 +359,22 @@ do_apply() { # args...
 	elif [ "$abort_set" = y ]
 	then
 		do_abort "$@"
+	elif [ "$quit_set" = y ]
+	then
+		do_quit "$@"
 	else
 		do_start "$@"
 	fi
 }
 
-getopt_short_options='ch'
-getopt_long_options='abort,_called-from-pop,_called-from-pop_,continue'
+getopt_short_options='chq'
+getopt_long_options='abort,_called-from-pop,_called-from-pop_,continue,quit'
 getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 abort_set=n
 is_pop=n
 continue_set=n
+quit_set=n
 while true
 do
 	case "$1" in
@@ -378,6 +391,9 @@ do
 		print_help
 		exit 0
 		;;
+	-q|--quit)
+		quit_set=y
+		;;
 	--)
 		shift
 		break
@@ -385,9 +401,19 @@ do
 	esac
 	shift
 done
+if [ $abort_set = y ] && [ $quit_set = y ]
+then
+	printf 'error: Either abort or quit; there is no middle road.\n' 1>&2
+	exit 1
+fi
 if [ $continue_set = y ] && [ $abort_set = y ]
 then
 	printf 'error: Unclear whether to continue aborting or to abort continuing.\n' 1>&2
+	exit 1
+fi
+if [ $continue_set = y ] && [ $quit_set = y ]
+then
+	printf 'error: Unclear whether to continue quitting or to quit continuing.\n' 1>&2
 	exit 1
 fi
 
