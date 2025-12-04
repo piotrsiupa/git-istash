@@ -118,9 +118,9 @@ find . -mindepth 2 -maxdepth 2 -type f -name '*.sh' ! -path './remote-for-tests/
 		cat
 	elif printf '%s ' "$changed_reference" | grep -q '^\s*$'
 	then
-		xargs -- git --literal-pathspecs diff --no-renames --name-only --
+		xargs -- git --literal-pathspecs diff --no-renames --name-only --relative --
 	else
-		xargs -- git --literal-pathspecs diff --no-renames --name-only "$changed_reference" --
+		xargs -- git --literal-pathspecs diff --no-renames --name-only --relative "$changed_reference" --
 	fi
 } | {
 	if [ -n "$filter" ] || [ -n "$negative_filter" ]
