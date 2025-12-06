@@ -36,7 +36,7 @@ save_data() {
 	
 	printf '%s\n' "$working_dir_changes_sha" >"$working_dir_sha_file"
 }
-load_data() {
+load_target_data() {
 	if [ "$(wc -l <"$target_data_file")" -ne 1 ]
 	then
 		printf 'fatal: "%s" is should contain exactly 1 line.\n' "$target_data_file" 1>&2
@@ -59,7 +59,8 @@ load_data() {
 	then
 		curr_branch_type='detached'
 	fi
-	
+}
+load_working_dir_data() {
 	if [ "$(wc -l <"$working_dir_sha_file")" -ne 1 ]
 	then
 		printf 'fatal: "%s" is should contain exactly 1 line.\n' "$working_dir_sha_file" 1>&2
@@ -71,6 +72,10 @@ load_data() {
 		printf 'fatal: "%s" says "%s" but there is no such commit.\n' "$working_dir_sha_file" "$working_dir_changes_sha" 1>&2
 		return 1
 	fi
+}
+load_data() {
+	load_target_data
+	load_working_dir_data
 }
 delete_data() {
 	rm -f "$target_data_file" "$working_dir_sha_file"

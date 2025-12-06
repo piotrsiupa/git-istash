@@ -23,7 +23,7 @@ print_help() {
 save_data() {
 	printf '%s\n' "$stash" >"$stash_data_file"
 }
-load_data() {
+load_stash_data() {
 	if [ "$(wc -l <"$stash_data_file")" -ne 1 ]
 	then
 		printf 'fatal: "%s" is should contain exactly 1 line.\n' "$stash_data_file" 1>&2
@@ -40,6 +40,9 @@ load_data() {
 		printf 'fatal: "%s" says "%i" but there is no such stash.\n' "$stash_data_file" "$stash" 1>&2
 		return 1
 	fi
+}
+load_data() {
+	load_stash_data
 }
 delete_data() {
 	rm -f "$stash_data_file"
@@ -65,10 +68,10 @@ check_stash_for_pop() {
 	fi
 }
 
-check_data_files() { # resume
+check_data_files() { # resume abort
 	case "$(find_data_files)" in
 		pop)
-			if [ "$1" = y ] ; then return 0 ; fi
+			if [ "$1" = y ] || [ "$2" = y ] ; then return 0 ; fi
 			printf '\n' 1>&2
 			if is_color_allowed 2
 			then
@@ -83,6 +86,7 @@ check_data_files() { # resume
 			return 1
 			;;
 		apply)
+			if [ "$2" = y ] ; then return 0 ; fi
 			printf '\n' 1>&2
 			if is_color_allowed 2
 			then
@@ -116,7 +120,7 @@ check_data_files() { # resume
 			return 1
 			;;
 		nothing)
-			if [ "$1" = n ] ; then return 0 ; fi
+			if [ "$1" = n ] && [ "$2" = n ] ; then return 0 ; fi
 			printf 'fatal: No istash pop in progress?\n' 1>&2
 			return 1
 			;;
@@ -129,7 +133,7 @@ run_apply() { # args...
 
 do_start() { # args...
 	check_args_for_pop 1 "$@"
-	check_data_files n
+	check_data_files n n
 	check_other_git_commands_state
 	find_stash "$@"
 	check_stash_for_pop
@@ -148,7 +152,7 @@ do_start() { # args...
 
 do_continue() { # args...
 	check_args_for_pop 0 "$@"
-	check_data_files y
+	check_data_files y n
 	load_data
 	run_apply --continue
 	end_with_success
@@ -156,14 +160,14 @@ do_continue() { # args...
 
 do_abort() { # args...
 	check_args_for_pop 0 "$@"
-	check_data_files y
+	check_data_files n y
 	run_apply --abort
 	delete_data
 }
 
 do_quit() { # args...
 	check_args_for_pop 0 "$@"
-	check_data_files y
+	check_data_files n y
 	run_apply --quit
 	delete_data
 }
