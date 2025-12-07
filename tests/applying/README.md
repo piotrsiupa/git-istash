@@ -15,5 +15,5 @@ The first character of the prefix (sub-category) can be:
 - `06` - Different ways of specifying which stash to use.
 - `07` - Specifying a stash that doesn't exist.
 - `08` - Trying to istash when the repository is not in a state that allows that (e.g. an istash is already in progress).
-- `09` - Handling various errors.
+- `09` - Handling various errors and corner cases.
 - `10` - Popping/Applying with sub-directories in the repository and when the working directory is not the repository's root.

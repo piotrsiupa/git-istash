@@ -142,10 +142,11 @@ end_with_success() {
 	printf 'Stash of the old working dir: %s\n' "$(prepare_stash_of_working_dir)"
 }
 
-check_data_files() { # resume
+check_data_files() { # resume quit
 	if [ "$is_pop" = y ] ; then return 0 ; fi
 	case "$(find_data_files)" in
 		pop)
+			if [ "$2" = y ] ; then return 0 ; fi
 			printf '\n' 1>&2
 			if is_color_allowed 2
 			then
@@ -160,7 +161,7 @@ check_data_files() { # resume
 			return 1
 			;;
 		apply)
-			if [ "$1" = y ] ; then return 0 ; fi
+			if [ "$1" = y ] || [ "$2" = y ] ; then return 0 ; fi
 			if is_color_allowed 2
 			then
 				printf '\033[33m'
@@ -174,6 +175,7 @@ check_data_files() { # resume
 			return 1
 			;;
 		error)
+			if [ "$2" = y ] ; then return 0 ; fi
 			printf '\n' 1>&2
 			if is_color_allowed 2
 			then
@@ -193,7 +195,7 @@ check_data_files() { # resume
 			return 1
 			;;
 		nothing)
-			if [ "$1" = n ] ; then return 0 ; fi
+			if [ "$1" = n ] && [ "$2" = n ] ; then return 0 ; fi
 			printf 'fatal: No istash apply in progress?\n' 1>&2
 			return 1
 			;;
@@ -263,7 +265,7 @@ start_rebase() { # untangled_stash_sha
 
 do_start() { # args...
 	check_args_for_apply 1 "$@"
-	check_data_files n
+	check_data_files n n
 	check_other_git_commands_state
 	find_stash "$@"
 	find_current_branch
@@ -277,7 +279,7 @@ do_start() { # args...
 
 do_continue() { # args...
 	check_args_for_apply 0 "$@"
-	check_data_files y
+	check_data_files y n
 	load_data
 	
 	git commit --allow-empty --no-edit 2>/dev/null || true
@@ -295,7 +297,7 @@ do_continue() { # args...
 
 do_abort() { # args...
 	check_args_for_apply 0 "$@"
-	check_data_files y
+	check_data_files y n
 	load_data
 	
 	git rebase --abort || true  # Errors are ignored because if rebase is not in progress, we still want to try to restore HEAD.
@@ -350,8 +352,13 @@ do_abort() { # args...
 }
 
 do_quit() { # args...
+	if [ "$is_pop" = n ]
+	then
+		exec sh "$lib_dir/git-istash-pop" --quit "$@"
+	fi
+	
 	check_args_for_apply 0 "$@"
-	check_data_files y
+	check_data_files n y
 	
 	git rebase --quit || true  # Errors are ignored because if rebase is not in progress or broken, we still want to remove the data files.
 	delete_data
@@ -422,6 +429,7 @@ then
 	exit 1
 fi
 
+lib_dir="$(cd "$(dirname "$0")" ; pwd)"
 cd "$(git rev-parse --show-toplevel)"
 target_data_file="$(make_target_data_file_path)"
 working_dir_sha_file="$(make_working_dir_sha_file_path)"

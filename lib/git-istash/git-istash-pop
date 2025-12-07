@@ -68,10 +68,10 @@ check_stash_for_pop() {
 	fi
 }
 
-check_data_files() { # resume abort
+check_data_files() { # resume abort quit
 	case "$(find_data_files)" in
 		pop)
-			if [ "$1" = y ] || [ "$2" = y ] ; then return 0 ; fi
+			if [ "$1" = y ] || [ "$2" = y ] || [ "$3" = y ] ; then return 0 ; fi
 			printf '\n' 1>&2
 			if is_color_allowed 2
 			then
@@ -86,7 +86,7 @@ check_data_files() { # resume abort
 			return 1
 			;;
 		apply)
-			if [ "$2" = y ] ; then return 0 ; fi
+			if [ "$2" = y ] || [ "$3" = y ] ; then return 0 ; fi
 			printf '\n' 1>&2
 			if is_color_allowed 2
 			then
@@ -101,6 +101,7 @@ check_data_files() { # resume abort
 			return 1
 			;;
 		error)
+			if [ "$3" = y ] ; then return 0 ; fi
 			printf '\n' 1>&2
 			if is_color_allowed 2
 			then
@@ -120,7 +121,7 @@ check_data_files() { # resume abort
 			return 1
 			;;
 		nothing)
-			if [ "$1" = n ] && [ "$2" = n ] ; then return 0 ; fi
+			if [ "$1" = n ] && [ "$2" = n ] && [ "$3" = n ] ; then return 0 ; fi
 			printf 'fatal: No istash pop in progress?\n' 1>&2
 			return 1
 			;;
@@ -133,7 +134,7 @@ run_apply() { # args...
 
 do_start() { # args...
 	check_args_for_pop 1 "$@"
-	check_data_files n n
+	check_data_files n n n
 	check_other_git_commands_state
 	find_stash "$@"
 	check_stash_for_pop
@@ -152,7 +153,7 @@ do_start() { # args...
 
 do_continue() { # args...
 	check_args_for_pop 0 "$@"
-	check_data_files y n
+	check_data_files y n n
 	load_data
 	run_apply --continue
 	end_with_success
@@ -160,14 +161,14 @@ do_continue() { # args...
 
 do_abort() { # args...
 	check_args_for_pop 0 "$@"
-	check_data_files n y
+	check_data_files n y n
 	run_apply --abort
 	delete_data
 }
 
 do_quit() { # args...
 	check_args_for_pop 0 "$@"
-	check_data_files n y
+	check_data_files n n y
 	run_apply --quit
 	delete_data
 }
