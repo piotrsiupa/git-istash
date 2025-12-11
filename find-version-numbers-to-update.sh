@@ -17,10 +17,10 @@ print_version() {
 }
 
 find_scripts_to_update_versions() {
-	regex='\<print_version\>'
+	regex='\<print_version\>\s*\(\)'
 	changed_files="$(git status --porcelain --no-renames | grep -vE 'D  ' | cut -c4- | grep -vE '^tests/.*/')"
 	{
-		printf '%s\n' "$changed_files" | xargs -- grep -El "$regex" -- | grep -vFx 'releasing-new-version.md'
+		printf '%s\n' "$changed_files" | xargs -- grep -El "$regex" -- || true
 		if printf '%s\n' "$changed_files" | xargs -- grep -EL "$regex" -- | grep -qE '^lib/'
 		then
 			printf 'bin/git-istash\n'
