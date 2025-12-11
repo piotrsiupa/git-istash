@@ -21,15 +21,16 @@ _convert_zero_separated_path_list() {
 	if command -v od 1>/dev/null 2>&1
 	then
 		#shellcheck disable=SC1003
-		od -bvAn | tr ' ' '\\' | tr -d '\n'
+		od -bvAn | tr ' ' '\\'
 	else
-		hexdump -ve'"\\" /1 "%03o"'
+		hexdump -ve'"\\" /1 "%03o\n"'
 	fi \
 	| sed -E -e 's/\\015/\\\\r/g' -e 's/\\012/\\\\n/g' -e 's/\\011/\\\\t/g' -e 's/\\134/\\\\\\\\/g' \
 		-e 's/\\(00[1-7]|0[1-3][0-7]|040|177|[2-3][0-7]{2})/\\\\\1/g' \
 		-e 's/\\045/\\045\\045/g' \
-	| xargs -r0 -- printf -- \
-	| tr -d '\n' | tr '\0' '\n'
+	| tr '\n' '\0' \
+	| xargs -r0 -n1 -- printf -- \
+	| tr '\0' '\n'
 }
 
 _prepare_path_list_for_assertion() { # [has_prefix]

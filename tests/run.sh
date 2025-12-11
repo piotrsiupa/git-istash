@@ -52,7 +52,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'test script version 2.4.1\n'
+	printf 'test script version 2.4.2\n'
 }
 
 printf_color_code() { # code_for_printf...
