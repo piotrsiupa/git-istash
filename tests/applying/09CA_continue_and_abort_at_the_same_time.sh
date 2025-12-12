@@ -4,8 +4,8 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
-PARAMETRIZE_ABORT
 PARAMETRIZE_CONTINUE
+PARAMETRIZE_ABORT
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
