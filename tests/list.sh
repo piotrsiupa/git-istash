@@ -8,7 +8,7 @@ print_help() {
 	printf 'Usage: %s [-h | --help | -e | --essential | -E | --non_essential]\n\t[ -R | --relative] [-c | --changed] [-C X | --changed-since=X]\n\t[--] [<filter>...]\n' "$(basename "$0")"
 	printf 'Options:\n'
 	printf '    -a, --altered\t- Print only the tests changed since the last commit.\n\t\t\t  (Only changes in individual test files count, not in\n\t\t\t  the common test utilities that affect every test.)\n\t\t\t  Renamed tests with 100%% similarity are omitted.\n\t\t\t  (See also "--since".)\n'
-	printf '    -A, --since=X\t- Selects the commit used as reference by "--altered".\n\t\t\t  Empty string means INDEX. (It implies "--altered".)\n'
+	printf '    -A, --since=X\t- Selects the commit used as reference by "--altered".\n\t\t\t  (It implies "--altered".)\n\t\t\t  Special cases:\n\t\t\t  * Empty / blank string means INDEX.\n\t\t\t  * Strings starting with "~" or "^" imply HEAD.\n\t\t\t    (So "~2" means the same as "HEAD~2".)\n\t\t\t  * "-" means all changes since branching from "master".\n'
 	printf '    -e, --essential\t- Print only the tests marked as essential.\n'
 	printf '    -E, --non-essential\t- Print only the tests NOT marked as essential.\n'
 	printf '    -h, --help\t\t- Print this help text.\n'
@@ -22,6 +22,33 @@ print_help() {
 
 print_version() {
 	printf 'test listing script version 1.0.2\n'
+}
+
+find_master() {
+	if git rev-parse --verify --quiet 'master^{commit}' 1>/dev/null
+	then
+		printf 'master'
+	else
+		remote_branches="$(git for-each-ref --format='%(refname)' "refs/remotes/*/master")"
+		if [ -z "$remote_branches" ]
+		then
+			printf 'Cannot find the master branch!\n' 1>&2
+			return 1
+		elif [ "$(printf '%s\n' "$remote_branches" | wc -l)" -gt 1 ]
+		then
+			if ! default_remote="$(git config --get checkout.defaultRemote)"
+			then
+				printf 'Multiple remotes have the master branch and there is no "checkout.defaultRemote"!\n' 1>&2
+				return 1
+			fi
+			if ! remote_branches="$(printf '%s' "$remote_branches" | grep -E "^refs/remotes/$default_remote/")"
+			then
+				printf 'Multiple remotes have the master branch and none of them are "checkout.defaultRemote"!\n' 1>&2
+				return 1
+			fi
+		fi
+		printf '%s' "$remote_branches" | sed -E 's;^refs/remotes/;;'
+	fi
 }
 
 getopt_short_options='aA:eEhRv'
@@ -42,6 +69,13 @@ do
 	-A|--since)
 		shift
 		changed_reference="$1"
+		if printf '%s' "$changed_reference" | grep -qE '^[~^]'
+		then
+			changed_reference="HEAD$changed_reference"
+		elif [ "$changed_reference" = '-' ]
+		then
+			changed_reference="$(find_master)...HEAD"
+		fi
 		only_changed=y
 		;;
 	-e|--essential)

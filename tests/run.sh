@@ -10,7 +10,7 @@ print_help() {
 	printf 'Options:\n'
 	printf '    -h, --help\t\t- Print this help message end exit.\n'
 	printf '    -a, --altered\t- Run only the tests changed since the last commit.\n\t\t\t  (Only changes in individual test files count, not in\n\t\t\t  the common test utilities that affect every test.)\n\t\t\t  Renamed tests with 100%% similarity are omitted.\n\t\t\t  (See also "--since".)\n'
-	printf '    -A, --since=X\t- Selects the commit used as reference by "--altered".\n\t\t\t  Empty string means INDEX. (It implies "--altered".)\n'
+	printf '    -A, --since=X\t- Selects the commit used as reference by "--altered".\n\t\t\t  (It implies "--altered".)\n\t\t\t  Special cases:\n\t\t\t  * Empty / blank string means INDEX.\n\t\t\t  * Strings starting with "~" or "^" imply HEAD.\n\t\t\t    (So "~2" means the same as "HEAD~2".)\n\t\t\t  * "-" means all changes since branching from "master".\n'
 	printf '    -c, --color=when\t- Set color mode (always / never / auto).\n'
 	printf '    -C, --check\t\t- Only check if all tests pass. (Equivalent to "-sSQ".)\n'
 	printf '    -d, --debug\t\t- Print outputs of all commands in run in the tests.\n'
