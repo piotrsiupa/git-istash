@@ -7,7 +7,7 @@ print_help() {
 	printf '\n'
 	printf 'Usage: %s [-h | --help | -e | --essential | -E | --non_essential]\n\t[ -R | --relative] [-c | --changed] [-C X | --changed-since=X]\n\t[--] [<filter>...]\n' "$(basename "$0")"
 	printf 'Options:\n'
-	printf '    -a, --altered\t- Print only the tests changed since the last commit.\n\t\t\t  (Only changes in individual test files count, not in\n\t\t\t  the common test utilities that affect every test.)\n\t\t\t  (See also "--since".)\n'
+	printf '    -a, --altered\t- Print only the tests changed since the last commit.\n\t\t\t  (Only changes in individual test files count, not in\n\t\t\t  the common test utilities that affect every test.)\n\t\t\t  Renamed tests with 100%% similarity are omitted.\n\t\t\t  (See also "--since".)\n'
 	printf '    -A, --since=X\t- Selects the commit used as reference by "--altered".\n\t\t\t  Empty string means INDEX. (It implies "--altered".)\n'
 	printf '    -e, --essential\t- Print only the tests marked as essential.\n'
 	printf '    -E, --non-essential\t- Print only the tests NOT marked as essential.\n'
@@ -110,17 +110,24 @@ done
 
 cd "$(dirname "$0")"
 
-find . -mindepth 2 -maxdepth 2 -type f -name '*.sh' ! -path './remote-for-tests/*' ! -path './the-actual-git/*' \
-| cut -c3- \
-| {
+{
 	if [ "$only_changed" = n ]
 	then
-		cat
-	elif printf '%s ' "$changed_reference" | grep -q '^\s*$'
-	then
-		xargs -- git --literal-pathspecs diff --no-renames --name-only --relative --
+		find . -mindepth 2 -maxdepth 2 -type f -name '*.sh' ! -path './remote-for-tests/*' ! -path './the-actual-git/*' \
+		| cut -c3-
 	else
-		xargs -- git --literal-pathspecs diff --no-renames --name-only --relative "$changed_reference" --
+		find . -mindepth 1 -maxdepth 1 -type d ! -name 'remote-for-tests' ! -name 'the-actual-git' \
+		| if printf '%s ' "$changed_reference" | grep -q '^\s*$'
+		then
+			xargs -- git --literal-pathspecs diff -M --name-status --relative --
+		else
+			xargs -- git --literal-pathspecs diff -M --name-status --relative "$changed_reference" --
+		fi \
+		| sed -E -e '/^R100\t/d' \
+			-e '/^D\t/d' \
+			-e 's/^[CR][0-9]{3}\t(\S+)\t(\S+)$/A\t\2/' \
+		| cut -c3- \
+		| grep -E '^[^/]+/[^/]+\.sh$' || true
 	fi
 } | {
 	if [ -n "$filter" ] || [ -n "$negative_filter" ]
