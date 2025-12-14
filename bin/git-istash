@@ -105,9 +105,15 @@ elif [ "$1" = '--version' ] || [ "$2" = '--version' ]
 then
 	print_version
 	exit 0
-elif printf '%s\n' "$1" | grep -Eqx -- '-c|--c(o(n(t(i(n(u(e)?)?)?)?)?)?)?|--ab(o(r(t)?)?)?|--q(u(i(t)?)?)?'  # Not a pretty solution but one that doesn't require knowing all options of every subcommand. (Although, it needs manual updating when something changes.)
+elif printf '%s\n' "$1" | grep -Eqx -- '-c|(--)?c(o(n(t(i(n(u(e)?)?)?)?)?)?)?|--ab(o(r(t)?)?)?|abort|--q(u(i(t)?)?)?|quit'  # Not a pretty solution but one that doesn't require knowing all options of every subcommand. (Although, it needs manual updating when something changes.)
 then
 	set -u
+	continuation_option="$1"
+	if printf '%s\n' "$continuation_option" | grep -qEv '^-'
+	then
+		continuation_option="--$continuation_option"
+	fi
+	shift
 	. "$(dirname "$0")/../lib/git-istash/git-istash-commons"
 	case "$(find_data_files)" in
 		'nothing')
@@ -115,10 +121,10 @@ then
 			exit 1
 			;;
 		'apply')
-			exec_subcommand 'apply' "$@"
+			exec_subcommand 'apply' "$continuation_option" "$@"
 			;;
 		'pop')
-			exec_subcommand 'pop' "$@"
+			exec_subcommand 'pop' "$continuation_option" "$@"
 			;;
 		'error')
 			printf 'fatal: The operation in progress seems damaged.\n' 1>&2
