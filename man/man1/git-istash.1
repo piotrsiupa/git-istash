@@ -21,6 +21,7 @@ git\-istash \- Handle Git stashes without arbitrary limitations of the original 
             [\-\-\~<\fIpathspec\fR>...]
 \fBgit istash\fR (pop\~|\~apply) [<\fIstash\fR>]
 \fBgit istash\fR [pop\~|\~apply] (\-c\~|\~\-\-continue\~|\~\-\-abort)
+\fBgit istash\fR (c\~|\~continue\~|\~abort\~|\~quit)
 .fi
 
 .SH DESCRIPTION
@@ -69,6 +70,13 @@ Alternatively, \fB\-\-abort\fR can be used to cancel the operation and return to
 Because of the multi-stage conflict resolution, \fIthe index saved to the stash entry will be preserved\fR (unlike in \fBgit stash\fR equivalent subcommands).
 .br
 Additionally, the state of working copy, from before the \fBapply\fR / \fBpop\fR has started, is backed up as a separate stash entry (which is not stored anywhere but it can be found in the command's output if needed).
+.RE
+
+\fBgit istash c\fR, \fBgit istash create\fR, \fBgit istash abort\fR and \fBgit istash quit\fR
+.RS 4
+Those are aliases for options with the same name. (Just a syntax sugar.)
+.br
+See \fB-c\fR, \fB--continue\fR, \fB--abort\fR and \fB--quit\fR.
 .RE
 
 .SH SUBCOMMANDS
@@ -145,6 +153,29 @@ The only differences from \fBgit istash apply\fR are that \fBpop\fR cannot use a
 In case of conflicts, the stash is dropped only after all conflicts are successfully resolved.
 .sp
 This is the inverse operation of \fBgit stash push\fR.
+.RE
+
+.PP
+\fBc\fR | \fBcontinue\fR
+.RS 4
+This is just a convenient alias for \fB-c\fR / \fB--continue\fR. \
+(\fBgit istash continue\fR is the same as \fBgit istash --continue\fR.)
+.br
+Other abbreviations (like \fBconti\fR) are also allowed.
+.RE
+
+.PP
+\fBabort\fR
+.RS 4
+This is just a convenient alias for \fB--abort\fR. \
+(\fBgit istash abort\fR is the same as \fBgit istash --abort\fR.)
+.RE
+
+.PP
+\fBquit\fR
+.RS 4
+This is just a convenient alias for \fB--quit\fR. \
+(\fBgit istash quit\fR is the same as \fBgit istash --quit\fR.)
 .RE
 
 .SH OPTIONS
