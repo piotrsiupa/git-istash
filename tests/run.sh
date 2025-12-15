@@ -9,6 +9,8 @@ print_help() {
 	printf '\n'
 	printf 'Options:\n'
 	printf '    -h, --help\t\t- Print this help message end exit.\n'
+	printf '    -a, --altered\t- Run only the tests changed since the last commit.\n\t\t\t  (Only changes in individual test files count, not in\n\t\t\t  the common test utilities that affect every test.)\n\t\t\t  Renamed tests with 100%% similarity are omitted.\n\t\t\t  (See also "--since".)\n'
+	printf '    -A, --since=X\t- Selects the commit used as reference by "--altered".\n\t\t\t  (It implies "--altered".)\n\t\t\t  Special cases:\n\t\t\t  * Empty / blank string means INDEX.\n\t\t\t  * Strings starting with "~" or "^" imply HEAD.\n\t\t\t    (So "~2" means the same as "HEAD~2".)\n\t\t\t  * "-" means all changes since branching from "master".\n'
 	printf '    -c, --color=when\t- Set color mode (always / never / auto).\n'
 	printf '    -C, --check\t\t- Only check if all tests pass. (Equivalent to "-sSQ".)\n'
 	printf '    -d, --debug\t\t- Print outputs of all commands in run in the tests.\n'
@@ -33,11 +35,16 @@ print_help() {
 	printf 'You can specify one or more filters in the command call. '
 	printf 'The filters are ERE\nregexps that match test names that should be run. '
 	printf '(A test name is the name of\nthe inluding the sub-directory but without the file extension.) '
-	printf 'A test will be\nrun if it matches any of the filters. '
-	printf 'If there are no filters, all tests are\nrun. '
-	printf 'This can be used to either list individual tests or choose some categories.\n'
+	printf 'A test will be\nrun if it matches any of the filters.\n'
+	printf 'Filters starting with "-" are negative filters that are applied after the normal\nones. '
+	printf '(To have a normal filter starting with "-", prefix it with "\\".) '
+	printf 'A test\nwill be skipped if it matches any negative filter.\n'
+	printf 'If there are no filters at all, all tests are taken. '
+	printf 'If there are only negative\nfilters, only tests that don'\''t match them are taken.\n'
+	printf 'If a filter doesn'\''t match anything, it will be ignored.\n'
+	printf '(This can be used to either list individual tests or to choose some categories.)\n'
 	printf '(See "README.md" in the test directory for more information about test names.)\n'
-	printf 'Paths to specific test files are also accepted.\n'
+	printf 'Paths to specific test files are also accepted; they will be converted into\ncorrect filters.\n'
 	printf '\n'
 	printf 'Meticulousness:\n'
 	printf 'This controls the balance between the speed and how detailed the tests are.\n'
@@ -52,7 +59,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'test script version 2.4.2\n'
+	printf 'test script version 2.5.0\n'
 }
 
 printf_color_code() { # code_for_printf...
@@ -113,13 +120,19 @@ create_test_dir() { # test_name [parameters_string]
 	mkdir "$test_dir"
 }
 
-find_tests() { # pattern
-	./list.sh \
+find_tests() { # [filters...]
+	{
+		if [ "$only_altered" = n ]
+		then
+			"$(dirname "$0")/list.sh" -- "$@"
+		else
+			"$(dirname "$0")/list.sh" --since="$altered_reference" -- "$@"
+		fi
+	} \
 	| sed -E 's/\.sh$//' \
-	| grep -E "$1" \
 	| while read -r test_name
 	do
-		if [ "$only_failed" = n ] || [ -d "$(get_test_dir "$test_name")" ]
+		if [ "$only_failed" = n ] || [ -d "$(dirname "$0")/$(get_test_dir "$test_name")" ]
 		then
 			printf '%s\n' "$test_name"
 		fi
@@ -777,10 +790,12 @@ print_summary() {
 	printf '\n'
 }
 
-getopt_short_options='c:Cdfhj:l:m:pRqQrsSvV'
-getopt_long_options='color:,check,debug,failed,file-name,help,jobs:,limit:,meticulousness:,print-paths,relative-paths,progress,no-progress,quiet,quieter,raw,raw-name,skip-at-fail,skip-at-error,skip-on-fail,skip-on-error,stop-at-fail,stop-at-error,stop-on-fail,stop-on-error,verbose,version,skip-version'
+getopt_short_options='aA:c:Cdfhj:l:m:pRqQrsSvV'
+getopt_long_options='altered,since:,color:,check,debug,failed,file-name,help,jobs:,limit:,meticulousness:,print-paths,relative-paths,progress,no-progress,quiet,quieter,raw,raw-name,skip-at-fail,skip-at-error,skip-on-fail,skip-on-error,stop-at-fail,stop-at-error,stop-on-fail,stop-on-error,verbose,version,skip-version'
 getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
+only_altered=n
+altered_reference=HEAD
 only_failed=n
 debug_mode=n
 quiet_level=0
@@ -800,6 +815,14 @@ skip_version=n
 while true
 do
 	case "$1" in
+	-a|--altered)
+		only_altered=y
+		;;
+	-A|--since)
+		shift
+		altered_reference="$1"
+		only_altered=y
+		;;
 	-c|--color)
 		shift
 		if printf '%s' "$1" | grep -ixqE 'auto|default'
@@ -948,39 +971,13 @@ then
 fi
 export meticulousness
 
-normalize_filter_entry() { # filter_entry
-	if [ -f "$1" ]
-	then
-		printf '%s' "$1" \
-		| sed -E -e 's;^.*/([^/]+/[^/]+)$;\1;' \
-			-e 's;^[^/]+$;./&;' \
-			-e "s;^\\./;$(basename "$(pwd)")/;" \
-			-e 's/\.sh$//' \
-			-e 's/^/^/' -e 's/$/$/'
-	else
-		printf '%s' "$1"
-	fi
-}
-if [ $# -eq 0 ]
-then
-	filter=''
-else
-	filter="($(normalize_filter_entry "$1"))"
-	shift
-	while [ $# -ne 0 ]
-	do
-		filter="$filter|($(normalize_filter_entry "$1"))"
-		shift
-	done
-fi
-
 trap 'trap - INT ; kill -s KILL -- -$$' INT
 
+tests="$(find_tests "$@")"
 cd "$(dirname "$0")"
-tests="$(find_tests "$filter")"
 if [ "$print_paths" = y ]
 then
-	printf '%s' "$tests" | xargs -n1 -- printf '%s%s.sh\n' "$print_paths_prefix"
+	printf '%s' "$tests" | xargs -rn1 -- printf '%s%s.sh\n' "$print_paths_prefix"
 	exit 0
 fi
 

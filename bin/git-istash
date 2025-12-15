@@ -15,27 +15,33 @@ print_help() {
 	printf 'Usage: git istash <sub-command> [<argument>...]\n'
 	printf '   or: git istash (-h | --help | --man)\n'
 	printf '   or: git istash --version\n'
-	printf '   or: git istash (--continue | --abort)\n'
+	printf '   or: git istash (-c | --continue | --abort | --quit)\n'
+	printf '   or: git istash (c | continue | abort | quit)\n'
 	printf '\n'
 	printf 'Options:\n'
-	printf '    -a, --abort\t\t- Abort "apply" or "pop" when one is in progress.\n'
+	printf '\t--abort\t\t- Abort "apply" or "pop" when one is in progress.\n'
 	printf '    -c, --continue\t- Continue "apply" or "pop" when one is in progress.\n'
 	printf '    -h\t\t\t- Show this help text and exit.\n'
 	printf '\t--help\t\t- Show manual page if possible.\n\t\t\t  (If you run it through "git", it will handle this in\n\t\t\t  its own way, which fails on Windows. See "--man".)\n'
 	printf '\t--man\t\t- Alias for "--help" that is not intercepted by "git".\n\t\t\t  (Which makes it work on Windows.)\n'
+	printf '\t--quit\t\t- Like "abort" but don'\''t restore the repository state\n\t\t\t  nor move the HEAD.\n'
 	printf '\t--version\t- Show version information and exit.\n'
 	printf '\n'
 	printf 'Sub-commands:\n'
+	printf '\tabort\t- Alias for "git istash --abort".\n'
 	printf '\tapply\t- Analog to "git stash apply --index".\n'
+	printf '\tc\t- Alias for "git istash -c".\n'
+	printf '\tcontinue- Alias for "git istash --continue".\n'
 	printf '\tcreate\t- Analog to "git stash create" (but with options).\n'
 	printf '\tpop\t- Analog to "git stash pop --index".\n'
 	printf '\tpush\t- Analog to "git stash push".\n'
+	printf '\tquit\t- Alias for "git istash --quit".\n'
 	printf '\tsave\t- Same as "git istash create" except it stores the stash.\n'
 	printf '\tsnatch\t- Same as "git istash push" except it doesn'\''t store the stash.\n'
 }
 
 print_version() {
-	printf 'git-istash version 1.5.3\n'
+	printf 'git-istash version 1.6.0\n'
 	printf 'Author: Piotr Siupa\n'
 	printf 'Requires Git in version at least %s\n' "$min_git_version"
 }
@@ -104,9 +110,15 @@ elif [ "$1" = '--version' ] || [ "$2" = '--version' ]
 then
 	print_version
 	exit 0
-elif printf '%s\n' "$1" | grep -Eqx -- '-c|--c(o(n(t(i(n(u(e)?)?)?)?)?)?)?|--ab(o(r(t)?)?)?'  # Not a pretty solution but one that doesn't require knowing all options of every subcommand. (Although, it needs manual updating when something changes.)
+elif printf '%s\n' "$1" | grep -Eqx -- '-c|(--)?c(o(n(t(i(n(u(e)?)?)?)?)?)?)?|--ab(o(r(t)?)?)?|abort|--q(u(i(t)?)?)?|quit'  # Not a pretty solution but one that doesn't require knowing all options of every subcommand. (Although, it needs manual updating when something changes.)
 then
 	set -u
+	continuation_option="$1"
+	if printf '%s\n' "$continuation_option" | grep -qEv '^-'
+	then
+		continuation_option="--$continuation_option"
+	fi
+	shift
 	. "$(dirname "$0")/../lib/git-istash/git-istash-commons"
 	case "$(find_data_files)" in
 		'nothing')
@@ -114,10 +126,10 @@ then
 			exit 1
 			;;
 		'apply')
-			exec_subcommand 'apply' "$@"
+			exec_subcommand 'apply' "$continuation_option" "$@"
 			;;
 		'pop')
-			exec_subcommand 'pop' "$@"
+			exec_subcommand 'pop' "$continuation_option" "$@"
 			;;
 		'error')
 			printf 'fatal: The operation in progress seems damaged.\n' 1>&2

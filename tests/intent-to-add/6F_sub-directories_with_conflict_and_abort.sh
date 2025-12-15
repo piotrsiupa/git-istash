@@ -4,6 +4,7 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_ABORT
 
 __test_section__ 'Create stash'
 mkdir xxx yyy
@@ -49,7 +50,7 @@ printf 'ccc1\n' >xxx/aaa
 printf 'ccc2\n' >yyy/aaa
 git add aaa xxx/aaa yyy/aaa
 cd xxx
-assert_exit_code 0 git istash "$APPLY_OPERATION" --abort
+assert_exit_code 0 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
 cd -
 assert_files_HT '
    aaa		bbb0

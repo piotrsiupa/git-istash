@@ -8,13 +8,15 @@ print_help() {
 	printf 'Usage: %s [<options...>]\n' "$(basename "$0")"
 	printf '\n'
 	printf 'Options:\n'
+	printf '    -a, --altered\t- Check only the tests changed since the last commit.\n\t\t\t  (Only changes in individual test files count, not in\n\t\t\t  the common test utilities that affect every test.)\n\t\t\t  Renamed tests with 100%% similarity are omitted.\n\t\t\t  (See also "--since".)\n'
+	printf '    -A, --since=X\t- Selects the commit used as reference by "--altered".\n\t\t\t  (It implies "--altered".)\n\t\t\t  Special cases:\n\t\t\t  * Empty / blank string means INDEX.\n\t\t\t  * Strings starting with "~" or "^" imply HEAD.\n\t\t\t    (So "~2" means the same as "HEAD~2".)\n\t\t\t  * "-" means all changes since branching from "master".\n'
 	printf '    -h, --help\t\t- Print this help message and exit.\n'
 	printf '    -s, --skip-tests\t- Do not check test scripts from sub-directories of\n\t\t\t  the directory "tests". (a lot faster execution)\n'
 	printf '\t--version\t- Print version information and exit.\n'
 }
 
 print_version() {
-	printf 'shellcheck wrapper script version 1.1.3\n'
+	printf 'shellcheck wrapper script version 1.2.0\n'
 }
 
 list_files() {
@@ -24,7 +26,12 @@ list_files() {
 	find tests -maxdepth 1 -type f -name '*.sh' | sort
 	if [ "$skip_tests" = n ]
 	then
-		tests/list.sh --relative
+		if [ "$only_altered" = n ]
+		then
+			tests/list.sh --relative
+		else
+			tests/list.sh --relative --since="$altered_reference"
+		fi
 	fi
 }
 
@@ -34,14 +41,24 @@ run_shellcheck() {
 	printf 'All %i files are correct.\n' "$(list_files | wc -l)"
 }
 
-getopt_short_options='hs'
-getopt_long_options='help,skip-tests,version'
+getopt_short_options='aA:hs'
+getopt_long_options='altered,since:,help,skip-tests,version'
 getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
+only_altered=n
+altered_reference=HEAD
 skip_tests=n
 while true
 do
 	case "$1" in
+	-a|--altered)
+		only_altered=y
+		;;
+	-A|--since)
+		shift
+		altered_reference="$1"
+		only_altered=y
+		;;
 	-h|--help)
 		print_help
 		exit 0

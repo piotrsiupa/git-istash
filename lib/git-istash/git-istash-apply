@@ -11,13 +11,14 @@ print_help() {
 	printf 'This is only a rudimentary help text. Prefer "git help istash" if available.\n'
 	printf '\n'
 	printf 'Usage: git istash apply [<option>...] [<stash>]\n'
-	printf '   or: git istash apply (-c | --continue | --abort)\n'
+	printf '   or: git istash apply (-c | --continue | --abort | --quit)\n'
 	printf '   or: git istash apply -h\n'
 	printf '\n'
 	printf 'Options:\n'
 	printf '\t--abort\t\t- Abort the previous operation and return the repository\n\t\t\t  to the state before it started.\n'
 	printf '    -c, --continue\t- Resume the previous operation.\n\t\t\t  (Conflicts need to be resolved before that.)\n'
 	printf '    -h\t\t\t- Show this help text and exit.\n'
+	printf '\t--quit\t\t- Abort the operation but don'\''t restore the repository\n\t\t\t  state nor move the HEAD.\n'
 }
 
 get_sub_command_name() {
@@ -35,7 +36,7 @@ save_data() {
 	
 	printf '%s\n' "$working_dir_changes_sha" >"$working_dir_sha_file"
 }
-load_data() {
+load_target_data() {
 	if [ "$(wc -l <"$target_data_file")" -ne 1 ]
 	then
 		printf 'fatal: "%s" is should contain exactly 1 line.\n' "$target_data_file" 1>&2
@@ -58,7 +59,8 @@ load_data() {
 	then
 		curr_branch_type='detached'
 	fi
-	
+}
+load_working_dir_data() {
 	if [ "$(wc -l <"$working_dir_sha_file")" -ne 1 ]
 	then
 		printf 'fatal: "%s" is should contain exactly 1 line.\n' "$working_dir_sha_file" 1>&2
@@ -70,6 +72,10 @@ load_data() {
 		printf 'fatal: "%s" says "%s" but there is no such commit.\n' "$working_dir_sha_file" "$working_dir_changes_sha" 1>&2
 		return 1
 	fi
+}
+load_data() {
+	load_target_data
+	load_working_dir_data
 }
 delete_data() {
 	rm -f "$target_data_file" "$working_dir_sha_file"
@@ -136,10 +142,11 @@ end_with_success() {
 	printf 'Stash of the old working dir: %s\n' "$(prepare_stash_of_working_dir)"
 }
 
-check_data_files() { # resume
+check_data_files() { # resume quit
 	if [ "$is_pop" = y ] ; then return 0 ; fi
 	case "$(find_data_files)" in
 		pop)
+			if [ "$2" = y ] ; then return 0 ; fi
 			printf '\n' 1>&2
 			if is_color_allowed 2
 			then
@@ -154,7 +161,7 @@ check_data_files() { # resume
 			return 1
 			;;
 		apply)
-			if [ "$1" = y ] ; then return 0 ; fi
+			if [ "$1" = y ] || [ "$2" = y ] ; then return 0 ; fi
 			if is_color_allowed 2
 			then
 				printf '\033[33m'
@@ -168,6 +175,7 @@ check_data_files() { # resume
 			return 1
 			;;
 		error)
+			if [ "$2" = y ] ; then return 0 ; fi
 			printf '\n' 1>&2
 			if is_color_allowed 2
 			then
@@ -179,7 +187,7 @@ check_data_files() { # resume
 				printf '\033[33m'
 			fi
 			printf 'hint: Fix the problem and finish that operation before starting "git istash apply"\n' 1>&2
-			printf 'hint: or remove the file "%s" to manually cancel it.\n' "$(make_stash_data_file_path)" 1>&2
+			printf 'hint: or run "git istash apply --quit" to forcefully cancel it.\n' 1>&2
 			if is_color_allowed 2
 			then
 				printf '\033[39m'
@@ -187,7 +195,7 @@ check_data_files() { # resume
 			return 1
 			;;
 		nothing)
-			if [ "$1" = n ] ; then return 0 ; fi
+			if [ "$1" = n ] && [ "$2" = n ] ; then return 0 ; fi
 			printf 'fatal: No istash apply in progress?\n' 1>&2
 			return 1
 			;;
@@ -257,7 +265,7 @@ start_rebase() { # untangled_stash_sha
 
 do_start() { # args...
 	check_args_for_apply 1 "$@"
-	check_data_files n
+	check_data_files n n
 	check_other_git_commands_state
 	find_stash "$@"
 	find_current_branch
@@ -271,7 +279,7 @@ do_start() { # args...
 
 do_continue() { # args...
 	check_args_for_apply 0 "$@"
-	check_data_files y
+	check_data_files y n
 	load_data
 	
 	git commit --allow-empty --no-edit 2>/dev/null || true
@@ -289,7 +297,7 @@ do_continue() { # args...
 
 do_abort() { # args...
 	check_args_for_apply 0 "$@"
-	check_data_files y
+	check_data_files y n
 	load_data
 	
 	git rebase --abort || true  # Errors are ignored because if rebase is not in progress, we still want to try to restore HEAD.
@@ -343,6 +351,19 @@ do_abort() { # args...
 	fi
 }
 
+do_quit() { # args...
+	if [ "$is_pop" = n ]
+	then
+		exec sh "$lib_dir/git-istash-pop" --quit "$@"
+	fi
+	
+	check_args_for_apply 0 "$@"
+	check_data_files n y
+	
+	git rebase --quit || true  # Errors are ignored because if rebase is not in progress or broken, we still want to remove the data files.
+	delete_data
+}
+
 do_apply() { # args...
 	if [ "$continue_set" = y ]
 	then
@@ -350,18 +371,22 @@ do_apply() { # args...
 	elif [ "$abort_set" = y ]
 	then
 		do_abort "$@"
+	elif [ "$quit_set" = y ]
+	then
+		do_quit "$@"
 	else
 		do_start "$@"
 	fi
 }
 
-getopt_short_options='ch'
-getopt_long_options='abort,_called-from-pop,_called-from-pop_,continue'
+getopt_short_options='chq'
+getopt_long_options='abort,_called-from-pop,_called-from-pop_,continue,quit'
 getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 abort_set=n
 is_pop=n
 continue_set=n
+quit_set=n
 while true
 do
 	case "$1" in
@@ -378,6 +403,9 @@ do
 		print_help
 		exit 0
 		;;
+	-q|--quit)
+		quit_set=y
+		;;
 	--)
 		shift
 		break
@@ -385,12 +413,23 @@ do
 	esac
 	shift
 done
+if [ $abort_set = y ] && [ $quit_set = y ]
+then
+	printf 'error: Either abort or quit; there is no middle road.\n' 1>&2
+	exit 1
+fi
 if [ $continue_set = y ] && [ $abort_set = y ]
 then
 	printf 'error: Unclear whether to continue aborting or to abort continuing.\n' 1>&2
 	exit 1
 fi
+if [ $continue_set = y ] && [ $quit_set = y ]
+then
+	printf 'error: Unclear whether to continue quitting or to quit continuing.\n' 1>&2
+	exit 1
+fi
 
+lib_dir="$(cd "$(dirname "$0")" ; pwd)"
 cd "$(git rev-parse --show-toplevel)"
 target_data_file="$(make_target_data_file_path)"
 working_dir_sha_file="$(make_working_dir_sha_file_path)"

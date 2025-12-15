@@ -4,6 +4,7 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_ABORT
 
 __test_section__ 'Create stash'
 printf 'aaa\n' >aaa
@@ -33,7 +34,7 @@ assert_rebase y
 assert_dotgit_contents_for "$APPLY_OPERATION"
 
 __test_section__ "Abort $APPLY_OPERATION stash"
-assert_exit_code 0 git istash "$APPLY_OPERATION" --abort
+assert_exit_code 0 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
 assert_files_HT '
    aaa		bbb
 !! ignored0	ignored0

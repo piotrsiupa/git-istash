@@ -315,6 +315,7 @@ assert_dotgit_contents_for() { # operation [additional_expected_file_names...]
 	case "$operation_for_assert" in
 		'apply') assert_dotgit_contents 'ISTASH_TARGET' 'ISTASH_WORKING-DIR' "$@" ;;
 		'pop') assert_dotgit_contents 'ISTASH_TARGET' 'ISTASH_STASH' 'ISTASH_WORKING-DIR' "$@" ;;
+		'none') assert_dotgit_contents "$@" ;;
 		*) fail 'Unknown operation "%s"!' "$operation_for_assert" ;;
 	esac
 	unset operation_for_assert

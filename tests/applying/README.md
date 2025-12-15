@@ -6,13 +6,14 @@ This category (directory) is for tests that check the commands that restore cont
 
 ### Prefix
 The first character of the prefix (sub-category) can be:
-- `0` - Sanity tests that don't use git commands from this repository.
-- `1` - Popping/Applying without conflicts.
-- `2` - Popping/Applying with conflicts that need to be manually solved.
-- `3` - Popping/Applying with "conflicts" that can be automatically resolved by Git merge algorithms.
-- `4` - Popping/Applying with conflicts that is aborted before they are resolved.
-- `5` - Different ways of specifying which stash to use.
-- `6` - Specifying a stash that doesn't exist.
-- `7` - Trying to istash when the repository is not in a state that allows that (e.g. an istash is already in progress).
-- `8` - Handling various errors.
-- `9` - Popping/Applying with sub-directories in the repository and when the working directory is not the repository's root.
+- `00` - Sanity tests that don't use git commands from this repository.
+- `01` - Popping/Applying without conflicts.
+- `02` - Popping/Applying with conflicts that need to be manually solved.
+- `03` - Popping/Applying with "conflicts" that can be automatically resolved by Git merge algorithms.
+- `04` - Popping/Applying with conflicts and aborting before they are resolved.
+- `05` - Popping/Applying with conflicts and quitting before they are resolved.
+- `06` - Different ways of specifying which stash to use.
+- `07` - Specifying a stash that doesn't exist.
+- `08` - Trying to istash when the repository is not in a state that allows that (e.g. an istash is already in progress).
+- `09` - Handling various errors and corner cases.
+- `10` - Popping/Applying with sub-directories in the repository and when the working directory is not the repository's root.
