@@ -1,4 +1,5 @@
 .gitattributes  text
+.gitconfig      text
 .gitignore      text
 /bin/*          text eol=lf
 /lib/**/*       text eol=lf
