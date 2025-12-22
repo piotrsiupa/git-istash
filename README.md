@@ -253,7 +253,7 @@ git istash --continue
 After the whole operation is finished, the stashed index is restored and intact.
 
 
-## Stashing away untracked files
+### Stashing away untracked files
 
 You've created a few new files yet to be added to the repository but you've realized that you will need them a little later and they are getting in the way of what you're doing right now.
 
