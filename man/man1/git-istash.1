@@ -1,4 +1,4 @@
-.TH GIT-ISTASH 1 "2025-10-24" "git-istash 1.5.2"
+.TH GIT-ISTASH 1 "2025-12-15" "git-istash 1.6.0"
 .nh
 .ad l
 
@@ -20,7 +20,8 @@ git\-istash \- Handle Git stashes without arbitrary limitations of the original 
             [\-S\~|\~\-\-staged] [\-u\~|\~\-\-[no\-]include\-untracked]
             [\-\-\~<\fIpathspec\fR>...]
 \fBgit istash\fR (pop\~|\~apply) [<\fIstash\fR>]
-\fBgit istash\fR [pop\~|\~apply] (\-c\~|\~\-\-continue\~|\~\-\-abort)
+\fBgit istash\fR [pop\~|\~apply] (\-c\~|\~\-\-continue\~|\~\-\-abort\~|\~\-\-quit)
+\fBgit istash\fR (c\~|\~continue\~|\~abort\~|\~quit)
 .fi
 
 .SH DESCRIPTION
@@ -64,11 +65,18 @@ Subcommand	Removes the stash from the stash ref
 .TE
 In case of conflicts, instead of refusing and demanding to run it without \fB\-\-index\fR, they temporarily apply index and working directory changes as separate commits, stopping to resolve conflicts whenever it's necessary (similarly to \fBgit rebase\fR). \
 After the conflicts are resolved, the subcommands can be resumed with \fB\-\-continue\fR. \
-Alternatively, \fB\-\-abort\fR can be used to cancel the operation and return to the repository state before it started.
+Alternatively, \fB\-\-abort\fR can be used to cancel the operation and return to the repository state before it started, or \fB\-\-quit\fR to cancel the operation without restoring anything.
 .br
 Because of the multi-stage conflict resolution, \fIthe index saved to the stash entry will be preserved\fR (unlike in \fBgit stash\fR equivalent subcommands).
 .br
 Additionally, the state of working copy, from before the \fBapply\fR / \fBpop\fR has started, is backed up as a separate stash entry (which is not stored anywhere but it can be found in the command's output if needed).
+.RE
+
+\fBgit istash c\fR, \fBgit istash create\fR, \fBgit istash abort\fR and \fBgit istash quit\fR
+.RS 4
+Those are aliases for options with the same name. (Just a syntax sugar.)
+.br
+See \fB-c\fR, \fB--continue\fR, \fB--abort\fR and \fB--quit\fR.
 .RE
 
 .SH SUBCOMMANDS
@@ -129,14 +137,14 @@ And finally, the options \fB\-\-patch\fR and \fB\-\-pathspec\-from\-file\fR are 
 .RE
 
 .PP
-\fBapply\fR [<\fIstash\fR>\~|\~\-c\~|\~\-\-continue\~|\~\-\-abort]
+\fBapply\fR [<\fIstash\fR>\~|\~\-c\~|\~\-\-continue\~|\~\-\-abort\~|\~\-\-quit]
 .RS 4
 Like \fBgit stash apply \-\-index\fR, but it handles staged and unstaged conflicts separately, preventing those scopes from mixing. \
 \fB<stash>\fR may be any commit that looks like a commit created by \fBgit stash push\fR or \fBgit stash create\fR.
 .RE
 
 .PP
-\fBpop\fR [<\fIstash\fR>\~|\~\-c\~|\~\-\-continue\~|\~\-\-abort]
+\fBpop\fR [<\fIstash\fR>\~|\~\-c\~|\~\-\-continue\~|\~\-\-abort\~|\~\-\-quit]
 .RS 4
 Like \fBgit stash pop \-\-index\fR, but it handles staged and unstaged conflicts separately, preventing those scopes from mixing. \
 Unlike \fBgit stash pop\fR, it can handle stashes referenced by name (\fBstash^{/<name>}\fR).
@@ -145,6 +153,29 @@ The only differences from \fBgit istash apply\fR are that \fBpop\fR cannot use a
 In case of conflicts, the stash is dropped only after all conflicts are successfully resolved.
 .sp
 This is the inverse operation of \fBgit stash push\fR.
+.RE
+
+.PP
+\fBc\fR | \fBcontinue\fR
+.RS 4
+This is just a convenient alias for \fB-c\fR / \fB--continue\fR. \
+(\fBgit istash continue\fR is the same as \fBgit istash --continue\fR.)
+.br
+Other abbreviations (like \fBconti\fR) are also allowed.
+.RE
+
+.PP
+\fBabort\fR
+.RS 4
+This is just a convenient alias for \fB--abort\fR. \
+(\fBgit istash abort\fR is the same as \fBgit istash --abort\fR.)
+.RE
+
+.PP
+\fBquit\fR
+.RS 4
+This is just a convenient alias for \fB--quit\fR. \
+(\fBgit istash quit\fR is the same as \fBgit istash --quit\fR.)
 .RE
 
 .SH OPTIONS
@@ -297,6 +328,16 @@ Cancel the operation and restore the repository to the state before it started.
 .RE
 
 .PP
+\fB\-\-quit\fR
+.RS 4
+This option is only valid for \fBapply\fR and \fBpop\fR subcommands. \
+(You can skip the subcommand name in the command line.)
+.sp
+Cancel the operation without restoring the state of the repository. \
+(In an unlikely scenario where an operation breaks for any reason, this is the most reliable way to cancel it because it doesn't require the state to be in any way valid.)
+.RE
+
+.PP
 \fB\-h\fR
 .RS 4
 Print a rudimentary help text to stdout. \
@@ -362,7 +403,7 @@ When no \fB<stash>\fR is given, the latest stash is assumed (that is, \fBstash@{
 .nf
 \fB0\fR - command succeeded
 \fB1\fR - command failed
-\fB2\fR - command was stopped by a conflict and can be resumed with \fB\-\-continue\fR or aborted with \fB\-\-abort\fR (only \fBapply\fR and \fBpop\fR)
+\fB2\fR - (only \fBapply\fR and \fBpop\fR) command was stopped by a conflict and can be resumed with \fB\-\-continue\fR, aborted with \fB\-\-abort\fR or canceled with \fB\-\-quit\fR
 .fi
 
 .SH EXAMPLES

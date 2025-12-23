@@ -3,6 +3,7 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
+PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_ABORT
 
 __test_section__ 'Prepare repository'
@@ -20,59 +21,49 @@ git commit -am 'Changed aaa'
 
 SWITCH_HEAD_TYPE
 
-__test_section__ 'Pop stash'
+__test_section__ 'Dirty the working directory'
+printf 'wdf0a\n' >wdf0
+git add wdf0
+printf 'wdf0b\n' >wdf0
+printf 'wdf1a\n' >wdf1
+
+__test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
-assert_exit_code 2 git istash pop
-assert_outputs__apply__conflict_HT 'pop' '
+assert_exit_code 2 git istash "$APPLY_OPERATION"
+assert_outputs__apply__conflict_HT "$APPLY_OPERATION" '
 UU aaa
 ' '
 DU aaa
 '
 assert_files_HT '
 UU aaa		ccc|bbb
+   wdf0		wdf0b
 !! ignored0	ignored0
 !! ignored1	ignored1
 ' '
 DU aaa		bbb
+   wdf0		wdf0b
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
 assert_stash_count 1
-assert_branch_count_HT 1
-assert_data_files 'pop'
+assert_data_files "$APPLY_OPERATION"
 assert_rebase y
-assert_dotgit_contents_for 'pop'
+assert_dotgit_contents_for "$APPLY_OPERATION"
 
-mv .git/ISTASH_TARGET .git/ISTASH_TARGET~
-correct_head_sha2="$(get_head_sha_HT)"
-printf 'ddd\n' >aaa
-git add aaa
-assert_exit_code 1 git istash "$ABORT_FLAG"
-assert_outputs__main_script__damaged_operation_in_progress
-assert_files_HT '
-M  aaa		ddd
-!! ignored0	ignored0
-!! ignored1	ignored1
-' '
-A  aaa		ddd
-!! ignored0	ignored0
-!! ignored1	ignored1
-'
-assert_stash_count 1
-assert_branch_count_HT 1
-assert_head_sha_HT "$correct_head_sha2"
-assert_rebase y
-assert_dotgit_contents 'ISTASH_STASH' 'ISTASH_TARGET~' 'ISTASH_WORKING-DIR'
-
-__test_section__ 'Abort popping stash'
-mv .git/ISTASH_TARGET~ .git/ISTASH_TARGET
-assert_exit_code 0 git istash pop "$ABORT_FLAG"
-assert_outputs__apply__abort 'pop'
+__test_section__ "Abort $APPLY_OPERATION stash"
+rm -rf '.git/rebase-apply' '.git/rebase-merge'
+assert_exit_code 0 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
+assert_outputs__apply__no_rebase_in_progress_on_abort "$APPLY_OPERATION"
 assert_files_HT '
    aaa		ccc
+AM wdf0		wdf0b	wdf0a
+?? wdf1		wdf1a
 !! ignored0	ignored0
 !! ignored1	ignored1
 ' '
+AM wdf0		wdf0b	wdf0a
+?? wdf1		wdf1a
 !! ignored0	ignored0
 !! ignored1	ignored1
 '

@@ -5,7 +5,6 @@ non_essential_test
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_ABORT
-PARAMETRIZE_CONTINUE
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
@@ -53,12 +52,14 @@ assert_data_files "$APPLY_OPERATION"
 assert_rebase y
 assert_dotgit_contents_for "$APPLY_OPERATION"
 
-__test_section__ "Continue & abort $APPLY_OPERATION stash"
+__test_section__ "Abort $APPLY_OPERATION stash (0)"
 correct_head_sha2="$(get_head_sha_HT)"
-assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" "$ABORT_FLAG"
+mv .git/ISTASH_TARGET .git/ISTASH_TARGET~
+printf 'fa4e08a58\n' >.git/ISTASH_TARGET
+assert_exit_code 1 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
 assert_outputs '
 ' '
-error: Unclear whether to continue aborting or to abort continuing\.
+	fatal: "\.git\/ISTASH_TARGET" says "fa4e08a58" but there is no such commit\.
 '
 assert_files_HT '
 UU aaa		ccc|bbb
@@ -76,9 +77,10 @@ assert_branch_count_HT 1
 assert_head_sha_HT "$correct_head_sha2"
 assert_data_files "$APPLY_OPERATION"
 assert_rebase y
-assert_dotgit_contents_for "$APPLY_OPERATION"
+assert_dotgit_contents_for "$APPLY_OPERATION" 'ISTASH_TARGET~'
 
-__test_section__ "Abort $APPLY_OPERATION stash"
+__test_section__ "Abort $APPLY_OPERATION stash (1)"
+mv .git/ISTASH_TARGET~ .git/ISTASH_TARGET
 assert_exit_code 0 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
 assert_outputs__apply__abort "$APPLY_OPERATION"
 assert_files_HT '

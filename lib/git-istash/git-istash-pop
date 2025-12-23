@@ -10,19 +10,20 @@ print_help() {
 	printf 'This is only a rudimentary help text. Prefer "git help istash" if available.\n'
 	printf '\n'
 	printf 'Usage: git istash pop [<option>...] [<stash>]\n'
-	printf '   or: git istash pop (-c | --continue | --abort)\n'
+	printf '   or: git istash pop (-c | --continue | --abort | --quit)\n'
 	printf '   or: git istash pop -h\n'
 	printf '\n'
 	printf 'Options:\n'
 	printf '\t--abort\t\t- Abort the previous operation and return the repository\n\t\t\t  to the state before it started.\n'
 	printf '    -c, --continue\t- Resume the previous operation.\n\t\t\t  (Conflicts need to be resolved before that.)\n'
 	printf '    -h\t\t\t- Show this help text and exit.\n'
+	printf '\t--quit\t\t- Abort the operation but don'\''t restore the repository\n\t\t\t  state nor move the HEAD.\n'
 }
 
 save_data() {
 	printf '%s\n' "$stash" >"$stash_data_file"
 }
-load_data() {
+load_stash_data() {
 	if [ "$(wc -l <"$stash_data_file")" -ne 1 ]
 	then
 		printf 'fatal: "%s" should have exactly 1 line.\n' "$stash_data_file" 1>&2
@@ -39,6 +40,9 @@ load_data() {
 		printf 'fatal: "%s" says "%i" but there is no such stash.\n' "$stash_data_file" "$stash" 1>&2
 		return 1
 	fi
+}
+load_data() {
+	load_stash_data
 }
 delete_data() {
 	rm -f "$stash_data_file"
@@ -64,11 +68,11 @@ check_stash_for_pop() {
 	fi
 }
 
-check_data_files() { # resume
+check_data_files() { # resume abort quit
 	operation_in_progress="$(find_data_files)"
 	case "$operation_in_progress" in
 		pop)
-			if [ "$1" = y ] ; then return 0 ; fi
+			if [ "$1" = y ] || [ "$2" = y ] || [ "$3" = y ] ; then return 0 ; fi
 			{
 				printf_color 2 '\033[33m'
 				printf 'fatal: "git istash %s" is already in progress?\n' "$operation_in_progress"
@@ -78,6 +82,7 @@ check_data_files() { # resume
 			return 1
 			;;
 		apply)
+			if [ "$2" = y ] || [ "$3" = y ] ; then return 0 ; fi
 			{
 				printf_color 2 '\033[33m'
 				printf 'error: There is currently a istash %s in progress.\n' "$operation_in_progress"
@@ -86,6 +91,7 @@ check_data_files() { # resume
 			return 1
 			;;
 		error-*)
+			if [ "$3" = y ] ; then return 0 ; fi
 			{
 				operation_in_progress="$(printf '%s' "$operation_in_progress" | tail -c +7)"
 				printf_color 2 '\033[31m'
@@ -105,30 +111,13 @@ check_data_files() { # resume
 				else
 					printf 'hint: Fix the problem and finish that operation before starting "git istash pop"\n'
 				fi
-				if [ -f "$(make_target_data_file_path)" ] && [ -f "$(make_stash_data_file_path)" ]
-				then
-					printf 'hint: or remove the files "%s" and "%s" to manually cancel it.\n' "$(make_target_data_file_path)" "$(make_stash_data_file_path)"
-				elif [ -f "$(make_working_dir_sha_file_path)" ] && [ -f "$(make_stash_data_file_path)" ]
-				then
-					printf 'hint: or remove the files "%s" and "%s" to manually cancel it.\n' "$(make_working_dir_sha_file_path)" "$(make_stash_data_file_path)"
-				elif [ -f "$(make_stash_data_file_path)" ]
-				then
-					printf 'hint: or remove the file "%s" to manually cancel it.\n' "$(make_stash_data_file_path)"
-				elif [ -f "$(make_target_data_file_path)" ]
-				then
-					printf 'hint: or remove the file "%s" to manually cancel it.\n' "$(make_target_data_file_path)"
-				elif [ -f "$(make_working_dir_sha_file_path)" ]
-				then
-					printf 'hint: or remove the file "%s" to manually cancel it.\n' "$(make_working_dir_sha_file_path)"
-				else
-					printf 'hint: or remove <ERROR> to manually cancel it.\n'
-				fi
+				printf 'hint: or run "git istash %s --quit" to forcefully cancel it.\n' "$operation_in_progress"
 				printf_color 2 '\033[39m'
 			} 1>&2
 			return 1
 			;;
 		nothing)
-			if [ "$1" = n ] ; then return 0 ; fi
+			if [ "$1" = n ] && [ "$2" = n ] && [ "$3" = n ] ; then return 0 ; fi
 			printf 'fatal: No istash pop in progress?\n' 1>&2
 			return 1
 			;;
@@ -141,7 +130,7 @@ run_apply() { # args...
 
 do_start() { # args...
 	check_args_for_pop 1 "$@"
-	check_data_files n
+	check_data_files n n n
 	check_other_git_commands_state
 	find_stash "$@"
 	check_stash_for_pop
@@ -160,7 +149,7 @@ do_start() { # args...
 
 do_continue() { # args...
 	check_args_for_pop 0 "$@"
-	check_data_files y
+	check_data_files y n n
 	load_data
 	run_apply --continue
 	end_with_success
@@ -168,9 +157,15 @@ do_continue() { # args...
 
 do_abort() { # args...
 	check_args_for_pop 0 "$@"
-	check_data_files y
-	load_data
+	check_data_files n y n
 	run_apply --abort
+	delete_data
+}
+
+do_quit() { # args...
+	check_args_for_pop 0 "$@"
+	check_data_files n n y
+	run_apply --quit
 	delete_data
 }
 
@@ -181,17 +176,21 @@ do_pop() { # args...
 	elif [ "$abort_set" = y ]
 	then
 		do_abort "$@"
+	elif [ "$quit_set" = y ]
+	then
+		do_quit "$@"
 	else
 		do_start "$@"
 	fi
 }
 
-getopt_short_options='ch'
-getopt_long_options='abort,continue'
+getopt_short_options='chq'
+getopt_long_options='abort,continue,quit'
 getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
 abort_set=n
 continue_set=n
+quit_set=n
 while true
 do
 	case "$1" in
@@ -205,6 +204,9 @@ do
 		print_help
 		exit 0
 		;;
+	-q|--quit)
+		quit_set=y
+		;;
 	--)
 		shift
 		break
@@ -212,9 +214,24 @@ do
 	esac
 	shift
 done
+if [ $continue_set = y ] && [ $abort_set = y ] && [ $quit_set = y ]
+then
+	printf 'error: You can choose continue, abort or quit at your discretion but the rule is that you can only have one.\n' 1>&2
+	exit 1
+fi
+if [ $abort_set = y ] && [ $quit_set = y ]
+then
+	printf 'error: Either abort or quit; there is no middle road.\n' 1>&2
+	exit 1
+fi
 if [ $continue_set = y ] && [ $abort_set = y ]
 then
 	printf 'error: Unclear whether to continue aborting or to abort continuing.\n' 1>&2
+	exit 1
+fi
+if [ $continue_set = y ] && [ $quit_set = y ]
+then
+	printf 'error: Unclear whether to continue quitting or to quit continuing.\n' 1>&2
 	exit 1
 fi
 

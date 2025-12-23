@@ -4,6 +4,7 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_CONTINUE
+PARAMETRIZE_ABORT
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
@@ -43,6 +44,7 @@ assert_data_files 'pop'
 assert_rebase y
 assert_dotgit_contents_for 'pop'
 
+__test_section__ 'Continue popping stash'
 mv .git/ISTASH_TARGET .git/ISTASH_TARGET~
 correct_head_sha2="$(get_head_sha_HT)"
 printf 'ddd\n' >aaa
@@ -66,7 +68,7 @@ assert_dotgit_contents 'ISTASH_STASH' 'ISTASH_TARGET~' 'ISTASH_WORKING-DIR'
 
 __test_section__ 'Abort popping stash'
 mv .git/ISTASH_TARGET~ .git/ISTASH_TARGET
-assert_exit_code 0 git istash pop --abort
+assert_exit_code 0 git istash pop "$ABORT_FLAG"
 assert_outputs__apply__abort 'pop'
 assert_files_HT '
    aaa		ccc
