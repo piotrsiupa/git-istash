@@ -325,6 +325,9 @@ This option is only valid for \fBapply\fR and \fBpop\fR subcommands. \
 (You can skip the subcommand name in the command line.)
 .sp
 Cancel the operation and restore the repository to the state before it started.
+.sp
+Aborting is apply / pop agnostic. \
+You can call \fBgit istash apply --abort\fR on an active pop operation and it will still work correctly (and vice versa).
 .RE
 
 .PP
@@ -335,6 +338,9 @@ This option is only valid for \fBapply\fR and \fBpop\fR subcommands. \
 .sp
 Cancel the operation without restoring the state of the repository. \
 (In an unlikely scenario where an operation breaks for any reason, this is the most reliable way to cancel it because it doesn't require the state to be in any way valid.)
+.sp
+Quitting is apply / pop agnostic. \
+You can call \fBgit istash apply --abort\fR on an active pop operation and it will still work correctly (and vice versa).
 .RE
 
 .PP
