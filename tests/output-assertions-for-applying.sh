@@ -112,14 +112,18 @@ assert_outputs__apply__no_operation_in_progress() { # operation
 	'
 }
 
-# "existing_files" should be in the format "file0 and file1 is".
-# "missing_files" should be in format "files file0 and file1".
-assert_outputs__apply__broken_operation_in_progress() { # current_op broken_op missing_files
-	assert_outputs '
-	' '
-		fatal: "git istash '"$2"'" seems to be in progress but '"$(sanitize_for_sed "$3")"' missing!\n
+create_broken_operation_hint_regex() { # current_op broken_op
+	printf '%s' '
 		hint: Fix the problem and finish that operation before starting '"$(if [ "$1" = "$2" ] ; then printf 'a new one' ; else printf '%s' '"git istash '"$1"'"' ; fi)"'\n
 		hint: or run "git istash '"$2"' --quit" to forcefully cancel it\.
+	'
+}
+
+assert_outputs__apply__missing_data_file() { # current_op broken_op missing_files
+	assert_outputs '
+	' '
+		fatal: "git istash '"$2"'" seems to be in progress but "'"$(sanitize_for_sed "$3")"'" is missing!\n
+		'"$(create_broken_operation_hint_regex "$1" "$2")"'
 	'
 }
 
