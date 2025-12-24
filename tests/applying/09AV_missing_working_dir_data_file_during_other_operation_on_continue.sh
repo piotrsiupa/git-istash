@@ -59,12 +59,7 @@ printf 'ddd\n' >aaa
 git add aaa
 mv .git/ISTASH_WORKING-DIR .git/ISTASH_WORKING-DIR~
 assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
-if IS_APPLY
-then
-	assert_outputs__apply__broken_operation_in_progress "$APPLY_OPERATION" "$OTHER_APPLY_OPERATION" 'files ".git/ISTASH_TARGET" and ".git/ISTASH_STASH"' '".git/ISTASH_WORKING-DIR" is'
-else
-	assert_outputs__apply__broken_operation_in_progress "$APPLY_OPERATION" "$OTHER_APPLY_OPERATION" 'file ".git/ISTASH_TARGET"' '".git/ISTASH_WORKING-DIR" is'
-fi
+assert_outputs__apply__broken_operation_in_progress "$APPLY_OPERATION" "$OTHER_APPLY_OPERATION" '".git/ISTASH_WORKING-DIR" is'
 assert_files_HT '
 M  aaa		ddd
    wdf0		wdf0b

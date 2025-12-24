@@ -57,12 +57,7 @@ __test_section__ "Abort $APPLY_OPERATION stash (0)"
 correct_head_sha2="$(get_head_sha_HT)"
 mv .git/ISTASH_WORKING-DIR .git/ISTASH_WORKING-DIR~
 assert_exit_code 1 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
-if IS_APPLY
-then
-	assert_outputs__apply__broken_operation_in_progress "$APPLY_OPERATION" "$OTHER_APPLY_OPERATION" 'files ".git/ISTASH_TARGET" and ".git/ISTASH_STASH"' '".git/ISTASH_WORKING-DIR" is'
-else
-	assert_outputs__apply__broken_operation_in_progress "$APPLY_OPERATION" "$OTHER_APPLY_OPERATION" 'file ".git/ISTASH_TARGET"' '".git/ISTASH_WORKING-DIR" is'
-fi
+assert_outputs__apply__broken_operation_in_progress "$APPLY_OPERATION" "$OTHER_APPLY_OPERATION" '".git/ISTASH_WORKING-DIR" is'
 assert_files_HT '
 UU aaa		ccc|bbb
    wdf0		wdf0b
