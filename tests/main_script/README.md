@@ -9,3 +9,4 @@ The first character of the prefix (sub-category) can be:
 - `1` - Errors for invalid arguments.
 - `2` - Displaying help texts and documentation.
 - `3` - Implicid subcommands.
+- `4` - Commands that are aliases for options.

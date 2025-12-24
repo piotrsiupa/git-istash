@@ -36,7 +36,8 @@ _remove_tracked_files_from_untracked() ( # untracked_sha [path]
 			subtree_sha="$(_remove_tracked_files_from_untracked "$1" "$(printf '%s' "$line" | sed -E '1 s/^.*\t//')/")"
 			printf '%s\\000' "$line" | sed -E 's;^(\w+\s+\w+\s+)\w+(\s);\1'"$subtree_sha"'\2;'
 		fi | sed -E 's;^(.*\t)(.*/)?([^/]+)$;\1\3;'
-	done | xargs -r0 -- printf -- \
+		printf '\0'
+	done | xargs -n1 -r0 -- printf -- \
 	| git mktree -z
 )
 
@@ -75,7 +76,8 @@ _merge_tracked_and_untracked() ( # tracked_sha [path]
 			subtree_sha="$(_merge_tracked_and_untracked "$1" "$(printf '%s' "$line" | sed -E '1 s/^.*\t//')/")"
 			printf '%s\\000' "$line" | sed -E 's;^(\w+\s+\w+\s+)\w+(\s);\1'"$subtree_sha"'\2;'
 		fi | sed -E 's;^(.*\t)(.*/)?([^/]+)$;\1\3;'
-	done | xargs -r0 -- printf -- \
+		printf '\0'
+	done | xargs -n1 -r0 -- printf -- \
 	| git mktree -z
 )
 

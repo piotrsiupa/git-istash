@@ -63,7 +63,7 @@ correct_head_sha2="$(get_head_sha_HT)"
 printf 'ddd\n' >aaa
 git add aaa
 assert_exit_code 1 git istash "$APPLY_OPERATION"
-assert_outputs__apply__broken_operation_in_progress "$APPLY_OPERATION" 'pop' 'files ".git/ISTASH_WORKING-DIR" and ".git/ISTASH_STASH"' '".git/ISTASH_TARGET" is'
+assert_outputs__apply__broken_operation_in_progress "$APPLY_OPERATION" 'pop' '".git/ISTASH_TARGET" is'
 assert_files_HT '
 M  aaa		ddd
    wdf0		wdf0b

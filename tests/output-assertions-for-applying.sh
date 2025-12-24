@@ -70,6 +70,12 @@ assert_outputs__apply__abort() { # operation
 	'
 }
 
+assert_outputs__apply__quit() {
+	assert_outputs '
+	' '
+	'
+}
+
 assert_outputs__apply__non_stash_on_pop() {
 	assert_outputs '
 	' '
@@ -108,12 +114,12 @@ assert_outputs__apply__no_operation_in_progress() { # operation
 
 # "existing_files" should be in the format "file0 and file1 is".
 # "missing_files" should be in format "files file0 and file1".
-assert_outputs__apply__broken_operation_in_progress() { # current_op broken_op existing_files missing_files
+assert_outputs__apply__broken_operation_in_progress() { # current_op broken_op missing_files
 	assert_outputs '
 	' '
-		fatal: "git istash '"$2"'" seems to be in progress but '"$(sanitize_for_sed "$4")"' missing!\n
+		fatal: "git istash '"$2"'" seems to be in progress but '"$(sanitize_for_sed "$3")"' missing!\n
 		hint: Fix the problem and finish that operation before starting '"$(if [ "$1" = "$2" ] ; then printf 'a new one' ; else printf '%s' '"git istash '"$1"'"' ; fi)"'\n
-		hint: or remove the '"$(sanitize_for_sed "$3")"' to manually cancel it\.
+		hint: or run "git istash '"$2"' --quit" to forcefully cancel it\.
 	'
 }
 

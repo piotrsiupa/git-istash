@@ -4,7 +4,7 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
-PARAMETRIZE_CONTINUE
+PARAMETRIZE_ABORT
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
@@ -52,25 +52,22 @@ assert_data_files "$APPLY_OPERATION"
 assert_rebase y
 assert_dotgit_contents_for "$APPLY_OPERATION"
 
-__test_section__ "Continue $APPLY_OPERATION stash (0)"
+__test_section__ "Abort $APPLY_OPERATION stash (0)"
 correct_head_sha2="$(get_head_sha_HT)"
-printf 'ddd\n' >aaa
-git add aaa
 mv .git/ISTASH_TARGET .git/ISTASH_TARGET~
-assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
-if IS_APPLY
-then
-	assert_outputs__apply__broken_operation_in_progress "$APPLY_OPERATION" "$APPLY_OPERATION" 'file ".git/ISTASH_WORKING-DIR"' '".git/ISTASH_TARGET" is'
-else
-	assert_outputs__apply__broken_operation_in_progress "$APPLY_OPERATION" "$APPLY_OPERATION" 'files ".git/ISTASH_WORKING-DIR" and ".git/ISTASH_STASH"' '".git/ISTASH_TARGET" is'
-fi
+printf 'fa4e08a58\n' >.git/ISTASH_TARGET
+assert_exit_code 1 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
+assert_outputs '
+' '
+	fatal: "\.git\/ISTASH_TARGET" says "fa4e08a58" but there is no such commit\.
+'
 assert_files_HT '
-M  aaa		ddd
+UU aaa		ccc|bbb
    wdf0		wdf0b
 !! ignored0	ignored0
 !! ignored1	ignored1
 ' '
-A  aaa		ddd
+DU aaa		bbb
    wdf0		wdf0b
 !! ignored0	ignored0
 !! ignored1	ignored1
@@ -78,33 +75,27 @@ A  aaa		ddd
 assert_stash_count 1
 assert_branch_count_HT 1
 assert_head_sha_HT "$correct_head_sha2"
+assert_data_files "$APPLY_OPERATION"
 assert_rebase y
-if IS_APPLY
-then
-	assert_dotgit_contents 'ISTASH_TARGET~' 'ISTASH_WORKING-DIR'
-else
-	assert_dotgit_contents 'ISTASH_STASH' 'ISTASH_TARGET~' 'ISTASH_WORKING-DIR'
-fi
+assert_dotgit_contents_for "$APPLY_OPERATION" 'ISTASH_TARGET~'
 
-__test_section__ "Continue $APPLY_OPERATION stash (1)"
+__test_section__ "Abort $APPLY_OPERATION stash (1)"
 mv .git/ISTASH_TARGET~ .git/ISTASH_TARGET
-stash_sha="$(git rev-parse stash)"
-assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
-assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
+assert_exit_code 0 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
+assert_outputs__apply__abort "$APPLY_OPERATION"
 assert_files_HT '
- M aaa		ddd	ccc
+   aaa		ccc
 AM wdf0		wdf0b	wdf0a
 ?? wdf1		wdf1a
 !! ignored0	ignored0
 !! ignored1	ignored1
 ' '
- A aaa		ddd
 AM wdf0		wdf0b	wdf0a
 ?? wdf1		wdf1a
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
-assert_stash_count_AO 1
+assert_stash_count 1
 assert_log_length_HT 3
 assert_branch_count 1
 assert_head_sha_HT "$correct_head_sha"

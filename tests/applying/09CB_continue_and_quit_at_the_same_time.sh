@@ -4,8 +4,8 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
-PARAMETRIZE_ABORT
 PARAMETRIZE_CONTINUE
+PARAMETRIZE_QUIT
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
@@ -29,7 +29,6 @@ printf 'wdf0b\n' >wdf0
 printf 'wdf1a\n' >wdf1
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
-correct_head_sha="$(get_head_sha_HT)"
 assert_exit_code 2 git istash "$APPLY_OPERATION"
 assert_outputs__apply__conflict_HT "$APPLY_OPERATION" '
 UU aaa
@@ -53,12 +52,12 @@ assert_data_files "$APPLY_OPERATION"
 assert_rebase y
 assert_dotgit_contents_for "$APPLY_OPERATION"
 
-__test_section__ "Continue & abort $APPLY_OPERATION stash"
-correct_head_sha2="$(get_head_sha_HT)"
-assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" "$ABORT_FLAG"
+__test_section__ "Continue & quit $APPLY_OPERATION stash"
+correct_head_sha="$(get_head_sha_HT)"
+assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" "$QUIT_FLAG"
 assert_outputs '
 ' '
-error: Unclear whether to continue aborting or to abort continuing\.
+error: Unclear whether to continue quitting or to quit continuing\.
 '
 assert_files_HT '
 UU aaa		ccc|bbb
@@ -73,32 +72,28 @@ DU aaa		bbb
 '
 assert_stash_count 1
 assert_branch_count_HT 1
-assert_head_sha_HT "$correct_head_sha2"
+assert_head_sha_HT "$correct_head_sha"
 assert_data_files "$APPLY_OPERATION"
 assert_rebase y
 assert_dotgit_contents_for "$APPLY_OPERATION"
 
-__test_section__ "Abort $APPLY_OPERATION stash"
-assert_exit_code 0 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
-assert_outputs__apply__abort "$APPLY_OPERATION"
+__test_section__ "Quit $APPLY_OPERATION stash"
+assert_exit_code 0 git istash "$APPLY_OPERATION" "$QUIT_FLAG"
+assert_outputs__apply__quit
 assert_files_HT '
-   aaa		ccc
-AM wdf0		wdf0b	wdf0a
-?? wdf1		wdf1a
+UU aaa		ccc|bbb
+   wdf0		wdf0b
 !! ignored0	ignored0
 !! ignored1	ignored1
 ' '
-AM wdf0		wdf0b	wdf0a
-?? wdf1		wdf1a
+DU aaa		bbb
+   wdf0		wdf0b
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
 assert_stash_count 1
-assert_log_length_HT 3
-assert_branch_count 1
+assert_branch_count_HT 1
 assert_head_sha_HT "$correct_head_sha"
-assert_head_name_HT
 assert_data_files 'none'
 assert_rebase n
-assert_branch_metadata_HT
-assert_dotgit_contents
+assert_dotgit_contents_for 'none'

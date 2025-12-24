@@ -27,10 +27,11 @@ git add wdf0
 printf 'wdf0b\n' >wdf0
 printf 'wdf1a\n' >wdf1
 
-__test_section__ "$CAP_APPLY_OPERATION stash"
+__test_section__ "$CAP_OTHER_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
-assert_exit_code 2 git istash "$APPLY_OPERATION"
-assert_outputs__apply__conflict_HT "$APPLY_OPERATION" '
+#shellcheck disable=SC2086
+assert_exit_code 2 git istash $OTHER_APPLY_OPERATION
+assert_outputs__apply__conflict_HT "$OTHER_APPLY_OPERATION" '
 UU aaa
 ' '
 DU aaa
@@ -48,22 +49,17 @@ DU aaa		bbb
 '
 assert_stash_count 1
 assert_branch_count_HT 1
-assert_data_files "$APPLY_OPERATION"
+assert_data_files "$OTHER_APPLY_OPERATION"
 assert_rebase y
-assert_dotgit_contents_for "$APPLY_OPERATION"
+assert_dotgit_contents_for "$OTHER_APPLY_OPERATION"
 
 __test_section__ "Continue $APPLY_OPERATION stash (0)"
 correct_head_sha2="$(get_head_sha_HT)"
 printf 'ddd\n' >aaa
 git add aaa
-mv .git/ISTASH_WORKING-DIR .git/ISTASH_WORKING-DIR~
+mv .git/ISTASH_TARGET .git/ISTASH_TARGET~
 assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
-if IS_APPLY
-then
-	assert_outputs__apply__broken_operation_in_progress "$APPLY_OPERATION" "$APPLY_OPERATION" 'file ".git/ISTASH_TARGET"' '".git/ISTASH_WORKING-DIR" is'
-else
-	assert_outputs__apply__broken_operation_in_progress "$APPLY_OPERATION" "$APPLY_OPERATION" 'files ".git/ISTASH_TARGET" and ".git/ISTASH_STASH"' '".git/ISTASH_WORKING-DIR" is'
-fi
+assert_outputs__apply__broken_operation_in_progress "$APPLY_OPERATION" "$OTHER_APPLY_OPERATION" '".git/ISTASH_TARGET" is'
 assert_files_HT '
 M  aaa		ddd
    wdf0		wdf0b
@@ -81,16 +77,17 @@ assert_head_sha_HT "$correct_head_sha2"
 assert_rebase y
 if IS_APPLY
 then
-	assert_dotgit_contents 'ISTASH_TARGET' 'ISTASH_WORKING-DIR~'
+	assert_dotgit_contents 'ISTASH_STASH' 'ISTASH_TARGET~' 'ISTASH_WORKING-DIR'
 else
-	assert_dotgit_contents 'ISTASH_STASH' 'ISTASH_TARGET' 'ISTASH_WORKING-DIR~'
+	assert_dotgit_contents 'ISTASH_TARGET~' 'ISTASH_WORKING-DIR'
 fi
 
-__test_section__ "Continue $APPLY_OPERATION stash (1)"
-mv .git/ISTASH_WORKING-DIR~ .git/ISTASH_WORKING-DIR
+__test_section__ "Continue $OTHER_APPLY_OPERATION stash (1)"
+mv .git/ISTASH_TARGET~ .git/ISTASH_TARGET
+#shellcheck disable=SC2086
 stash_sha="$(git rev-parse stash)"
-assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
-assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
+assert_exit_code 0 git istash "$OTHER_APPLY_OPERATION" "$CONTINUE_FLAG"
+assert_outputs__apply__success "$OTHER_APPLY_OPERATION" 0 "$stash_sha"
 assert_files_HT '
  M aaa		ddd	ccc
 AM wdf0		wdf0b	wdf0a
@@ -104,7 +101,12 @@ AM wdf0		wdf0b	wdf0a
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
-assert_stash_count_AO 1
+if IS_APPLY
+then
+	assert_stash_count 0
+else
+	assert_stash_count 1
+fi
 assert_log_length_HT 3
 assert_branch_count 1
 assert_head_sha_HT "$correct_head_sha"

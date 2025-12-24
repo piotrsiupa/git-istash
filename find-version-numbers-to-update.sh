@@ -13,14 +13,14 @@ print_help() {
 }
 
 print_version() {
-	printf 'version number update reminder script version 1.0.1\n'
+	printf 'version number update reminder script version 1.0.2\n'
 }
 
 find_scripts_to_update_versions() {
-	regex='\<print_version\>'
+	regex='\<print_version\>\s*\(\)'
 	changed_files="$(git status --porcelain --no-renames | grep -vE 'D  ' | cut -c4- | grep -vE '^tests/.*/')"
 	{
-		printf '%s\n' "$changed_files" | xargs -- grep -El "$regex" -- | grep -vFx 'releasing-new-version.md'
+		printf '%s\n' "$changed_files" | xargs -- grep -El "$regex" -- || true
 		if printf '%s\n' "$changed_files" | xargs -- grep -EL "$regex" -- | grep -qE '^lib/'
 		then
 			printf 'bin/git-istash\n'
