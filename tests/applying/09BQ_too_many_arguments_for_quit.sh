@@ -56,11 +56,7 @@ correct_head_sha="$(get_head_sha_HT)"
 printf 'ddd\n' >aaa
 git add aaa
 assert_exit_code 1 git istash "$APPLY_OPERATION" "$QUIT_FLAG" 0
-assert_outputs '
-' '
-	error: Too many arguments\.\n
-	error: Type "git istash '"$APPLY_OPERATION"' --help" for more information\.
-'
+assert_outputs__too_many_arguments "$APPLY_OPERATION"
 assert_files_HT '
 M  aaa		ddd
    wdf0		wdf0b

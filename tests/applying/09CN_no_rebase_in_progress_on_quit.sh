@@ -56,10 +56,7 @@ git rebase --quit
 printf 'ddd\n' >aaa
 git add aaa
 assert_exit_code 0 git istash "$APPLY_OPERATION" "$QUIT_FLAG"
-assert_outputs '
-' '
-fatal: [Nn]o rebase in progress\??
-'
+assert_outputs__apply__quit
 assert_files_HT '
 M  aaa		ddd
    wdf0		wdf0b

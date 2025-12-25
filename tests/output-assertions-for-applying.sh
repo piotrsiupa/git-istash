@@ -119,11 +119,54 @@ create_broken_operation_hint_regex() { # current_op broken_op
 	'
 }
 
-assert_outputs__apply__missing_data_file() { # current_op broken_op missing_files
+assert_outputs__apply__missing_data_file() { # current_op broken_op data_file
 	assert_outputs '
 	' '
 		fatal: "git istash '"$2"'" seems to be in progress but "'"$(sanitize_for_sed "$3")"'" is missing!\n
 		'"$(create_broken_operation_hint_regex "$1" "$2")"'
+	'
+}
+
+assert_outputs__apply__data_file_not_1_line() { # current_op broken_op data_file
+	assert_outputs '
+	' '
+		fatal: "'"$(sanitize_for_sed "$3")"'" should have exactly 1 line\.\n
+		'"$(create_broken_operation_hint_regex "$1" "$2")"'
+	'
+}
+
+assert_outputs__apply__data_file_invalid_commit() { # current_op broken_op data_file invalid_commit
+	assert_outputs '
+	' '
+		fatal: "'"$(sanitize_for_sed "$3")"'" says "'"$(sanitize_for_sed "$4")"'" but there is no such commit\.\n
+		'"$(create_broken_operation_hint_regex "$1" "$2")"'
+	'
+}
+
+assert_outputs__apply__data_file_invalid_integer() { # current_op broken_op data_file
+	assert_outputs '
+	' '
+		fatal: "'"$(sanitize_for_sed "$3")"'" doesn'\''t contain a positive integer\.\n
+		'"$(create_broken_operation_hint_regex "$1" "$2")"'
+	'
+}
+
+assert_outputs__apply__data_file_invalid_stash_number() { # current_op broken_op data_file stash_number
+	assert_outputs '
+	' '
+		fatal: "'"$(sanitize_for_sed "$3")"'" says "'"$(sanitize_for_sed "$4")"'" but there is no such stash\.\n
+		'"$(create_broken_operation_hint_regex "$1" "$2")"'
+	'
+}
+
+assert_outputs__apply__branch_already_used() { # current_op branch
+	assert_outputs '
+	' '
+		fatal: '\'"$(sanitize_for_sed "$2")"\'' is already used by worktree at '\''.*'\''\n
+		\n
+		fatal: Failed to restore HEAD\.\n
+		hint: Fix problems and rerun "git istash '"$1"' --abort"\n
+		hint: or run "git istash '"$1"' --quit" to forcefully cancel it\.
 	'
 }
 
@@ -146,5 +189,33 @@ assert_outputs__apply__no_rebase_in_progress_on_abort() { # operation
 	' '
 		fatal: [Nn]o rebase in progress\??\n
 		Aborted "git istash '"$(sanitize_for_sed "$1")"'"
+	'
+}
+
+assert_outputs__apply__continue_abort() {
+	assert_outputs '
+	' '
+		error: Unclear whether to continue aborting or to abort continuing\.
+	'
+}
+
+assert_outputs__apply__continue_quit() {
+	assert_outputs '
+	' '
+		error: Unclear whether to continue quitting or to quit continuing\.
+	'
+}
+
+assert_outputs__apply__abort_quit() {
+	assert_outputs '
+	' '
+		error: Either abort or quit\; there is no middle road\.
+	'
+}
+
+assert_outputs__apply__continue_abort_quit() {
+	assert_outputs '
+	' '
+		error: You can choose continue, abort or quit at your discretion but the rule is that you can only have one\.
 	'
 }

@@ -16,11 +16,7 @@ SWITCH_HEAD_TYPE
 __test_section__ "$CAP_APPLY_OPERATION stash (without changes)"
 correct_head_sha="$(get_head_sha_HT)"
 assert_exit_code 1 git istash "$APPLY_OPERATION" 0 0
-assert_outputs '
-' '
-	error: Too many arguments\.\n
-	error: Type "git istash '"$APPLY_OPERATION"' --help" for more information\.
-'
+assert_outputs__too_many_arguments "$APPLY_OPERATION"
 assert_files_HT '
 !! ignored0	ignored0
 !! ignored1	ignored1
@@ -39,11 +35,7 @@ printf 'aaa\n' >aaa
 git add aaa
 printf 'bbb\n' >aaa
 assert_exit_code 1 git istash "$APPLY_OPERATION" 0 0
-assert_outputs '
-' '
-	error: Too many arguments\.\n
-	error: Type "git istash '"$APPLY_OPERATION"' --help" for more information\.
-'
+assert_outputs__too_many_arguments "$APPLY_OPERATION"
 assert_files_HT '
 AM aaa		bbb	aaa
 !! ignored0	ignored0

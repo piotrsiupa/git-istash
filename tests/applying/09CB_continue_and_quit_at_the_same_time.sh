@@ -55,10 +55,7 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 __test_section__ "Continue & quit $APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" "$QUIT_FLAG"
-assert_outputs '
-' '
-error: Unclear whether to continue quitting or to quit continuing\.
-'
+assert_outputs__apply__continue_quit
 assert_files_HT '
 UU aaa		ccc|bbb
    wdf0		wdf0b

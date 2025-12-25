@@ -120,7 +120,8 @@ then
 	fi
 	shift
 	. "$(dirname "$0")/../lib/git-istash/git-istash-commons"
-	case "$(find_data_files)" in
+	data_files="$(find_data_files)"
+	case "$data_files" in
 		nothing)
 			printf 'fatal: There doesn'\''t seem to be any operation in progress.\n' 1>&2
 			exit 1
@@ -132,8 +133,13 @@ then
 			exec_subcommand 'pop' "$continuation_option" "$@"
 			;;
 		error-*)
-			printf 'fatal: The operation in progress seems damaged.\n' 1>&2
-			exit 1
+			if [ "$continuation_option" = '--quit' ]
+			then
+				exec_subcommand "$(printf '%s' "$data_files" | tail -c+7)" "$continuation_option" "$@"
+			else
+				printf 'fatal: The operation in progress seems damaged.\n' 1>&2
+				exit 1
+			fi
 			;;
 	esac
 fi

@@ -56,10 +56,7 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 __test_section__ "Continue & abort $APPLY_OPERATION stash"
 correct_head_sha2="$(get_head_sha_HT)"
 assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" "$ABORT_FLAG"
-assert_outputs '
-' '
-error: Unclear whether to continue aborting or to abort continuing\.
-'
+assert_outputs__apply__continue_abort
 assert_files_HT '
 UU aaa		ccc|bbb
    wdf0		wdf0b

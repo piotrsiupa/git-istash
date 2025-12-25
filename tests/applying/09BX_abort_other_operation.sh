@@ -58,10 +58,7 @@ correct_head_sha2="$(get_head_sha_HT)"
 if IS_APPLY
 then
 	assert_exit_code 1 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
-	assert_outputs '
-	' '
-		error: There is currently a istash pop in progress\.
-	'
+	assert_outputs__apply__other_operation_in_progress 'istash pop'
 	assert_files_HT '
 	UU aaa		ccc|bbb
 	   wdf0		wdf0b

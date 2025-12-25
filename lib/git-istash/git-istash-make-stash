@@ -543,8 +543,7 @@ then
 fi
 if [ -n "$patch_options" ] && [ "$pathspec_from_file" = '-' ]
 then
-	#shellcheck disable=SC2016
-	printf 'Stdin cannot be assigned to both `--patch` and the pathspec.\n' 1>&2
+	printf 'Stdin cannot be assigned to both "--patch" and the pathspec.\n' 1>&2
 	exit 1
 fi
 if [ -z "$pathspec_from_file" ] && [ "$pathspec_file_nul" = y ]

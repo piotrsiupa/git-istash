@@ -48,26 +48,7 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 __test_section__ "Abort $APPLY_OPERATION stash (0)"
 git worktree add block-master master
 assert_exit_code 1 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
-if IS_APPLY
-then
-	assert_outputs '
-	' '
-	fatal: '\''master'\'' is already used by worktree at '\''.*'\''\n
-	\n
-	fatal: Failed to restore HEAD\.\n
-	hint: Fix problems and rerun "git istash apply --abort"\n
-	hint: or delete the files "\.git\/ISTASH_TARGET" and "\.git\/ISTASH_WORKING-DIR" to cancel manually.
-	'
-else
-	assert_outputs '
-	' '
-	fatal: '\''master'\'' is already used by worktree at '\''.*'\''\n
-	\n
-	fatal: Failed to restore HEAD\.\n
-	hint: Fix problems and rerun "git istash pop --abort"\n
-	hint: or delete the files "\.git\/ISTASH_TARGET", "\.git\/ISTASH_WORKING-DIR" and "\.git\/ISTASH_STASH" to cancel manually.
-	'
-fi
+assert_outputs__apply__branch_already_used "$APPLY_OPERATION" 'master'
 assert_all_files '
 aaa
 block-master/.git

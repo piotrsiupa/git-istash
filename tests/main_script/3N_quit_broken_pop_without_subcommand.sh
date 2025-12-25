@@ -43,37 +43,16 @@ assert_rebase y
 assert_dotgit_contents_for 'pop'
 
 __test_section__ 'Quit popping stash'
-mv .git/ISTASH_TARGET .git/ISTASH_TARGET~
+rm .git/ISTASH_TARGET
 correct_head_sha="$(get_head_sha_HT)"
-printf 'ddd\n' >aaa
-git add aaa
-assert_exit_code 1 git istash "$QUIT_FLAG"
-assert_outputs__main_script__damaged_operation_in_progress
-assert_files_HT '
-M  aaa		ddd
-!! ignored0	ignored0
-!! ignored1	ignored1
-' '
-A  aaa		ddd
-!! ignored0	ignored0
-!! ignored1	ignored1
-'
-assert_stash_count 1
-assert_branch_count_HT 1
-assert_head_sha_HT "$correct_head_sha"
-assert_rebase y
-assert_dotgit_contents 'ISTASH_STASH' 'ISTASH_TARGET~' 'ISTASH_WORKING-DIR'
-
-__test_section__ 'Quit popping stash'
-mv .git/ISTASH_TARGET~ .git/ISTASH_TARGET
-assert_exit_code 0 git istash pop "$QUIT_FLAG"
+assert_exit_code 0 git istash "$QUIT_FLAG"
 assert_outputs__apply__quit
 assert_files_HT '
-M  aaa		ddd
+UU aaa		ccc|bbb
 !! ignored0	ignored0
 !! ignored1	ignored1
 ' '
-A  aaa		ddd
+DU aaa		bbb
 !! ignored0	ignored0
 !! ignored1	ignored1
 '

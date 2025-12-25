@@ -23,26 +23,29 @@ print_help() {
 save_data() {
 	printf '%s\n' "$stash" >"$stash_data_file"
 }
-load_stash_data() {
+load_stash_data() { # subcommand
 	if [ "$(wc -l <"$stash_data_file")" -ne 1 ]
 	then
 		printf 'fatal: "%s" should have exactly 1 line.\n' "$stash_data_file" 1>&2
+		print_quit_hint "$1"
 		return 1
 	fi
 	stash="$(cat "$stash_data_file")"
 	if ! [ "$stash" -eq "$stash" ] 2>/dev/null || [ "$stash" -lt 0 ]
 	then
 		printf 'fatal: "%s" doesn'\''t contain a positive integer.\n' "$stash_data_file" 1>&2
+		print_quit_hint "$1"
 		return 1
 	fi
 	if [ "$stash" -ge "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" ]
 	then
 		printf 'fatal: "%s" says "%i" but there is no such stash.\n' "$stash_data_file" "$stash" 1>&2
+		print_quit_hint "$1"
 		return 1
 	fi
 }
-load_data() {
-	load_stash_data
+load_data() { # subcommand
+	load_stash_data "$1"
 }
 delete_data() {
 	rm -f "$stash_data_file"
@@ -67,6 +70,18 @@ check_stash_for_pop() {
 		return 1
 	fi
 }
+
+print_quit_hint() { # subcommand
+	printf_color 2 '\033[33m'
+	if [ "$1" = 'pop' ]
+	then
+		printf 'hint: Fix the problem and finish that operation before starting a new one\n'
+	else
+		printf 'hint: Fix the problem and finish that operation before starting "git istash pop"\n'
+	fi
+	printf 'hint: or run "git istash %s --quit" to forcefully cancel it.\n' "$1"
+	printf_color 2 '\033[39m'
+} 1>&2
 
 check_data_files() { # resume abort quit
 	operation_in_progress="$(find_data_files)"
@@ -105,15 +120,9 @@ check_data_files() { # resume abort quit
 					printf 'fatal: "git istash %s" seems to be in progress but "%s" and "%s" are missing!\n' "$operation_in_progress" "$(make_target_data_file_path)" "$(make_working_dir_sha_file_path)"
 				fi
 				printf_color 2 '\033[33m'
-				if [ "$operation_in_progress" = 'pop' ]
-				then
-					printf 'hint: Fix the problem and finish that operation before starting a new one\n'
-				else
-					printf 'hint: Fix the problem and finish that operation before starting "git istash pop"\n'
-				fi
-				printf 'hint: or run "git istash %s --quit" to forcefully cancel it.\n' "$operation_in_progress"
 				printf_color 2 '\033[39m'
 			} 1>&2
+			print_quit_hint "$operation_in_progress"
 			return 1
 			;;
 		nothing)
@@ -150,7 +159,7 @@ do_start() { # args...
 do_continue() { # args...
 	check_args_for_pop 0 "$@"
 	check_data_files y n n
-	load_data
+	load_data 'pop'
 	run_apply --continue
 	end_with_success
 }

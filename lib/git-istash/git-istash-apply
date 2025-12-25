@@ -36,10 +36,11 @@ save_data() {
 	
 	printf '%s\n' "$working_dir_changes_sha" >"$working_dir_sha_file"
 }
-load_target_data() {
+load_target_data() { # subcommand
 	if [ "$(wc -l <"$target_data_file")" -ne 1 ]
 	then
 		printf 'fatal: "%s" should have exactly 1 line.\n' "$target_data_file" 1>&2
+		print_quit_hint_for_new_operation "$1"
 		return 1
 	fi
 	current_branch="$(cat "$target_data_file")"
@@ -53,6 +54,7 @@ load_target_data() {
 	if ! git rev-parse --quiet --verify "$current_branch^{commit}" 1>/dev/null
 	then
 		printf 'fatal: "%s" says "%s" but there is no such commit.\n' "$target_data_file" "$current_branch" 1>&2
+		print_quit_hint_for_new_operation "$1"
 		return 1
 	fi
 	if [ "$curr_branch_type" != 'orphan' ] && [ "$(git rev-parse "$current_branch")" = "$current_branch" ]
@@ -60,22 +62,24 @@ load_target_data() {
 		curr_branch_type='detached'
 	fi
 }
-load_working_dir_data() {
+load_working_dir_data() { # subcommand
 	if [ "$(wc -l <"$working_dir_sha_file")" -ne 1 ]
 	then
 		printf 'fatal: "%s" should have exactly 1 line.\n' "$working_dir_sha_file" 1>&2
+		print_quit_hint_for_new_operation "$1"
 		return 1
 	fi
 	working_dir_changes_sha="$(cat "$working_dir_sha_file")"
 	if ! git rev-parse --quiet --verify "$working_dir_changes_sha^{commit}" 1>/dev/null
 	then
 		printf 'fatal: "%s" says "%s" but there is no such commit.\n' "$working_dir_sha_file" "$working_dir_changes_sha" 1>&2
+		print_quit_hint_for_new_operation "$1"
 		return 1
 	fi
 }
-load_data() {
-	load_target_data
-	load_working_dir_data
+load_data() { # subcommand
+	load_target_data "$1"
+	load_working_dir_data "$1"
 }
 delete_data() {
 	rm -f "$target_data_file" "$working_dir_sha_file"
@@ -138,6 +142,29 @@ end_with_success() {
 	printf 'Stash of the old working dir: %s\n' "$(prepare_stash_of_working_dir)"
 }
 
+print_quit_hint() { # subcommand
+	printf 'hint: or run "git istash %s --quit" to forcefully cancel it.\n' "$1"
+}
+
+print_quit_hint_for_new_operation() { # subcommand
+	printf_color 2 '\033[33m'
+	if [ "$1" = "$(get_sub_command_name)" ]
+	then
+		printf 'hint: Fix the problem and finish that operation before starting a new one\n'
+	else
+		printf 'hint: Fix the problem and finish that operation before starting "git istash apply"\n'
+	fi
+	print_quit_hint "$1"
+	printf_color 2 '\033[39m'
+} 1>&2
+
+print_quit_hint_for_resumed_operation() { # subcommand
+	printf_color 2 '\033[33m'
+	printf 'hint: Fix problems and rerun "git istash %s --abort"\n' "$(get_sub_command_name)"
+	print_quit_hint "$(get_sub_command_name)"
+	printf_color 2 '\033[39m'
+} 1>&2
+
 check_data_files() { # resume quit
 	if [ "$is_pop" = y ] ; then return 0 ; fi
 	operation_in_progress="$(find_data_files)"
@@ -175,16 +202,8 @@ check_data_files() { # resume quit
 				else
 					printf 'fatal: "git istash %s" seems to be in progress but "%s" and "%s" are missing!\n' "$operation_in_progress" "$(make_target_data_file_path)" "$(make_working_dir_sha_file_path)"
 				fi
-				printf_color 2 '\033[33m'
-				if [ "$operation_in_progress" = 'apply' ]
-				then
-					printf 'hint: Fix the problem and finish that operation before starting a new one\n'
-				else
-					printf 'hint: Fix the problem and finish that operation before starting "git istash apply"\n'
-				fi
-				printf 'hint: or run "git istash %s --quit" to forcefully cancel it.\n' "$operation_in_progress"
-				printf_color 2 '\033[39m'
 			} 1>&2
+			print_quit_hint_for_new_operation "$operation_in_progress"
 			return 1
 			;;
 		nothing)
@@ -273,7 +292,7 @@ do_start() { # args...
 do_continue() { # args...
 	check_args_for_apply 0 "$@"
 	check_data_files y n
-	load_data
+	load_data "$(get_sub_command_name)"
 	
 	git commit --quiet --allow-empty --no-edit 1>/dev/null 2>&1 || true
 	exec 3>&1
@@ -295,7 +314,7 @@ do_continue() { # args...
 do_abort() { # args...
 	check_args_for_apply 0 "$@"
 	check_data_files y n
-	load_data
+	load_data "$(get_sub_command_name)"
 	
 	git rebase --abort || true  # Errors are ignored because if rebase is not in progress, we still want to try to restore HEAD.
 	git reset --quiet --hard
@@ -336,15 +355,7 @@ do_abort() { # args...
 		{
 			printf '\n'
 			printf 'fatal: Failed to restore HEAD.\n'
-			printf_color 2 '\033[33m'
-			printf 'hint: Fix problems and rerun "git istash %s --abort"\n' "$(get_sub_command_name)"
-			if [ "$is_pop" = n ]
-			then
-				printf 'hint: or delete the files "%s" and "%s" to cancel manually.\n' "$target_data_file" "$working_dir_sha_file"
-			else
-				printf 'hint: or delete the files "%s", "%s" and "%s" to cancel manually.\n' "$target_data_file" "$working_dir_sha_file" "$(make_stash_data_file_path)"
-			fi
-			printf_color 2 '\033[39m'
+			print_quit_hint_for_resumed_operation
 		} 1>&2
 		return 1
 	fi
@@ -359,7 +370,7 @@ do_quit() { # args...
 		exec sh "$lib_dir/git-istash-pop" --quit "$@"
 	fi
 	
-	git rebase --quit || true  # Errors are ignored because if rebase is not in progress or broken, we still want to remove the data files.
+	git rebase --quit 2>/dev/null || true  # Errors are ignored because if rebase is not in progress or broken, we still want to remove the data files.
 	delete_data
 }
 

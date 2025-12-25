@@ -115,3 +115,17 @@ assert_outputs__create__broken_operation_in_progress() { # operation
 		error: There is currently an istash error-'"$(sanitize_for_sed "$1")"' in progress.
 	'
 }
+
+assert_outputs__create__pfn_without_pff() {
+	assert_outputs '
+	' '
+		Option "--pathspec-file-nul" is not valid without "--pathspec-from-file"\.
+	'
+}
+
+assert_outputs_create__patch_with_patchspec() {
+	assert_outputs '
+	' '
+		Stdin cannot be assigned to both "--patch" and the pathspec\.
+	'
+}

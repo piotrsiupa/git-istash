@@ -59,10 +59,7 @@ git add aaa
 mv .git/ISTASH_WORKING-DIR .git/ISTASH_WORKING-DIR~
 printf 'fa4e08a58\n' >.git/ISTASH_WORKING-DIR
 assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
-assert_outputs '
-' '
-	fatal: "\.git\/ISTASH_WORKING-DIR" says "fa4e08a58" but there is no such commit\.
-'
+assert_outputs__apply__data_file_invalid_commit "$APPLY_OPERATION" "$APPLY_OPERATION" '.git/ISTASH_WORKING-DIR' 'fa4e08a58'
 assert_files_HT '
 M  aaa		ddd
    wdf0		wdf0b

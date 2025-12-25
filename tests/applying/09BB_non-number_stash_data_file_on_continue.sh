@@ -62,10 +62,7 @@ git add aaa
 mv .git/ISTASH_STASH .git/ISTASH_STASH~
 printf 'fa4e08a58\n' >.git/ISTASH_STASH
 assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
-assert_outputs '
-' '
-	fatal: "\.git\/ISTASH_STASH" doesn'\''t contain a positive integer\.
-'
+assert_outputs__apply__data_file_invalid_integer "$APPLY_OPERATION" "$APPLY_OPERATION" '.git/ISTASH_STASH'
 assert_files_HT '
 M  aaa		eee
    wdf0		wdf0b
