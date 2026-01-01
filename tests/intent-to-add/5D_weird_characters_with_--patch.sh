@@ -29,7 +29,7 @@ git add -N .
 printf 'y n ' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
 GIT_EDITOR="sed -Ei 's/^\+[a-z]{3}2/+xxx/'" assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS <.git/answers_for_patch
-assert_outputs__create__success '*' 0 '' '1,1' ''
+assert_outputs__create__success '*' 0 '' 't,1,1' 'u'
 new_stash_sha_CO="$stdout"
 assert_files_HTCO '
  A bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{e}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th eee

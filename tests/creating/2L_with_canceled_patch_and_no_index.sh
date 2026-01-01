@@ -27,12 +27,12 @@ printf 'q q ' | tr ' ' '\n' >.git/answers_for_patch
 assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $KEEP_INDEX_FLAGS --patch --message 'some nicer stash name' <.git/answers_for_patch
 if IS_ALL_ON
 then
-	assert_outputs__create__no_changes_to_stash '1' '1'
+	assert_outputs__create__no_changes_to_stash 't,1' 'u,1'
 elif IS_UNTRACKED_ON
 then
-	assert_outputs__create__no_changes_to_stash '1' ''
+	assert_outputs__create__no_changes_to_stash 't,1' 'u'
 else
-	assert_outputs__create__no_changes_to_stash '1'
+	assert_outputs__create__no_changes_to_stash 't,1'
 fi
 assert_files_HT '
  M aaa		yyy\naaa\naaa\nyyy	aaa\naaa

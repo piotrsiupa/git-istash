@@ -39,7 +39,7 @@ new_stash_sha_CO="$(
 	} | {
 		#shellcheck disable=SC2086
 		GIT_EDITOR="sed -Ei 's/^\+[a-z]{3}2/+xxx/'" assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS
-		assert_outputs__create__success '*' 0 '' '1,1' '1,1'
+		assert_outputs__create__success '*' 0 '' 't,1,1' 'u,1,1'
 	}
 )"
 if ! IS_KEEP_INDEX_ON
