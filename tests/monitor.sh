@@ -31,7 +31,7 @@ get_failing_tests_count() { # [filter]...
 }
 
 get_first_failing_test() { # [filter]...
-	./run.sh --failed --print-paths -- "$@" | head -n 1
+	./run.sh --failed --print-paths -- "$@" 2>/dev/null | head -n 1
 }
 
 get_istash_files() {
@@ -39,7 +39,7 @@ get_istash_files() {
 }
 
 get_common_test_files() {
-	find '.' -type f -maxdepth 1 -name '*.sh' ! -name '.*' | sort
+	find '.' -maxdepth 1 -type f -name '*.sh' ! -name '.*' | sort
 }
 
 get_times() { # file_lists...
