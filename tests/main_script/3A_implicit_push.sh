@@ -12,7 +12,10 @@ printf 'bbb\n' >aaa
 printf 'ddd\n' >ddd
 #shellcheck disable=SC2086
 assert_exit_code 0 git istash
-assert_outputs__create__success
+assert_outputs__create__success 'SW' \
+			"$(case "$HEAD_TYPE" in 'BRANCH') printf 'master' ;; 'DETACH') printf '(no branch)' ;; 'ORPHAN') printf 'ooo' ;; esac)" \
+			'stash@{0}~' \
+			''
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_HT '

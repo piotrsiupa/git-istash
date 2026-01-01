@@ -44,7 +44,7 @@ assert_dotgit_contents
 __test_section__ "$CAP_CREATE_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 assert_exit_code 1 git istash "$CREATE_OPERATION"
-assert_outputs__create__operation_in_progress 'a rebase'
+assert_outputs__create__operation_in_progress 'rebase'
 assert_files_HT '
    aaa		aaa
    xxx		xxx

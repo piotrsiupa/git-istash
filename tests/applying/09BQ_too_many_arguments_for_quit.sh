@@ -77,7 +77,7 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 
 __test_section__ "Quit $APPLY_OPERATION stash (1)"
 assert_exit_code 0 git istash "$APPLY_OPERATION" "$QUIT_FLAG"
-assert_outputs__apply__quit
+assert_outputs__apply__quit "$APPLY_OPERATION"
 assert_files_HT '
 M  aaa		ddd
    wdf0		wdf0b

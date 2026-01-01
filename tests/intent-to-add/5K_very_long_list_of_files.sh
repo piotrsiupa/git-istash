@@ -73,7 +73,7 @@ do
 done
 #shellcheck disable=SC2086
 assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $UNTRACKED_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS --message 'the biggest stash'
-assert_outputs__create__success
+assert_outputs__create__success '*' 0 'the biggest stash'
 new_stash_sha_CO="$stdout"
 assert_files_HT '
 '

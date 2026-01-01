@@ -50,7 +50,7 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 __test_section__ "$CAP_CREATE_OPERATION stash again"
 correct_head_sha_1="$(get_head_sha_HT)"
 assert_exit_code 1 git istash "$CREATE_OPERATION"
-assert_outputs__create__operation_in_progress "an istash $APPLY_OPERATION"
+assert_outputs__create__operation_in_progress "istash $APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ccc|bbb
 !! ignored0	ignored0

@@ -25,7 +25,7 @@ printf 'aaa\n' >.gitignore
 git add .gitignore
 #shellcheck disable=SC2086
 assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS -mX
-assert_outputs__create__success
+assert_outputs__create__success '*' 0 'X'
 new_stash_sha_CO="$stdout"
 if ! IS_KEEP_INDEX_ON
 then

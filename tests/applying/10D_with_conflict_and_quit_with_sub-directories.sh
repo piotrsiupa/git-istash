@@ -84,7 +84,7 @@ git add aaa xxx/aaa yyy/aaa
 cd xxx
 assert_exit_code 0 git istash "$APPLY_OPERATION" "$QUIT_FLAG"
 cd -
-assert_outputs__apply__quit
+assert_outputs__apply__quit "$APPLY_OPERATION"
 assert_files_HT '
 M  aaa		eee0
 M  xxx/aaa	eee1

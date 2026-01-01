@@ -27,105 +27,160 @@ create_patch_output_regex_for_single_file() { # nr_of_questions
 	'
 }
 
-create_patch_output_regex_for_single_call() { # ends_with_new_line [nr_of_questions...]
-	printf '%s' '### .*\.\.\.'
-	if [ $# -gt 1 ]
+create_patch_output_regex_for_single_call() { # [nr_of_questions...]
+	printf '%s' '### .*\.\.\.\n\n'
+	if [ $# -ne 0 ]
 	then
-		ends_with_new_line="$1"
-		shift
 		while [ $# -ne 0 ]
 		do
 			create_patch_output_regex_for_single_file "$1"
+			printf '%s' '\n'
 			shift
-			if [ $# -ne 0 ] || [ "$ends_with_new_line" = y ]
-			then
-				printf '%s' '\n'
-			fi
 		done
-		unset ends_with_new_line
 	else
-		if [ "$1" = y ]
-		then
-			printf '%s' '(No changes\.\n)?'
-		else
-			printf '%s' '(No changes\.)?'
-		fi
+		printf '%s' '(No changes\.\n)?'
 	fi
 }
 
 # "call_description" is a number of questions in every file, separated by ",".
 # E.g. "2,3" means that the first file in a call has 2 questions and the second one has 3.
 # Empty string means no files.
-create_patch_output_regex() { # ends_with_new_line [call_description...]
-	last_ends_with_new_line="$1"
-	shift
-	while [ $# -ge 2 ]
+create_patch_output_regex() { # [call_description...]
+	while [ $# -ne 0 ]
 	do
 		#shellcheck disable=SC2046
-		create_patch_output_regex_for_single_call y $(printf '%s' "$1" | tr ',' ' ')
+		create_patch_output_regex_for_single_call $(printf '%s' "$1" | tr ',' ' ')
 		shift
+		if [ $# -ne 0 ]
+		then
+			printf '%s' '\n'
+		fi
 	done
-	if [ $# -eq 1 ]
-	then
-		#shellcheck disable=SC2046
-		create_patch_output_regex_for_single_call "$last_ends_with_new_line" $(printf '%s' "$1" | tr ',' ' ')
-	fi
-	unset last_ends_with_new_line
 }
 
+# See "assert_outputs__create__success" for info on the summary code.
+create_success_message_regex() { # summary_code branch_name base_commit message
+	printf 'Saved '
+	printf '%s' "$1" \
+	| sed -E -e 's/^[^-]+-//' -e 's/./&\n/g' | tr 'WSUI' '1-4' | tr -d -c '1-4\n' | sort | tr '1-4' 'WSUI' | tr -d '\n' \
+	| sed -E -e 's/./&,/g' -e 's/,$//' -e 's/U,I/UI/' -e 's/,/, /g' -e 's/,([^,]+)$/ \&\1/' \
+	| sed -E -e 's/W/working directory/' -e 's/S/index state/' -e 's/UI/untracked files \\(including ignored\\)/' -e 's/U/untracked files/' -e 's/I/ignored files/' -e 's/\&/and/' | grep '.' || printf 'nothing'
+	if [ -n "$4" ]
+	then
+		printf ' On %s: %s' "$(sanitize_for_sed "$2")" "$(sanitize_for_sed "$4")"
+	else
+		printf ' WIP on %s: %s' "$(sanitize_for_sed "$2")" "$(sanitize_for_ere "$(git rev-list --no-commit-header --format='%h %s' --max-count=1 "$3")")"
+	fi
+	case "$1" in
+		create-*)	;;
+		save-*)		printf '\\n\nStored the stash in the stash ref' ;;
+		snatch-*)	printf '\\n\nReverted the saved changes' ;;
+		push-*)		printf '\\n\nReverted the saved changes and stored the stash in the stash ref' ;;
+	esac
+}
 
+make_summary_code() {
+	if IS_STAGED_ON
+	then
+		printf 'S'
+	fi
+	if IS_UNSTAGED_ON
+	then
+		printf 'W'
+	fi
+	if IS_ALL_ON
+	then
+		printf 'I'
+		if ! IS_UNTRACKED_OFF
+		then
+			printf 'U'
+		fi
+	else
+		if IS_UNTRACKED_ON
+		then
+			printf 'U'
+		fi
+	fi
+}
+
+# Use the "*" version for automatic values which is recommended unless it's some weird situation.
+# It generates the summary code, takes the current branch name and the "stash@{$stash_num}~" as the base commit.
+# summary_code - letters describing which files were stashed (order not important):
+#	+ W -> working directory files
+#	+ S -> state of the index
+#	+ U -> untracked files
+#	+ I -> ignored files
+# branch_name - the current branch name (empty for detached HEAD)
+# base_commit - the commit on which the stash was created
+# commit_message - message / name of the stash (empty for no message)
+# call_description - see "create_patch_output_regex"
 #shellcheck disable=SC2120
-assert_outputs__create__success() { # [call_description...]
+assert_outputs__create__success() { # ('*' stash_num message | summary_code branch_name base_commit message) [call_description...]
+	if [ "$1" = '*' ]
+	then
+		stash_number_for_assertion="$2"
+		shift 2
+		#shellcheck disable=SC2154
+		set -- "$(make_summary_code)" \
+			"$(if IS_HEAD_DETACHED ; then printf '(no branch)' ; else git branch --show-current ; fi)" \
+			"$(if CO_STORES_STASH ; then printf '%s' "stash@{$stash_number_for_assertion}" ; else printf '%s' "$stdout" ; fi)~" \
+			"$@"
+		unset stash_number_for_assertion
+	fi
+	
 	assert_outputs "$(
 		if ! CO_STORES_STASH
 		then
 			printf '%s' '[0-9a-fA-F]{7,40}'
 		fi
-	)" "$(
-		create_patch_output_regex n "$@"
-	)"
+	)" '
+		'"$(shift 4 ; create_patch_output_regex "$@")"'
+		'"$(if [ $# -gt 4 ] ; then printf '%s' '\n' ; fi)"'
+		'"$(create_success_message_regex "$1" "$2" "$3" "$4")"'
+	'
 }
 
 #shellcheck disable=SC2120
 assert_outputs__create__no_changes_to_stash() { # [call_description...]
 	assert_outputs '
-	' "
-		$(create_patch_output_regex y "$@")
-		fatal: There are no suitable changes to stash\\.
-	"
+	' '
+		'"$(create_patch_output_regex "$@")"'
+		'"$(if [ $# -ne 0 ] ; then printf '%s' '\n' ; fi)"'
+		error: no suitable changes to stash
+	'
 }
 
 assert_outputs__create__unmatching_pathspec() { # pathspec
 	assert_outputs '
 	' '
-		fatal: pathspec '"'$(sanitize_for_sed "$1")'"' did not match any files
+		error: pathspec '"'$(sanitize_for_sed "$1")'"' did not match any file\(s\)
 	'
 }
 
 assert_outputs__create__operation_in_progress() { # operation
 	assert_outputs '
 	' '
-		error: There is currently '"$(sanitize_for_sed "$1")"' in progress.
+		error: there is currently '\''git '"$(sanitize_for_sed "$1")"\'' in progress
 	'
 }
 
 assert_outputs__create__broken_operation_in_progress() { # operation
 	assert_outputs '
 	' '
-		error: There is currently an istash error-'"$(sanitize_for_sed "$1")"' in progress.
+		error: there is currently a broken '\''git '"$(sanitize_for_sed "$1")"\'' in progress
 	'
 }
 
 assert_outputs__create__pfn_without_pff() {
 	assert_outputs '
 	' '
-		Option "--pathspec-file-nul" is not valid without "--pathspec-from-file"\.
+		error: option '\''--pathspec-file-nul'\'' is not valid without '\''--pathspec-from-file'\''
 	'
 }
 
 assert_outputs_create__patch_with_patchspec() {
 	assert_outputs '
 	' '
-		Stdin cannot be assigned to both "--patch" and the pathspec\.
+		error: stdin cannot be assigned to both '\''--patch'\'' and the pathspec
 	'
 }

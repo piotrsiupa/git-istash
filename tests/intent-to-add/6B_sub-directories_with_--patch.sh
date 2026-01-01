@@ -55,7 +55,7 @@ cd 'b'
 #shellcheck disable=SC2086
 assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS --patch <../.git/answers_for_patch
 cd -
-assert_outputs__create__success '3,1,1,3,1,3' ''
+assert_outputs__create__success '*' 0 '' '3,1,1,3,1,3' ''
 new_stash_sha_CO="$stdout"
 if ! IS_KEEP_INDEX_ON
 then

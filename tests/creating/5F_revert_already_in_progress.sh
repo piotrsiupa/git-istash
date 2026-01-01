@@ -45,7 +45,7 @@ assert_dotgit_contents
 __test_section__ "$CAP_CREATE_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 assert_exit_code 1 git istash "$CREATE_OPERATION"
-assert_outputs__create__operation_in_progress 'a revert'
+assert_outputs__create__operation_in_progress 'revert'
 assert_files_HT '
 UU aaa		ddd|aaa
 !! ignored0	ignored0

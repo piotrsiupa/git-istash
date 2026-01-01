@@ -12,7 +12,10 @@ __test_section__ "$CAP_CREATE_OPERATION stash"
 printf 'bbb\n' >aaa
 git add aaa
 assert_exit_code 0 git istash "$CREATE_OPERATION" -kSmabc
-assert_outputs__create__success
+assert_outputs__create__success 'S' \
+			"$(case "$HEAD_TYPE" in 'BRANCH') printf 'master' ;; 'DETACH') printf '(no branch)' ;; 'ORPHAN') printf 'ooo' ;; esac)" \
+			"$(if CO_STORES_STASH ; then printf '%s' "stash@{0}" ; else printf '%s' "$stdout" ; fi)~" \
+			'abc'
 new_stash_sha_CO="$stdout"
 assert_files_HTCO '
 A  aaa		bbb

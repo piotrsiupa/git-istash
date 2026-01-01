@@ -27,7 +27,7 @@ printf 'zzz\nbbb\nbbb\nzzz\n' >bbb
 printf 'q ' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
 assert_exit_code 0 git istash "$CREATE_OPERATION" $UNSTAGED_FLAGS $STAGED_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS --patch --message 'some nice stash name' <.git/answers_for_patch
-assert_outputs__create__success '1'
+assert_outputs__create__success '*' 0 'some nice stash name' '1'
 new_stash_sha_CO="$stdout"
 if ! IS_KEEP_INDEX_ON
 then

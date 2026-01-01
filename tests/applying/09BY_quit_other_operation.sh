@@ -57,7 +57,7 @@ correct_head_sha="$(get_head_sha_HT)"
 printf 'ddd\n' >aaa
 git add aaa
 assert_exit_code 0 git istash "$APPLY_OPERATION" "$QUIT_FLAG"
-assert_outputs__apply__quit
+assert_outputs__apply__quit "$OTHER_APPLY_OPERATION"
 assert_files_HT '
 M  aaa		ddd
    wdf0		wdf0b

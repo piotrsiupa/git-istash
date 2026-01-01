@@ -53,7 +53,7 @@ assert_dotgit_contents_for 'pop'
 __test_section__ "Quit $APPLY_OPERATION stash"
 : >.git/ISTASH_STASH
 assert_exit_code 0 git istash "$APPLY_OPERATION" "$QUIT_FLAG"
-assert_outputs__apply__quit
+assert_outputs__apply__quit 'pop'
 assert_files_HT '
 UU aaa		ddd|bbb
    wdf0		wdf0b

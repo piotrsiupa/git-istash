@@ -52,7 +52,8 @@ exec_subcommand() { # subcommand [arguments...]
 	subcommand_path="$(dirname "$0")/../lib/git-istash/git-istash-$subcommand"
 	if [ ! -f "$subcommand_path" ] || [ ! -x "$subcommand_path" ]
 	then
-		printf 'git-istash: "%s" is not a sub-command. See "git istash --help".\n' "$subcommand" 1>&2
+		printf 'error: subcommand wasn'\''t specified; '\''push'\'' can'\''t be assumed due to unexpected token '\''%s'\''\n' "$subcommand" 1>&2
+		printf 'hint: pathspecs for an implicit '\''push'\'' subcommand must be preceded by '\''--'\''\n' 1>&2
 		return 1
 	fi
 	exec sh "$subcommand_path" "$@"
@@ -123,7 +124,7 @@ then
 	data_files="$(find_data_files)"
 	case "$data_files" in
 		nothing)
-			printf 'fatal: There doesn'\''t seem to be any operation in progress.\n' 1>&2
+			printf 'error: no istash operation in progress\n' 1>&2
 			exit 1
 			;;
 		apply)
@@ -137,7 +138,7 @@ then
 			then
 				exec_subcommand "$(printf '%s' "$data_files" | tail -c+7)" "$continuation_option" "$@"
 			else
-				printf 'fatal: The operation in progress seems damaged.\n' 1>&2
+				printf 'fatal: the operation in progress seems to be broken\n' 1>&2
 				exit 1
 			fi
 			;;

@@ -51,7 +51,7 @@ __test_section__ "$CAP_CREATE_OPERATION stash again"
 correct_head_sha_1="$(get_head_sha_HT)"
 mv .git/ISTASH_TARGET .git/ISTASH_TARGET~
 assert_exit_code 1 git istash "$CREATE_OPERATION"
-assert_outputs__create__broken_operation_in_progress "$APPLY_OPERATION"
+assert_outputs__create__broken_operation_in_progress "istash $APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ccc|bbb
 !! ignored0	ignored0

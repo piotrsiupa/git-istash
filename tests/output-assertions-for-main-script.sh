@@ -10,14 +10,21 @@ fi
 assert_outputs__main_script__no_such_command() { # command
 	assert_outputs '
 	' '
-		git-istash: "'"$(sanitize_for_sed "$1")"'" is not a sub-command\. See "git istash --help"\.
+		error: subcommand wasn'\''t specified; '\''push'\'' can'\''t be assumed due to unexpected token '\'"$(sanitize_for_sed "$1")"\''\n
+		hint: pathspecs for an implicit '\''push'\'' subcommand must be preceded by '\''--'\''
 	'
+}
+
+assert_outputs__main_script__missing_arg_separator() { # token
+	# This call the other assertion because output should be the same in this case.
+	# This is a slightly different situation, though, so the separate function is kept just in case.
+	assert_outputs__main_script__no_such_command "$@"
 }
 
 assert_outputs__main_script__unrecognised_option() { # option
 	assert_outputs '
 	' '
-		git-istash-push: unrecognized option:? '\''?(--)?'"$(sanitize_for_sed "$1")"\''?
+		error: unrecognized option:? '\''?(--)?'"$(sanitize_for_sed "$1")"\''?
 	'
 }
 
@@ -33,24 +40,16 @@ assert_outputs__main_script__help() {
 	'
 }
 
-assert_outputs__main_script__missing_arg_separator() { # token
-	assert_outputs '
-	' '
-		fatal: unexpected token "'"$(sanitize_for_sed "$1")"'"\n
-		fatal: pathspec for an implicit "push" command must be preceded by "--"
-	'
-}
-
 assert_outputs__main_script__no_operation_in_progress() {
 	assert_outputs '
 	' '
-		fatal: There doesn'\''t seem to be any operation in progress\.
+		error: no istash operation in progress
 	'
 }
 
 assert_outputs__main_script__damaged_operation_in_progress() {
 	assert_outputs '
 	' '
-		fatal: The operation in progress seems damaged\.
+		fatal: the operation in progress seems to be broken
 	'
 }

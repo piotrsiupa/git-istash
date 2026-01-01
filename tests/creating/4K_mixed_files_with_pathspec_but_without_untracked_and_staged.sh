@@ -62,7 +62,7 @@ else
 	#shellcheck disable=SC2086
 	assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
 fi
-assert_outputs__create__success
+assert_outputs__create__success '*' 0 ''
 new_stash_sha_CO="$stdout"
 assert_files_HTCO '
 MM aaa0		zzz	yyy

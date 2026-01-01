@@ -46,7 +46,7 @@ __test_section__ 'Quit popping stash'
 rm .git/ISTASH_TARGET
 correct_head_sha="$(get_head_sha_HT)"
 assert_exit_code 0 git istash "$QUIT_FLAG"
-assert_outputs__apply__quit
+assert_outputs__apply__quit 'pop'
 assert_files_HT '
 UU aaa		ccc|bbb
 !! ignored0	ignored0

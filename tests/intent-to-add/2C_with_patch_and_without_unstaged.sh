@@ -27,7 +27,7 @@ git add -N ccc
 printf '' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
 GIT_EDITOR="sed -Ei '/^\+bar$/ d'" assert_exit_code 0 git istash "$CREATE_OPERATION" $STAGED_FLAGS $UNSTAGED_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS --patch --message 'some nice stash name' <.git/answers_for_patch
-assert_outputs__create__success ''
+assert_outputs__create__success '*' 0 'some nice stash name'
 new_stash_sha_CO="$stdout"
 if ! IS_KEEP_INDEX_ON
 then

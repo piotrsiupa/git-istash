@@ -54,7 +54,7 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 __test_section__ "Quit $APPLY_OPERATION stash"
 rm .git/ISTASH_WORKING-DIR
 assert_exit_code 0 git istash "$APPLY_OPERATION" "$QUIT_FLAG"
-assert_outputs__apply__quit
+assert_outputs__apply__quit "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ccc|bbb
    wdf0		wdf0b

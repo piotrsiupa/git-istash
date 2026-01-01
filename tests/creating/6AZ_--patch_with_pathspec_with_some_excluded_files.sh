@@ -68,7 +68,7 @@ new_stash_sha_CO="$(
 			#shellcheck disable=SC2086
 			assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'a very controlled stash' --patch $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
 		fi
-		assert_outputs__create__success '1,3,3,1' '1,1'
+		assert_outputs__create__success '*' 0 'a very controlled stash' '1,3,3,1' '1,1'
 	}
 )"
 assert_files_HTCO '

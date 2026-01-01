@@ -133,7 +133,7 @@ correct_head_sha="$(get_head_sha_HT)"
 cd xxx
 assert_exit_code 0 git istash "$APPLY_OPERATION" "$QUIT_FLAG"
 cd -
-assert_outputs__apply__quit
+assert_outputs__apply__quit "$APPLY_OPERATION"
 assert_files '
 UU aaa		ggg0|ccc0
 UU xxx/aaa	ggg1|ccc1

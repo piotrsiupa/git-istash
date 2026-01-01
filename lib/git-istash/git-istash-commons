@@ -77,46 +77,48 @@ check_args() { # max_free_args args...
 	shift 2
 	if [ $# -gt "$_max_free_args" ]
 	then
-		printf 'error: Too many arguments.\n' 1>&2
-		printf 'error: Type "git %s --help" for more information.\n' "$_script_name" 1>&2
+		printf 'error: too many arguments\n' 1>&2
+		printf 'hint: type '\''git %s --help'\'' for detailed information\n' "$_script_name" 1>&2
+		printf 'hint: or '\''git %s -h'\'' for a short help text\n' "$_script_name" 1>&2
 		return 1
 	fi
 }
 
 check_other_git_commands_state() {
+	other_git_command=''
 	git_dir="$(git rev-parse --git-dir)"
 	if [ -e "$git_dir/rebase-apply" ] || [ -e "$git_dir/rebase-merge" ]
 	then
-		printf 'error: There is currently a rebase in progress.\n' 1>&2
-		return 1
-	fi
-	if [ -e "$git_dir/CHERRY_PICK_HEAD" ]
+		other_git_command='rebase'
+	elif [ -e "$git_dir/CHERRY_PICK_HEAD" ]
 	then
-		printf 'error: There is currently a cherry-pick in progress.\n' 1>&2
-		return 1
-	fi
-	if [ -e "$git_dir/REVERT_HEAD" ]
+		other_git_command='cherry-pick'
+	elif [ -e "$git_dir/REVERT_HEAD" ]
 	then
-		printf 'error: There is currently a revert in progress.\n' 1>&2
-		return 1
-	fi
-	if [ -e "$git_dir/MERGE_HEAD" ]
+		other_git_command='revert'
+	elif [ -e "$git_dir/MERGE_HEAD" ]
 	then
-		printf 'error: There is currently a merge in progress.\n' 1>&2
-		return 1
-	fi
-	if [ -e "$git_dir/BISECT_START" ]
+		other_git_command='merge'
+	elif [ -e "$git_dir/BISECT_START" ]
 	then
-		printf 'error: There is currently a bisect in progress.\n' 1>&2
+		other_git_command='bisect'
+	fi
+	if [ -n "$other_git_command" ]
+	then
+		printf 'error: there is currently '\''git %s'\'' in progress\n' "$other_git_command" 1>&2
 		return 1
 	fi
 }
 
 check_data_files() {
 	current_operation="$(find_data_files)"
-	if [ "$current_operation" != 'nothing' ]
+	if printf '%s\n' "$current_operation" | grep -E -q '^error-'
 	then
-		printf 'error: There is currently an istash %s in progress.\n' "$current_operation" 1>&2
+		printf 'error: there is currently a broken '\''git istash %s'\'' in progress\n' "$(printf '%s' "$current_operation" | tail -c+7)" 1>&2
+		return 1
+	elif [ "$current_operation" != 'nothing' ]
+	then
+		printf 'error: there is currently '\''git istash %s'\'' in progress\n' "$current_operation" 1>&2
 		return 1
 	fi
 }
@@ -160,7 +162,7 @@ check_stash() { # stash
 	stash_commit="$(get_stash_commit "$1")"
 	if ! git rev-parse --quiet --verify "$stash_commit^{commit}" 1>/dev/null
 	then
-		printf 'fatal: There is no commit "%s".\n' "$stash_commit" 1>&2
+		printf 'error: no commit '\''%s'\''\n' "$stash_commit" 1>&2
 		return 1
 	fi
 	parents_num="$(git rev-list --no-walk --count "$stash_commit^@")"

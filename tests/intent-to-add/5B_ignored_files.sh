@@ -20,7 +20,7 @@ git add --intent-to-add aaa0 aaa1
 printf '*0\n' >.gitignore
 #shellcheck disable=SC2086
 assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS --message 'name'
-assert_outputs__create__success
+assert_outputs__create__success '*' 0 'name'
 new_stash_sha_CO="$stdout"
 assert_files_HTCO '
  A aaa0		xxx

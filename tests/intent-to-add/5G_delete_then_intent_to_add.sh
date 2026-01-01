@@ -24,7 +24,7 @@ printf 'bbb\n' >aaa
 git add --intent-to-add aaa
 #shellcheck disable=SC2086
 assert_exit_code 0 git istash "$CREATE_OPERATION" $ALL_FLAGS $UNTRACKED_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS --message 'stash, not a trash'
-assert_outputs__create__success
+assert_outputs__create__success '*' 0 'stash, not a trash'
 new_stash_sha_CO="$stdout"
 if ! IS_KEEP_INDEX_ON
 then

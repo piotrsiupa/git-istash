@@ -140,7 +140,7 @@ check_pathspec() {
 			if [ "$good" = n ]
 			then
 				#shellcheck disable=SC2059
-				printf 'fatal: pathspec '\'"$ps"\'' did not match any files\n' 1>&2
+				printf 'error: pathspec '\'"$ps"\'' did not match any file(s)\n' 1>&2
 				return 1
 			fi
 		done
@@ -189,17 +189,19 @@ commit_changes() {
 		branch_name_for_msg='(no branch)'
 	fi
 	there_are_enough_changes="$allow_empty"
+	there_was_patch_message=n
 	
 	# staged (initial)
 	git commit --message="index on $branch_name_for_msg: $default_message (unfinished)" --allow-empty 1>/dev/null
 	
 	# unstaged
-	if [ -n "$patch_options" ]
-	then
-		printf '### Using the interactive patch for tracked files...' 1>&2
-	fi
 	if [ "$leave_unstaged" = n ]
 	then
+		if [ -n "$patch_options" ]
+		then
+			printf '### Using the interactive patch for tracked files...\n\n' 1>&2
+			there_was_patch_message=y
+		fi
 		if [ -z "$pathspec_file" ]
 		then
 			git --no-literal-pathspecs add --update $patch_options :/ 1>&2 2>/dev/null || true
@@ -240,7 +242,12 @@ commit_changes() {
 		fi
 		if [ -n "$patch_options" ]
 		then
-			printf '### Using the interactive patch for untracked files...' 1>&2
+			if [ "$there_was_patch_message" = y ]
+			then
+				printf '\n' 1>&2
+			fi
+			printf '### Using the interactive patch for untracked files...\n\n' 1>&2
+			there_was_patch_message=y
 		fi
 		if [ -z "$pathspec_file" ]
 		then
@@ -304,7 +311,11 @@ commit_changes() {
 	if [ "$there_are_enough_changes" = n ]
 	then
 		undo_commit_changes
-		printf 'fatal: There are no suitable changes to stash.\n' 1>&2
+		if [ "$there_was_patch_message" = y ]
+		then
+			printf '\n' 1>&2
+		fi
+		printf 'error: no suitable changes to stash\n' 1>&2
 		return 1
 	fi
 }
@@ -438,6 +449,41 @@ remove_temporary_branch() {
 	git switch --quiet --orphan "$current_branch"
 }
 
+print_summary() {
+	if [ "$there_was_patch_message" = y ]
+	then
+		printf '\n' 1>&2
+	fi
+	printf 'Saved '
+	{
+		if [ "$leave_unstaged" = n ]
+		then
+			printf 'working directory, '
+		fi
+		if [ "$leave_staged" = n ]
+		then
+			printf 'index state, '
+		fi
+		if [ "$include_untracked" = y ]
+		then
+			printf 'untracked files'
+			if [ "$include_ignored" = y ]
+			then
+				printf ' (including ignored)'
+			fi
+			printf ', '
+		elif [ "$include_ignored" = y ]
+		then
+			printf 'ignored files, '
+		fi
+		if [ "$leave_unstaged" = y ] && [ "$leave_staged" = y ] && [ "$include_untracked" = n ] && [ "$include_ignored" = n ]
+		then
+			printf 'nothing, '
+		fi
+	} | sed -E -e 's/, $/ /' -e 's/,([^,]+)$/ and\1/'
+	git rev-list --no-commit-header --format='%s' --max-count=1 "$stash_sha"
+} 1>&2
+
 make_stash() { # pathspecs...
 	check_data_files
 	check_other_git_commands_state
@@ -457,6 +503,7 @@ make_stash() { # pathspecs...
 	else
 		create_stash
 	fi
+	print_summary
 }
 
 getopt_short_options='ahklm:Su'
@@ -543,12 +590,12 @@ then
 fi
 if [ -n "$patch_options" ] && [ "$pathspec_from_file" = '-' ]
 then
-	printf 'Stdin cannot be assigned to both "--patch" and the pathspec.\n' 1>&2
+	printf 'error: stdin cannot be assigned to both '\''--patch'\'' and the pathspec\n' 1>&2
 	exit 1
 fi
 if [ -z "$pathspec_from_file" ] && [ "$pathspec_file_nul" = y ]
 then
-	printf 'Option "--pathspec-file-nul" is not valid without "--pathspec-from-file".\n' 1>&2
+	printf 'error: option '\''--pathspec-file-nul'\'' is not valid without '\''--pathspec-from-file'\''\n' 1>&2
 	exit 1
 fi
 

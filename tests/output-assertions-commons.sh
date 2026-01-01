@@ -10,7 +10,8 @@ fi
 assert_outputs__too_many_arguments() { # operation
 	assert_outputs '
 	' '
-		error: Too many arguments\.\n
-		error: Type "git istash '"$1"' --help" for more information\.
+		error: too many arguments\n
+		hint: type '\''git istash '"$1"' --help'\'' for detailed information\n
+		hint: or '\''git istash '"$1"' -h'\'' for a short help text
 	'
 }

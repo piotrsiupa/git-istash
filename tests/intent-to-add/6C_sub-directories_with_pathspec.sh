@@ -68,7 +68,7 @@ else
 	assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $PATHSPEC_NULL_FLAGS --pathspec-from-file ../.git/pathspec_for_test
 fi
 cd -
-assert_outputs__create__success
+assert_outputs__create__success '*' 0 ''
 new_stash_sha_CO="$stdout"
 if ! IS_KEEP_INDEX_ON
 then

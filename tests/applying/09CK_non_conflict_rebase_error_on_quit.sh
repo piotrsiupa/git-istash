@@ -54,7 +54,7 @@ __test_section__ "Quit $APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 rm -rf '.git/rebase-apply' '.git/rebase-merge'
 assert_exit_code 0 git istash "$APPLY_OPERATION" "$QUIT_FLAG"
-assert_outputs__apply__quit
+assert_outputs__apply__quit "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ccc|bbb
    wdf0		wdf0b

@@ -29,7 +29,7 @@ rm ddd eee
 printf 's y n s n y n y ' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
 assert_exit_code 0 git istash $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS --patch --message 'some nice stash name' <.git/answers_for_patch
-assert_outputs__create__success '3,2,1,1'
+assert_outputs__create__success '*' 0 'some nice stash name' '3,2,1,1'
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_HT '

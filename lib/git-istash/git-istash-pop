@@ -26,20 +26,23 @@ save_data() {
 load_stash_data() { # subcommand
 	if [ "$(wc -l <"$stash_data_file")" -ne 1 ]
 	then
-		printf 'fatal: "%s" should have exactly 1 line.\n' "$stash_data_file" 1>&2
+		printf 'fatal: '\''git istash pop'\'' seems to be running but the data files are broken\n' 1>&2
+		printf 'fatal: '\''%s'\'' doesn'\''t have exactly 1 line\n' "$stash_data_file" 1>&2
 		print_quit_hint "$1"
 		return 1
 	fi
 	stash="$(cat "$stash_data_file")"
 	if ! [ "$stash" -eq "$stash" ] 2>/dev/null || [ "$stash" -lt 0 ]
 	then
-		printf 'fatal: "%s" doesn'\''t contain a positive integer.\n' "$stash_data_file" 1>&2
+		printf 'fatal: '\''git istash pop'\'' seems to be running but the data files are broken\n' 1>&2
+		printf 'fatal: '\''%s'\'' doesn'\''t contain a positive integer\n' "$stash_data_file" 1>&2
 		print_quit_hint "$1"
 		return 1
 	fi
 	if [ "$stash" -ge "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" ]
 	then
-		printf 'fatal: "%s" says "%i" but there is no such stash.\n' "$stash_data_file" "$stash" 1>&2
+		printf 'fatal: '\''git istash pop'\'' seems to be running but the data files are broken\n' 1>&2
+		printf 'fatal: '\''%s'\'' contains an invalid stash number\n' "$stash_data_file" 1>&2
 		print_quit_hint "$1"
 		return 1
 	fi
@@ -66,7 +69,7 @@ check_stash_for_pop() {
 	then
 		:
 	else
-		printf 'error: Only stash entries can be popped.\n' 1>&2
+		printf 'error: can only pop '\''refs/stash'\'' or entries of its reflog\n' 1>&2
 		return 1
 	fi
 }
@@ -75,11 +78,11 @@ print_quit_hint() { # subcommand
 	printf_color 2 '\033[33m'
 	if [ "$1" = 'pop' ]
 	then
-		printf 'hint: Fix the problem and finish that operation before starting a new one\n'
+		printf 'hint: fix the problem and finalize that operation before starting a new one\n'
 	else
-		printf 'hint: Fix the problem and finish that operation before starting "git istash pop"\n'
+		printf 'hint: fix the problem and finalize that operation before starting '\''istash pop'\''\n'
 	fi
-	printf 'hint: or run "git istash %s --quit" to forcefully cancel it.\n' "$1"
+	printf 'hint: or run '\''git istash --quit'\'' to forcefully cancel it\n'
 	printf_color 2 '\033[39m'
 } 1>&2
 
@@ -90,8 +93,8 @@ check_data_files() { # resume abort quit
 			if [ "$1" = y ] || [ "$2" = y ] || [ "$3" = y ] ; then return 0 ; fi
 			{
 				printf_color 2 '\033[33m'
-				printf 'fatal: "git istash %s" is already in progress?\n' "$operation_in_progress"
-				printf 'hint: Use "git istash %s --continue" or "git istash %s --abort".\n' "$operation_in_progress" "$operation_in_progress"
+				printf 'error: '\''git istash %s'\'' is already in progress\n' "$operation_in_progress"
+				printf 'hint: use '\''git istash --continue'\'' or '\''git istash --abort'\''\n'
 				printf_color 2 '\033[39m'
 			} 1>&2
 			return 1
@@ -100,7 +103,7 @@ check_data_files() { # resume abort quit
 			if [ "$2" = y ] || [ "$3" = y ] ; then return 0 ; fi
 			{
 				printf_color 2 '\033[33m'
-				printf 'error: There is currently a istash %s in progress.\n' "$operation_in_progress"
+				printf 'error: there is currently '\''git istash %s'\'' in progress\n' "$operation_in_progress"
 				printf_color 2 '\033[39m'
 			} 1>&2
 			return 1
@@ -112,12 +115,15 @@ check_data_files() { # resume abort quit
 				printf_color 2 '\033[31m'
 				if [ -f "$(make_target_data_file_path)" ]
 				then
-					printf 'fatal: "git istash %s" seems to be in progress but "%s" is missing!\n' "$operation_in_progress" "$(make_working_dir_sha_file_path)"
+					printf 'fatal: '\''git istash %s'\'' seems to be running but the data files are broken\n' "$operation_in_progress" 1>&2
+					printf 'fatal: '\''%s'\'' is missing\n' "$(make_working_dir_sha_file_path)"
 				elif [ -f "$(make_working_dir_sha_file_path)" ]
 				then
-					printf 'fatal: "git istash %s" seems to be in progress but "%s" is missing!\n' "$operation_in_progress" "$(make_target_data_file_path)"
+					printf 'fatal: '\''git istash %s'\'' seems to be running but the data files are broken\n' "$operation_in_progress" 1>&2
+					printf 'fatal: '\''%s'\'' is missing\n' "$(make_target_data_file_path)"
 				else
-					printf 'fatal: "git istash %s" seems to be in progress but "%s" and "%s" are missing!\n' "$operation_in_progress" "$(make_target_data_file_path)" "$(make_working_dir_sha_file_path)"
+					printf 'fatal: '\''git istash %s'\'' seems to be running but the data files are broken\n' "$operation_in_progress" 1>&2
+					printf 'fatal: '\''%s'\'' and '\''%s'\'' are missing!' "$(make_target_data_file_path)" "$(make_working_dir_sha_file_path)"
 				fi
 				printf_color 2 '\033[33m'
 				printf_color 2 '\033[39m'
@@ -127,7 +133,7 @@ check_data_files() { # resume abort quit
 			;;
 		nothing)
 			if [ "$1" = n ] && [ "$2" = n ] && [ "$3" = n ] ; then return 0 ; fi
-			printf 'fatal: No istash pop in progress?\n' 1>&2
+			printf 'error: no istash pop in progress\n' 1>&2
 			return 1
 			;;
 	esac
@@ -225,22 +231,22 @@ do
 done
 if [ $continue_set = y ] && [ $abort_set = y ] && [ $quit_set = y ]
 then
-	printf 'error: You can choose continue, abort or quit at your discretion but the rule is that you can only have one.\n' 1>&2
+	printf 'error: you can choose continue, abort or quit at your discretion but the rule is that you can only have one\n' 1>&2
 	exit 1
 fi
 if [ $abort_set = y ] && [ $quit_set = y ]
 then
-	printf 'error: Either abort or quit; there is no middle road.\n' 1>&2
+	printf 'error: either abort or quit; there is no middle road\n' 1>&2
 	exit 1
 fi
 if [ $continue_set = y ] && [ $abort_set = y ]
 then
-	printf 'error: Unclear whether to continue aborting or to abort continuing.\n' 1>&2
+	printf 'error: unclear whether to continue aborting or to abort continuing\n' 1>&2
 	exit 1
 fi
 if [ $continue_set = y ] && [ $quit_set = y ]
 then
-	printf 'error: Unclear whether to continue quitting or to quit continuing.\n' 1>&2
+	printf 'error: unclear whether to continue quitting or to quit continuing\n' 1>&2
 	exit 1
 fi
 

@@ -23,7 +23,7 @@ git rm bbb
 rm ccc
 #shellcheck disable=SC2086
 assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
-assert_outputs__create__success
+assert_outputs__create__success '*' 0 ''
 new_stash_sha_CO="$stdout"
 if ! IS_KEEP_INDEX_ON
 then

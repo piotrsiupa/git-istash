@@ -18,7 +18,7 @@ printf 'bbb\n' >aaa
 printf 'ddd\n' >ddd
 #shellcheck disable=SC2086
 assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $ALL_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $UNTRACKED_FLAGS --message 'name of the new stash'
-assert_outputs__create__success
+assert_outputs__create__success '*' 0 'name of the new stash'
 new_stash_sha_CO="$stdout"
 if ! IS_KEEP_INDEX_ON
 then
