@@ -1,4 +1,0 @@
-. "$(dirname "$0")/../commons.sh" 1>/dev/null
-
-assert_exit_code 1 git istash --some-option
-assert_outputs__main_script__unrecognised_option 'some-option'

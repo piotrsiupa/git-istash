@@ -252,7 +252,7 @@ check_for_option_h_in_make_command() ( # option...
 	then
 		return 0  # Fall back to showing help, to not accidentaly break the repository.
 	fi
-	getopt_result="$(getopt -o"-$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
+	getopt_result="$(getopt -o"-$getopt_short_options" --long="$getopt_long_options" -n'fatal' -ssh -- "$@" 2>/dev/null)"
 	eval set -- "$getopt_result"
 	while [ $# -ne 0 ]
 	do
