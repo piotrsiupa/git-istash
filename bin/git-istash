@@ -76,8 +76,8 @@ show_manual() {
 	then
 		return 0
 	fi
-	printf 'Unable to open the manual entry.\n' 1>&2
-	printf 'Falling back to the built-in help text.\n' 1>&2
+	printf 'fatal: unable to open the manual entry\n' 1>&2
+	printf 'fatal: falling back to the built-in help text\n' 1>&2
 	printf '\n' 1>&2
 	return 1
 }

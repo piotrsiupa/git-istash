@@ -125,7 +125,7 @@ end_with_success() {
 		orphan)
 			if [ -n "$(git ls-tree -r --name-only HEAD~6)" ]
 			then
-				printf 'fatal: The empty commit created for the command is not empty.\n' 1>&2
+				printf 'fatal: the empty commit created for the command is not empty\n' 1>&2
 				return 1
 			fi
 			git branch --quiet --delete --force "$current_branch"
@@ -200,14 +200,14 @@ check_data_files() { # resume quit
 				printf_color 2 '\033[31m'
 				if [ -f "$(make_target_data_file_path)" ]
 				then
-					printf 'fatal: '\''git istash %s'\'' seems to be running but the data files are broken\n' "$operation_in_progress" 1>&2
+					printf 'fatal: '\''git istash %s'\'' seems to be running but the data files are broken\n' "$operation_in_progress"
 					printf 'fatal: '\''%s'\'' is missing\n' "$(make_working_dir_sha_file_path)"
 				elif [ -f "$(make_working_dir_sha_file_path)" ]
 				then
-					printf 'fatal: '\''git istash %s'\'' seems to be running but the data files are broken\n' "$operation_in_progress" 1>&2
+					printf 'fatal: '\''git istash %s'\'' seems to be running but the data files are broken\n' "$operation_in_progress"
 					printf 'fatal: '\''%s'\'' is missing\n' "$(make_target_data_file_path)"
 				else
-					printf 'fatal: '\''git istash %s'\'' seems to be running but the data files are broken\n' "$operation_in_progress" 1>&2
+					printf 'fatal: '\''git istash %s'\'' seems to be running but the data files are broken\n' "$operation_in_progress"
 					printf 'fatal: '\''%s'\'' and '\''%s'\'' are missing\n' "$(make_target_data_file_path)" "$(make_working_dir_sha_file_path)"
 				fi
 			} 1>&2

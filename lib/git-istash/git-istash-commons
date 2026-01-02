@@ -77,9 +77,11 @@ check_args() { # max_free_args args...
 	shift 2
 	if [ $# -gt "$_max_free_args" ]
 	then
-		printf 'error: too many arguments\n' 1>&2
-		printf 'hint: type '\''git %s --help'\'' for detailed information\n' "$_script_name" 1>&2
-		printf 'hint: or '\''git %s -h'\'' for a short help text\n' "$_script_name" 1>&2
+		{
+			printf 'error: too many arguments\n'
+			printf 'hint: type '\''git %s --help'\'' for detailed information\n' "$_script_name"
+			printf 'hint: or '\''git %s -h'\'' for a short help text\n' "$_script_name"
+		} 1>&2
 		return 1
 	fi
 }
@@ -168,22 +170,22 @@ check_stash() { # stash
 	parents_num="$(git rev-list --no-walk --count "$stash_commit^@")"
 	if [ "$parents_num" -lt 2 ] || [ "$parents_num" -gt 3 ]
 	then
-		printf 'fatal: "%s" should have 2 or 3 parents to be a stash.\n' "$stash_commit" 1>&2
+		printf 'fatal: "%s" doesn'\''t have 2 or 3 parents required to be a stash\n' "$stash_commit" 1>&2
 		return 1
 	fi
 	if [ "$parents_num" -eq 3 ] && [ "$(git rev-list --no-walk --count "$stash_commit^3^@")" -ne 0 ]
 	then
-		printf 'fatal: "%s^3" should have no parents to be a part of a stash.\n' "$stash_commit" 1>&2
+		printf 'fatal: "%s^3" have parents unlike in a stash\n' "$stash_commit" 1>&2
 		return 1
 	fi
 	if [ "$(git rev-list --no-walk --count "$stash_commit^2^@")" -ne 1 ]
 	then
-		printf 'fatal: The commit "%s^2" should have one parent to be a part of a stash.\n' "$stash_commit" 1>&2
+		printf 'fatal: "%s^2" doesn'\''t have one parent like in a stash\n' "$stash_commit" 1>&2
 		return 1
 	fi
 	if [ "$(git rev-parse "$stash_commit^1")" != "$(git rev-parse "$stash_commit^2^")" ]
 	then
-		printf 'fatal: The commit "%s^1" should be the parent of "%s^2" to be a part of a stash.\n' "$stash_commit" "$stash_commit" 1>&2
+		printf 'fatal: "%s^1" isn'\''t the parent of "%s^2" like in a stash\n' "$stash_commit" "$stash_commit" 1>&2
 		return 1
 	fi
 	correct_commit_msgs=0
@@ -203,11 +205,11 @@ check_stash() { # stash
 	then
 		if [ $correct_commit_msgs -eq 0 ]
 		then
-			printf 'error: "%s"'\''s commits don'\''t have correct messages for stash.\n' "$stash_commit" 1>&2
+			printf 'fatal: "%s"'\''s commits don'\''t have correct messages for a stash\n' "$stash_commit" 1>&2
 		else
-			printf 'error: some of "%s"'\'' commits don'\''t have correct messages for stash.\n' "$stash_commit" 1>&2
+			printf 'fatal: some of "%s"'\'' commits don'\''t have correct messages for a stash\n' "$stash_commit" 1>&2
 		fi
-		printf 'error: It may not be a stash entry or it may be damaged.\n'
+		printf 'fatal: it may not be a stash entry or it may be damaged\n' 1>&2
 		return 1
 	fi
 }
