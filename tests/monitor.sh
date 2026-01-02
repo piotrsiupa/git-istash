@@ -98,6 +98,10 @@ initial_run() { # [filter]...
 monitor_tests() { # [filter]...
 	if ! initial_run "$@"
 	then
+		if [ "$(get_all_tests_count "$@")" -eq 0 ]
+		then
+			return 1
+		fi
 		if [ "$skip_init" = n ]
 		then
 			printf '\n\n\n'
