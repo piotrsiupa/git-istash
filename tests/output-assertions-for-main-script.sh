@@ -48,6 +48,15 @@ assert_outputs__main_script__help() {
 	'
 }
 
+assert_outputs__main_script__version() {
+	assert_outputs '
+		git-istash version [1-9][0-9]*\.([1-9][0-9]*|0)\.([1-9][0-9]*|0)\n
+		Author: Piotr Siupa\n
+		Requires Git in version at least [1-9][0-9]*\.([1-9][0-9]*|0)\.([1-9][0-9]*|0)
+	' '
+	'
+}
+
 assert_outputs__main_script__no_operation_in_progress() {
 	assert_outputs '
 	' '
