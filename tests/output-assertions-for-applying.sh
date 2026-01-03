@@ -123,11 +123,16 @@ create_broken_operation_hint_regex() { # current_op broken_op
 	'
 }
 
-assert_outputs__apply__missing_data_file() { # current_op broken_op data_file
+assert_outputs__apply__missing_data_file() { # current_op broken_op data_file [second_data_file]
 	assert_outputs '
 	' '
 		'"$(create_broken_operation_header_regex "$2")"'\n
-		fatal: '\''\.git\/'"$(sanitize_for_sed "$3")"\'' is missing\n
+		'"$(if [ $# -eq 3 ]
+		then
+			printf '%s' 'fatal: '\''\.git\/'"$(sanitize_for_sed "$3")"\'' is missing'
+		else
+			printf '%s' 'fatal: '\''\.git\/'"$(sanitize_for_sed "$3")"\'' and '\''\.git\/'"$(sanitize_for_sed "$4")"\'' are missing'
+		fi)"'\n
 		'"$(create_broken_operation_hint_regex "$1" "$2")"'
 	'
 }
@@ -225,5 +230,41 @@ assert_outputs__apply__continue_abort_quit() {
 	assert_outputs '
 	' '
 		error: you can choose continue, abort or quit at your discretion but the rule is that you can only have one
+	'
+}
+
+assert_outputs__apply__wrong_number_of_stash_parents() { # stash_name
+	assert_outputs '
+	' '
+		fatal: '\'"$(sanitize_for_sed "$1")"\'' doesn'\''t have 2 or 3 parents required to be a stash
+	'
+}
+
+assert_outputs__apply__wrong_number_of_untracked_stash_parents() { # stash_name
+	assert_outputs '
+	' '
+		fatal: '\'"$(sanitize_for_sed "$1")"'\^3'\'' have parents unlike in a stash
+	'
+}
+
+assert_outputs__apply__wrong_number_of_staged_stash_parents() { # stash_name
+	assert_outputs '
+	' '
+		fatal: '\'"$(sanitize_for_sed "$1")"'\^2'\'' doesn'\''t have one parent like in a stash
+	'
+}
+
+assert_outputs__apply__wrong_staged_stash_parent() { # stash_name
+	assert_outputs '
+	' '
+		fatal: '\'"$(sanitize_for_sed "$1")"'\^1'\'' isn'\''t the parent of '\'"$(sanitize_for_sed "$1")"'\^2'\'' like in a stash
+	'
+}
+
+assert_outputs__apply__wrong_stash_commit_messages() { # stash_name
+	assert_outputs '
+	' '
+		fatal: some of '\'"$(sanitize_for_sed "$1")"\'' commits don'\''t have correct messages for a stash\n
+		fatal: it may not be a stash entry or it may be damaged
 	'
 }

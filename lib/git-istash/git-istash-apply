@@ -125,6 +125,7 @@ end_with_success() {
 		orphan)
 			if [ -n "$(git ls-tree -r --name-only HEAD~6)" ]
 			then
+				# This error is untested because it's hard to come up with a scenario so contrived that it would occur.
 				printf 'fatal: the empty commit created for the command is not empty\n' 1>&2
 				return 1
 			fi

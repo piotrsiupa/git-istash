@@ -123,7 +123,7 @@ check_data_files() { # resume abort quit
 					printf 'fatal: '\''%s'\'' is missing\n' "$(make_target_data_file_path)"
 				else
 					printf 'fatal: '\''git istash %s'\'' seems to be running but the data files are broken\n' "$operation_in_progress" 1>&2
-					printf 'fatal: '\''%s'\'' and '\''%s'\'' are missing!' "$(make_target_data_file_path)" "$(make_working_dir_sha_file_path)"
+					printf 'fatal: '\''%s'\'' and '\''%s'\'' are missing\n' "$(make_target_data_file_path)" "$(make_working_dir_sha_file_path)"
 				fi
 				printf_color 2 '\033[33m'
 				printf_color 2 '\033[39m'

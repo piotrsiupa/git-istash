@@ -170,22 +170,22 @@ check_stash() { # stash
 	parents_num="$(git rev-list --no-walk --count "$stash_commit^@")"
 	if [ "$parents_num" -lt 2 ] || [ "$parents_num" -gt 3 ]
 	then
-		printf 'fatal: "%s" doesn'\''t have 2 or 3 parents required to be a stash\n' "$stash_commit" 1>&2
+		printf 'fatal: '\''%s'\'' doesn'\''t have 2 or 3 parents required to be a stash\n' "$stash_commit" 1>&2
 		return 1
 	fi
 	if [ "$parents_num" -eq 3 ] && [ "$(git rev-list --no-walk --count "$stash_commit^3^@")" -ne 0 ]
 	then
-		printf 'fatal: "%s^3" have parents unlike in a stash\n' "$stash_commit" 1>&2
+		printf 'fatal: '\''%s^3'\'' have parents unlike in a stash\n' "$stash_commit" 1>&2
 		return 1
 	fi
 	if [ "$(git rev-list --no-walk --count "$stash_commit^2^@")" -ne 1 ]
 	then
-		printf 'fatal: "%s^2" doesn'\''t have one parent like in a stash\n' "$stash_commit" 1>&2
+		printf 'fatal: '\''%s^2'\'' doesn'\''t have one parent like in a stash\n' "$stash_commit" 1>&2
 		return 1
 	fi
 	if [ "$(git rev-parse "$stash_commit^1")" != "$(git rev-parse "$stash_commit^2^")" ]
 	then
-		printf 'fatal: "%s^1" isn'\''t the parent of "%s^2" like in a stash\n' "$stash_commit" "$stash_commit" 1>&2
+		printf 'fatal: '\''%s^1'\'' isn'\''t the parent of '\''%s^2'\'' like in a stash\n' "$stash_commit" "$stash_commit" 1>&2
 		return 1
 	fi
 	correct_commit_msgs=0
@@ -203,12 +203,7 @@ check_stash() { # stash
 	fi
 	if [ $correct_commit_msgs -ne "$parents_num" ]
 	then
-		if [ $correct_commit_msgs -eq 0 ]
-		then
-			printf 'fatal: "%s"'\''s commits don'\''t have correct messages for a stash\n' "$stash_commit" 1>&2
-		else
-			printf 'fatal: some of "%s"'\'' commits don'\''t have correct messages for a stash\n' "$stash_commit" 1>&2
-		fi
+		printf 'fatal: some of '\''%s'\'' commits don'\''t have correct messages for a stash\n' "$stash_commit" 1>&2
 		printf 'fatal: it may not be a stash entry or it may be damaged\n' 1>&2
 		return 1
 	fi
@@ -244,6 +239,7 @@ set_getopt_options_from_make_command() {
 	getopt_long_options="$(sed -E -n 's/^\s*getopt_long_options='\''([^'\'']+)'\''\s*$/\1/p' "$(dirname "$0")/git-istash-make-stash")"
 	if [ "$(printf '%s\n' "$getopt_short_options" | wc -l)" -ne 1 ] || [ "$(printf '%s\n' "$getopt_long_options" | wc -l)" -ne 1 ]
 	then
+		# Not tested because it cannot be triggered. It's here in a case something gets broken by a future change.
 		printf 'fatal: cannot determine if there is option "-h" in the arguments\n' 1>&2
 		return 1
 	fi
