@@ -42,11 +42,11 @@ extract_prefix() { # test_name_or_its_part
 }
 
 elongate_prefix() { # test_name_or_prefix
-	printf '%s' "$1" | sed -E 's;^((.*/)?[0-9]+)([A-Z]+(_[^/]+)?)$;\1A\3;'
+	printf '%s\n' "$1" | sed -E 's;^((.*/)?[0-9]+)([A-Z]+(_[^/]+)?)$;\1A\3;'
 }
 
 infinitesimalize_prefix() { # test_name_or_prefix
-	printf '%s' "$1" | sed -E 's;^((.*/)?[0-9]+)A([A-Z]+(_[^/]+)?)$;\1\3;'
+	printf '%s\n' "$1" | sed -E 's;^((.*/)?[0-9]+)A([A-Z]+(_[^/]+)?)$;\1\3;'
 }
 
 # It assumes that there is enough letters.
@@ -166,6 +166,8 @@ create_test() { # new_test_name...
 			new_test_name="$new_test_name.sh"
 		fi
 		
+		shift
+		
 		if extract_prefix "$(list_category "$category" | sort -r | head -n1)" | grep -E -q -x '[0-9]+Z+'
 		then
 			new_prefix="$(elongate_prefix "$new_prefix")"
@@ -175,6 +177,19 @@ create_test() { # new_test_name...
 			do
 				git mv "$test_to_rename" "$(elongate_prefix "$test_to_rename")"
 			done
+			#shellcheck disable=SC2046
+			set -- $(
+				printf '%s\n' "$@" \
+				| while read -r test_to_rename
+				do
+					if [ "$(extract_category "$test_to_rename")" = "$category" ]
+					then
+						elongate_prefix "$test_to_rename"
+					else
+						printf '%s\n' "$test_to_rename"
+					fi
+				done
+			)
 		fi
 		
 		{
@@ -189,10 +204,9 @@ create_test() { # new_test_name...
 			git mv "$test_to_rename" "$(increment_prefix "$test_to_rename")"
 		done
 		
+		printf 'touch %s\n' "$new_test_name" 1>&2
 		touch "$new_test_name"
 		git add --intent-to-add "$new_test_name"
-		
-		shift
 	done
 }
 
@@ -237,6 +251,8 @@ delete_test() { # test_name...
 			git mv "$test_to_rename" "$(decrement_prefix "$test_to_rename")"
 		done
 		
+		shift
+		
 		if extract_prefix "$(list_category "$category" | sort -r | head -n1)" | grep -E -q '[0-9]A.'
 		then
 			list_category "$category" \
@@ -244,9 +260,20 @@ delete_test() { # test_name...
 			do
 				git mv "$test_to_rename" "$(infinitesimalize_prefix "$test_to_rename")"
 			done
+			#shellcheck disable=SC2046
+			set -- $(
+				printf '%s\n' "$@" \
+				| while read -r test_to_rename
+				do
+					if [ "$(extract_category "$test_to_rename")" = "$category" ]
+					then
+						infinitesimalize_prefix "$test_to_rename"
+					else
+						printf '%s\n' "$test_to_rename"
+					fi
+				done
+			)
 		fi
-		
-		shift
 	done
 }
 
