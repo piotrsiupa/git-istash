@@ -15,12 +15,6 @@ assert_outputs__main_script__no_such_command() { # command
 	'
 }
 
-assert_outputs__main_script__missing_arg_separator() { # token
-	# This call the other assertion because output should be the same in this case.
-	# This is a slightly different situation, though, so the separate function is kept just in case.
-	assert_outputs__main_script__no_such_command "$@"
-}
-
 assert_outputs__main_script__unrecognised_short_option() { # option
 	# "getopt" doesn't give a very consistent output between inplementations
 	assert_outputs '

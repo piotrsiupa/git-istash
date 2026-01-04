@@ -12,7 +12,7 @@ print_help() {
 	printf 'This is only a rudimentary help text.\n'
 	printf 'Prefer "git help istash" (or "git istash --man") if available.\n'
 	printf '\n'
-	printf 'Usage: git istash <sub-command> [<argument>...]\n'
+	printf 'Usage: git istash [<sub-command>] [<sub-command argument>...]\n'
 	printf '   or: git istash (-h | --help | --man)\n'
 	printf '   or: git istash --version\n'
 	printf '   or: git istash (-c | --continue | --abort | --quit)\n'
@@ -34,7 +34,7 @@ print_help() {
 	printf '\tcontinue- Alias for "git istash --continue".\n'
 	printf '\tcreate\t- Analog to "git stash create" (but with options).\n'
 	printf '\tpop\t- Analog to "git stash pop --index".\n'
-	printf '\tpush\t- Analog to "git stash push".\n'
+	printf '\tpush\t- Analog to "git stash push". (Default sub-command.)\n'
 	printf '\tquit\t- Alias for "git istash --quit".\n'
 	printf '\tsave\t- Same as "git istash create" except it stores the stash.\n'
 	printf '\tsnatch\t- Same as "git istash push" except it doesn'\''t store the stash.\n'
@@ -52,9 +52,8 @@ exec_subcommand() { # subcommand [arguments...]
 	subcommand_path="$(dirname "$0")/../lib/git-istash/git-istash-$subcommand"
 	if [ ! -f "$subcommand_path" ] || [ ! -x "$subcommand_path" ]
 	then
-		printf 'error: subcommand wasn'\''t specified; '\''push'\'' can'\''t be assumed due to unexpected token '\''%s'\''\n' "$subcommand" 1>&2
-		printf 'hint: pathspecs for an implicit '\''push'\'' subcommand must be preceded by '\''--'\''\n' 1>&2
-		return 1
+		subcommand_path="$(dirname "$0")/../lib/git-istash/git-istash-push"
+		set -- '--_implicit-push_' "$subcommand" "$@"
 	fi
 	exec sh "$subcommand_path" "$@"
 }
