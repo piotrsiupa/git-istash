@@ -4,21 +4,20 @@ This is a guide for the maintainer, acting as a reminder of all the necessary st
  1. Make sure the new functionality is finished (including an extensive set of tests for it).
  2. If applicable, remove / fix old tests with "known failures" if these problems are fixed by the new features.
  3. Make sure that `README.md`, `man/man1/git-istash.1` and help texts in `bin/git-istash` and `lib/git-istash/git-istash-*` are up to date with the new features.
- 4. If there are any new relevant changes done to `master`, make sure to fetch and merge them.
-    (If you don't want to complicate the log graph, make a temporary merge or whatever.
-    The point is to make sure tests are run on the code that will be in `master`, not on the subset of only the changes that are in the branch.)
- 5. Run `tests/shellcheck.sh`.
+ 4. Make sure that there are no TODO comments remaining in the working copy or commited by accident.
+ 5. Switch to latest `master` and merge the feature branch with the flags `--no-ff` and `--no-commit`.
+    Do *not* finalize the merge yet.
+ 6. Fix merge conflicts.
+    If there are a lot of them, or there are a lot changes on master that are not in the branch yet, consider a preliminary merge of master into the branch.
+ 7. Run `tests/shellcheck.sh`.
     (Although, this should really be done after every change in a script.)
- 6. Run the complete test suite (`tests/run.sh`) on both Linux and Windows - all tests have to pass.
+ 8. Run the complete test suite (`tests/run.sh`) on both Linux and Windows - all tests have to pass.
     Make sure to choose a meticulousness that will catch all the problems.
     For simple changes `3` may suffice but you should run `4` on at least 1 system if the scripts options has changed and maybe even `5` if there is a chance that the new option names will collide in any way (including their abbreviations).
     (For Windows run `2` because this will take the whole day even then.)
     After this step, no changes in directories `bin/` and `lib/` are allowed.
- 7. Run `tests/check-git-versions.sh` to make sure that the minimum required version of `git` hasn't changed.
+ 9. Run `tests/check-git-versions.sh` to make sure that the minimum required version of `git` hasn't changed.
     (If it did, update `bin/git-istash` and rerun the test suite.)
- 8. Switch to latest `master` and merge the feature branch with the flags `--no-ff` and `--no-commit`.
-    Do *not* finalize the merge yet.
- 9. If there are conflicts solve them; and rerun the tests and Shellcheck as needed.
 10. Update the version numbers in all modified scripts that have a function `print_version`.
     (You may use the script `find-version-numbers-to-update.sh`.)
 11. Update the version number and the date in `man/man1/git-istash.1`.
