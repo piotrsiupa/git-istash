@@ -111,7 +111,7 @@ elif [ "$1" = '--version' ] || [ "$2" = '--version' ]
 then
 	print_version
 	exit 0
-elif printf '%s\n' "$1" | grep -Eqx -- '-c|(--)?c(o(n(t(i(n(u(e)?)?)?)?)?)?)?|--ab(o(r(t)?)?)?|abort|--q(u(i(t)?)?)?|quit'  # Not a pretty solution but one that doesn't require knowing all options of every subcommand. (Although, it needs manual updating when something changes.)
+elif printf '%s\n' "$1" | grep -Eqx -- '-c|(--)?c(o(n(t(i(n(ue?)?)?)?)?)?)?|--ab(o(r(t)?)?)?|abort|--q(u(it?)?)?|quit'  # Not a pretty solution but one that doesn't require knowing all options of every subcommand. (Although, it needs manual updating when something changes.)
 then
 	set -u
 	continuation_option="$1"
@@ -134,7 +134,7 @@ then
 			exec_subcommand 'pop' "$continuation_option" "$@"
 			;;
 		error-*)
-			if [ "$continuation_option" = '--quit' ]
+			if printf '%s' "$continuation_option" | grep -Exq -- '--q(u(it?)?)?'
 			then
 				exec_subcommand "$(printf '%s' "$data_files" | tail -c+7)" "$continuation_option" "$@"
 			else
