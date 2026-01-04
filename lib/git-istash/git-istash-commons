@@ -240,7 +240,7 @@ set_getopt_options_from_make_command() {
 	if [ "$(printf '%s\n' "$getopt_short_options" | wc -l)" -ne 1 ] || [ "$(printf '%s\n' "$getopt_long_options" | wc -l)" -ne 1 ]
 	then
 		# Not tested because it cannot be triggered. It's here in a case something gets broken by a future change.
-		printf 'fatal: cannot determine if there is option "-h" in the arguments\n' 1>&2
+		printf 'fatal: cannot determine if there is option '\''-h'\'' in the arguments\n' 1>&2
 		return 1
 	fi
 }
