@@ -57,7 +57,7 @@ correct_head_sha2="$(get_head_sha_HT)"
 printf 'ddd\n' >aaa
 git add aaa
 assert_exit_code 1 git istash "$APPLY_OPERATION"
-assert_outputs__apply__operation_in_progress "istash $APPLY_OPERATION"
+assert_outputs__operation_in_progress "istash $APPLY_OPERATION"
 assert_files_HT '
 M  aaa		ddd
    wdf0		wdf0b

@@ -47,7 +47,7 @@ assert_dotgit_contents
 __test_section__ "$CAP_CREATE_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 assert_exit_code 1 git istash "$CREATE_OPERATION"
-assert_outputs__create__operation_in_progress 'bisect'
+assert_outputs__external_operation_in_progress 'bisect'
 assert_files_HT '
    aaa		ccc
 !! ignored0	ignored0

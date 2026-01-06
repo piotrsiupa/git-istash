@@ -107,20 +107,57 @@ check_other_git_commands_state() {
 	fi
 	if [ -n "$other_git_command" ]
 	then
-		printf 'error: there is currently '\''git %s'\'' in progress\n' "$other_git_command" 1>&2
+		printf 'error: there is currently '\''git %s'\'' in progress\n' "$other_git_command"
+		printf 'hint: finalize it before running '\''git istash'\'
 		return 1
-	fi
+	fi 1>&2
 }
 
-check_data_files() {
+print_broken_operation_hint() { # called_operation
+	printf_color 2 '\033[33m'
+	if printf '%s' "$1" | grep -E -q '^-'
+	then
+		printf 'hint: fix the problems and rerun '\''git istash %s'\''\n' "$1"
+	else
+		printf 'hint: fix the problem and finalize that operation before starting a new one\n'
+	fi
+	printf 'hint: or run '\''git istash --quit'\'' to forcefully cancel it\n'
+	printf_color 2 '\033[39m'
+} 1>&2
+
+print_error_for_data_files_check() { # current_operation called_operation
+	printf_color 2 '\033[31m'
+	if printf '%s\n' "$1" | grep -E -q '^error-'
+	then
+		operation_in_progress="$(printf '%s' "$1" | tail -c +7)"
+		printf 'fatal: '\''git istash %s'\'' seems to be in progress but the data files are broken\n' "$operation_in_progress"
+		if [ -f "$(make_target_data_file_path)" ]
+		then
+			printf 'fatal: '\''%s'\'' is missing\n' "$(make_working_dir_sha_file_path)"
+		elif [ -f "$(make_working_dir_sha_file_path)" ]
+		then
+			printf 'fatal: '\''%s'\'' is missing\n' "$(make_target_data_file_path)"
+		else
+			printf 'fatal: '\''%s'\'' and '\''%s'\'' are missing\n' "$(make_target_data_file_path)" "$(make_working_dir_sha_file_path)"
+		fi
+		print_broken_operation_hint "$2"
+	elif [ "$1" != 'nothing' ]
+	then
+		printf 'error: there is currently '\''git istash %s'\'' in progress\n' "$1"
+		printf 'hint: use '\''git istash --continue'\'' or '\''git istash --abort'\''\n'
+	fi
+	printf_color 2 '\033[39m'
+} 1>&2
+
+check_data_files() { # operation
 	current_operation="$(find_data_files)"
 	if printf '%s\n' "$current_operation" | grep -E -q '^error-'
 	then
-		printf 'error: there is currently a broken '\''git istash %s'\'' in progress\n' "$(printf '%s' "$current_operation" | tail -c+7)" 1>&2
+		print_error_for_data_files_check "$current_operation" "$1"
 		return 1
 	elif [ "$current_operation" != 'nothing' ]
 	then
-		printf 'error: there is currently '\''git istash %s'\'' in progress\n' "$current_operation" 1>&2
+		print_error_for_data_files_check "$current_operation" "$1"
 		return 1
 	fi
 }

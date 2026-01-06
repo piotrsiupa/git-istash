@@ -59,7 +59,7 @@ git add aaa
 mv .git/ISTASH_TARGET .git/ISTASH_TARGET~
 mv .git/ISTASH_WORKING-DIR .git/ISTASH_WORKING-DIR~
 assert_exit_code 1 git istash apply "$CONTINUE_FLAG"
-assert_outputs__apply__missing_data_file 'apply' 'pop' 'ISTASH_TARGET' 'ISTASH_WORKING-DIR'
+assert_outputs__missing_data_file 'pop' 'ISTASH_TARGET' 'ISTASH_WORKING-DIR'
 assert_files_HT '
 M  aaa		ddd
    wdf0		wdf0b

@@ -63,7 +63,7 @@ correct_head_sha2="$(get_head_sha_HT)"
 printf 'ddd\n' >aaa
 git add aaa
 assert_exit_code 1 git istash "$APPLY_OPERATION"
-assert_outputs__apply__missing_data_file "$APPLY_OPERATION" 'pop' 'ISTASH_TARGET'
+assert_outputs__missing_data_file 'pop' 'ISTASH_TARGET'
 assert_files_HT '
 M  aaa		ddd
    wdf0		wdf0b

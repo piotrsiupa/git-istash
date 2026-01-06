@@ -39,9 +39,9 @@ save_data() {
 load_target_data() { # subcommand
 	if [ "$(wc -l <"$target_data_file")" -ne 1 ]
 	then
-		printf 'fatal: '\''git istash %s'\'' seems to be running but the data files are broken\n' "$(get_sub_command_name)" 1>&2
+		printf 'fatal: '\''git istash %s'\'' seems to be in progress but the data files are broken\n' "$(get_sub_command_name)" 1>&2
 		printf 'fatal: '\''%s'\'' doesn'\''t have exactly 1 line\n' "$target_data_file" 1>&2
-		print_quit_hint_for_new_operation "$1"
+		print_broken_operation_hint "$1"
 		return 1
 	fi
 	current_branch="$(cat "$target_data_file")"
@@ -54,9 +54,9 @@ load_target_data() { # subcommand
 	fi
 	if ! git rev-parse --quiet --verify "$current_branch^{commit}" 1>/dev/null
 	then
-		printf 'fatal: '\''git istash %s'\'' seems to be running but the data files are broken\n' "$(get_sub_command_name)" 1>&2
+		printf 'fatal: '\''git istash %s'\'' seems to be in progress but the data files are broken\n' "$(get_sub_command_name)" 1>&2
 		printf 'fatal: '\''%s'\'' contains an invalid commit hash\n' "$target_data_file" 1>&2
-		print_quit_hint_for_new_operation "$1"
+		print_broken_operation_hint "$1"
 		return 1
 	fi
 	if [ "$curr_branch_type" != 'orphan' ] && [ "$(git rev-parse "$current_branch")" = "$current_branch" ]
@@ -67,17 +67,17 @@ load_target_data() { # subcommand
 load_working_dir_data() { # subcommand
 	if [ "$(wc -l <"$working_dir_sha_file")" -ne 1 ]
 	then
-		printf 'fatal: '\''git istash %s'\'' seems to be running but the data files are broken\n' "$(get_sub_command_name)" 1>&2
+		printf 'fatal: '\''git istash %s'\'' seems to be in progress but the data files are broken\n' "$(get_sub_command_name)" 1>&2
 		printf 'fatal: '\''%s'\'' doesn'\''t have exactly 1 line\n' "$working_dir_sha_file" 1>&2
-		print_quit_hint_for_new_operation "$1"
+		print_broken_operation_hint "$1"
 		return 1
 	fi
 	working_dir_changes_sha="$(cat "$working_dir_sha_file")"
 	if ! git rev-parse --quiet --verify "$working_dir_changes_sha^{commit}" 1>/dev/null
 	then
-		printf 'fatal: '\''git istash %s'\'' seems to be running but the data files are broken\n' "$(get_sub_command_name)" 1>&2
+		printf 'fatal: '\''git istash %s'\'' seems to be in progress but the data files are broken\n' "$(get_sub_command_name)" 1>&2
 		printf 'fatal: '\''%s'\'' contains an invalid commit hash\n' "$working_dir_sha_file" 1>&2
-		print_quit_hint_for_new_operation "$1"
+		print_broken_operation_hint "$1"
 		return 1
 	fi
 }
@@ -148,71 +148,23 @@ end_with_success() {
 	fi
 }
 
-print_quit_hint() { # subcommand
-	printf 'hint: or run '\''git istash --quit'\'' to forcefully cancel it\n'
-}
-
-print_quit_hint_for_new_operation() { # subcommand
-	printf_color 2 '\033[33m'
-	if [ "$1" = "$(get_sub_command_name)" ]
-	then
-		printf 'hint: fix the problem and finalize that operation before starting a new one\n'
-	else
-		printf 'hint: fix the problem and finalize that operation before starting '\''istash apply'\''\n'
-	fi
-	print_quit_hint "$1"
-	printf_color 2 '\033[39m'
-} 1>&2
-
-print_quit_hint_for_resumed_operation() { # subcommand
-	printf_color 2 '\033[33m'
-	printf 'hint: fix the problems and rerun the operation with '\''git istash --abort'\''\n'
-	print_quit_hint "$(get_sub_command_name)"
-	printf_color 2 '\033[39m'
-} 1>&2
-
 check_data_files() { # resume quit
 	if [ "$is_pop" = y ] ; then return 0 ; fi
 	operation_in_progress="$(find_data_files)"
 	case "$operation_in_progress" in
 		pop)
 			if [ "$2" = y ] ; then return 0 ; fi
-			{
-				printf_color 2 '\033[33m'
-				printf 'error: there is currently '\''git istash %s'\'' in progress\n' "$operation_in_progress"
-				printf_color 2 '\033[39m'
-			} 1>&2
+			print_error_for_data_files_check "$operation_in_progress" 'apply'
 			return 1
 			;;
 		apply)
 			if [ "$1" = y ] || [ "$2" = y ] ; then return 0 ; fi
-			{
-				printf_color 2 '\033[33m'
-				printf 'error: '\''git istash apply'\'' is already in progress\n'
-				printf 'hint: use '\''git istash --continue'\'' or '\''git istash --abort'\''\n'
-				printf_color 2 '\033[39m'
-			} 1>&2
+			print_error_for_data_files_check "$operation_in_progress" 'apply'
 			return 1
 			;;
 		error-*)
 			if [ "$2" = y ] ; then return 0 ; fi
-			{
-				operation_in_progress="$(printf '%s' "$operation_in_progress" | tail -c +7)"
-				printf_color 2 '\033[31m'
-				if [ -f "$(make_target_data_file_path)" ]
-				then
-					printf 'fatal: '\''git istash %s'\'' seems to be running but the data files are broken\n' "$operation_in_progress"
-					printf 'fatal: '\''%s'\'' is missing\n' "$(make_working_dir_sha_file_path)"
-				elif [ -f "$(make_working_dir_sha_file_path)" ]
-				then
-					printf 'fatal: '\''git istash %s'\'' seems to be running but the data files are broken\n' "$operation_in_progress"
-					printf 'fatal: '\''%s'\'' is missing\n' "$(make_target_data_file_path)"
-				else
-					printf 'fatal: '\''git istash %s'\'' seems to be running but the data files are broken\n' "$operation_in_progress"
-					printf 'fatal: '\''%s'\'' and '\''%s'\'' are missing\n' "$(make_target_data_file_path)" "$(make_working_dir_sha_file_path)"
-				fi
-			} 1>&2
-			print_quit_hint_for_new_operation "$operation_in_progress"
+			print_error_for_data_files_check "$operation_in_progress" 'apply'
 			return 1
 			;;
 		nothing)
@@ -366,7 +318,7 @@ do_abort() { # args...
 		{
 			printf 'fatal: failed to restore HEAD to initial position\n'
 			printf '%s\n' "$error_message"
-			print_quit_hint_for_resumed_operation
+			print_broken_operation_hint '--abort'
 		} 1>&2
 		return 1
 	fi

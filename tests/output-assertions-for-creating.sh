@@ -159,20 +159,6 @@ assert_outputs__create__unmatching_pathspec() { # pathspec
 	'
 }
 
-assert_outputs__create__operation_in_progress() { # operation
-	assert_outputs '
-	' '
-		error: there is currently '\''git '"$(sanitize_for_sed "$1")"\'' in progress
-	'
-}
-
-assert_outputs__create__broken_operation_in_progress() { # operation
-	assert_outputs '
-	' '
-		error: there is currently a broken '\''git '"$(sanitize_for_sed "$1")"\'' in progress
-	'
-}
-
 assert_outputs__create__pfn_without_pff() {
 	assert_outputs '
 	' '

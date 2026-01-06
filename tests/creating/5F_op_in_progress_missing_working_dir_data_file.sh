@@ -4,7 +4,13 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
-PARAMETRIZE_ABORT
+PARAMETRIZE_CREATE_OPERATION
+PARAMETRIZE_ALL 'DEFAULT'
+PARAMETRIZE_UNTRACKED 'DEFAULT'
+PARAMETRIZE_KEEP_INDEX 'DEFAULT'
+PARAMETRIZE_STAGED 'YES'
+PARAMETRIZE_UNSTAGED 'YES'
+PARAMETRIZE_CONTINUE
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
@@ -21,12 +27,6 @@ git commit -am 'Changed aaa'
 
 SWITCH_HEAD_TYPE
 
-__test_section__ 'Dirty the working directory'
-printf 'wdf0a\n' >wdf0
-git add wdf0
-printf 'wdf0b\n' >wdf0
-printf 'wdf1a\n' >wdf1
-
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 assert_exit_code 2 git istash "$APPLY_OPERATION"
@@ -37,12 +37,10 @@ DU aaa
 '
 assert_files_HT '
 UU aaa		ccc|bbb
-   wdf0		wdf0b
 !! ignored0	ignored0
 !! ignored1	ignored1
 ' '
 DU aaa		bbb
-   wdf0		wdf0b
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
@@ -52,20 +50,19 @@ assert_data_files "$APPLY_OPERATION"
 assert_rebase y
 assert_dotgit_contents_for "$APPLY_OPERATION"
 
-__test_section__ "Abort $APPLY_OPERATION stash (0)"
+__test_section__ "Continue $APPLY_OPERATION stash (0)"
 correct_head_sha2="$(get_head_sha_HT)"
-mv .git/ISTASH_TARGET .git/ISTASH_TARGET~
-touch .git/ISTASH_TARGET
-assert_exit_code 1 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
-assert_outputs__apply__data_file_not_1_line "$APPLY_OPERATION" 'ISTASH_TARGET'
+printf 'ddd\n' >aaa
+git add aaa
+mv .git/ISTASH_WORKING-DIR .git/ISTASH_WORKING-DIR~
+assert_exit_code 1 git istash "$CREATE_OPERATION"
+assert_outputs__missing_data_file "$APPLY_OPERATION" 'ISTASH_WORKING-DIR'
 assert_files_HT '
-UU aaa		ccc|bbb
-   wdf0		wdf0b
+M  aaa		ddd
 !! ignored0	ignored0
 !! ignored1	ignored1
 ' '
-DU aaa		bbb
-   wdf0		wdf0b
+A  aaa		ddd
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
@@ -73,25 +70,28 @@ assert_stash_count 1
 assert_branch_count_HT 1
 assert_head_sha_HT "$correct_head_sha2"
 assert_rebase y
-assert_dotgit_contents_for "$APPLY_OPERATION" 'ISTASH_TARGET~'
+if IS_APPLY
+then
+	assert_dotgit_contents 'ISTASH_TARGET' 'ISTASH_WORKING-DIR~'
+else
+	assert_dotgit_contents 'ISTASH_STASH' 'ISTASH_TARGET' 'ISTASH_WORKING-DIR~'
+fi
 
-__test_section__ "Abort $APPLY_OPERATION stash (1)"
-mv .git/ISTASH_TARGET~ .git/ISTASH_TARGET
-assert_exit_code 0 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
-assert_outputs__apply__abort "$APPLY_OPERATION"
+__test_section__ "Continue $APPLY_OPERATION stash (1)"
+mv .git/ISTASH_WORKING-DIR~ .git/ISTASH_WORKING-DIR
+stash_sha="$(git rev-parse stash)"
+assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
+assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
 assert_files_HT '
-   aaa		ccc
-AM wdf0		wdf0b	wdf0a
-?? wdf1		wdf1a
+ M aaa		ddd	ccc
 !! ignored0	ignored0
 !! ignored1	ignored1
 ' '
-AM wdf0		wdf0b	wdf0a
-?? wdf1		wdf1a
+ A aaa		ddd
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
-assert_stash_count 1
+assert_stash_count_AO 1
 assert_log_length_HT 3
 assert_branch_count 1
 assert_head_sha_HT "$correct_head_sha"

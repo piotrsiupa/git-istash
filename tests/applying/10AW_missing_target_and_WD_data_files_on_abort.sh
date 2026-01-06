@@ -56,7 +56,7 @@ correct_head_sha2="$(get_head_sha_HT)"
 mv .git/ISTASH_TARGET .git/ISTASH_TARGET~
 mv .git/ISTASH_WORKING-DIR .git/ISTASH_WORKING-DIR~
 assert_exit_code 1 git istash pop "$ABORT_FLAG"
-assert_outputs__apply__missing_data_file 'pop' 'pop' 'ISTASH_TARGET' 'ISTASH_WORKING-DIR'
+assert_outputs__missing_data_file 'pop' 'ISTASH_TARGET' 'ISTASH_WORKING-DIR'
 assert_files_HT '
 UU aaa		ccc|bbb
    wdf0		wdf0b

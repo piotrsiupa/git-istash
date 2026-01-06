@@ -59,7 +59,7 @@ git add aaa
 mv .git/ISTASH_TARGET .git/ISTASH_TARGET~
 touch .git/ISTASH_TARGET
 assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
-assert_outputs__apply__data_file_not_1_line "$APPLY_OPERATION" "$APPLY_OPERATION" 'ISTASH_TARGET'
+assert_outputs__apply__data_file_not_1_line "$APPLY_OPERATION" 'ISTASH_TARGET'
 assert_files_HT '
 M  aaa		ddd
    wdf0		wdf0b

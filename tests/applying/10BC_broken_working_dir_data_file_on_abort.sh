@@ -57,7 +57,7 @@ correct_head_sha2="$(get_head_sha_HT)"
 mv .git/ISTASH_WORKING-DIR .git/ISTASH_WORKING-DIR~
 printf 'fa4e08a58\n' >.git/ISTASH_WORKING-DIR
 assert_exit_code 1 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
-assert_outputs__apply__data_file_invalid_commit "$APPLY_OPERATION" "$APPLY_OPERATION" 'ISTASH_WORKING-DIR'
+assert_outputs__apply__data_file_invalid_commit "$APPLY_OPERATION" 'ISTASH_WORKING-DIR'
 assert_files_HT '
 UU aaa		ccc|bbb
    wdf0		wdf0b

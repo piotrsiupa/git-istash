@@ -485,7 +485,7 @@ print_summary() {
 } 1>&2
 
 make_stash() { # pathspecs...
-	check_data_files
+	check_data_files "$command_name"
 	check_other_git_commands_state
 	
 	initialize "$@"
@@ -598,6 +598,8 @@ then
 	printf 'error: option '\''--pathspec-file-nul'\'' is not valid without '\''--pathspec-from-file'\''\n' 1>&2
 	exit 1
 fi
+command_name="$1"
+shift
 
 set +e
 (

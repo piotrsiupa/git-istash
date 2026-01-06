@@ -61,7 +61,7 @@ printf 'eee\n' >aaa
 git add aaa
 mv .git/ISTASH_STASH .git/ISTASH_STASH~
 assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
-assert_outputs__apply__other_operation_in_progress "istash $OTHER_APPLY_OPERATION"
+assert_outputs__operation_in_progress "istash $OTHER_APPLY_OPERATION"
 assert_files_HT '
 M  aaa		eee
    wdf0		wdf0b

@@ -88,21 +88,6 @@ assert_outputs__apply__no_such_commit() { # commit
 	'
 }
 
-assert_outputs__apply__operation_in_progress() { # operation
-	assert_outputs '
-	' '
-		error: '\''git '"$(sanitize_for_sed "$1")"\'' is already in progress\n
-		hint: use '\''git istash --continue'\'' or '\''git istash --abort'\''
-	'
-}
-
-assert_outputs__apply__other_operation_in_progress() { # operation
-	assert_outputs '
-	' '
-		error: there is currently '\''git '"$(sanitize_for_sed "$1")"\'' in progress
-	'
-}
-
 assert_outputs__apply__no_operation_in_progress() { # operation
 	assert_outputs '
 	' '
@@ -110,66 +95,39 @@ assert_outputs__apply__no_operation_in_progress() { # operation
 	'
 }
 
-create_broken_operation_header_regex() { # broken_op
-	printf '%s' '
-		fatal: '\''git istash '"$1"\'' seems to be running but the data files are broken
-	'
-}
-
-create_broken_operation_hint_regex() { # current_op broken_op
-	printf '%s' '
-		hint: fix the problem and finalize that operation before starting '"$(if [ "$1" = "$2" ] ; then printf 'a new one' ; else printf '%s' \''istash '"$1"\' ; fi)"'\n
-		hint: or run '\''git istash --quit'\'' to forcefully cancel it
-	'
-}
-
-assert_outputs__apply__missing_data_file() { # current_op broken_op data_file [second_data_file]
+assert_outputs__apply__data_file_not_1_line() { # broken_op data_file
 	assert_outputs '
 	' '
-		'"$(create_broken_operation_header_regex "$2")"'\n
-		'"$(if [ $# -eq 3 ]
-		then
-			printf '%s' 'fatal: '\''\.git\/'"$(sanitize_for_sed "$3")"\'' is missing'
-		else
-			printf '%s' 'fatal: '\''\.git\/'"$(sanitize_for_sed "$3")"\'' and '\''\.git\/'"$(sanitize_for_sed "$4")"\'' are missing'
-		fi)"'\n
-		'"$(create_broken_operation_hint_regex "$1" "$2")"'
+		'"$(create_broken_operation_header_regex "$1")"'\n
+		fatal: '\''\.git\/'"$(sanitize_for_sed "$2")"\'' doesn'\''t have exactly 1 line\n
+		'"$(create_broken_operation_hint_regex)"'
 	'
 }
 
-assert_outputs__apply__data_file_not_1_line() { # current_op broken_op data_file
+assert_outputs__apply__data_file_invalid_commit() { # broken_op data_file
 	assert_outputs '
 	' '
-		'"$(create_broken_operation_header_regex "$2")"'\n
-		fatal: '\''\.git\/'"$(sanitize_for_sed "$3")"\'' doesn'\''t have exactly 1 line\n
-		'"$(create_broken_operation_hint_regex "$1" "$2")"'
+		'"$(create_broken_operation_header_regex "$1")"'\n
+		fatal: '\''\.git\/'"$(sanitize_for_sed "$2")"\'' contains an invalid commit hash\n
+		'"$(create_broken_operation_hint_regex)"'
 	'
 }
 
-assert_outputs__apply__data_file_invalid_commit() { # current_op broken_op data_file
+assert_outputs__apply__data_file_invalid_integer() { # broken_op data_file
 	assert_outputs '
 	' '
-		'"$(create_broken_operation_header_regex "$2")"'\n
-		fatal: '\''\.git\/'"$(sanitize_for_sed "$3")"\'' contains an invalid commit hash\n
-		'"$(create_broken_operation_hint_regex "$1" "$2")"'
+		'"$(create_broken_operation_header_regex "$1")"'\n
+		fatal: '\''\.git\/'"$(sanitize_for_sed "$2")"\'' doesn'\''t contain a positive integer\n
+		'"$(create_broken_operation_hint_regex)"'
 	'
 }
 
-assert_outputs__apply__data_file_invalid_integer() { # current_op broken_op data_file
+assert_outputs__apply__data_file_invalid_stash_number() { # broken_op data_file stash_number
 	assert_outputs '
 	' '
-		'"$(create_broken_operation_header_regex "$2")"'\n
-		fatal: '\''\.git\/'"$(sanitize_for_sed "$3")"\'' doesn'\''t contain a positive integer\n
-		'"$(create_broken_operation_hint_regex "$1" "$2")"'
-	'
-}
-
-assert_outputs__apply__data_file_invalid_stash_number() { # current_op broken_op data_file stash_number
-	assert_outputs '
-	' '
-		'"$(create_broken_operation_header_regex "$2")"'\n
-		fatal: '\''\.git\/'"$(sanitize_for_sed "$3")"\'' contains an invalid stash number\n
-		'"$(create_broken_operation_hint_regex "$1" "$2")"'
+		'"$(create_broken_operation_header_regex "$1")"'\n
+		fatal: '\''\.git\/'"$(sanitize_for_sed "$2")"\'' contains an invalid stash number\n
+		'"$(create_broken_operation_hint_regex)"'
 	'
 }
 
@@ -178,7 +136,7 @@ assert_outputs__apply__branch_already_used() { # current_op branch
 	' '
 		fatal: failed to restore HEAD to initial position\n
 		fatal: '\'"$(sanitize_for_sed "$2")"\'' is already used by worktree at '\''.*'\''\n
-		hint: fix the problems and rerun the operation with '\''git istash --abort'\''\n
+		hint: fix the problems and rerun '\''git istash --abort'\''\n
 		hint: or run '\''git istash --quit'\'' to forcefully cancel it
 	'
 }

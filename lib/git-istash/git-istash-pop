@@ -26,24 +26,24 @@ save_data() {
 load_stash_data() { # subcommand
 	if [ "$(wc -l <"$stash_data_file")" -ne 1 ]
 	then
-		printf 'fatal: '\''git istash pop'\'' seems to be running but the data files are broken\n' 1>&2
+		printf 'fatal: '\''git istash pop'\'' seems to be in progress but the data files are broken\n' 1>&2
 		printf 'fatal: '\''%s'\'' doesn'\''t have exactly 1 line\n' "$stash_data_file" 1>&2
-		print_quit_hint "$1"
+		print_broken_operation_hint 'pop' "$1"
 		return 1
 	fi
 	stash="$(cat "$stash_data_file")"
 	if ! [ "$stash" -eq "$stash" ] 2>/dev/null || [ "$stash" -lt 0 ]
 	then
-		printf 'fatal: '\''git istash pop'\'' seems to be running but the data files are broken\n' 1>&2
+		printf 'fatal: '\''git istash pop'\'' seems to be in progress but the data files are broken\n' 1>&2
 		printf 'fatal: '\''%s'\'' doesn'\''t contain a positive integer\n' "$stash_data_file" 1>&2
-		print_quit_hint "$1"
+		print_broken_operation_hint 'pop' "$1"
 		return 1
 	fi
 	if [ "$stash" -ge "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" ]
 	then
-		printf 'fatal: '\''git istash pop'\'' seems to be running but the data files are broken\n' 1>&2
+		printf 'fatal: '\''git istash pop'\'' seems to be in progress but the data files are broken\n' 1>&2
 		printf 'fatal: '\''%s'\'' contains an invalid stash number\n' "$stash_data_file" 1>&2
-		print_quit_hint "$1"
+		print_broken_operation_hint 'pop' "$1"
 		return 1
 	fi
 }
@@ -74,61 +74,22 @@ check_stash_for_pop() {
 	fi
 }
 
-print_quit_hint() { # subcommand
-	printf_color 2 '\033[33m'
-	if [ "$1" = 'pop' ]
-	then
-		printf 'hint: fix the problem and finalize that operation before starting a new one\n'
-	else
-		printf 'hint: fix the problem and finalize that operation before starting '\''istash pop'\''\n'
-	fi
-	printf 'hint: or run '\''git istash --quit'\'' to forcefully cancel it\n'
-	printf_color 2 '\033[39m'
-} 1>&2
-
 check_data_files() { # resume abort quit
 	operation_in_progress="$(find_data_files)"
 	case "$operation_in_progress" in
 		pop)
 			if [ "$1" = y ] || [ "$2" = y ] || [ "$3" = y ] ; then return 0 ; fi
-			{
-				printf_color 2 '\033[33m'
-				printf 'error: '\''git istash %s'\'' is already in progress\n' "$operation_in_progress"
-				printf 'hint: use '\''git istash --continue'\'' or '\''git istash --abort'\''\n'
-				printf_color 2 '\033[39m'
-			} 1>&2
+			print_error_for_data_files_check "$operation_in_progress" 'pop'
 			return 1
 			;;
 		apply)
 			if [ "$2" = y ] || [ "$3" = y ] ; then return 0 ; fi
-			{
-				printf_color 2 '\033[33m'
-				printf 'error: there is currently '\''git istash %s'\'' in progress\n' "$operation_in_progress"
-				printf_color 2 '\033[39m'
-			} 1>&2
+			print_error_for_data_files_check "$operation_in_progress" 'pop'
 			return 1
 			;;
 		error-*)
 			if [ "$3" = y ] ; then return 0 ; fi
-			{
-				operation_in_progress="$(printf '%s' "$operation_in_progress" | tail -c +7)"
-				printf_color 2 '\033[31m'
-				if [ -f "$(make_target_data_file_path)" ]
-				then
-					printf 'fatal: '\''git istash %s'\'' seems to be running but the data files are broken\n' "$operation_in_progress" 1>&2
-					printf 'fatal: '\''%s'\'' is missing\n' "$(make_working_dir_sha_file_path)"
-				elif [ -f "$(make_working_dir_sha_file_path)" ]
-				then
-					printf 'fatal: '\''git istash %s'\'' seems to be running but the data files are broken\n' "$operation_in_progress" 1>&2
-					printf 'fatal: '\''%s'\'' is missing\n' "$(make_target_data_file_path)"
-				else
-					printf 'fatal: '\''git istash %s'\'' seems to be running but the data files are broken\n' "$operation_in_progress" 1>&2
-					printf 'fatal: '\''%s'\'' and '\''%s'\'' are missing\n' "$(make_target_data_file_path)" "$(make_working_dir_sha_file_path)"
-				fi
-				printf_color 2 '\033[33m'
-				printf_color 2 '\033[39m'
-			} 1>&2
-			print_quit_hint "$operation_in_progress"
+			print_error_for_data_files_check "$operation_in_progress" 'pop'
 			return 1
 			;;
 		nothing)
