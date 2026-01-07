@@ -137,7 +137,7 @@ then
 			then
 				exec_subcommand "$(printf '%s' "$data_files" | tail -c+7)" "$continuation_option" "$@"
 			else
-				printf 'fatal: the operation in progress seems to be broken\n' 1>&2
+				print_error_for_data_files_check "$data_files" 'push'
 				exit 1
 			fi
 			;;

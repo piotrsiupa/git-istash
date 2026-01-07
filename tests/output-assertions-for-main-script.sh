@@ -57,10 +57,3 @@ assert_outputs__main_script__no_operation_in_progress() {
 		error: no istash operation in progress
 	'
 }
-
-assert_outputs__main_script__damaged_operation_in_progress() {
-	assert_outputs '
-	' '
-		fatal: the operation in progress seems to be broken
-	'
-}

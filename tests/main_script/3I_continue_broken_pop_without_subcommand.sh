@@ -50,7 +50,7 @@ correct_head_sha2="$(get_head_sha_HT)"
 printf 'ddd\n' >aaa
 git add aaa
 assert_exit_code 1 git istash "$CONTINUE_FLAG"
-assert_outputs__main_script__damaged_operation_in_progress
+assert_outputs__missing_data_file 'pop' 'ISTASH_TARGET'
 assert_files_HT '
 M  aaa		ddd
 !! ignored0	ignored0
