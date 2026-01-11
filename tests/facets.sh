@@ -20,7 +20,7 @@ raw_facets='
 	non-essential = ne|n(on)?[-_]e(ss(en(t(ial)?)?)?)?
 	
 	# Run tests for HEAD a normal branch, an orphan branch and a commit detached from a branch.
-	head-type = ht|h(ead)?[-_]t(ype)?
+	head-type = ht|h(ead)?([-_]t(ype)?)?
 	
 	# Run tests for a few chosen combinations of pathspec from arguments / stdin / file in a plain text / null separated format.
 	pathspec-style = p?ps|(p(a(r(t(ial)?)?)?)?[-_])?pa?(th)?s(p(ec)?)?[-_]s(t(y(le?)?)?)?
@@ -177,13 +177,13 @@ then
 	
 	pretty_print() { # list_of_facets_or_facet_categories
 		printf '%s' "$1" \
-		| sed -E -e 's/^\s+//' -e 's/^([^= ]+) *=.*$/\1/' \
+		| sed -E -e 's/^\s+//' -e 's/^([^= ]+) *=[^:]*(:[^:]*)?$/\1\2/' \
 		| tr '\n' '~' \
 		| sed -E -e 's/~~|~$/\n/g' -e 's/^~//' \
 		| while read -r entry
 		do
 			printf ' - '
-			name="$(printf '%s' "$entry" | sed -E 's/^.*~([^~]+)$/\1/')"
+			name="$(printf '%s' "$entry" | sed -E 's/^.*~([^~:]+)(:[^~:]*)?$/\1/')"
 			printf '%s' "$name"
 			if [ ${#name} -lt $((8-3)) ]
 			then
@@ -201,6 +201,20 @@ then
 				-e 's/(^|~)\s*#\s*/\1/g' \
 				-e 's/~/\n\t\t  /g'
 			printf '\n'
+			if printf '%s\n' "$entry" | grep -E -q ':'
+			then
+				printf '\t\t  Includes: '
+				if printf '%s\n' "$entry" | grep -E -q ':$'
+				then
+					printf '<nothing>'
+				else
+					printf '%s' "$entry" \
+					| sed -E 's/^.*://' \
+					| tr -d ' ' \
+					| sed -E -e 's/,/, /g' -e 's/,([^,]+)$/ and\1/'
+				fi
+				printf '.\n'
+			fi
 		done \
 		| break_long_lines '\t\t  '
 	}
