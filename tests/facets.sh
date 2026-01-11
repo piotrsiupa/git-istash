@@ -48,6 +48,10 @@ raw_facets='
 	
 	# Test also the command run with "--" between options and arguments.
 	end-options-indicator = e?oi|(e(nd)?[-_])?o(p(t(i(o(ns?)?)?|s|))?)?[-_]i(n(d(i(c(a(t(or)?)?)?)?)?)?)?|eo|e(nd)?[-_]o(p(t(i(o(ns?)?)?|s|))?)?|ei|e(nd)?[-_]i(n(d(i(c(a(t(or)?)?)?)?)?)?)?
+	
+	# Run the tests that take a long time to execute.
+	# (Only a few tests are like that but they still inhibit things noticeably.)
+	long-running = lr|l(o?ng)?[-_]r(u(n(n(ing)?)?)?)?
 '
 facets="$(normalize_facet_list "$raw_facets")"
 
@@ -58,11 +62,11 @@ raw_facet_categories='
 	all = a(ll)?: '"$(printf '%s' "$facets" | sed -E 's/^(.+)=.*$/\1/' | tr '\n' ',')"'
 	
 	# Test everything important and a little more, just ot be sure.
-	full = fu?ll: full-pathspec-style, color, standard
+	full = fu?ll: standard, full-pathspec-style, color, long-running
 	
 	# Test the important things.
 	# (It gives a pretty good idea of whether everything works.)
-	standard = std|sta(n(d(ard)?)?)?: partial-pathspec-style, short-options, fast
+	standard = std|sta(n(d(ard)?)?)?: fast, partial-pathspec-style, short-options
 	
 	# Test the most important things.
 	# (It is fast but not that thorough. It is usually good enough for testing mid-development.)

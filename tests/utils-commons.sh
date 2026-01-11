@@ -30,9 +30,14 @@ skip_silently() {
 	exit 1
 }
 
+is_facet_active() { # facet_regex
+	#shellcheck disable=SC2154
+	printf '%s' "$meticulousness" | grep -E -x -q "$1"
+}
+
 non_essential_test() {
 	#shellcheck disable=SC2154
-	if [ "$meticulousness" -le 0 ]
+	if ! is_facet_active 'non-essential'
 	then
 		skip_silently
 	fi

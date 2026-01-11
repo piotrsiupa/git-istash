@@ -1,7 +1,7 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
-# Special condition because it runs rather long.
-if [ "$meticulousness" -lt 2 ]
+non_essential_test
+if ! is_facet_active 'long-running'
 then
 	skip_silently
 fi
