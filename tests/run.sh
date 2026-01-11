@@ -54,6 +54,10 @@ print_help() {
 	printf 'You can also specify multiple such lists, separated with "|". '
 	printf 'They will be\nexecuted one after another for each test. '
 	printf 'This lets to test more features\nwithout letting the runtime get absolutely insane bananas.\n'
+	printf 'There are also special presets that can be used instead of listing facets:\n'
+	printf ' - complete\t- Attempts to test all code paths without too much redundancy.\n\t\t  It tests every single thing at least one but it doesn'\''t focus\n\t\t  much on combining different things and testing them together.\n'
+	printf ' - quickie\t- The same concept as "complete" but it prioritizes speed over\n\t\t  thoroughness.\n'
+	printf 'If meticulousness is not specified, it'\''s set to "complete" by default.\n'
 	printf 'To see the list of all facets and facet categories, run "facets.sh --help".\n'
 }
 
@@ -334,6 +338,7 @@ run_test() ( # test_name
 	cleanup_test "$1"
 	for meticulousness in $meticulousnesses
 	do
+		: >"$PARAMETERS_FILE"
 		meticulousness="$(printf '%s' "$meticulousness" | tr ',' '\n')"
 		export meticulousness
 		for i in $(seq 1 $iteration_cap)
@@ -802,6 +807,22 @@ getopt_short_options='aA:c:Cdfhj:l:m:pRqQrsSvV'
 getopt_long_options='altered,since:,color:,check,debug,failed,file-name,help,jobs:,limit:,meticulousness:,facets:,print-paths,relative-paths,progress,no-progress,quiet,quieter,raw,raw-name,skip-at-fail,skip-at-error,skip-on-fail,skip-on-error,stop-at-fail,stop-at-error,stop-on-fail,stop-on-error,verbose,version,skip-version'
 getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
+parse_meticulousnesses() { # value
+	if [ "$1" = 'complete' ]
+	then
+		set -- 'non-essential,head-type,subcommand,options|non-essential,pathspec-style,end-options-indicator,long-running|short-options,pathspec-style,partial-options'
+	elif [ "$1" = 'quickie' ]
+	then
+		set -- 'non-essential,subcommand|non-essential,head-type|non-essential,options|short-options|pathspec-style'
+	fi
+	printf '%s\n' "$1" | tr '|' '\n' \
+	| while read -r x
+	do
+		meticulousness="$(parse_meticulousness "$x")"
+		printf '%s\n' "$meticulousness" | tr '\n' ','
+		printf '\n'
+	done
+}
 only_altered=n
 altered_reference=HEAD
 only_failed=n
@@ -817,7 +838,7 @@ test_limit=0
 print_paths=n
 print_paths_prefix=''
 jobs_num=1
-meticulousnesses="$(parse_meticulousness 'standard' | tr '\n' '|')"
+meticulousnesses=''
 skip_version=n
 while true
 do
@@ -887,16 +908,7 @@ do
 		;;
 	-m|--meticulousness|--facets)
 		shift
-		meticulousnesses="$(
-			set -e
-			printf '%s\n' "$1" | tr '|' '\n' \
-			| while read -r x
-			do
-				meticulousness="$(parse_meticulousness "$x")"
-				printf '%s\n' "$meticulousness" | tr '\n' ','
-				printf '\n'
-			done
-		)"
+		meticulousnesses="$(set -e ; parse_meticulousnesses "$1")"
 		;;
 	-p|--print-paths)
 		print_paths=y
@@ -978,6 +990,10 @@ then
 		2) printf 'Options "--quieter" and "--verbose" are incompatible.\n' 1>&2 ;;
 	esac
 	exit 1
+fi
+if [ -z "$meticulousnesses" ]
+then
+	meticulousnesses="$(parse_meticulousnesses 'complete')"
 fi
 
 trap 'trap - INT ; kill -s KILL -- -$$' INT
