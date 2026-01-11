@@ -17,16 +17,16 @@ normalize_facet_list() { # list
 # Format: <canonical_spelling> = <other_spellings_regex>
 raw_facets='
 	# Run tests marked as non-essential. (Essential tests check mostly the happy path of the common cases.)
-	non-essential = ne|n(on)?-e(ss(en(t(ial)?)?)?)?
+	non-essential = ne|n(on)?[-_]e(ss(en(t(ial)?)?)?)?
 	
 	# Run tests for HEAD a normal branch, an orphan branch and a commit detached from a branch.
-	head-type = ht|h(ead)?-t(ype)?
+	head-type = ht|h(ead)?[-_]t(ype)?
 	
 	# Run tests for a few chosen combinations of pathspec from arguments / stdin / file in a plain text / null separated format.
-	pathspec-style = p?ps|(p(a(r(t(ial)?)?)?)?-)?pa?(th)?s(p(ec)?)?-s(t(y(le?)?)?)?
+	pathspec-style = p?ps|(p(a(r(t(ial)?)?)?)?[-_])?pa?(th)?s(p(ec)?)?[-_]s(t(y(le?)?)?)?
 	
 	# Run tests for all the combinations of pathspec from arguments / stdin / file in a plain text / null separated format.
-	full-pathspec-style = fps|f(u?ll)?-?pa?(th)?s(p(ec)?)?-s(t(y(le?)?)?)?
+	full-pathspec-style = fps|f(u?ll)?[-_]?pa?(th)?s(p(ec)?)?[-_]s(t(y(le?)?)?)?
 	
 	# Run tests for outputs with and without colors.
 	# (By default it is tested only with colors.)
@@ -40,14 +40,14 @@ raw_facets='
 	
 	# Test both short and long variants of the same option.
 	# (E.g. "--continue" and "-c".)
-	short-options = so|s(h(o?rt)?)?-o(p(t(i(o(ns?)?)?|s|))?)?
+	short-options = so|s(h(o?rt)?)?[-_]o(p(t(i(o(ns?)?)?|s|))?)?
 	
 	# Test also shortened spelling for options.
 	# (E.g. "--conti" instead of "--continue".)
-	partial-options = po|p(a(r(t(ial)?)?)?)?-o(p(t(i(o(ns?)?)?|s|))?)?
+	partial-options = po|p(a(r(t(ial)?)?)?)?[-_]o(p(t(i(o(ns?)?)?|s|))?)?
 	
 	# Test also the command run with "--" between options and arguments.
-	end-options-indicator = e?oi|(e(nd)?-)?o(p(t(i(o(ns?)?)?|s|))?)?-i(n(d(i(c(a(t(or)?)?)?)?)?)?)?|eo|e(nd)?-o(p(t(i(o(ns?)?)?|s|))?)?|ei|e(nd)?-i(n(d(i(c(a(t(or)?)?)?)?)?)?)?
+	end-options-indicator = e?oi|(e(nd)?[-_])?o(p(t(i(o(ns?)?)?|s|))?)?[-_]i(n(d(i(c(a(t(or)?)?)?)?)?)?)?|eo|e(nd)?[-_]o(p(t(i(o(ns?)?)?|s|))?)?|ei|e(nd)?[-_]i(n(d(i(c(a(t(or)?)?)?)?)?)?)?
 '
 facets="$(normalize_facet_list "$raw_facets")"
 
