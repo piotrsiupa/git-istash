@@ -33,7 +33,7 @@ raw_facets='
 	color = c(ol(or)?)?|clr?
 	
 	# Run tests for all the subcommands applicable for the given test. (E.g. instead of just "create" test "create", "save", "snatch" and "push".)
-	subcommand = (s(u?b)?)?(c(om(m(and?)?)?)?|cmd)
+	subcommand = (s(u?b)?)?(c(om(m(and?)?)?)?|sub|cmd)
 	
 	# Test all options applicable for given test. (E.g. try to run the same test with and without "--keep-index".)
 	options = o(p(t(i(o(ns?)?)?|s|))?)?
@@ -47,7 +47,7 @@ raw_facets='
 	partial-options = po|p(a(r(t(ial)?)?)?)?-o(p(t(i(o(ns?)?)?|s|))?)?
 	
 	# Test also the command run with "--" between options and arguments.
-	options-indicator = oi|o(p(t(i(o(ns?)?)?|s|))?)?-i(n(d(i(c(a(t(or)?)?)?)?)?)?)?
+	end-options-indicator = e?oi|(e(nd)?-)?o(p(t(i(o(ns?)?)?|s|))?)?-i(n(d(i(c(a(t(or)?)?)?)?)?)?)?|eo|e(nd)?-o(p(t(i(o(ns?)?)?|s|))?)?|ei|e(nd)?-i(n(d(i(c(a(t(or)?)?)?)?)?)?)?
 '
 facets="$(normalize_facet_list "$raw_facets")"
 
@@ -57,7 +57,7 @@ raw_facet_categories='
 	# Test everything, including things that need testing very rarely if ever. (very excessive)
 	all = a(ll)?: '"$(printf '%s' "$facets" | sed -E 's/^(.+)=.*$/\1/' | tr '\n' ',')"'
 	
-	# Test everything important.
+	# Test everything important and a little more, just ot be sure.
 	full = fu?ll: full-pathspec-style, color, standard
 	
 	# Test the important things.
@@ -77,6 +77,7 @@ facet_categories="$(normalize_facet_list "$raw_facet_categories")"
 
 # It errors out if a line is neither a facet nor a facet category.
 canonize_facet_names() (
+	set -eu
 	names="$(cat)"
 	{
 		printf '%s\n' "$facets" | sed -E 's/^([^=]+)=(.*)$/\1\n\2/'
@@ -107,6 +108,7 @@ canonize_facet_names() (
 # It works kinda like "sort -u" except it sorts in the order as they are in the "facets".
 # It assumes that every input line is an existing facet.
 sort_u_facets() (
+	set -eu
 	facet_regex="^($(tr '\n' '|'))\$"
 	printf '%s\n' "$facets" \
 	| sed -E 's/^([^=]+)=.*$/\1/' \
@@ -115,6 +117,7 @@ sort_u_facets() (
 
 # It takes lists of facets and facet lists. It breaks the lists into individual facets, deduplicates and sorts the list.
 parse_meticulousness() ( # [facet_list]...
+	set -eu
 	names="$(
 		printf '%s\n' "$@" \
 		| tr ',' '\n' \
