@@ -51,6 +51,9 @@ print_help() {
 	printf 'Meticulousness:\n'
 	printf 'This controls the balance between the speed and how detailed the tests are.\n'
 	printf 'The option'\''s value is a list of facets and facet categories, separated with ",".\n'
+	printf 'You can also specify multiple such lists, separated with "|". '
+	printf 'They will be\nexecuted one after another for each test. '
+	printf 'This lets to test more features\nwithout letting the runtime get absolutely insane bananas.\n'
 	printf 'To see the list of all facets and facet categories, run "facets.sh --help".\n'
 }
 
@@ -329,90 +332,99 @@ run_test() ( # test_name
 	parametrized_run_cap=10000
 	iteration_cap=$((parametrized_run_cap * 8))
 	cleanup_test "$1"
-	for i in $(seq 1 $iteration_cap)
+	for meticulousness in $meticulousnesses
 	do
-		sed -iE '/^--------$/ d' "$PARAMETERS_FILE"
-		printf -- '--------\n' >>"$PARAMETERS_FILE"
-		ROTATE_PARAMETER=y
-		export ROTATE_PARAMETER
-		exec 4>"$output_file"
-		test_run_start_time="$(get_timestamp)"
-		test_result="$(
-			do_run_test "$1"
-		)"
-		test_run_end_time="$(get_timestamp)"
-		exec 4>&-
-		if ! printf '%s\n' "$test_result" | grep -qE '^\?'
-		then
-			test_count=$((test_count + 1))
-			display_name="$(get_display_name "$1")"
-			if [ -z "$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | tail -n+2)" ]
+		meticulousness="$(printf '%s' "$meticulousness" | tr ',' '\n')"
+		export meticulousness
+		for i in $(seq 1 $iteration_cap)
+		do
+			sed -iE '/^--------$/ d' "$PARAMETERS_FILE"
+			printf -- '--------\n' >>"$PARAMETERS_FILE"
+			ROTATE_PARAMETER=y
+			export ROTATE_PARAMETER
+			exec 4>"$output_file"
+			test_run_start_time="$(get_timestamp)"
+			test_result="$(
+				do_run_test "$1"
+			)"
+			test_run_end_time="$(get_timestamp)"
+			exec 4>&-
+			if ! printf '%s\n' "$test_result" | grep -qE '^\?'
 			then
-				parameters_string=''
-			else
-				parameters_string="$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | tail -n+2 | sed '/^_/ d' | awk '{if (NF == 4) {print $4} else {print $2}}' | sed -E 's/$/, /' | head -c-3 | tr -d '\n')"
-			fi
-			test_passed="$(printf '%s\n' "$test_result" | grep -Ev '^[-+]')"
-			if [ "$test_passed" = n ]
-			then
-				failed_count=$((failed_count + 1))
-			fi
-			known_failure_reason="$(printf '%s' "$test_result" | grep -E '^\+')"
-			if { [ -z "$known_failure_reason" ] && [ "$test_passed" = y ] ; } || { [ -n "$known_failure_reason" ] && [ "$test_passed" = n ] ; }
-			then
-				test_result_is_correct=y
-			else
-				test_result_is_correct=n
-			fi
-			if { [ "$test_result_is_correct" = n ] || [ "$verbose_mode" = y ] ; } \
-				&& { [ "$test_result_is_correct" = n ] || [ "$quiet_level" -eq 0 ] || { [ "$test_passed" = n ] && [ "$quiet_level" -eq 1 ] ; } ; }
-			then
-				print_test_result
-			fi
-			if [ "$test_result_is_correct" = n ]
-			then
-				error_count=$((error_count + 1))
-				if [ -n "$parameters_string" ]
+				test_count=$((test_count + 1))
+				display_name="$(get_display_name "$1")"
+				if [ -z "$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | tail -n+2)" ]
 				then
-					test_dir="$(get_test_dir "$1" 'current')"
-					if [ -e "$test_dir" ]
-					then
-						parameters_string="$(awk 'x{print $2} /^--------$/{x=1}' "$PARAMETERS_FILE" | head -c-1 | tr '\n' '_')"
-						parametrized_test_dir="$(get_test_dir "$1" "$parameters_string")"
-						mv "$test_dir" "$parametrized_test_dir"
-					fi
+					parameters_string=''
+				else
+					parameters_string="$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | tail -n+2 | sed '/^_/ d' | awk '{if (NF == 4) {print $4} else {print $2}}' | sed -E 's/$/, /' | head -c-3 | tr -d '\n')"
 				fi
-				if [ "$skip_on_fail" = y ]
+				test_passed="$(printf '%s\n' "$test_result" | grep -Ev '^[-+]')"
+				if [ "$test_passed" = n ]
 				then
-					i=x
-					break
+					failed_count=$((failed_count + 1))
+				fi
+				known_failure_reason="$(printf '%s' "$test_result" | grep -E '^\+')"
+				if { [ -z "$known_failure_reason" ] && [ "$test_passed" = y ] ; } || { [ -n "$known_failure_reason" ] && [ "$test_passed" = n ] ; }
+				then
+					test_result_is_correct=y
+				else
+					test_result_is_correct=n
+				fi
+				if { [ "$test_result_is_correct" = n ] || [ "$verbose_mode" = y ] ; } \
+					&& { [ "$test_result_is_correct" = n ] || [ "$quiet_level" -eq 0 ] || { [ "$test_passed" = n ] && [ "$quiet_level" -eq 1 ] ; } ; }
+				then
+					print_test_result
+				fi
+				if [ "$test_result_is_correct" = n ]
+				then
+					error_count=$((error_count + 1))
+					if [ -n "$parameters_string" ]
+					then
+						test_dir="$(get_test_dir "$1" 'current')"
+						if [ -e "$test_dir" ]
+						then
+							parameters_string="$(awk 'x{print $2} /^--------$/{x=1}' "$PARAMETERS_FILE" | head -c-1 | tr '\n' '_')"
+							parametrized_test_dir="$(get_test_dir "$1" "$parameters_string")"
+							mv "$test_dir" "$parametrized_test_dir"
+						fi
+					fi
+					if [ "$skip_on_fail" = y ]
+					then
+						i=x
+						break
+					fi
+				else
+					cleanup_test "$1" 'current'
 				fi
 			else
 				cleanup_test "$1" 'current'
 			fi
-		else
-			cleanup_test "$1" 'current'
-		fi
-		if [ -z "$(awk '$2 != $3 { print 1 }' "$PARAMETERS_FILE")" ]
+			if [ -z "$(awk '$2 != $3 { print 1 }' "$PARAMETERS_FILE")" ]
+			then
+				i=y
+				break
+			fi
+			if [ $test_count -eq $parametrized_run_cap ]
+			then
+				failed_count=$((failed_count + 1))
+				error_count=$((error_count + 1))
+				printf_color_code '\033[0;1;31m'
+				printf '    TOO MANY PARAMETRIZED RUNS (The cap is %i.)' "$parametrized_run_cap"
+				printf_color_code '\033[22;39m'
+				printf '\n'
+				i=x
+				break
+			fi
+		done
+		if [ "$i" = x ]
 		then
-			i=x
-			break
-		fi
-		if [ $test_count -eq $parametrized_run_cap ]
-		then
-			failed_count=$((failed_count + 1))
-			error_count=$((error_count + 1))
-			printf_color_code '\033[0;1;31m'
-			printf '    TOO MANY PARAMETRIZED RUNS (The cap is %i.)' "$parametrized_run_cap"
-			printf_color_code '\033[22;39m'
-			printf '\n'
-			i=x
 			break
 		fi
 	done
 	rmdir "$(get_test_dir "$1")" 2>/dev/null || true
 	test_end_time="$(get_timestamp)"
-	if [ "$i" != x ]
+	if [ "$i" != x ] && [ "$i" != y ]
 	then
 		failed_count=$((failed_count + 1))
 		error_count=$((error_count + 1))
@@ -805,7 +817,7 @@ test_limit=0
 print_paths=n
 print_paths_prefix=''
 jobs_num=1
-meticulousness="$(parse_meticulousness 'standard')"
+meticulousnesses="$(parse_meticulousness 'standard' | tr '\n' '|')"
 skip_version=n
 while true
 do
@@ -875,7 +887,16 @@ do
 		;;
 	-m|--meticulousness|--facets)
 		shift
-		meticulousness="$(parse_meticulousness "$1")"
+		meticulousnesses="$(
+			set -e
+			printf '%s\n' "$1" | tr '|' '\n' \
+			| while read -r x
+			do
+				meticulousness="$(parse_meticulousness "$x")"
+				printf '%s\n' "$meticulousness" | tr '\n' ','
+				printf '\n'
+			done
+		)"
 		;;
 	-p|--print-paths)
 		print_paths=y
@@ -958,7 +979,6 @@ then
 	esac
 	exit 1
 fi
-export meticulousness
 
 trap 'trap - INT ; kill -s KILL -- -$$' INT
 
