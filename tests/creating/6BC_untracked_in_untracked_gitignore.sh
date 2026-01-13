@@ -10,6 +10,8 @@ PARAMETRIZE_KEEP_INDEX 'YES'
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'NO'
 
+__end_of_initialization__
+
 correct_head_sha="$(get_head_sha)"
 SWITCH_HEAD_TYPE
 

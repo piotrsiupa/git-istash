@@ -10,6 +10,8 @@ PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED
 
+__end_of_initialization__
+
 __test_section__ 'Prepare repository'
 printf 'X' >.gitignore
 git add .gitignore

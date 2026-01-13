@@ -5,6 +5,8 @@ non_essential_test
 PARAMETRIZE_HEAD_TYPE 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
 
+__end_of_initialization__
+
 __test_section__ 'Prepare repository'
 rm -rf .git
 git init

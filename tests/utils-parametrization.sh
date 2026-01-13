@@ -131,30 +131,30 @@ PARAMETRIZE_OPTION() { # condition name override_facet map values...
 	NAME="$2"
 	FACET="${3:-options}"
 	#shellcheck disable=SC2020
-	MAP="$(printf '%s' "$4" | sed -E 's/\s+//g' | tr ':&|' '  \n')"
+	MAP="$(printf '%s' "$4" | sed -E 's/\s+//g' | tr '|' '\n' | sed -E 's/^(.+:)(.*&&)(.*&&)(.*)$/\1\3\2\4/')"
 	shift 4
 	if ! is_facet_active 'short-options'
 	then
-		MAP="$(printf '%s\n' "$MAP" | sed -E 's/^(\S+\s).*(\s\s.*\s\s.*)$/\1\2/')"
+		MAP="$(printf '%s\n' "$MAP" | sed -E 's/^(.+:)(.*&&).*&&(.*)$/\1\2\3/')"
 	fi
 	if ! is_facet_active 'partial-options'
 	then
-		MAP="$(printf '%s\n' "$MAP" | sed -E 's/^(\S+\s.*\s\s.*\s\s).*$/\1/')"
+		MAP="$(printf '%s\n' "$MAP" | sed -E 's/^(.+:)((&?[^&])*&&).*$/\1\2/')"
 	fi
 	if [ $# -eq 0 ]
 	then
-		VALUES="$(printf '%s\n' "$MAP" | awk '{$1=""} 1')"
+		VALUES="$(printf '%s\n' "$MAP" | cut -d: -f2-)"
 	else
 		VALUES=''
 		while [ $# -ne 0 ]
 		do
-			printf '%s\n' "$MAP" | grep -qE "^$1\\s" ||
+			printf '%s\n' "$MAP" | grep -qE "^$1:" ||
 				fail 'Key "%s" cannot be found by "PARAMETRIZE_OPTION"!\n' "$1"
-			VALUES="$VALUES$(printf '\n' ; printf '%s\n' "$MAP" | awk -v key="$1" '$1 == key {$1=""; print}')"
+			VALUES="$VALUES$(printf '\n' ; printf '%s\n' "$MAP" | grep -E "^$1:" | cut -d: -f2-)"
 			shift
 		done
 	fi
-	VALUES="$(printf '%s\n' "$VALUES" | tr ' ' '\n' | sed -E -e '/^\s*$/ d' -e "s/'/'\\\\''/g" -e "s/^/'/" -e "s/$/'/" | tr '\n' ' ')"
+	VALUES="$(printf '%s\n' "$VALUES" | tr '&' '\n' | sed -E -e '/^\s*$/ d' -e "s/'/'\\\\''/g" -e "s/^/'/" -e "s/$/'/" | tr '\n' ' ')"
 	eval set -- "$VALUES"
 	PARAMETRIZE_COND "$CONDITION" "$NAME" "$FACET" "$@"
 	unset CONDITION

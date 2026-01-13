@@ -8,6 +8,8 @@ PARAMETRIZE_CONTINUE
 PARAMETRIZE_ABORT
 PARAMETRIZE_QUIT
 
+__end_of_initialization__
+
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
 git add aaa

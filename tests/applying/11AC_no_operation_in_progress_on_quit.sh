@@ -6,6 +6,8 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_QUIT
 
+__end_of_initialization__
+
 __test_section__ 'Create stash'
 printf 'aaa\n' >aaa
 git add aaa

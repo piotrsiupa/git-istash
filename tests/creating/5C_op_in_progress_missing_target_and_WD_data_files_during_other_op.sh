@@ -11,6 +11,8 @@ PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_CONTINUE
 
+__end_of_initialization__
+
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
 git add aaa

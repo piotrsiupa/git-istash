@@ -19,6 +19,8 @@ PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
 
+__end_of_initialization__
+
 __test_section__ 'Prepare repository'
 printf 'aaa1\n' >'bo	=ÿþ€{a}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'
 printf 'bbb1\n' >'bo	=ÿþ€{b}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'

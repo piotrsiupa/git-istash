@@ -2,6 +2,8 @@
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 
+__end_of_initialization__
+
 correct_head_sha="$(get_head_sha)"
 SWITCH_HEAD_TYPE
 

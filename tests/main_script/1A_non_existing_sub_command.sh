@@ -1,5 +1,7 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
+__end_of_initialization__
+
 correct_head_sha="$(get_head_sha)"
 
 __test_section__ "Add some files"

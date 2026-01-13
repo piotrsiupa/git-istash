@@ -10,6 +10,8 @@ PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
 
+__end_of_initialization__
+
 __test_section__ 'Create pre-existing stash (0)'
 printf 'xxx\n' >aaa
 git stash push -um 'pre-existing stash 0'

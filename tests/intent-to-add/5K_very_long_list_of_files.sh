@@ -36,6 +36,8 @@ PARAMETRIZE_UNSTAGED 'YES'
 # It's messy enough without those.
 rm ignored0 ignored1
 
+__end_of_initialization__
+
 gen_file_names() { # suffix
 	current_file_name="$(printf "%$((single_file_name_length - ${#1}))s" '' | tr ' ' 'a')$1"
 	x="$number_of_files"

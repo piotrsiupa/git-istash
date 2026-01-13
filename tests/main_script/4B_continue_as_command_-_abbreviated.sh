@@ -6,6 +6,8 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_OPTION true 'CONTINUE_COMMAND' 'option' 'CONTINUE: c && cont && conti & continu & co'
 
+__end_of_initialization__
+
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
 git add aaa

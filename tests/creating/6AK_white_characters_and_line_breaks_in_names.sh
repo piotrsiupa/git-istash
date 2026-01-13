@@ -19,6 +19,8 @@ PARAMETRIZE_UNSTAGED 'YES'
 # We don't need thos in this test.
 rm ignored0 ignored1
 
+__end_of_initialization__
+
 # Some tracked files to make it harder on the algorithms creating the commit for ignored ones.
 __test_section__ 'Prepare repository'
 printf 'x\n' >'unc hanged'

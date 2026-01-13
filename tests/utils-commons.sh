@@ -30,13 +30,20 @@ skip_silently() {
 	exit 1
 }
 
+__end_of_initialization__() {
+	#shellcheck disable=SC2154
+	if [ "$skip_after_init" = y ]
+	then
+		skip_silently
+	fi
+}
+
 is_facet_active() { # facet_regex
 	#shellcheck disable=SC2154
 	printf '%s' "$meticulousness" | grep -E -x -q "$1"
 }
 
 non_essential_test() {
-	#shellcheck disable=SC2154
 	if ! is_facet_active 'non-essential'
 	then
 		skip_silently

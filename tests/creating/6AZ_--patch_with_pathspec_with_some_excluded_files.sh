@@ -13,6 +13,8 @@ PARAMETRIZE_PATHSPEC_STYLE 'ARGS' 'FILE' 'NULL-FILE'
 PARAMETRIZE_OPTIONS_INDICATOR IS_PATHSPEC_IN_ARGS
 PARAMETRIZE_EXCLUDE
 
+__end_of_initialization__
+
 __test_section__ 'Prepare repository'
 printf 'xxx\nxxx\n' >aaa0
 printf 'xxx\nxxx\n' >aaa1

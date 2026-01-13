@@ -22,6 +22,8 @@ PARAMETRIZE_UNSTAGED 'YES'
 # We don't need thos in this test.
 rm ignored0 ignored1
 
+__end_of_initialization__
+
 correct_head_sha="$(get_head_sha)"
 SWITCH_HEAD_TYPE
 

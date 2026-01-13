@@ -9,6 +9,8 @@ then
 	skip_silently # "pop" doesn't support shaes, which is checked in an ealier test
 fi
 
+__end_of_initialization__
+
 __test_section__ 'Create stash'
 printf 'aaa\n' >aaa
 git add aaa

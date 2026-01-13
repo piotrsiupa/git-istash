@@ -10,6 +10,8 @@ then
 	skip_silently # "pop" doesn't support shaes, which is checked in an ealier test
 fi
 
+__end_of_initialization__
+
 wrong_sha="$(get_head_sha)"
 
 __test_section__ 'Prepare repository'

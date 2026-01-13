@@ -3,6 +3,8 @@
 # The output for every subcommand is the same as for the main script, btw.
 PARAMETRIZE_SUBCOMMAND
 
+__end_of_initialization__
+
 __test_section__ "Show version for subcommand \"$SUBCOMMAND\""
 #shellcheck disable=SC2086
 assert_exit_code 0 git istash $SUBCOMMAND --version

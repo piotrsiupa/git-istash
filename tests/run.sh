@@ -336,6 +336,8 @@ run_test() ( # test_name
 	parametrized_run_cap=10000
 	iteration_cap=$((parametrized_run_cap * 8))
 	cleanup_test "$1"
+	export skip_after_init
+	skip_after_init=n
 	for meticulousness in $meticulousnesses
 	do
 		: >"$PARAMETERS_FILE"
@@ -421,11 +423,13 @@ run_test() ( # test_name
 				i=x
 				break
 			fi
+			skip_after_init=n
 		done
 		if [ "$i" = x ]
 		then
 			break
 		fi
+		skip_after_init=y
 	done
 	rmdir "$(get_test_dir "$1")" 2>/dev/null || true
 	test_end_time="$(get_timestamp)"

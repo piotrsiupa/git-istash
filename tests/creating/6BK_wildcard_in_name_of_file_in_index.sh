@@ -18,6 +18,8 @@ PARAMETRIZE_UNSTAGED 'NO'
 PARAMETRIZE_PATHSPEC_STYLE
 PARAMETRIZE_OPTIONS_INDICATOR IS_PATHSPEC_IN_ARGS
 
+__end_of_initialization__
+
 __test_section__ 'Prepare repository'
 printf 'xxx\n' >'f*'
 printf 'xxx\n' >'foo'

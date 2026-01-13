@@ -5,6 +5,8 @@ non_essential_test
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_CREATE_OPERATION
 
+__end_of_initialization__
+
 correct_head_sha="$(get_head_sha)"
 SWITCH_HEAD_TYPE
 
