@@ -2,6 +2,8 @@
 
 set -eu
 
+. "$(dirname "$0")/facets.sh"
+
 print_help() {
 	printf '%s - Script that runs "run.sh" first with all tests and then reruns it\nfor all failed test every time any relevant file changes.\n' "$(basename "$0")"
 	printf 'It exits when there are no failed tests.\n'
@@ -13,11 +15,11 @@ print_help() {
 	printf '    -A, --since=X\t- Selects the commit used as reference by "--altered".\n\t\t\t  (It implies "--altered".)\n\t\t\t  Special cases:\n\t\t\t  * Empty / blank string means INDEX.\n\t\t\t  * Strings starting with "~" or "^" imply HEAD.\n\t\t\t    (So "~2" means the same as "HEAD~2".)\n\t\t\t  * "-" means all changes since branching from "master".\n'
 	printf '    -h, --help\t\t- Print this help message end exit.\n'
 	printf '    -c, --color=when\t- Set color mode (always / never / auto).\n'
-	printf '    -m, --meticulous=N\t- Set how many tests will be run. Allowed values are\n\t\t\t  0..5 (default=3). (See the section "Meticulousness".)\n'
+	printf '    -m, --meticulous=X\t- Set how many tests / test variants will be run.\n\t\t\t  (For more info, run "run.sh --help".)\n'
 	printf '    -s, --skip-init\t- Skip the initial run that checks which tests fail.\n\t\t\t  (Assume that the relevant tests has failed already.)\n'
 	printf '\t--version\t- Print version information and exit.\n'
 	printf '\n'
-	printf 'For info about filters and meticulousness, see "run.sh --help".\n'
+	printf 'For info about filters, run "run.sh --help".\n'
 }
 
 print_version() {
@@ -30,6 +32,15 @@ call_run_sh__with_altered() { # [arg...]
 		./run.sh "$@"
 	else
 		./run.sh --since="$altered_reference" "$@"
+	fi
+}
+
+call_run_sh__with_settings() { # [arg...]
+	if [ -n "$meticulousness" ]
+	then
+		call_run_sh__with_altered --meticulousness="$meticulousness" "$@"
+	else
+		call_run_sh__with_altered "$@"
 	fi
 }
 
@@ -89,7 +100,7 @@ wait_for_change() { # [filter]...
 initial_run() { # [filter]...
 	if [ "$skip_init" = n ]
 	then
-		call_run_sh__with_altered --skip-at-fail --color="$use_color" --meticulousness="$meticulousness" --jobs=0 -- "$@"
+		call_run_sh__with_settings --skip-at-fail --color="$use_color" --jobs=0 -- "$@"
 	else
 		false
 	fi
@@ -106,7 +117,7 @@ monitor_tests() { # [filter]...
 		then
 			printf '\n\n\n'
 		fi
-		while ! call_run_sh__with_altered --failed --skip-at-fail --stop-at-fail --verbose --color="$use_color" --meticulousness="$meticulousness" -- "$@"
+		while ! call_run_sh__with_settings --failed --skip-at-fail --stop-at-fail --verbose --color="$use_color" -- "$@"
 		do
 			wait_for_change "$@"
 			printf '\n\n\n'
@@ -121,8 +132,7 @@ eval set -- "$getopt_result"
 only_altered=n
 altered_reference=HEAD
 use_color=auto
-max_meticulousness=5
-meticulousness=3
+meticulousness=''
 skip_init=n
 while true
 do
@@ -157,13 +167,15 @@ do
 		;;
 	-m|--meticulousness)
 		shift
-		if [ "$1" -eq "$1" ] 2>/dev/null && [ "$1" -ge 0 ] && [ "$1" -le $max_meticulousness ]
-		then
-			meticulousness="$1"
-		else
-			printf '"%s" is not a valid value for meticulousness (0..%i).\n' "$1" $max_meticulousness 1>&2
-			exit 1
-		fi
+		test "$1" = 'complete' \
+		|| test "$1" = 'quickie' \
+		|| printf '%s\n' "$1" \
+		| tr '|' '\n' \
+		| while read -r x
+		do
+			parse_meticulousness "$x" 1>/dev/null
+		done
+		meticulousness="$1"
 		;;
 	-s|--skip-init)
 		skip_init=y
