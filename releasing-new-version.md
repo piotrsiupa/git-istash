@@ -4,7 +4,7 @@ This is a guide for the maintainer, acting as a reminder of all the necessary st
  1. Make sure the new functionality is finished (including an extensive set of tests for it).
  2. If applicable, remove / fix old tests with "known failures" if these problems are fixed by the new features.
  3. Make sure that `README.md`, `man/man1/git-istash.1` and help texts in `bin/git-istash` and `lib/git-istash/git-istash-*` are up to date with the new features.
- 4. Make sure that there are no TODO comments remaining in the working copy or commited by accident.
+ 4. Make sure that there are no TODO comments remaining in the working copy or committed by accident.
  5. Switch to latest `master` and merge the feature branch with the flags `--no-ff` and `--no-commit`.
     Do *not* finalize the merge yet.
  6. Fix merge conflicts.
@@ -12,9 +12,9 @@ This is a guide for the maintainer, acting as a reminder of all the necessary st
  7. Run `tests/shellcheck.sh`.
     (Although, this should really be done after every change in a script.)
  8. Run the complete test suite (`tests/run.sh`) on both Linux and Windows - all tests have to pass.
-    Make sure to choose a meticulousness that will catch all the problems.
-    For simple changes `3` may suffice but you should run `4` on at least 1 system if the scripts options has changed and maybe even `5` if there is a chance that the new option names will collide in any way (including their abbreviations).
-    (For Windows run `2` because this will take the whole day even then.)
+    Make sure to choose a meticulousness that will catch all the problems that may be introduced by the new changes.
+    For simple changes `complete` may suffice but you should run `full` (or at the very least `standard`) on at least one system, and maybe even `full|options,partial-options` if there is a chance that the new option names will collide in any way (including their abbreviations).
+    (For Windows run `quickie` and with some luck this won't take the whole day.)
     After this step, no changes in directories `bin/` and `lib/` are allowed.
  9. Run `tests/check-git-versions.sh` to make sure that the minimum required version of `git` hasn't changed.
     (If it did, update `bin/git-istash` and rerun the test suite.)
