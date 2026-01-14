@@ -7,11 +7,11 @@ then
 fi
 
 
-# It calls "PARAMETRIZE" with the name "APPLY_OPERATION" and values "apply" & "pop".
+# It calls "PARAMETRIZE" with the name "APPLY_OPERATION", the facet "subcommand" and values "apply" & "pop".
 # It also creates a variable "CAP_APPLY_OPERATION" which stores the same operation name but capitalized and a few other variables.
 # (See also assertions with suffix "_AO".)
 PARAMETRIZE_APPLY_OPERATION() {
-	PARAMETRIZE 'APPLY_OPERATION' 'apply' 'pop'
+	PARAMETRIZE 'APPLY_OPERATION' 'subcommand' 'apply' 'pop'
 	#shellcheck disable=SC2034
 	case "$APPLY_OPERATION" in
 		apply)
@@ -35,7 +35,7 @@ IS_POP() {
 
 #shellcheck disable=SC2120
 PARAMETRIZE_CONTINUE() { # keys
-	PARAMETRIZE_OPTION true 'CONTINUE' 'CONTINUE: CONTINUE-SHORT & CONTINUE-LONG && CONTINUE-LONGISH0 & CONTINUE-LONGISH1' "$@"
+	PARAMETRIZE_OPTION true 'CONTINUE' '' 'CONTINUE: CONTINUE-SHORT && CONTINUE-LONG && CONTINUE-LONGISH0 & CONTINUE-LONGISH1' "$@"
 	#shellcheck disable=SC2034
 	case "$CONTINUE" in
 		CONTINUE-SHORT) CONTINUE_FLAG='-c' ;;
@@ -47,7 +47,7 @@ PARAMETRIZE_CONTINUE() { # keys
 
 #shellcheck disable=SC2120
 PARAMETRIZE_ABORT() { # keys
-	PARAMETRIZE_OPTION true 'ABORT' 'ABORT: ABORT-LONG && ABORT-LONGISH0 & ABORT-LONGISH1' "$@"
+	PARAMETRIZE_OPTION true 'ABORT' '' 'ABORT: && ABORT-LONG && ABORT-LONGISH0 & ABORT-LONGISH1' "$@"
 	#shellcheck disable=SC2034
 	case "$ABORT" in
 		ABORT-LONG) ABORT_FLAG='--abort' ;;
@@ -58,7 +58,7 @@ PARAMETRIZE_ABORT() { # keys
 
 #shellcheck disable=SC2120
 PARAMETRIZE_QUIT() { # keys
-	PARAMETRIZE_OPTION true 'QUIT' 'QUIT: QUIT-LONG && QUIT-LONGISH0 & QUIT-LONGISH1' "$@"
+	PARAMETRIZE_OPTION true 'QUIT' '' 'QUIT: && QUIT-LONG && QUIT-LONGISH0 & QUIT-LONGISH1' "$@"
 	#shellcheck disable=SC2034
 	case "$QUIT" in
 		QUIT-LONG) QUIT_FLAG='--quit' ;;

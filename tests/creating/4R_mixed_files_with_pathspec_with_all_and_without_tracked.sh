@@ -11,6 +11,8 @@ PARAMETRIZE_STAGED 'NO'
 PARAMETRIZE_UNSTAGED 'NO'
 PARAMETRIZE_PATHSPEC_STYLE
 
+__end_of_initialization__
+
 __test_section__ 'Prepare repository'
 printf 'xxx\n' >aaa0
 printf 'xxx\n' >aaa1

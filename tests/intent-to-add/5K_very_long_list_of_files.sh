@@ -1,7 +1,7 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
-# Special condition because it runs rather long.
-if [ "$meticulousness" -lt 2 ]
+non_essential_test
+if ! is_facet_active 'long-running'
 then
 	skip_silently
 fi
@@ -35,6 +35,8 @@ PARAMETRIZE_UNSTAGED 'YES'
 
 # It's messy enough without those.
 rm ignored0 ignored1
+
+__end_of_initialization__
 
 gen_file_names() { # suffix
 	current_file_name="$(printf "%$((single_file_name_length - ${#1}))s" '' | tr ' ' 'a')$1"

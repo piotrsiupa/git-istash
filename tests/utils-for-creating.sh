@@ -7,16 +7,16 @@ then
 fi
 
 
-# It calls "PARAMETRIZE" with the name "CREATE_OPERATION" and values "create" & "push".
+# It calls "PARAMETRIZE" with the name "CREATE_OPERATION", the facet "subcommand" and values "create" & "push".
 # It also creates a variable "CAP_CREATE_OPERATION" which stores the same operation name but capitalized.
 # (See also assertions with suffix "_O".)
 #shellcheck disable=SC2120
 PARAMETRIZE_CREATE_OPERATION() { # [operations...]
 	if [ $# -eq 0 ]
 	then
-		PARAMETRIZE 'CREATE_OPERATION' 'create' 'snatch' 'save' 'push'
+		PARAMETRIZE 'CREATE_OPERATION' 'subcommand' 'create' 'snatch' 'save' 'push'
 	else
-		PARAMETRIZE 'CREATE_OPERATION' "$@"
+		PARAMETRIZE 'CREATE_OPERATION' 'subcommand' "$@"
 	fi
 	#shellcheck disable=SC2034
 	CAP_CREATE_OPERATION="$(printf '%s' "$CREATE_OPERATION" | cut  -c1 | tr '[:lower:]' '[:upper:]')$(printf '%s' "$CREATE_OPERATION" | cut  -c2-)"
@@ -43,7 +43,7 @@ CO_STORES_STASH() {
 
 #shellcheck disable=SC2120
 PARAMETRIZE_KEEP_INDEX() { # keys
-	PARAMETRIZE_OPTION true 'KEEP_INDEX' 'DEFAULT: INDEX-DEFAULT | NO: INDEX-NO-LONG && INDEX-NO-LONGISH0 & INDEX-NO-LONGISH1 | YES: INDEX-YES-SHORT & INDEX-YES-LONG && INDEX-YES-LONGISH0 & INDEX-YES-LONGISH1' "$@"
+	PARAMETRIZE_OPTION true 'KEEP_INDEX' '' 'DEFAULT: && INDEX-DEFAULT && | NO: && INDEX-NO-LONG && INDEX-NO-LONGISH0 & INDEX-NO-LONGISH1 | YES: INDEX-YES-SHORT && INDEX-YES-LONG && INDEX-YES-LONGISH0 & INDEX-YES-LONGISH1' "$@"
 	#shellcheck disable=SC2034
 	case "$KEEP_INDEX" in
 		INDEX-DEFAULT) KEEP_INDEX_FLAGS='' ;;
@@ -66,7 +66,7 @@ IS_KEEP_INDEX_OFF() {
 
 #shellcheck disable=SC2120
 PARAMETRIZE_STAGED() { # keys
-	PARAMETRIZE_OPTION true 'STAGED' 'YES: STAGED-YES | NO: STAGED-NO-SHORT & STAGED-NO-LONG && STAGED-NO-LONGISH0 & STAGED-NO-LONGISH1' "$@"
+	PARAMETRIZE_OPTION true 'STAGED' '' 'YES: && STAGED-YES && | NO: STAGED-NO-SHORT && STAGED-NO-LONG && STAGED-NO-LONGISH0 & STAGED-NO-LONGISH1' "$@"
 	#shellcheck disable=SC2034
 	case "$STAGED" in
 		STAGED-YES) STAGED_FLAGS='' ;;
@@ -83,7 +83,7 @@ IS_STAGED_ON() {
 
 #shellcheck disable=SC2120
 PARAMETRIZE_UNSTAGED() { # keys
-	PARAMETRIZE_OPTION true 'UNSTAGED' 'YES: UNSTGD-YES | NO: UNSTGD-NO-SHORT & UNSTGD-NO-LONG && UNSTGD-NO-LONGISH0 & UNSTGD-NO-LONGISH1' "$@"
+	PARAMETRIZE_OPTION true 'UNSTAGED' '' 'YES: && UNSTGD-YES && | NO: UNSTGD-NO-SHORT && UNSTGD-NO-LONG && UNSTGD-NO-LONGISH0 & UNSTGD-NO-LONGISH1' "$@"
 	#shellcheck disable=SC2034
 	case "$UNSTAGED" in
 		UNSTGD-YES) UNSTAGED_FLAGS='' ;;
@@ -99,7 +99,7 @@ IS_UNSTAGED_ON() {
 
 #shellcheck disable=SC2120
 PARAMETRIZE_ALL() { # keys
-	PARAMETRIZE_OPTION true 'ALL' 'DEFAULT: ALL-DEFAULT | YES: ALL-YES-SHORT & ALL-YES-LONG' "$@"
+	PARAMETRIZE_OPTION true 'ALL' '' 'DEFAULT: && ALL-DEFAULT && | YES: ALL-YES-SHORT && ALL-YES-LONG &&' "$@"
 	#shellcheck disable=SC2034
 	case "$ALL" in
 		ALL-DEFAULT) ALL_FLAGS='' ;;
@@ -113,7 +113,7 @@ IS_ALL_ON() {
 
 #shellcheck disable=SC2120
 PARAMETRIZE_UNTRACKED() { # keys
-	PARAMETRIZE_OPTION true 'UNTRACKED' 'DEFAULT: UNTR-DEFAULT | NO: UNTR-NO-LONG && UNTR-NO-LONGISH0 & UNTR-NO-LONGISH1 | YES: UNTR-YES-SHORT & UNTR-YES-LONG && UNTR-YES-LONGISH0 & UNTR-YES-LONGISH1' "$@"
+	PARAMETRIZE_OPTION true 'UNTRACKED' '' 'DEFAULT: && UNTR-DEFAULT && | NO: && UNTR-NO-LONG && UNTR-NO-LONGISH0 & UNTR-NO-LONGISH1 | YES: UNTR-YES-SHORT && UNTR-YES-LONG && UNTR-YES-LONGISH0 & UNTR-YES-LONGISH1' "$@"
 	#shellcheck disable=SC2034
 	case "$UNTRACKED" in
 		UNTR-DEFAULT) UNTRACKED_FLAGS='' ;;
@@ -137,9 +137,9 @@ PARAMETRIZE_OPTIONS_INDICATOR() { # condition
 	#shellcheck disable=SC2154
 	if [ "$meticulousness" -le 3 ]
 	then
-		PARAMETRIZE_COND "$1" 'END_OPTIONS_INDICATOR' 'EOI-NO'
+		PARAMETRIZE_COND "$1" 'END_OPTIONS_INDICATOR' 'end-options-indicator' 'EOI-NO'
 	else
-		PARAMETRIZE_COND "$1" 'END_OPTIONS_INDICATOR' 'EOI-NO' 'EOI-YES'
+		PARAMETRIZE_COND "$1" 'END_OPTIONS_INDICATOR' 'end-options-indicator' 'EOI-NO' 'EOI-YES'
 	fi
 	#shellcheck disable=SC2034
 	case "$END_OPTIONS_INDICATOR" in
@@ -156,7 +156,10 @@ IS_OPTIONS_INDICATOR_OFF() {
 
 PARAMETRIZE_PATHSPEC_STYLE() { # keys
 	#shellcheck disable=SC2154
-	if [ "$meticulousness" -le 2 ]
+	if is_facet_active 'full-pathspec-style'
+	then
+		: # leave as is
+	elif is_facet_active 'pathspec-style'
 	then
 		if [ $# -eq 0 ]
 		then
@@ -169,8 +172,15 @@ PARAMETRIZE_PATHSPEC_STYLE() { # keys
 				| tr ':' ' '
 			)
 		fi
+	else
+		if [ $# -eq 0 ]
+		then
+			set -- 'ARGS'
+		else
+			set -- "$1"
+		fi
 	fi
-	PARAMETRIZE_OPTION true 'PATHSPEC' 'ARGS: PS-ARGS | STDIN: PS-STDIN | NULL-STDIN: PS-NULL-STDIN | FILE: PS-FILE | NULL-FILE: PS-NULL-FILE' "$@"
+	PARAMETRIZE_OPTION true 'PATHSPEC' '(full-)?pathspec-style' 'ARGS: && PS-ARGS && | STDIN: && PS-STDIN && | NULL-STDIN: && PS-NULL-STDIN && | FILE: && PS-FILE && | NULL-FILE: && PS-NULL-FILE &&' "$@"
 	#shellcheck disable=SC2034
 	if ! IS_PATHSPEC_NULL_SEP
 	then
@@ -201,14 +211,14 @@ PREPARE_PATHSPEC_FILE() {
 }
 
 PARAMETRIZE_EXCLUDE() {
-	PARAMETRIZE_OPTION true 'EXCLUDE_STYLE' 'EXCLUDE: LONG && EXCL & EXCL_COLON & CARET & CARET_COLON'
+	PARAMETRIZE_OPTION true 'EXCLUDE_STYLE' 'partial-options' 'EXCLUDE: && EXCL_LONG && EXCL_STD & EXCL_COLON & EXCL_CARET & EXCL_CARET_COLON'
 	#shellcheck disable=SC2034
 	case "$EXCLUDE_STYLE" in
-		LONG) EXCLUDE_PATTERN='(exclude)' ;;
-		EXCL) EXCLUDE_PATTERN='!' ;;
+		EXCL_LONG) EXCLUDE_PATTERN='(exclude)' ;;
+		EXCL_STD) EXCLUDE_PATTERN='!' ;;
 		EXCL_COLON) EXCLUDE_PATTERN='!:' ;;
-		CARET) EXCLUDE_PATTERN='^' ;;
-		CARET_COLON) EXCLUDE_PATTERN='^:' ;;
+		EXCL_CARET) EXCLUDE_PATTERN='^' ;;
+		EXCL_CARET_COLON) EXCLUDE_PATTERN='^:' ;;
 	esac
 }
 

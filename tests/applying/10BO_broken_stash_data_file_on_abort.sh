@@ -10,6 +10,8 @@ then
 	skip_silently  # this test is "pop" specific
 fi
 
+__end_of_initialization__
+
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
 git add aaa

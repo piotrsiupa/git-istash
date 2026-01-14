@@ -2,6 +2,8 @@
 
 set -eu
 
+. "$(dirname "$0")/facets.sh"
+
 print_help() {
 	printf '%s - Script that runs tests from sub-directories of this directory.\n' "$(basename "$0")"
 	printf '\n'
@@ -17,7 +19,7 @@ print_help() {
 	printf '    -f, --failed\t- Rerun only the tests that failed the last time when\n\t\t\t  they were run. (Check the presence of the test dir.)\n'
 	printf '    -j, --jobs=N\t- Run N tests in parallel. (default is sequentially)\n\t\t\t  N=0 uses all available processing units. ("nproc")\n'
 	printf '    -l, --limit=number\t- Set maximum number of tests to be run. (It pairs well\n\t\t\t  with "--failed" to e.g. rerun the first failed test.)\n'
-	printf '    -m, --meticulous=N\t- Set how many tests will be run. Allowed values are\n\t\t\t  0..5 (default=3). (See the section "Meticulousness".)\n'
+	printf '    -m, --meticulous=X\t- Set how many tests / test variants will be run.\n\t\t\t  (See the section "Meticulousness".)\n'
 	printf '    -p, --print-paths\t- Instead of running tests, print their paths and exit.\n\t\t\t  (The paths are relative to the directory "tests".)\n'
 	printf '    -R, --relative\t- Print paths relative to the currect directory.\n\t\t\t  (Implies "--print-paths".)\n'
 	printf '\t--progress\t- Show progress information during testing. (It uses the\n\t\t\t  multi-threaded code, which adds some overhead for\n\t\t\t  a single job run.)\n\t\t\t  This is the default when color is enabled, the quiet\n\t\t\t  mode is disabled and there are multiple jobs.\n'
@@ -48,14 +50,15 @@ print_help() {
 	printf '\n'
 	printf 'Meticulousness:\n'
 	printf 'This controls the balance between the speed and how detailed the tests are.\n'
-	printf 'The exact metrics depend strongly on which specific tests are run.\n'
-	printf 'The levels are:\n'
-	printf '    0 - Most of the tests (marked as non-essential) are skipped. It can be used\n\tto check if the most important functionality is implemented but it'\''s\n\tnot very useful overall. (Extremely fast, though.)\n'
-	printf '    1 - Only the first set of parameters is run for each parametric test. Almost\n\tall tests are parametric so a lot is skipped but this should suffice to\n\tdo a quick test. It won'\''t catch most of the corner cases, though.\n\t(It'\''s a good mode for checking which tests are related to specific line\n\tof code. Just break that line and run the tests. This is also a way to\n\tget some idea about what a piece of code is needed for.)\n'
-	printf '    2 - When an option has a few spellings (e.g. "-m" and "--message") only one\n\tof them will be tested. Beside that, other things from parametric tests\n\tare tested in all combinations, except not all the ways to specify\n\tpathspecs because there is a lot. (Null-separated stdin and non-null-\n\t-separated file are skipped but it probably should still test all\n\texecution paths.) This is relatively thorough and it should be enough\n\tfor testing on the fly, while writing code.\n'
-	printf '    3 - When an option has multiple spellings, all of them are tested but not\n\tnecessarily all combinations of spellings of different options.\n\tThis level should be run before every commit!\n'
-	printf '    4 - All combinations of parameters are run in parametric tests.\n\t(A bit of an overkill but it is run from time to time, just to be sure.)\n'
-	printf '    5 - All combinations of parameters are run in parametric tests but non\n\tstandard versions of options are tested (e.g. "--mess" instead of\n\t"--message"). (Sometimes it can catch a weird option naming conflict but\n\tgenerarly running it has sense only for big merges and releases.)\n'
+	printf 'The option'\''s value is a list of facets and facet categories, separated with ",".\n'
+	printf 'You can also specify multiple such lists, separated with "|". '
+	printf 'They will be\nexecuted one after another for each test. '
+	printf 'This lets to test more features\nwithout letting the runtime get absolutely insane bananas.\n'
+	printf 'There are also special presets that can be used instead of listing facets:\n'
+	printf ' - complete\t- Attempts to test all code paths without too much redundancy.\n\t\t  It tests every single thing at least one but it doesn'\''t focus\n\t\t  much on combining different things and testing them together.\n'
+	printf ' - quickie\t- The same concept as "complete" but it prioritizes speed over\n\t\t  thoroughness.\n'
+	printf 'If meticulousness is not specified, it'\''s set to "complete" by default.\n'
+	printf 'To see the list of all facets and facet categories, run "facets.sh --help".\n'
 }
 
 print_version() {
@@ -333,90 +336,104 @@ run_test() ( # test_name
 	parametrized_run_cap=10000
 	iteration_cap=$((parametrized_run_cap * 8))
 	cleanup_test "$1"
-	for i in $(seq 1 $iteration_cap)
+	export skip_after_init
+	skip_after_init=n
+	for meticulousness in $meticulousnesses
 	do
-		sed -iE '/^--------$/ d' "$PARAMETERS_FILE"
-		printf -- '--------\n' >>"$PARAMETERS_FILE"
-		ROTATE_PARAMETER=y
-		export ROTATE_PARAMETER
-		exec 4>"$output_file"
-		test_run_start_time="$(get_timestamp)"
-		test_result="$(
-			do_run_test "$1"
-		)"
-		test_run_end_time="$(get_timestamp)"
-		exec 4>&-
-		if ! printf '%s\n' "$test_result" | grep -qE '^\?'
-		then
-			test_count=$((test_count + 1))
-			display_name="$(get_display_name "$1")"
-			if [ -z "$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | tail -n+2)" ]
+		: >"$PARAMETERS_FILE"
+		meticulousness="$(printf '%s' "$meticulousness" | tr ',' '\n')"
+		export meticulousness
+		for i in $(seq 1 $iteration_cap)
+		do
+			sed -iE '/^--------$/ d' "$PARAMETERS_FILE"
+			printf -- '--------\n' >>"$PARAMETERS_FILE"
+			ROTATE_PARAMETER=y
+			export ROTATE_PARAMETER
+			exec 4>"$output_file"
+			test_run_start_time="$(get_timestamp)"
+			test_result="$(
+				do_run_test "$1"
+			)"
+			test_run_end_time="$(get_timestamp)"
+			exec 4>&-
+			if ! printf '%s\n' "$test_result" | grep -qE '^\?'
 			then
-				parameters_string=''
-			else
-				parameters_string="$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | tail -n+2 | sed '/^_/ d' | awk '{if (NF == 4) {print $4} else {print $2}}' | sed -E 's/$/, /' | head -c-3 | tr -d '\n')"
-			fi
-			test_passed="$(printf '%s\n' "$test_result" | grep -Ev '^[-+]')"
-			if [ "$test_passed" = n ]
-			then
-				failed_count=$((failed_count + 1))
-			fi
-			known_failure_reason="$(printf '%s' "$test_result" | grep -E '^\+')"
-			if { [ -z "$known_failure_reason" ] && [ "$test_passed" = y ] ; } || { [ -n "$known_failure_reason" ] && [ "$test_passed" = n ] ; }
-			then
-				test_result_is_correct=y
-			else
-				test_result_is_correct=n
-			fi
-			if { [ "$test_result_is_correct" = n ] || [ "$verbose_mode" = y ] ; } \
-				&& { [ "$test_result_is_correct" = n ] || [ "$quiet_level" -eq 0 ] || { [ "$test_passed" = n ] && [ "$quiet_level" -eq 1 ] ; } ; }
-			then
-				print_test_result
-			fi
-			if [ "$test_result_is_correct" = n ]
-			then
-				error_count=$((error_count + 1))
-				if [ -n "$parameters_string" ]
+				test_count=$((test_count + 1))
+				display_name="$(get_display_name "$1")"
+				if [ -z "$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | tail -n+2)" ]
 				then
-					test_dir="$(get_test_dir "$1" 'current')"
-					if [ -e "$test_dir" ]
-					then
-						parameters_string="$(awk 'x{print $2} /^--------$/{x=1}' "$PARAMETERS_FILE" | head -c-1 | tr '\n' '_')"
-						parametrized_test_dir="$(get_test_dir "$1" "$parameters_string")"
-						mv "$test_dir" "$parametrized_test_dir"
-					fi
+					parameters_string=''
+				else
+					parameters_string="$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | tail -n+2 | sed '/^_/ d' | awk '{if (NF == 4) {print $4} else {print $2}}' | sed -E 's/$/, /' | head -c-3 | tr -d '\n')"
 				fi
-				if [ "$skip_on_fail" = y ]
+				test_passed="$(printf '%s\n' "$test_result" | grep -Ev '^[-+]')"
+				if [ "$test_passed" = n ]
 				then
-					i=x
-					break
+					failed_count=$((failed_count + 1))
+				fi
+				known_failure_reason="$(printf '%s' "$test_result" | grep -E '^\+')"
+				if { [ -z "$known_failure_reason" ] && [ "$test_passed" = y ] ; } || { [ -n "$known_failure_reason" ] && [ "$test_passed" = n ] ; }
+				then
+					test_result_is_correct=y
+				else
+					test_result_is_correct=n
+				fi
+				if { [ "$test_result_is_correct" = n ] || [ "$verbose_mode" = y ] ; } \
+					&& { [ "$test_result_is_correct" = n ] || [ "$quiet_level" -eq 0 ] || { [ "$test_passed" = n ] && [ "$quiet_level" -eq 1 ] ; } ; }
+				then
+					print_test_result
+				fi
+				if [ "$test_result_is_correct" = n ]
+				then
+					error_count=$((error_count + 1))
+					if [ -n "$parameters_string" ]
+					then
+						test_dir="$(get_test_dir "$1" 'current')"
+						if [ -e "$test_dir" ]
+						then
+							parameters_string="$(awk 'x{print $2} /^--------$/{x=1}' "$PARAMETERS_FILE" | head -c-1 | tr '\n' '_')"
+							parametrized_test_dir="$(get_test_dir "$1" "$parameters_string")"
+							mv "$test_dir" "$parametrized_test_dir"
+						fi
+					fi
+					if [ "$skip_on_fail" = y ]
+					then
+						i=x
+						break
+					fi
+				else
+					cleanup_test "$1" 'current'
 				fi
 			else
 				cleanup_test "$1" 'current'
 			fi
-		else
-			cleanup_test "$1" 'current'
-		fi
-		if { [ "$meticulousness" -le 1 ] && [ $test_count -ne 0 ] ; } || [ -z "$(awk '$2 != $3 { print 1 }' "$PARAMETERS_FILE")" ]
+			if [ -z "$(awk '$2 != $3 { print 1 }' "$PARAMETERS_FILE")" ]
+			then
+				i=y
+				break
+			fi
+			if [ $test_count -eq $parametrized_run_cap ]
+			then
+				failed_count=$((failed_count + 1))
+				error_count=$((error_count + 1))
+				printf_color_code '\033[0;1;31m'
+				printf '    TOO MANY PARAMETRIZED RUNS (The cap is %i.)' "$parametrized_run_cap"
+				printf_color_code '\033[22;39m'
+				printf '\n'
+				i=x
+				break
+			fi
+			skip_after_init=n
+		done
+		if [ "$i" = x ]
 		then
-			i=x
 			break
 		fi
-		if [ $test_count -eq $parametrized_run_cap ]
-		then
-			failed_count=$((failed_count + 1))
-			error_count=$((error_count + 1))
-			printf_color_code '\033[0;1;31m'
-			printf '    TOO MANY PARAMETRIZED RUNS (The cap is %i.)' "$parametrized_run_cap"
-			printf_color_code '\033[22;39m'
-			printf '\n'
-			i=x
-			break
-		fi
+		skip_after_init=y
 	done
 	rmdir "$(get_test_dir "$1")" 2>/dev/null || true
 	test_end_time="$(get_timestamp)"
-	if [ "$i" != x ]
+	if [ "$i" != x ] && [ "$i" != y ]
 	then
 		failed_count=$((failed_count + 1))
 		error_count=$((error_count + 1))
@@ -791,9 +808,25 @@ print_summary() {
 }
 
 getopt_short_options='aA:c:Cdfhj:l:m:pRqQrsSvV'
-getopt_long_options='altered,since:,color:,check,debug,failed,file-name,help,jobs:,limit:,meticulousness:,print-paths,relative-paths,progress,no-progress,quiet,quieter,raw,raw-name,skip-at-fail,skip-at-error,skip-on-fail,skip-on-error,stop-at-fail,stop-at-error,stop-on-fail,stop-on-error,verbose,version,skip-version'
+getopt_long_options='altered,since:,color:,check,debug,failed,file-name,help,jobs:,limit:,meticulousness:,facets:,print-paths,relative-paths,progress,no-progress,quiet,quieter,raw,raw-name,skip-at-fail,skip-at-error,skip-on-fail,skip-on-error,stop-at-fail,stop-at-error,stop-on-fail,stop-on-error,verbose,version,skip-version'
 getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
+parse_meticulousnesses() { # value
+	if [ "$1" = 'complete' ]
+	then
+		set -- 'non-essential,head-type,subcommand,options|non-essential,pathspec-style,end-options-indicator,long-running|short-options,pathspec-style,partial-options'
+	elif [ "$1" = 'quickie' ]
+	then
+		set -- 'non-essential,subcommand|non-essential,head-type|non-essential,options|short-options|pathspec-style'
+	fi
+	printf '%s\n' "$1" | tr '|' '\n' \
+	| while read -r x
+	do
+		meticulousness="$(parse_meticulousness "$x")"
+		printf '%s\n' "$meticulousness" | tr '\n' ','
+		printf '\n'
+	done
+}
 only_altered=n
 altered_reference=HEAD
 only_failed=n
@@ -809,8 +842,7 @@ test_limit=0
 print_paths=n
 print_paths_prefix=''
 jobs_num=1
-max_meticulousness=5
-meticulousness=3
+meticulousnesses=''
 skip_version=n
 while true
 do
@@ -878,15 +910,9 @@ do
 			exit 1
 		fi
 		;;
-	-m|--meticulousness)
+	-m|--meticulousness|--facets)
 		shift
-		if [ "$1" -eq "$1" ] 2>/dev/null && [ "$1" -ge 0 ] && [ "$1" -le $max_meticulousness ]
-		then
-			meticulousness="$1"
-		else
-			printf '"%s" is not a valid value for meticulousness (0..%i).\n' "$1" $max_meticulousness 1>&2
-			exit 1
-		fi
+		meticulousnesses="$(set -e ; parse_meticulousnesses "$1")"
 		;;
 	-p|--print-paths)
 		print_paths=y
@@ -969,7 +995,10 @@ then
 	esac
 	exit 1
 fi
-export meticulousness
+if [ -z "$meticulousnesses" ]
+then
+	meticulousnesses="$(parse_meticulousnesses 'complete')"
+fi
 
 trap 'trap - INT ; kill -s KILL -- -$$' INT
 

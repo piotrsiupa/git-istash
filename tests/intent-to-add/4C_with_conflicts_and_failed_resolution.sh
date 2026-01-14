@@ -3,6 +3,8 @@
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_APPLY_OPERATION
 
+__end_of_initialization__
+
 __test_section__ 'Create stash'
 printf 'aaa\n' >aaa
 git add --intent-to-add aaa

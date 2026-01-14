@@ -248,7 +248,7 @@ print_remove_files_task() { # source_path
 	printf 'The file "%s" will be deleted.\n' "$(make_target_path "$1")"
 }
 execute_remove_files_task() { # source_path
-	rm -f '"%s"\n' "$(make_target_path "$1")"
+	rm -f "$(make_target_path "$1")"
 }
 
 make_add_to_profile_task() { # source_path

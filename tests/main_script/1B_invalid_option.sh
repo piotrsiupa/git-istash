@@ -5,6 +5,8 @@
 
 PARAMETRIZE_SUBCOMMAND
 
+__end_of_initialization__
+
 correct_head_sha="$(get_head_sha)"
 
 __test_section__ "Add some files"

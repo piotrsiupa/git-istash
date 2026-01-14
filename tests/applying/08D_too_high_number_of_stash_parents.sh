@@ -2,6 +2,8 @@
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 
+__end_of_initialization__
+
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
 git add aaa

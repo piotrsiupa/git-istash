@@ -7,6 +7,8 @@ PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_CONTINUE
 PARAMETRIZE_ABORT
 
+__end_of_initialization__
+
 __test_section__ 'Create stash'
 mkdir xxx yyy
 printf 'bbb0\n' >aaa

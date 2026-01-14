@@ -4,12 +4,11 @@ set -eu
 
 actual_git_repo_path='./the-actual-git'
 subsequent_failed_version_limit=5
-meticulousness=2
 
 print_help() {
 	printf 'This tests downloads the Git repository, compiles all the versions, starting at\nthe newest one and tries to run tests of each one of them.\n'
-	printf 'It run tests at meticulousness %i. ' "$meticulousness"
-	printf 'If %i mayor version didn'\''t work the script\nstops.\n' "$subsequent_failed_version_limit"
+	printf 'It run tests at meticulousness up to "complete". '
+	printf 'If %i mayor version didn'\''t work\nthe script stops.\n' "$subsequent_failed_version_limit"
 	printf 'The goal is to determine which versions of Git are supported by istash.\n'
 	printf '\n'
 	printf 'Usage: %s [-h | --help | -Q | --quick | --version]\n' "$(basename "$0")"
@@ -54,11 +53,11 @@ check_version() { # meticulousnesses...
 		print_failure 'Cannot compile Git.'
 		return 1
 	else
-		for i in "$@"
+		for x in "$@"
 		do
-			if ! PATH="$abs_actual_git_repo_path:$PATH" ./run.sh --meticulousness="$i" --check --skip-version --jobs=0 1>/dev/null 2>&1
+			if ! PATH="$abs_actual_git_repo_path:$PATH" ./run.sh --meticulousness="$x" --check --skip-version --jobs=0 1>/dev/null 2>&1
 			then
-				print_failure "Failed at meticulousness $i"
+				print_failure "Failed at meticulousness \"$x\""
 				return 1
 			fi
 		done
@@ -89,7 +88,7 @@ check_versions_one_by_one() {
 			last_mayor_version="$mayor_version"
 			any_minor_version_succeeded=n
 		fi
-		if check_version "$meticulousness"
+		if check_version 'minimal' 'complete'
 		then
 			any_minor_version_succeeded=y
 		fi
@@ -104,7 +103,7 @@ check_versions_binary_search() {
 		printf 'Remaining versions: %i (expected steps: %i)...\n' "$((versions_num - last_is_tested))" "$(printf '(l(%i) / l(2)) + 1\n' "$((versions_num - last_is_tested))" | bc -l | sed 's/\..*$//')"
 		middle=$(((versions_num - last_is_tested + 1) / 2))
 		version="$(printf '%s\n' "$versions" | tail -n "+$middle" | head -n 1)"
-		if check_version "$meticulousness"
+		if check_version 'complete'
 		then
 			versions="$(printf '%s\n' "$versions" | head -n "$middle")"
 			versions_num="$middle"

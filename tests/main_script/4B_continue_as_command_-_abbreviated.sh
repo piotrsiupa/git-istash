@@ -4,8 +4,9 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_APPLY_OPERATION
-#PARAMETRIZE 'CONTINUE_COMMAND' 'conti' 'cont' 'c'
-PARAMETRIZE_OPTION true 'CONTINUE_COMMAND' 'CONTINUE: cont & c && conti & continu & co'
+PARAMETRIZE_OPTION true 'CONTINUE_COMMAND' 'option' 'CONTINUE: c && cont && conti & continu & co'
+
+__end_of_initialization__
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa

@@ -15,6 +15,8 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_CONTINUE
 
+__end_of_initialization__
+
 __test_section__ 'Prepare repository'
 printf 'foo\n' >'bo	=ÿþ€{}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'
 git add 'bo	=ÿþ€{}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'

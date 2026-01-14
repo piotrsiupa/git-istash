@@ -3,6 +3,8 @@
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
 
+__end_of_initialization__
+
 __test_section__ 'Create stash'
 mkdir xxx yyy
 printf 'aaa0\n' >aaa

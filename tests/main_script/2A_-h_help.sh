@@ -5,6 +5,8 @@
 
 PARAMETRIZE_SUBCOMMAND
 
+__end_of_initialization__
+
 __test_section__ "Show short help for subcommand \"$SUBCOMMAND\""
 #shellcheck disable=SC2086
 assert_exit_code 0 git istash $SUBCOMMAND -h

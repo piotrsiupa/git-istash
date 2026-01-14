@@ -8,6 +8,8 @@ PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_STAGED 'NO'
 PARAMETRIZE_UNSTAGED 'NO'
 
+__end_of_initialization__
+
 __test_section__ 'Prepare repository'
 touch aaa bbb
 git add aaa bbb

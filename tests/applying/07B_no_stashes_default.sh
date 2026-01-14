@@ -5,6 +5,8 @@ non_essential_test
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
 
+__end_of_initialization__
+
 SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_APPLY_OPERATION stash (without changes)"
