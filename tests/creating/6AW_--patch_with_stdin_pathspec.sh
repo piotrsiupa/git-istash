@@ -51,7 +51,7 @@ rm bbb2 ddd7
 printf 'y s y n s n y n y n ' | tr ' ' '\n' >.git/patchspec_for_test
 printf 'aaa0 bbb? *5 ./?dd* fff1? ' | PREPARE_PATHSPEC_FILE
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'a very controlled stash' --patch $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/patchspec_for_test
+assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'a very controlled stash' --patch $PATHSPEC_NULL_FLAGS "$PATHSPEC_FROM_FILE_FLAG"=- <.git/patchspec_for_test
 #shellcheck disable=SC2016
 assert_outputs_create__patch_with_patchspec
 assert_files_HT '

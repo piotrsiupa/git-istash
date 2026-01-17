@@ -38,10 +38,10 @@ then
 elif IS_PATHSPEC_IN_STDIN
 then
 	#shellcheck disable=SC2086
-	GIT_LITERAL_PATHSPECS=1 assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test
+	GIT_LITERAL_PATHSPECS=1 assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $PATHSPEC_NULL_FLAGS "$PATHSPEC_FROM_FILE_FLAG"=- <.git/pathspec_for_test
 else
 	#shellcheck disable=SC2086
-	GIT_LITERAL_PATHSPECS=yes assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
+	GIT_LITERAL_PATHSPECS=yes assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $PATHSPEC_NULL_FLAGS "$PATHSPEC_FROM_FILE_FLAG" .git/pathspec_for_test
 fi
 assert_outputs__create__success '*' 0 ''
 new_stash_sha_CO="$stdout"

@@ -64,7 +64,7 @@ then
 	assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS --patch $EOI ':/a/0' '../a/1/k' '../a/1/l' '0' './1/i' <../.git/answers_for_patch
 else
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $PATHSPEC_NULL_FLAGS --patch --pathspec-from-file ../.git/pathspec_for_test -- <../.git/answers_for_patch
+	assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $PATHSPEC_NULL_FLAGS --patch "$PATHSPEC_FROM_FILE_FLAG" ../.git/pathspec_for_test -- <../.git/answers_for_patch
 fi
 cd -
 assert_outputs__create__success '*' 0 '' 't,1,1,1,1,1' 'u'

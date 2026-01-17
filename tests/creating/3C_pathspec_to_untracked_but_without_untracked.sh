@@ -25,10 +25,10 @@ then
 elif IS_PATHSPEC_IN_STDIN
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS -m 'whatever' $PATHSPEC_NULL_FLAGS --pathspec-from-file=- $UNSTAGED_FLAGS $STAGED_FLAGS <.git/pathspec_for_test
+	assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS -m 'whatever' $PATHSPEC_NULL_FLAGS "$PATHSPEC_FROM_FILE_FLAG"=- $UNSTAGED_FLAGS $STAGED_FLAGS <.git/pathspec_for_test
 else
 	#shellcheck disable=SC2086
-	assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS -m 'whatever' $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test $UNSTAGED_FLAGS $STAGED_FLAGS
+	assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS -m 'whatever' $PATHSPEC_NULL_FLAGS "$PATHSPEC_FROM_FILE_FLAG" .git/pathspec_for_test $UNSTAGED_FLAGS $STAGED_FLAGS
 fi
 assert_outputs__create__unmatching_pathspec 'aaa'
 assert_files_HT '

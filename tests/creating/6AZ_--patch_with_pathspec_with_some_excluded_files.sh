@@ -68,7 +68,7 @@ new_stash_sha_CO="$(
 			assert_exit_code 0 git istash "$CREATE_OPERATION" ":${EXCLUDE_PATTERN}aaa1" 'aaa?' $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS 'bbb?' --patch -m 'a very controlled stash' 'ccc?' $EOI './?dd*' 'fff1?' ":${EXCLUDE_PATTERN}*4"
 		else
 			#shellcheck disable=SC2086
-			assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'a very controlled stash' --patch $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
+			assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'a very controlled stash' --patch $PATHSPEC_NULL_FLAGS "$PATHSPEC_FROM_FILE_FLAG" .git/pathspec_for_test
 		fi
 		assert_outputs__create__success '*' 0 'a very controlled stash' 't,1,3,3,1' 'u,1,1'
 	}

@@ -180,23 +180,36 @@ PARAMETRIZE_PATHSPEC_STYLE() { # keys
 			set -- "$1"
 		fi
 	fi
-	PARAMETRIZE_OPTION true 'PATHSPEC' '(full-)?pathspec-style' 'ARGS: && PS-ARGS && | STDIN: && PS-STDIN && | NULL-STDIN: && PS-NULL-STDIN && | FILE: && PS-FILE && | NULL-FILE: && PS-NULL-FILE &&' "$@"
+	PARAMETRIZE_OPTION true 'PATHSPEC' '(full-)?pathspec-style' 'ARGS: && PS-ARGS && | STDIN: && PS-STDIN && PS-STDIN-ISH | NULL-STDIN: && PS-NULL-STDIN && PS-NULL-STDIN-ISH | FILE: && PS-FILE && PS-FILE-ISH | NULL-FILE: && PS-NULL-FILE && PS-NULL-FILE-ISH' "$@"
+	#shellcheck disable=SC2034
+	if IS_PATHSPEC_IN_ARGS
+	then
+		PATHSPEC_FROM_FILE_FLAG=''
+	elif ! printf '%s' "$PATHSPEC" | grep -qE -- '-ISH$'
+	then
+		PATHSPEC_FROM_FILE_FLAG='--pathspec-from-file'
+	else
+		PATHSPEC_FROM_FILE_FLAG='--pathspec-from'
+	fi
 	#shellcheck disable=SC2034
 	if ! IS_PATHSPEC_NULL_SEP
 	then
 		PATHSPEC_NULL_FLAGS=''
-	else
+	elif ! printf '%s' "$PATHSPEC" | grep -qE -- '-ISH$'
+	then
 		PATHSPEC_NULL_FLAGS='--pathspec-file-nul'
+	else
+		PATHSPEC_NULL_FLAGS='--pathspec-file-n'
 	fi
 }
 IS_PATHSPEC_IN_ARGS() {
 	test "$PATHSPEC" = 'PS-ARGS'
 }
 IS_PATHSPEC_IN_STDIN() {
-	printf '%s' "$PATHSPEC" | grep -qE -- '-STDIN$'
+	printf '%s' "$PATHSPEC" | grep -qE -- '-STDIN(-ISH)?$'
 }
 IS_PATHSPEC_IN_FILE() {
-	printf '%s' "$PATHSPEC" | grep -qE -- '-FILE$'
+	printf '%s' "$PATHSPEC" | grep -qE -- '-FILE(-ISH)?$'
 }
 IS_PATHSPEC_NULL_SEP() {
 	printf '%s' "$PATHSPEC" | grep -qE -- '-NULL-'
