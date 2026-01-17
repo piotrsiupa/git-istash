@@ -59,6 +59,7 @@ facets="$(normalize_facet_list "$raw_facets")"
 # Format: <canonical_spelling> = <other_spellings_regex>: [<component>,]...
 raw_facet_categories='
 	# Test everything, including things that need testing very rarely if ever. (very excessive)
+	# (Some tests will not even finish, because there will be too many runs.)
 	all = a(ll)?: '"$(printf '%s' "$facets" | sed -E 's/^(.+)=.*$/\1/' | tr '\n' ',')"'
 	
 	# Test everything important and a little more, just ot be sure.
@@ -240,6 +241,8 @@ then
 		printf '\n'
 		printf '(Some of the names are rather long to type, but regexes used to parse the input\nare very lenient when it comes to abbreviating. '
 		printf 'As long as the abbreviation is\nunique to one name, the script should allow it.)\n'
+		printf '\n'
+		printf 'See also "run.sh --help" to read about testing multiple lists of facets at once\nincluding some predefined ones that may be more useful than the categories here.\n'
 	}
 	
 	print_version() {
