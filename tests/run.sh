@@ -4,6 +4,38 @@ set -eu
 
 . "$(dirname "$0")/facets.sh"
 
+
+break_long_lines() { # new_line_prefix
+	while IFS= read -r line
+	do
+		while true
+		do
+			line_length="$(printf '%s' "$line" | wc -L)"
+			if [ "$line_length" -le 80 ]
+			then
+				break
+			fi
+			cut_line="$(
+				printf '%s\n' "$line" \
+				| head -c$((${#line} - (line_length - 80) + 1)) \
+				| sed -E 's/ [^ ]*$//'
+			)"
+			printf '%s\n' "$cut_line"
+			#shellcheck disable=SC2059
+			line="$(printf "$1")$(printf '%s' "$line" | tail -c+$((${#cut_line} + 2)))"
+		done
+		printf '%s\n' "$line"
+	done
+}
+
+format_facets_for_help() { # facets
+	printf '\t\t  It'\''s equivalent to:\n'
+	printf '%s\n' "$1" \
+	| tr '|' '\n' \
+	| sed -E -e 's/,/, /g' -e 's/^/\t\t  + /' \
+	| break_long_lines '\t\t    '
+}
+
 print_help() {
 	printf '%s - Script that runs tests from sub-directories of this directory.\n' "$(basename "$0")"
 	printf '\n'
@@ -20,6 +52,8 @@ print_help() {
 	printf '    -j, --jobs=N\t- Run N tests in parallel. (default is sequentially)\n\t\t\t  N=0 uses all available processing units. ("nproc")\n'
 	printf '    -l, --limit=number\t- Set maximum number of tests to be run. (It pairs well\n\t\t\t  with "--failed" to e.g. rerun the first failed test.)\n'
 	printf '    -m, --meticulous=X\t- Set how many tests / test variants will be run.\n\t\t\t  (See the section "Meticulousness".)\n'
+	printf '\t--complete\t- Same as "--meticulousness=complete".\n'
+	printf '\t--quickie\t- Same as "--meticulousness=quickie".\n'
 	printf '    -p, --print-paths\t- Instead of running tests, print their paths and exit.\n\t\t\t  (The paths are relative to the directory "tests".)\n'
 	printf '    -R, --relative\t- Print paths relative to the currect directory.\n\t\t\t  (Implies "--print-paths".)\n'
 	printf '\t--progress\t- Show progress information during testing. (It uses the\n\t\t\t  multi-threaded code, which adds some overhead for\n\t\t\t  a single job run.)\n\t\t\t  This is the default when color is enabled, the quiet\n\t\t\t  mode is disabled and there are multiple jobs.\n'
@@ -56,7 +90,9 @@ print_help() {
 	printf 'This lets to test more features\nwithout letting the runtime get absolutely insane bananas.\n'
 	printf 'There are also special presets that can be used instead of listing facets:\n'
 	printf ' - complete\t- Attempts to test all code paths without too much redundancy.\n\t\t  It tests every single thing at least one but it doesn'\''t focus\n\t\t  much on combining different things and testing them together.\n'
+	format_facets_for_help "$complete"
 	printf ' - quickie\t- The same concept as "complete" but it prioritizes speed over\n\t\t  thoroughness.\n'
+	format_facets_for_help "$quickie"
 	printf 'If meticulousness is not specified, it'\''s set to "complete" by default.\n'
 	printf 'To see the list of all facets and facet categories, run "facets.sh --help".\n'
 }
@@ -808,16 +844,18 @@ print_summary() {
 }
 
 getopt_short_options='aA:c:Cdfhj:l:m:pRqQrsSvV'
-getopt_long_options='altered,since:,color:,check,debug,failed,file-name,help,jobs:,limit:,meticulousness:,facets:,print-paths,relative-paths,progress,no-progress,quiet,quieter,raw,raw-name,skip-at-fail,skip-at-error,skip-on-fail,skip-on-error,stop-at-fail,stop-at-error,stop-on-fail,stop-on-error,verbose,version,skip-version'
+getopt_long_options='altered,since:,color:,check,debug,failed,file-name,help,jobs:,limit:,meticulousness:,complete,quickie,facets:,print-paths,relative-paths,progress,no-progress,quiet,quieter,raw,raw-name,skip-at-fail,skip-at-error,skip-on-fail,skip-on-error,stop-at-fail,stop-at-error,stop-on-fail,stop-on-error,verbose,version,skip-version'
 getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
+complete='non-essential,head-type,subcommand,options|non-essential,pathspec-style,end-options-indicator,long-running|short-options,pathspec-style,partial-options'
+quickie='non-essential,subcommand|non-essential,head-type|non-essential,options|short-options|pathspec-style'
 parse_meticulousnesses() { # value
 	if [ "$1" = 'complete' ]
 	then
-		set -- 'non-essential,head-type,subcommand,options|non-essential,pathspec-style,end-options-indicator,long-running|short-options,pathspec-style,partial-options'
+		set -- "$complete"
 	elif [ "$1" = 'quickie' ]
 	then
-		set -- 'non-essential,subcommand|non-essential,head-type|non-essential,options|short-options|pathspec-style'
+		set -- "$quickie"
 	fi
 	printf '%s\n' "$1" | tr '|' '\n' \
 	| while read -r x
@@ -913,6 +951,12 @@ do
 	-m|--meticulousness|--facets)
 		shift
 		meticulousnesses="$(set -e ; parse_meticulousnesses "$1")"
+		;;
+	--complete)
+		meticulousnesses="$(set -e ; parse_meticulousnesses 'complete')"
+		;;
+	--quickie)
+		meticulousnesses="$(set -e ; parse_meticulousnesses 'quickie')"
 		;;
 	-p|--print-paths)
 		print_paths=y
