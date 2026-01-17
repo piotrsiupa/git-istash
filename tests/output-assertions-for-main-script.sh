@@ -19,14 +19,14 @@ assert_outputs__main_script__unrecognised_short_option() { # option
 	# "getopt" doesn't give a very consistent output between inplementations
 	assert_outputs '
 	' '
-		error: (unrecognized|invalid) option:? (-- )?'\''?'"$(sanitize_for_sed "$1")"\''?
+		error: (unrecognized|invalid|unknown) option:? (-- )?'\''?'"$(sanitize_for_sed "$1")"\''?
 	'
 }
 
 assert_outputs__main_script__unrecognised_long_option() { # option
 	assert_outputs '
 	' '
-		error: unrecognized option:? '\''?(--)?'"$(sanitize_for_sed "$1")"\''?
+		error: (unrecognized|unknown) option:? '\''?(-- ?)?'"$(sanitize_for_sed "$1")"\''?
 	'
 }
 
