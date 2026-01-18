@@ -2,6 +2,7 @@
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_CONTINUE
 
 __end_of_initialization__
 
@@ -36,7 +37,7 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 
 __test_section__ "Continue $APPLY_OPERATION stash (0)"
 printf 'ccc\n' >aaa
-assert_exit_code 2 git istash "$APPLY_OPERATION" --continue
+assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 assert_outputs__apply__failed_resolution "$APPLY_OPERATION" 'aaa'
 assert_files_HT '
 AA aaa		ccc
@@ -52,7 +53,7 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 __test_section__ "Continue $APPLY_OPERATION stash (1)"
 git add aaa
 stash_sha="$(git rev-parse stash)"
-assert_exit_code 0 git istash "$APPLY_OPERATION" --continue
+assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
 assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
 assert_files_HT '
  M aaa		ccc	bbb
