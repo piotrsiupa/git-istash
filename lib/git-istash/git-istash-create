@@ -15,6 +15,7 @@ print_help() {
 	printf 'Options:\n'
 	printf '    -a, --all\t\t- Stash also untracked and ignored files.\n'
 	printf '\t--allow-empty\t- Create a stash even if there are no suitable changes.\n'
+	printf '\t--color=<when>\t- Allow use of ANSI color codes.\n\t\t\t  <when> can be one of always, never, or auto.\n'
 	printf '    -h\t\t\t- Show this help text and exit.\n'
 	printf '    -l, --leave-staged\t- Don'\'' add to stash any changes already added\n\t\t\t  to the index.\n'
 	printf '    -m, --message=MSG\t- Set stash description.\n'

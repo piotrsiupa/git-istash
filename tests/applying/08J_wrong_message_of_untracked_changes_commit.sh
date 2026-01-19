@@ -1,6 +1,7 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
+PARAMETRIZE_COLOR YES  # Randomly chosen value
 
 __end_of_initialization__
 
@@ -31,7 +32,8 @@ SWITCH_HEAD_TYPE
 
 __test_section__ 'Apply stash'
 correct_head_sha="$(get_head_sha_HT)"
-assert_exit_code 1 git istash apply "$stash_sha"
+#shellcheck disable=SC2086
+assert_exit_code 1 git istash apply $COLOR_FLAGS "$stash_sha"
 assert_outputs__apply__wrong_stash_commit_messages "$stash_sha"
 assert_files_HT '
    aaa		aaa

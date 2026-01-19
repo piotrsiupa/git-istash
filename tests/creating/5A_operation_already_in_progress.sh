@@ -11,6 +11,7 @@ PARAMETRIZE_KEEP_INDEX 'DEFAULT'
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_CONTINUE
+PARAMETRIZE_COLOR NO  # Randomly chosen value
 
 __end_of_initialization__
 
@@ -31,7 +32,8 @@ SWITCH_HEAD_TYPE
 
 __test_section__ "Apply $CAP_APPLY_OPERATION"
 correct_head_sha_0="$(get_head_sha_HT)"
-assert_exit_code 2 git istash "$APPLY_OPERATION"
+#shellcheck disable=SC2086
+assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS
 assert_outputs__apply__conflict_HT "$APPLY_OPERATION" '
 UU aaa
 ' '
@@ -52,7 +54,8 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 
 __test_section__ "$CAP_CREATE_OPERATION stash again"
 correct_head_sha_1="$(get_head_sha_HT)"
-assert_exit_code 1 git istash "$CREATE_OPERATION"
+#shellcheck disable=SC2086
+assert_exit_code 1 git istash "$CREATE_OPERATION" $COLOR_FLAGS
 assert_outputs__operation_in_progress "istash $APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ccc|bbb
@@ -72,7 +75,8 @@ __test_section__ "Continue the first $APPLY_OPERATION stash"
 printf 'ddd\n' >aaa
 git add aaa
 stash_sha="$(git rev-parse stash)"
-assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS
 assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
 assert_files_HT '
  M aaa		ddd	ccc

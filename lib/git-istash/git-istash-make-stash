@@ -15,6 +15,7 @@ print_help() {
 	printf 'Options:\n'
 	printf '    -a, --all\t\t- Stash and clean also untracked and ignored files.\n'
 	printf '\t--allow-empty\t- Create a stash even if there are no suitable changes.\n'
+	printf '\t--color=<when>\t- Allow use of ANSI color codes.\n\t\t\t  <when> can be one of always, never, or auto.\n'
 	printf '    -h\t\t\t- Show this help text and exit.\n'
 	printf '    -k, --keep-index\t- Left intact all changes already added to the index.\n'
 	printf '\t--no-keep-index\t- Cancel --keep-index.\n'
@@ -507,7 +508,7 @@ make_stash() { # pathspecs...
 }
 
 getopt_short_options='ahklm:Su'
-getopt_long_options='all,allow-empty,keep-index,no-keep-index,leave-staged,message:,patch,pathspec-file-null,pathspec-from-file:,remove-stashed,staged,no-store,include-untracked,no-include-untracked'
+getopt_long_options='all,allow-empty,color:,keep-index,no-keep-index,leave-staged,message:,patch,pathspec-file-null,pathspec-from-file:,remove-stashed,staged,no-store,include-untracked,no-include-untracked'
 getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n'error' -ssh -- "$@")"
 eval set -- "$getopt_result"
 include_ignored=n
@@ -534,6 +535,9 @@ do
 		;;
 	--allow-empty)
 		allow_empty=y
+		;;
+	--color)
+		shift
 		;;
 	-h)
 		print_help

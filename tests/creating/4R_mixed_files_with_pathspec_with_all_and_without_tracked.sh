@@ -10,6 +10,7 @@ PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_STAGED 'NO'
 PARAMETRIZE_UNSTAGED 'NO'
 PARAMETRIZE_PATHSPEC_STYLE
+PARAMETRIZE_COLOR NO  # Randomly chosen value
 
 __end_of_initialization__
 
@@ -54,14 +55,14 @@ printf 'bbb? c?c8 *ore?0 ./?dd* ' | PREPARE_PATHSPEC_FILE
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS 'bbb?' -m 'mr. stash' 'c?c8' '*ore?0' './?dd*'
+	assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $COLOR_FLAGS 'bbb?' -m 'mr. stash' 'c?c8' '*ore?0' './?dd*'
 elif IS_PATHSPEC_IN_STDIN
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'mr. stash' $PATHSPEC_NULL_FLAGS "$PATHSPEC_FROM_FILE_FLAG"=- <.git/pathspec_for_test
+	assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $COLOR_FLAGS -m 'mr. stash' $PATHSPEC_NULL_FLAGS "$PATHSPEC_FROM_FILE_FLAG"=- <.git/pathspec_for_test
 else
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'mr. stash' $PATHSPEC_NULL_FLAGS "$PATHSPEC_FROM_FILE_FLAG" .git/pathspec_for_test
+	assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $COLOR_FLAGS -m 'mr. stash' $PATHSPEC_NULL_FLAGS "$PATHSPEC_FROM_FILE_FLAG" .git/pathspec_for_test
 fi
 assert_outputs__create__success '*' 0 'mr. stash'
 new_stash_sha_CO="$stdout"
@@ -129,6 +130,7 @@ remove_all_changes
 RESTORE_HEAD_TYPE
 
 __test_section__ 'Pop stash'
+#shellcheck disable=SC2086
 assert_exit_code 0 git stash pop --index
 assert_files '
    aaa0		xxx

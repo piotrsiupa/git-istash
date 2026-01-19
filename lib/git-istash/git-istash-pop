@@ -15,6 +15,7 @@ print_help() {
 	printf '\n'
 	printf 'Options:\n'
 	printf '\t--abort\t\t- Abort the previous operation and return the repository\n\t\t\t  to the state before it started.\n'
+	printf '\t--color=<when>\t- Allow use of ANSI color codes.\n\t\t\t  <when> can be one of always, never, or auto.\n'
 	printf '    -c, --continue\t- Resume the previous operation.\n\t\t\t  (Conflicts need to be resolved before that.)\n'
 	printf '    -h\t\t\t- Show this help text and exit.\n'
 	printf '\t--quit\t\t- Abort the operation but don'\''t restore the repository\n\t\t\t  state nor move the HEAD.\n'
@@ -161,7 +162,7 @@ do_pop() { # args...
 }
 
 getopt_short_options='chq'
-getopt_long_options='abort,continue,quit'
+getopt_long_options='abort,color:,continue,quit'
 getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n'error' -ssh -- "$@")"
 eval set -- "$getopt_result"
 abort_set=n
@@ -172,6 +173,9 @@ do
 	case "$1" in
 	--abort)
 		abort_set=y
+		;;
+	--color)
+		shift
 		;;
 	-c|--continue)
 		continue_set=y

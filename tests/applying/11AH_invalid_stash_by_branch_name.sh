@@ -4,6 +4,7 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_COLOR YES  # Randomly chosen value
 if IS_POP
 then
 	skip_silently # "pop" doesn't support branch names, which is checked in an ealier test
@@ -21,7 +22,8 @@ SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_APPLY_OPERATION stash (without changes)"
 correct_head_sha="$(get_head_sha_HT)"
-assert_exit_code 1 git istash "$APPLY_OPERATION" HEAD^
+#shellcheck disable=SC2086
+assert_exit_code 1 git istash "$APPLY_OPERATION" HEAD^ $COLOR_FLAGS
 assert_outputs__apply__no_such_commit 'HEAD^'
 assert_files_HT '
 !! ignored0	ignored0
@@ -39,7 +41,8 @@ __test_section__ "$CAP_APPLY_OPERATION stash (with changes)"
 printf 'aaa\n' >aaa
 git add aaa
 printf 'bbb\n' >aaa
-assert_exit_code 1 git istash "$APPLY_OPERATION" HEAD^
+#shellcheck disable=SC2086
+assert_exit_code 1 git istash "$APPLY_OPERATION" HEAD^ $COLOR_FLAGS
 assert_outputs__apply__no_such_commit 'HEAD^'
 assert_files_HT '
 AM aaa		bbb	aaa

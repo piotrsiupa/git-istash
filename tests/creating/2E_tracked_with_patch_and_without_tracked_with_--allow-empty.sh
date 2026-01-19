@@ -7,6 +7,7 @@ PARAMETRIZE_UNTRACKED 'DEFAULT'
 PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_STAGED 'NO'
 PARAMETRIZE_UNSTAGED 'NO'
+PARAMETRIZE_COLOR NO  # Randomly chosen value
 
 __end_of_initialization__
 
@@ -31,7 +32,7 @@ git rm ccc
 rm ddd eee
 printf '' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$CREATE_OPERATION" $STAGED_FLAGS $UNSTAGED_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS --patch --allow-empty --message 'some nice stash name' <.git/answers_for_patch
+assert_exit_code 0 git istash "$CREATE_OPERATION" $STAGED_FLAGS $COLOR_FLAGS $UNSTAGED_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS --patch --allow-empty --message 'some nice stash name' <.git/answers_for_patch
 assert_outputs__create__success '*' 0 'some nice stash name'
 new_stash_sha_CO="$stdout"
 assert_files_HTCO '

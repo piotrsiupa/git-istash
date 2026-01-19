@@ -4,6 +4,7 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_ABORT
+PARAMETRIZE_COLOR NO  # Randomly chosen value
 
 __end_of_initialization__
 
@@ -17,7 +18,8 @@ SWITCH_HEAD_TYPE
 
 __test_section__ "Abort stash (without changes)"
 correct_head_sha="$(get_head_sha_HT)"
-assert_exit_code 1 git istash "$ABORT_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 1 git istash $COLOR_FLAGS "$ABORT_FLAG"
 assert_outputs__main_script__no_operation_in_progress
 assert_files_HT '
 !! ignored0	ignored0
@@ -36,7 +38,8 @@ __test_section__ "Abort stash (with changes)"
 printf 'ccc\n' >aaa
 git add aaa
 printf 'ddd\n' >aaa
-assert_exit_code 1 git istash "$ABORT_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 1 git istash "$ABORT_FLAG" $COLOR_FLAGS
 assert_outputs__main_script__no_operation_in_progress
 assert_files_HT '
 AM aaa		ddd	ccc

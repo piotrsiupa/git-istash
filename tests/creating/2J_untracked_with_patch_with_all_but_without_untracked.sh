@@ -9,6 +9,7 @@ PARAMETRIZE_UNTRACKED 'NO'
 PARAMETRIZE_KEEP_INDEX 'YES'
 PARAMETRIZE_STAGED 'NO'
 PARAMETRIZE_UNSTAGED 'YES'
+PARAMETRIZE_COLOR NO  # Randomly chosen value
 
 __end_of_initialization__
 
@@ -20,7 +21,7 @@ printf 'aaa\n' >aaa
 printf 'bbb\n' >bbb
 printf 'y y ' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS --message=message <.git/answers_for_patch
+assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS $COLOR_FLAGS --patch $KEEP_INDEX_FLAGS --message=message <.git/answers_for_patch
 assert_outputs__create__success '*' 0 'message' 't' 'u,1,1'
 new_stash_sha_CO="$stdout"
 assert_files_HTCO '

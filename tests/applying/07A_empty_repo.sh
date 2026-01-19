@@ -4,6 +4,7 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_COLOR YES  # Randomly chosen value
 
 __end_of_initialization__
 
@@ -16,7 +17,8 @@ printf 'ignored?\0n' >>.git/info/exclude
 SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_APPLY_OPERATION stash (without changes)"
-assert_exit_code 1 git istash "$APPLY_OPERATION"
+#shellcheck disable=SC2086
+assert_exit_code 1 git istash "$APPLY_OPERATION" $COLOR_FLAGS
 assert_outputs__apply__no_such_commit 'stash@{0}'
 assert_files_HT '
 !! ignored0	ignored0
@@ -32,7 +34,8 @@ __test_section__ "$CAP_APPLY_OPERATION stash (with changes)"
 printf 'aaa\n' >aaa
 git add aaa
 printf 'bbb\n' >aaa
-assert_exit_code 1 git istash "$APPLY_OPERATION"
+#shellcheck disable=SC2086
+assert_exit_code 1 git istash "$APPLY_OPERATION" $COLOR_FLAGS
 assert_outputs__apply__no_such_commit 'stash@{0}'
 assert_files_HT '
 AM aaa		bbb	aaa

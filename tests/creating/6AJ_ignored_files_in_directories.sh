@@ -9,6 +9,7 @@ PARAMETRIZE_UNTRACKED 'DEFAULT' 'YES' 'NO'
 PARAMETRIZE_KEEP_INDEX 'DEFAULT'
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
+PARAMETRIZE_COLOR YES  # Randomly chosen value
 
 # We don't need thos in this test.
 rm ignored0 ignored1
@@ -71,7 +72,7 @@ printf 'uf0\n' >tracked-dir1/ignored-dir2/some-file0
 printf 'uf1\n' >tracked-dir1/ignored-dir2/some-file1
 printf '%s\n' '*ignored*' >.git/info/exclude
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
+assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $COLOR_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
 assert_outputs__create__success '*' 0 ''
 new_stash_sha_CO="$stdout"
 assert_files_HTCO '

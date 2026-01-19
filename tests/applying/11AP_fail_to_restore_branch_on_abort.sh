@@ -5,6 +5,7 @@ non_essential_test
 PARAMETRIZE_HEAD_TYPE 'BRANCH'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_ABORT
+PARAMETRIZE_COLOR YES  # Randomly chosen value
 
 __end_of_initialization__
 
@@ -31,7 +32,8 @@ printf 'wdf1a\n' >wdf1
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(git rev-parse HEAD)"
-assert_exit_code 2 git istash "$APPLY_OPERATION"
+#shellcheck disable=SC2086
+assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS
 assert_outputs__apply__conflict "$APPLY_OPERATION" '
 UU aaa
 '
@@ -49,7 +51,8 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 
 __test_section__ "Abort $APPLY_OPERATION stash (0)"
 git worktree add block-master master
-assert_exit_code 1 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 1 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$ABORT_FLAG"
 assert_outputs__apply__branch_already_used "$APPLY_OPERATION" 'master'
 assert_all_files '
 aaa
@@ -68,7 +71,8 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 
 __test_section__ "Abort $APPLY_OPERATION stash (1)"
 git worktree remove block-master
-assert_exit_code 0 git istash "$APPLY_OPERATION" "$ABORT_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 0 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$ABORT_FLAG"
 assert_outputs__apply__no_rebase_in_progress_on_abort "$APPLY_OPERATION"
 assert_files_HT '
    aaa		ccc

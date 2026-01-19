@@ -9,6 +9,7 @@ PARAMETRIZE_UNTRACKED 'DEFAULT'
 PARAMETRIZE_KEEP_INDEX 'DEFAULT'
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
+PARAMETRIZE_COLOR YES  # Randomly chosen value
 
 __end_of_initialization__
 
@@ -45,7 +46,8 @@ assert_dotgit_contents
 
 __test_section__ "$CAP_CREATE_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
-assert_exit_code 1 git istash "$CREATE_OPERATION"
+#shellcheck disable=SC2086
+assert_exit_code 1 git istash "$CREATE_OPERATION" $COLOR_FLAGS
 assert_outputs__external_operation_in_progress 'rebase'
 assert_files_HT '
    aaa		aaa

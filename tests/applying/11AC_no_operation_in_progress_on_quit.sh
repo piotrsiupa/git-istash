@@ -5,6 +5,7 @@ non_essential_test
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_QUIT
+PARAMETRIZE_COLOR YES  # Randomly chosen value
 
 __end_of_initialization__
 
@@ -24,7 +25,8 @@ printf 'wdf1a\n' >wdf1
 
 __test_section__ "Quit $APPLY_OPERATION stash (without changes)"
 correct_head_sha="$(get_head_sha_HT)"
-assert_exit_code 1 git istash "$APPLY_OPERATION" "$QUIT_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 1 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$QUIT_FLAG"
 assert_outputs__apply__no_operation_in_progress "istash $APPLY_OPERATION"
 assert_files_HT '
 AM wdf0		wdf0b	wdf0a
@@ -45,7 +47,8 @@ __test_section__ "Quit $APPLY_OPERATION stash (with changes)"
 printf 'ccc\n' >aaa
 git add aaa
 printf 'ddd\n' >aaa
-assert_exit_code 1 git istash "$APPLY_OPERATION" "$QUIT_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 1 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$QUIT_FLAG"
 assert_outputs__apply__no_operation_in_progress "istash $APPLY_OPERATION"
 assert_files_HT '
 AM aaa		ddd	ccc

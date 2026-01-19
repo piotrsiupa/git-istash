@@ -9,6 +9,7 @@ PARAMETRIZE_UNTRACKED 'YES'
 PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
+PARAMETRIZE_COLOR NO  # Randomly chosen value
 
 __end_of_initialization__
 
@@ -40,7 +41,7 @@ new_stash_sha_CO="$(
 		 cat .git/answers_for_patch1
 	} | {
 		#shellcheck disable=SC2086
-		GIT_EDITOR="sed -Ei 's/^\+[a-z]{3}2/+xxx/'" assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS
+		GIT_EDITOR="sed -Ei 's/^\+[a-z]{3}2/+xxx/'" assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS --patch $COLOR_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS
 		assert_outputs__create__success '*' 0 '' 't,1,1' 'u,1,1'
 	}
 )"
@@ -109,6 +110,7 @@ git clean -df
 RESTORE_HEAD_TYPE
 
 __test_section__ 'Pop stash'
+#shellcheck disable=SC2086
 assert_exit_code 0 git stash pop --index
 assert_files '
 M  aaa		aaa2

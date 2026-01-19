@@ -6,6 +6,7 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_CONTINUE
 PARAMETRIZE_QUIT
+PARAMETRIZE_COLOR NO  # Randomly chosen value
 
 __end_of_initialization__
 
@@ -32,7 +33,8 @@ printf 'hhh\n' >bbb
 printf 'iii\n' >ccc
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
-assert_exit_code 2 git istash "$APPLY_OPERATION"
+#shellcheck disable=SC2086
+assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS
 assert_outputs__apply__conflict "$APPLY_OPERATION" '
 UU aaa
 '
@@ -50,7 +52,8 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 __test_section__ "Continue $APPLY_OPERATION stash (0)"
 printf 'jjj\n' >aaa
 git add aaa
-assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG"
 assert_outputs__apply__conflict "$APPLY_OPERATION" '
 UU aaa
 '
@@ -68,7 +71,8 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 __test_section__ "Continue $APPLY_OPERATION stash (1)"
 printf 'kkk\n' >aaa
 git add aaa
-assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS
 assert_outputs__apply__conflict "$APPLY_OPERATION" '
 UU aaa
 '
@@ -86,7 +90,8 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 __test_section__ "Continue $APPLY_OPERATION stash (2)"
 printf 'lll\n' >aaa
 git add aaa
-assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS
 assert_outputs__apply__conflict "$APPLY_OPERATION" '
 AA bbb
 AA ccc
@@ -106,7 +111,8 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 
 __test_section__ "Quit $APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
-assert_exit_code 0 git istash "$APPLY_OPERATION" "$QUIT_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 0 git istash "$APPLY_OPERATION" "$QUIT_FLAG" $COLOR_FLAGS
 assert_outputs__apply__quit "$APPLY_OPERATION"
 assert_files_HT '
    aaa		lll

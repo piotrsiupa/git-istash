@@ -9,6 +9,7 @@ PARAMETRIZE_UNTRACKED 'DEFAULT'
 PARAMETRIZE_KEEP_INDEX 'DEFAULT'
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
+PARAMETRIZE_COLOR NO  # Randomly chosen value
 
 __end_of_initialization__
 
@@ -22,7 +23,7 @@ git add aaa bbb
 printf 'ccc\n' >ccc
 printf 'ddd\n' >ddd
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS --pathspec-file-nul $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS
+assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS --pathspec-file-nul $KEEP_INDEX_FLAGS $STAGED_FLAGS $COLOR_FLAGS $UNSTAGED_FLAGS
 assert_outputs__create__pfn_without_pff
 assert_files_HT '
 A  aaa		aaa

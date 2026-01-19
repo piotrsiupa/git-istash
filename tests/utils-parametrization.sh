@@ -197,3 +197,18 @@ get_head_sha_HT() {
 		get_head_sha
 	fi
 }
+
+#shellcheck disable=SC2120
+PARAMETRIZE_COLOR() { # keys
+	PARAMETRIZE_OPTION true 'COLOR' '' 'YES: && COLOR-YES-LONG && COLOR-YES-LONGISH0 & COLOR-YES-LONGISH1 | NO: && COLOR-DEFAULT &&' "$@"
+	#shellcheck disable=SC2034
+	case "$COLOR" in
+		COLOR-DEFAULT) COLOR_FLAGS='' ;;
+		COLOR-YES-LONG) COLOR_FLAGS='--color=always' ;;
+		COLOR-YES-LONGISH0) COLOR_FLAGS='--colo always' ;;
+		COLOR-YES-LONGISH1) COLOR_FLAGS='--col=always' ;;
+	esac
+}
+IS_COLOR_ON() {
+	printf '%s' "$COLOR" | grep -Eq '^COLOR-YES-'
+}

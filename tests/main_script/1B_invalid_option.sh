@@ -4,6 +4,7 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 PARAMETRIZE_SUBCOMMAND
+PARAMETRIZE_COLOR NO  # Randomly chosen value
 
 __end_of_initialization__
 
@@ -19,7 +20,7 @@ printf 'ddd\n' >ddd
 
 __test_section__ "Call \"$SUBCOMMAND\" with an invalid short option"
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash $SUBCOMMAND -x
+assert_exit_code 1 git istash $SUBCOMMAND $COLOR_FLAGS -x
 assert_outputs__main_script__unrecognised_short_option 'x'
 assert_files '
 AM aaa		bbb	aaa
@@ -39,7 +40,7 @@ assert_dotgit_contents
 
 __test_section__ "Call \"$SUBCOMMAND\" with an invalid long option"
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash $SUBCOMMAND --xxx
+assert_exit_code 1 git istash $SUBCOMMAND $COLOR_FLAGS --xxx
 assert_outputs__main_script__unrecognised_long_option 'xxx'
 assert_files '
 AM aaa		bbb	aaa

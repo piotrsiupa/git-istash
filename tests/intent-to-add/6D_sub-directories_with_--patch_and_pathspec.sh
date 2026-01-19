@@ -11,6 +11,7 @@ PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_PATHSPEC_STYLE 'ARGS' 'FILE' 'NULL-FILE'
 PARAMETRIZE_OPTIONS_INDICATOR IS_PATHSPEC_IN_ARGS
+PARAMETRIZE_COLOR NO  # Randomly chosen value
 
 # We don't need those in this test.
 rm ignored0 ignored1
@@ -54,17 +55,16 @@ rm 'b/0/k'
 printf 'yyy\n' >'b/1/k'
 git add 'b/1'
 printf 'zzz\n' >'b/1/i'
-#shellcheck disable=SC2086
 cd 'b'
 printf 'y y y n n ' | tr ' ' '\n' >../.git/answers_for_patch
 printf ':/a/0 ../a/1/k ../a/1/l 0 ./1/i ' | PREPARE_PATHSPEC_FILE
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS --patch $EOI ':/a/0' '../a/1/k' '../a/1/l' '0' './1/i' <../.git/answers_for_patch
+	assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $COLOR_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS --patch $EOI ':/a/0' '../a/1/k' '../a/1/l' '0' './1/i' <../.git/answers_for_patch
 else
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $PATHSPEC_NULL_FLAGS --patch "$PATHSPEC_FROM_FILE_FLAG" ../.git/pathspec_for_test -- <../.git/answers_for_patch
+	assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $COLOR_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $PATHSPEC_NULL_FLAGS --patch "$PATHSPEC_FROM_FILE_FLAG" ../.git/pathspec_for_test -- <../.git/answers_for_patch
 fi
 cd -
 assert_outputs__create__success '*' 0 '' 't,1,1,1,1,1' 'u'
@@ -160,7 +160,8 @@ RESTORE_HEAD_TYPE
 
 __test_section__ 'Pop stash'
 stash_sha="$(git rev-parse stash)"
-assert_exit_code 0 git istash pop
+#shellcheck disable=SC2086
+assert_exit_code 0 git istash pop $COLOR_FLAGS
 assert_outputs__apply__success 'pop' 0 "$stash_sha"
 assert_files '
 M  a/0/i	yyy

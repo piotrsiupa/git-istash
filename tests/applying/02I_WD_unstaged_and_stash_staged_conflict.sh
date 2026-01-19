@@ -5,6 +5,7 @@ non_essential_test
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_CONTINUE
+PARAMETRIZE_COLOR NO  # Randomly chosen value
 
 __end_of_initialization__
 
@@ -25,7 +26,8 @@ printf 'ddd\n' >aaa
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
-assert_exit_code 2 git istash "$APPLY_OPERATION"
+#shellcheck disable=SC2086
+assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS
 assert_outputs__apply__conflict_HT "$APPLY_OPERATION" '
 UU aaa
 '
@@ -44,7 +46,8 @@ __test_section__ "Continue $APPLY_OPERATION stash"
 printf 'eee\n' >aaa
 git add aaa
 stash_sha="$(git rev-parse stash)"
-assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 0 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG"
 assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
 assert_files_HT '
 MM aaa		eee	bbb

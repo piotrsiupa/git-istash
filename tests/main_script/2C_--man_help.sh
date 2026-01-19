@@ -10,6 +10,7 @@ then
 fi
 
 PARAMETRIZE_SUBCOMMAND
+PARAMETRIZE_COLOR NO  # Randomly chosen value
 
 __end_of_initialization__
 
@@ -20,7 +21,8 @@ printf '%s\n' '#/usr/bin/env sh' 'cd "$(dirname "$0")" || exit' 'printf '\''"%s"
 chmod +x './man'
 PATH="$(pwd):$PATH"
 export PATH
-assert_exit_code 0 git istash "$SUBCOMMAND" --man
+#shellcheck disable=SC2086
+assert_exit_code 0 git istash "$SUBCOMMAND" $COLOR_FLAGS --man
 test -f './call-to-man.txt' ||
 	fail '"man" was not called!\n'
 test "$(cat './call-to-man.txt')" = '"git-istash"' ||

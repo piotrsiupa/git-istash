@@ -9,6 +9,7 @@ PARAMETRIZE_UNTRACKED 'DEFAULT' 'YES'
 PARAMETRIZE_KEEP_INDEX 'NO'
 PARAMETRIZE_STAGED 'NO'
 PARAMETRIZE_UNSTAGED 'NO'
+PARAMETRIZE_COLOR NO  # Randomly chosen value
 
 # We don't need those in this test.
 rm ignored0 ignored1
@@ -32,7 +33,7 @@ printf 'xxx\n' >'b/1/i'
 printf 'xxx\n' >'b/1/j'
 cd 'a'
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
+assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $COLOR_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
 cd -
 assert_outputs__create__success '*' 0 ''
 new_stash_sha_CO="$stdout"

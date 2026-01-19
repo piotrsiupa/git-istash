@@ -5,6 +5,7 @@ non_essential_test
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_CONTINUE
+PARAMETRIZE_COLOR YES  # Randomly chosen value
 
 __end_of_initialization__
 
@@ -45,7 +46,8 @@ __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 mkdir -p xxx
 cd xxx
-assert_exit_code 2 "../../../../../lib/git-istash/git-istash-$APPLY_OPERATION"
+#shellcheck disable=SC2086
+assert_exit_code 2 "../../../../../lib/git-istash/git-istash-$APPLY_OPERATION" $COLOR_FLAGS
 cd -
 assert_outputs__apply__conflict_HT "$APPLY_OPERATION" '
 UU aaa
@@ -84,7 +86,8 @@ printf 'eee1\n' >xxx/aaa
 printf 'eee2\n' >yyy/aaa
 git add aaa xxx/aaa yyy/aaa
 cd xxx
-assert_exit_code 2 "../../../../../lib/git-istash/git-istash-$APPLY_OPERATION" "$CONTINUE_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 2 "../../../../../lib/git-istash/git-istash-$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG"
 cd -
 assert_outputs__apply__conflict "$APPLY_OPERATION" '
 UU aaa
@@ -121,7 +124,8 @@ git add aaa xxx/aaa yyy/aaa
 if [ "$HEAD_TYPE" != 'ORPHAN' ]
 then
 	cd xxx
-	assert_exit_code 2 "../../../../../lib/git-istash/git-istash-$APPLY_OPERATION" "$CONTINUE_FLAG"
+	#shellcheck disable=SC2086
+	assert_exit_code 2 "../../../../../lib/git-istash/git-istash-$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS
 	cd -
 	assert_outputs__apply__conflict "$APPLY_OPERATION" '
 	AA zzz
@@ -152,7 +156,8 @@ then
 fi
 stash_sha="$(git rev-parse stash)"
 cd xxx
-assert_exit_code 0 "../../../../../lib/git-istash/git-istash-$APPLY_OPERATION" "$CONTINUE_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 0 "../../../../../lib/git-istash/git-istash-$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS
 cd -
 assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
 assert_files_HT '

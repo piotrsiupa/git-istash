@@ -5,6 +5,7 @@ non_essential_test
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_QUIT
+PARAMETRIZE_COLOR YES  # Randomly chosen value
 
 __end_of_initialization__
 
@@ -30,7 +31,8 @@ printf 'wdf0b\n' >wdf0
 printf 'wdf1a\n' >wdf1
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
-assert_exit_code 2 git istash "$APPLY_OPERATION"
+#shellcheck disable=SC2086
+assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS
 assert_outputs__apply__conflict_HT "$APPLY_OPERATION" '
 UU aaa
 ' '
@@ -57,7 +59,8 @@ __test_section__ "Quit $APPLY_OPERATION stash (0)"
 correct_head_sha="$(get_head_sha_HT)"
 printf 'ddd\n' >aaa
 git add aaa
-assert_exit_code 1 git istash "$APPLY_OPERATION" "$QUIT_FLAG" 0
+#shellcheck disable=SC2086
+assert_exit_code 1 git istash "$APPLY_OPERATION" "$QUIT_FLAG" $COLOR_FLAGS 0
 assert_outputs__too_many_arguments "$APPLY_OPERATION"
 assert_files_HT '
 M  aaa		ddd
@@ -78,7 +81,8 @@ assert_rebase y
 assert_dotgit_contents_for "$APPLY_OPERATION"
 
 __test_section__ "Quit $APPLY_OPERATION stash (1)"
-assert_exit_code 0 git istash "$APPLY_OPERATION" "$QUIT_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 0 git istash "$APPLY_OPERATION" "$QUIT_FLAG" $COLOR_FLAGS
 assert_outputs__apply__quit "$APPLY_OPERATION"
 assert_files_HT '
 M  aaa		ddd

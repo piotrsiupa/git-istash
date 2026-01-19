@@ -7,6 +7,7 @@ PARAMETRIZE_UNTRACKED 'YES'
 PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_STAGED 'NO'
 PARAMETRIZE_UNSTAGED 'NO'
+PARAMETRIZE_COLOR YES  # Randomly chosen value
 
 __end_of_initialization__
 
@@ -19,7 +20,7 @@ git add aaa
 printf 'bbb\n' >aaa
 printf 'ddd\n' >ddd
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$CREATE_OPERATION" $UNSTAGED_FLAGS $STAGED_FLAGS $KEEP_INDEX_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS --message 'name of this stash'
+assert_exit_code 0 git istash "$CREATE_OPERATION" $UNSTAGED_FLAGS $STAGED_FLAGS $KEEP_INDEX_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS $COLOR_FLAGS --message 'name of this stash'
 assert_outputs__create__success '*' 0 'name of this stash'
 new_stash_sha_CO="$stdout"
 assert_files_HTCO '

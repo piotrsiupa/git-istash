@@ -5,6 +5,7 @@ non_essential_test
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_CONTINUE
+PARAMETRIZE_COLOR NO  # Randomly chosen value
 
 __end_of_initialization__
 
@@ -30,7 +31,8 @@ printf 'wdf0b\n' >wdf0
 printf 'wdf1a\n' >wdf1
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
-assert_exit_code 2 git istash "$APPLY_OPERATION"
+#shellcheck disable=SC2086
+assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS
 assert_outputs__apply__conflict_HT "$APPLY_OPERATION" '
 UU aaa
 ' '
@@ -56,7 +58,8 @@ __test_section__ "Continue $APPLY_OPERATION stash"
 git rebase --abort
 printf 'ddd\n' >aaa
 git add aaa
-assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS
 assert_outputs__apply__no_rebase_in_progress
 assert_files_HT '
 M  aaa		ddd

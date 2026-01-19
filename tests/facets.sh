@@ -28,10 +28,6 @@ raw_facets='
 	# Run tests for all the combinations of pathspec from arguments / stdin / file in a plain text / null separated format.
 	full-pathspec-style = fps|f(u?ll)?[-_]?pa?(th)?s(p(ec)?)?[-_]s(t(y(le?)?)?)?
 	
-	# Run tests for outputs with and without colors.
-	# (By default it is tested only with colors.)
-	color = c(ol(or)?)?|clr?
-	
 	# Run tests for all the subcommands applicable for the given test. (E.g. instead of just "create" test "create", "save", "snatch" and "push".)
 	subcommand = (s(u?b)?)?(c(om(m(and?)?)?)?|sub|cmd)
 	
@@ -63,7 +59,7 @@ raw_facet_categories='
 	all = a(ll)?: '"$(printf '%s' "$facets" | sed -E 's/^(.+)=.*$/\1/' | tr '\n' ',')"'
 	
 	# Test everything important and a little more, just ot be sure.
-	full = fu?ll: standard, full-pathspec-style, color, long-running
+	full = fu?ll: standard, full-pathspec-style, long-running
 	
 	# Test the important things.
 	# (It gives a pretty good idea of whether everything works.)

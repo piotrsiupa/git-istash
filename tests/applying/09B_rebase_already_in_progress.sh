@@ -4,6 +4,7 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_COLOR NO  # Randomly chosen value
 
 __end_of_initialization__
 
@@ -41,7 +42,8 @@ assert_dotgit_contents
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
-assert_exit_code 1 git istash "$APPLY_OPERATION"
+#shellcheck disable=SC2086
+assert_exit_code 1 git istash "$APPLY_OPERATION" $COLOR_FLAGS
 assert_outputs__external_operation_in_progress 'rebase'
 assert_files_HT '
    aaa		aaa
