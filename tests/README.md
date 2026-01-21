@@ -28,8 +28,8 @@ A script that checks all the scripts in the projects (including the tests), usin
 A script that runs the test suite with different versions of Git to determine which ones are supported by `istash`.
 
 ## `list.sh`
-A helper script that just prints the list of tests and allows filtering for essential / no-essential tests.
-(It's useful mostly to check if tests were correctly marked as non-essential.)
+A helper script that just prints the list of tests, with some rudimentary filtering options.
+It should be treated as the only source of truth when it comes to which files are tests, and it can be relied even if the directory structure or name convention changes. (Other scripts use this one to list tests.)
 
 ## `commons.sh`
 
