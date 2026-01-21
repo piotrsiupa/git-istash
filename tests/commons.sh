@@ -19,7 +19,7 @@ set -eu
 
 cd ../../..
 WAS_IT_CALLED_FROM_COMMONS_SH='affirmative'
-. ./set-up-repo.sh
+. ./preparations.sh
 . ./utils.sh
 . ./assertions.sh
 unset WAS_IT_CALLED_FROM_COMMONS_SH

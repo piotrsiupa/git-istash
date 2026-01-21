@@ -13,6 +13,8 @@ PARAMETRIZE_SUBCOMMAND
 
 __end_of_initialization__
 
+prepare_repository
+
 
 __test_section__ "Displaying manual with \"$SUBCOMMAND --help\""
 #shellcheck disable=SC2016

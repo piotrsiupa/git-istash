@@ -13,6 +13,8 @@ PARAMETRIZE_COLOR YES  # Randomly chosen value
 
 __end_of_initialization__
 
+prepare_repository
+
 __test_section__ 'Prepare repository'
 printf 'aaa\naaa\n' >aaa
 printf 'bbb\nbbb\n' >bbb

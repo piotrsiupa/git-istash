@@ -13,6 +13,8 @@ fi
 
 __end_of_initialization__
 
+prepare_repository
+
 wrong_sha="$(get_head_sha)"
 
 __test_section__ 'Prepare repository'

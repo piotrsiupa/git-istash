@@ -13,6 +13,8 @@ fi
 
 __end_of_initialization__
 
+prepare_repository
+
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
 git add aaa

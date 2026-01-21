@@ -17,10 +17,11 @@ PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_COLOR YES  # Randomly chosen value
 
+__end_of_initialization__
+
+prepare_repository
 # We don't need thos in this test.
 rm ignored0 ignored1
-
-__end_of_initialization__
 
 # Some tracked files to make it harder on the algorithms creating the commit for ignored ones.
 __test_section__ 'Prepare repository'

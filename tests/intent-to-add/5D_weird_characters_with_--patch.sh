@@ -22,6 +22,8 @@ PARAMETRIZE_COLOR YES  # Randomly chosen value
 
 __end_of_initialization__
 
+prepare_repository
+
 correct_head_sha="$(get_head_sha)"
 SWITCH_HEAD_TYPE
 
