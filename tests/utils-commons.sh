@@ -40,7 +40,7 @@ __end_of_initialization__() {
 
 is_facet_active() { # facet_regex
 	#shellcheck disable=SC2154
-	printf '%s' "$meticulousness" | grep -E -x -q "$1"
+	printf 'always\n%s' "$meticulousness" | grep -E -x -q "$1"
 }
 
 non_essential_test() {

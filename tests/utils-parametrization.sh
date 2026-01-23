@@ -154,9 +154,13 @@ PARAMETRIZE_OPTION() { # condition name override_facet map values...
 			shift
 		done
 	fi
+	if ! is_facet_active "$FACET"
+	then
+		VALUES="$(printf '%s\n' "$VALUES" | grep -v '^$' | head -n1)"
+	fi
 	VALUES="$(printf '%s\n' "$VALUES" | tr '&' '\n' | sed -E -e '/^\s*$/ d' -e "s/'/'\\\\''/g" -e "s/^/'/" -e "s/$/'/" | tr '\n' ' ')"
 	eval set -- "$VALUES"
-	PARAMETRIZE_COND "$CONDITION" "$NAME" "$FACET" "$@"
+	PARAMETRIZE_COND "$CONDITION" "$NAME" 'always' "$@"
 	unset CONDITION
 	unset NAME
 	unset FACET

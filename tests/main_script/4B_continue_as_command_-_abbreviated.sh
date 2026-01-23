@@ -4,7 +4,7 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_APPLY_OPERATION
-PARAMETRIZE_OPTION true 'CONTINUE_COMMAND' 'option' 'CONTINUE: c && cont && conti & continu & co'
+PARAMETRIZE_OPTION true 'CONTINUE_COMMAND' '' 'CONTINUE: c && cont && conti & continu & co'
 
 __end_of_initialization__
 
