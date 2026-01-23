@@ -139,7 +139,7 @@ PARAMETRIZE_OPTION() { # condition name override_facet map values...
 	fi
 	if ! is_facet_active 'partial-options'
 	then
-		MAP="$(printf '%s\n' "$MAP" | sed -E 's/^(.+:)((&?[^&])*&&).*$/\1\2/')"
+		MAP="$(printf '%s\n' "$MAP" | sed -E 's/^(.+:)(.*)&&(&?[^&])*$/\1\2/')"
 	fi
 	if [ $# -eq 0 ]
 	then
