@@ -5,7 +5,7 @@ This category (directory) is for tests that check the commands that restore cont
 
 
 ### Prefix
-The first character of the prefix (sub-category) can be:
+The first two characters of the prefix (sub-category) can be:
 - `00` - Sanity tests that don't use git commands from this repository.
 - `01` - Popping/Applying without conflicts.
 - `02` - Popping/Applying with conflicts that need to be manually solved.
