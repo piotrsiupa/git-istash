@@ -30,8 +30,8 @@ print_help() {
 }
 
 check_pathspec_for_implicit_push() ( # args...
-	getopt_result="$(getopt -o"-$getopt_short_options" --long="$getopt_long_options" -n'error' -ssh -- "$@")"
-	eval set -- "$getopt_result"
+	normalized_options="$(getopt -o"-$getopt_short_options" --long="$getopt_long_options" -n'error' -ssh -- "$@")"
+	eval set -- "$normalized_options"
 	while [ $# -ne 0 ]
 	do
 		if [ "$1" = '--' ]

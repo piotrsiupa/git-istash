@@ -43,8 +43,8 @@ run_shellcheck() {
 
 getopt_short_options='aA:hs'
 getopt_long_options='altered,since:,help,skip-tests,version'
-getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
-eval set -- "$getopt_result"
+normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
+eval set -- "$normalized_options"
 only_altered=n
 altered_reference=HEAD
 skip_tests=n

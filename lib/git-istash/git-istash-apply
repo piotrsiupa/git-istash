@@ -363,8 +363,8 @@ do_apply() { # args...
 
 getopt_short_options='chq'
 getopt_long_options='abort,_called-from-pop,_called-from-pop_,color:,continue,quit'
-getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n'error' -ssh -- "$@")"
-eval set -- "$getopt_result"
+normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n'error' -ssh -- "$@")"
+eval set -- "$normalized_options"
 abort_set=n
 is_pop=n
 continue_set=n

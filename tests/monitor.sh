@@ -127,8 +127,8 @@ monitor_tests() { # [filter]...
 
 getopt_short_options='aA:c:hm:s'
 getopt_long_options='altered,since:,color:,help,meticulousness:,skip-init,version'
-getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
-eval set -- "$getopt_result"
+normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
+eval set -- "$normalized_options"
 only_altered=n
 altered_reference=HEAD
 use_color=auto

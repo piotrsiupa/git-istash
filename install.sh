@@ -442,8 +442,8 @@ do_the_install_thing() {
 
 getopt_short_options='hgc:C:u'
 getopt_long_options='help,version,global,custom-dir:,create-dir:,uninstall,debug'
-getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
-eval set -- "$getopt_result"
+normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
+eval set -- "$normalized_options"
 global=n
 uninstall=n
 debug=n

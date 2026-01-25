@@ -509,8 +509,8 @@ make_stash() { # pathspecs...
 
 getopt_short_options='ahklm:Su'
 getopt_long_options='all,allow-empty,color:,keep-index,no-keep-index,leave-staged,message:,patch,pathspec-file-null,pathspec-from-file:,remove-stashed,staged,no-store,include-untracked,no-include-untracked'
-getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n'error' -ssh -- "$@")"
-eval set -- "$getopt_result"
+normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n'error' -ssh -- "$@")"
+eval set -- "$normalized_options"
 include_ignored=n
 allow_empty=n
 keep_index=n
