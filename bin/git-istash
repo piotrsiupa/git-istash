@@ -41,7 +41,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'git-istash version 1.6.0\n'
+	printf 'git-istash version 1.6.1\n'
 	printf 'Author: Piotr Siupa\n'
 	printf 'Requires Git in version at least %s\n' "$min_git_version"
 }
@@ -99,7 +99,7 @@ then
 			print_help
 			exit 0
 		else
-			eval set -- "$1" -h
+			set -- "$1" -h
 		fi
 	fi
 elif [ "$1" = '-h' ] || [ "$1" = '--help' ]
