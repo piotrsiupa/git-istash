@@ -36,12 +36,6 @@ get_all_versions() { # sort_prefix
 strip_tag_version() { # tag_version_number
 	printf '%s' "$1" | cut -c2-
 }
-print_success() {
-	printf '\b\b\b\033[32mPASSED\033[39m\n'
-}
-print_failure() {  # reason
-	printf '\b\b\b\033[31mFAILED\033[39m (%s)\n' "$1"
-}
 check_version() { # meticulousnesses...
 	printf 'Version %s\t...' "$(strip_tag_version "$version")"
 	if ! (
@@ -50,19 +44,19 @@ check_version() { # meticulousnesses...
 		make -j "$(nproc)" 1>/dev/null 2>&1
 	)
 	then
-		print_failure 'Cannot compile Git.'
+		printf '\b\b\b\033[41mFAILED\033[49m (Cannot compile Git.)\n'
 		return 1
 	else
 		for x in "$@"
 		do
 			if ! PATH="$abs_actual_git_repo_path:$PATH" ./run.sh --meticulousness="$x" --check --skip-version --jobs=0 1>/dev/null 2>&1
 			then
-				print_failure "Failed at meticulousness \"$x\""
+				printf '\b\b\b\033[31mFAILED\033[39m (Failed at meticulousness "%s")\n' "$x"
 				return 1
 			fi
 		done
 	fi
-	print_success
+	printf '\b\b\b\033[32mPASSED\033[39m\n'
 	return 0
 }
 check_versions_one_by_one() {
