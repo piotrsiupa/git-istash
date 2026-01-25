@@ -99,7 +99,7 @@ then
 			print_help
 			exit 0
 		else
-			eval set -- "$1" -h
+			set -- "$1" -h
 		fi
 	fi
 elif [ "$1" = '-h' ] || [ "$1" = '--help' ]
