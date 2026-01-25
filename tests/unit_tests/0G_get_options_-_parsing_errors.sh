@@ -36,6 +36,10 @@ __test_section__ 'Abbreviated long option with an unexpected argument'
 assert_exit_code 1 get_options 'ab:cd:' 'veni,vidi:,vici' -c --vidi=qwerty --ve=inev -ady
 assert_outputs '.*' 'error: option `veni'\'' takes no value'
 
-__test_section__ 'Long option with an unexpected argument'
+__test_section__ 'Ambiguous option abbreviation'
 assert_exit_code 1 get_options 'ab:cd:' 'veni,vidi:,vici' --ve -c --vic --vi=qwerty -ady
 assert_outputs '.*' 'error: ambiguous option abbreviation `vi'\'
+
+__test_section__ 'Ambiguous option abbreviation when one option is abbreviation of another'
+assert_exit_code 1 get_options 'ab:cd:' 'abcde,xyz,abc' --abcd -c --ab -ady
+assert_outputs '.*' 'error: ambiguous option abbreviation `ab'\'

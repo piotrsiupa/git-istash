@@ -85,10 +85,13 @@ get_options() ( # short_options_string long_options_string [argument...]
 				;;
 			--*)
 				option_name="$(printf '%s' "$1" | head -n1 | cut -d= -f1 | cut -c3-)"
-				long_option_nr="$(printf '%s\n' "$long_options" | cut -c-${#option_name} | grep -n -F -x -- "$option_name")" ||
-					error 'unknown option `%s'\' "$option_name"
-				test "$(printf '%s\n' "$long_option_nr" | wc -l)" -eq 1 ||
-					error 'ambiguous option abbreviation `%s'\' "$option_name"
+				if ! long_option_nr="$(printf '%s\n' "$long_options" | grep -n -F -x -- "$option_name")"
+				then
+					long_option_nr="$(printf '%s\n' "$long_options" | cut -c-${#option_name} | grep -n -F -x -- "$option_name")" ||
+						error 'unknown option `%s'\' "$option_name"
+					test "$(printf '%s\n' "$long_option_nr" | wc -l)" -eq 1 ||
+						error 'ambiguous option abbreviation `%s'\' "$option_name"
+				fi
 				long_option_nr="$(printf '%s' "$long_option_nr" | cut -d: -f1)"
 				option_name="$(printf '%s' "$long_options" | sed -E -n "${long_option_nr}p")"
 				printf ' --%s' "$option_name"

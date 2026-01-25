@@ -78,12 +78,19 @@ eval set -- "$stdout"
 assert_exit_code 0 get_options '' 'anger,bloodlust:,cruelty,depravity:' "$@"
 assert_outputs " --bloodlust ' xyz ' --cruelty --depravity '--anger' --bloodlust 'qwerty' --anger --cruelty --" ''
 
-__test_section__ 'With a few shortened options'
+__test_section__ 'With a few abbreviated options'
 assert_exit_code 0 get_options '' 'anger,bloodlust:,cruelty,depravity:' --blood ' xyz ' --cruelt --d=a
 assert_outputs " --bloodlust ' xyz ' --cruelty --depravity 'a' --" ''
 eval set -- "$stdout"
 assert_exit_code 0 get_options '' 'anger,bloodlust:,cruelty,depravity:' "$@"
 assert_outputs " --bloodlust ' xyz ' --cruelty --depravity 'a' --" ''
+
+__test_section__ 'With a few abbreviation that is a name of a different option'
+assert_exit_code 0 get_options '' 'anger,bloodlust:,cruelty,blood,depravity:' --bloodl ' xyz ' --cruelt --blood --d=a
+assert_outputs " --bloodlust ' xyz ' --cruelty --blood --depravity 'a' --" ''
+eval set -- "$stdout"
+assert_exit_code 0 get_options '' 'anger,bloodlust:,cruelty,blood,depravity:' "$@"
+assert_outputs " --bloodlust ' xyz ' --cruelty --blood --depravity 'a' --" ''
 
 __test_section__ 'With some options and arguments'
 assert_exit_code 0 get_options '' 'anger,bloodlust:,cruelty,depravity:' --cruelty --bl=a abcd --deprav a 'a b'\''c d' --anger
