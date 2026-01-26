@@ -1,3 +1,6 @@
+# Not sure if this is needed anymore. It was written mostly as a base for writing other tests.
+# Whatever, it takes basically no time at all to run.
+
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 non_essential_test

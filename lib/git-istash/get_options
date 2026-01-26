@@ -8,10 +8,12 @@ escape_for_shell() {
 }
 
 # The descriptions of short and long options have the same syntax as for "getopt".
+# Options:
+# -R - Don't reorder entries by placing all non-option arguments after "--" (normalize only).
 # Returns 0 on success.
 # Returns 1 on failure to parse options.
 # Returns 2 on error.
-get_options() ( # short_options_string long_options_string [argument...]
+get_options() ( # [-R] short_options_string long_options_string [argument...]
 	set -eu
 	
 	fatal() { # printf_arg...
@@ -21,6 +23,16 @@ get_options() ( # short_options_string long_options_string [argument...]
 		printf '\n'
 		return 2
 	} 1>&2
+	
+	reorder=y
+	if [ "${1-}" = '-R' ]
+	then
+		reorder=n
+		shift
+	fi
+	printf '%s' "${1-}" | grep -E -q '^-' &&
+		fatal 'unknown option %s for get_options' "$1"
+	
 	test $# -ge 2 ||
 		fatal 'not enough arguments for get_options'
 	printf '%s' "$1" | tr '\n' ' ' | grep -E -q '\s' &&
@@ -75,11 +87,18 @@ get_options() ( # short_options_string long_options_string [argument...]
 		printf '\n'
 		return 1
 	} 1>&2
-	non_option_args=' --'
+	if [ "$reorder" = y ]
+	then
+		non_option_args=' --'
+	fi
 	while [ $# -ne 0 ]
 	do
 		case "$1" in
 			--)
+				if [ "$reorder" = n ]
+				then
+					printf \ \'--\'
+				fi
 				shift
 				break
 				;;
@@ -151,15 +170,30 @@ get_options() ( # short_options_string long_options_string [argument...]
 				done
 				;;
 			*)
-				non_option_args="$non_option_args $(printf '%s' "$1" | escape_for_shell)"
+				if [ "$reorder" = y ]
+				then
+					non_option_args="$non_option_args $(printf '%s' "$1" | escape_for_shell)"
+				else
+					printf ' '
+					printf '%s' "$1" | escape_for_shell
+				fi
 				;;
 		esac
 		shift
 	done
 	while [ $# -ne 0 ]
 	do
-		non_option_args="$non_option_args $(printf '%s' "$1" | escape_for_shell)"
+		if [ "$reorder" = y ]
+		then
+			non_option_args="$non_option_args $(printf '%s' "$1" | escape_for_shell)"
+		else
+			printf ' '
+			printf '%s' "$1" | escape_for_shell
+		fi
 		shift
 	done
-	printf '%s' "$non_option_args"
+	if [ "$reorder" = y ]
+	then
+		printf '%s' "$non_option_args"
+	fi
 )
