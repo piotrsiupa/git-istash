@@ -2,6 +2,7 @@
 
 set -eu
 
+. "$(dirname "$0")/get_options"
 . "$(dirname "$0")/git-istash-commons"
 . "$(dirname "$0")/git-istash-vanilla-format"
 
@@ -509,7 +510,7 @@ make_stash() { # pathspecs...
 
 getopt_short_options='ahklm:Su'
 getopt_long_options='all,allow-empty,color:,keep-index,no-keep-index,leave-staged,message:,patch,pathspec-file-null,pathspec-from-file:,remove-stashed,staged,no-store,include-untracked,no-include-untracked'
-normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n'error' -ssh -- "$@")"
+normalized_options="$(get_options "$getopt_short_options" "$getopt_long_options" "$@")"
 eval set -- "$normalized_options"
 include_ignored=n
 allow_empty=n

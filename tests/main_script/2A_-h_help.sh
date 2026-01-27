@@ -14,7 +14,7 @@ __test_section__ "Show short help for subcommand \"$SUBCOMMAND\""
 #shellcheck disable=SC2086
 assert_exit_code 0 git istash $SUBCOMMAND $COLOR_FLAGS -h
 assert_outputs__main_script__help
-mentions_of_this_subcommand="$(printf '%s\n' "$stdout" | grep -Fc "git istash $SUBCOMMAND")"
+mentions_of_this_subcommand="$(printf '%s\n' "$stdout" | grep -Fc "git istash $SUBCOMMAND" || true)"
 mentions_of_any_subcommand="$(printf '%s\n' "$stdout" | grep -Ec 'git istash \w+' || true)"
 test "$mentions_of_this_subcommand" -ge 1 ||
 	fail 'The "-h" help is not for the subcommand "%s"!\n' "$SUBCOMMAND"
