@@ -2,14 +2,9 @@
 
 non_essential_test
 
-PARAMETRIZE 'MODE' 'options' 'DEFAULT' 'NO_REORDER'
+PARAMETRIZE_GET_OPTIONS_MODE
 
 __end_of_initialization__
-
-case "$MODE" in
-	NO_REORDER) MODE_FLAGS='-R' ;;
-	*) MODE_FLAGS='' ;;
-esac
 
 cd - 1>/dev/null
 . ../lib/git-istash/get_options
