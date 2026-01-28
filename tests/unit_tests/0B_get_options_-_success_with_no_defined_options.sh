@@ -14,6 +14,7 @@ test_get_options_success \
 	'' \
 	"" \
 	" --" \
+	" --" \
 	
 
 __test_section__ 'Without only --'
@@ -21,6 +22,7 @@ test_get_options_success \
 	'' \
 	'' \
 	" '--'" \
+	" --" \
 	" --" \
 	--
 
@@ -30,6 +32,7 @@ test_get_options_success \
 	'' \
 	" 'abcd'" \
 	" -- 'abcd'" \
+	" -- 'abcd'" \
 	abcd
 
 __test_section__ 'With an empty argument'
@@ -37,6 +40,7 @@ test_get_options_success \
 	'' \
 	'' \
 	" ''" \
+	" -- ''" \
 	" -- ''" \
 	''
 
@@ -46,6 +50,7 @@ test_get_options_success \
 	'' \
 	" 'abcd' 'a b'\\\\''c d'" \
 	" -- 'abcd' 'a b'\\\\''c d'" \
+	" -- 'abcd' 'a b'\\\\''c d'" \
 	abcd 'a b'\''c d'
 
 __test_section__ 'With "--" before arguments'
@@ -53,6 +58,7 @@ test_get_options_success \
 	'' \
 	'' \
 	" '--' 'abcd' 'a b'\\\\''c d'" \
+	" -- 'abcd' 'a b'\\\\''c d'" \
 	" -- 'abcd' 'a b'\\\\''c d'" \
 	-- abcd 'a b'\''c d'
 
@@ -62,6 +68,7 @@ test_get_options_success \
 	'' \
 	" 'abcd' '--' 'a b'\\\\''c d'" \
 	" -- 'abcd' 'a b'\\\\''c d'" \
+	" -- 'abcd' '--' 'a b'\\\\''c d'" \
 	abcd -- 'a b'\''c d'
 
 __test_section__ 'With "--" after arguments'
@@ -70,6 +77,7 @@ test_get_options_success \
 	'' \
 	" 'abcd' 'a b'\\\\''c d' '--'" \
 	" -- 'abcd' 'a b'\\\\''c d'" \
+	" -- 'abcd' 'a b'\\\\''c d' '--'" \
 	abcd 'a b'\''c d' --
 
 __test_section__ 'With thinks looking like options after "--"'
@@ -78,6 +86,7 @@ test_get_options_success \
 	'' \
 	" 'abcd' 'a b'\\\\''c d' '--' '-abcd' '--abcd'" \
 	" -- 'abcd' 'a b'\\\\''c d' '-abcd' '--abcd'" \
+	" -- 'abcd' 'a b'\\\\''c d' '--' '-abcd' '--abcd'" \
 	abcd 'a b'\''c d' -- -abcd --abcd
 
 __test_section__ 'With a few "--"'
@@ -85,5 +94,6 @@ test_get_options_success \
 	'' \
 	'' \
 	" '--' 'abcd' '--' 'a b'\\\\''c d' '--'" \
+	" -- 'abcd' '--' 'a b'\\\\''c d' '--'" \
 	" -- 'abcd' '--' 'a b'\\\\''c d' '--'" \
 	-- abcd -- 'a b'\''c d' --

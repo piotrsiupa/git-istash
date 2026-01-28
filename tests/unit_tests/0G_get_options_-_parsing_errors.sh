@@ -45,3 +45,13 @@ assert_outputs '.*' 'error: ambiguous option abbreviation `vi'\'
 __test_section__ 'Ambiguous option abbreviation when one option is abbreviation of another'
 assert_exit_code 1 get_options $MODE_FLAGS 'ab:cd:' 'abcde,xyz,abc' --abcd -c --ab -ady
 assert_outputs '.*' 'error: ambiguous option abbreviation `ab'\'
+
+__test_section__ 'Short option without the required argument after a non-option'
+if IS_POSIXLY_ON
+then
+	assert_exit_code 0 get_options $MODE_FLAGS 'ab:cd:' 'veni,vidi:,vici' -c --vidi=qwerty blah --veni -ad
+	assert_outputs " -c --vidi 'qwerty' -- 'blah' '--veni' '-ad'" ''
+else
+	assert_exit_code 1 get_options $MODE_FLAGS 'ab:cd:' 'veni,vidi:,vici' -c --vidi=qwerty blah --veni -ad
+	assert_outputs '.*' 'error: switch `d'\'' requires a value'
+fi

@@ -1,5 +1,6 @@
-# Fully POSIX option parser inspired by GNU getopt, although less customizable.
-# It does, however, have capabilities of partially parsing arguments when not all option names are known.
+# Fully POSIX option parser inspired by GNU getopt, although not strictly compatible with it.
+# The small deviations of the output (from what getopt with similar options would produce with similar settings) are there because of how get_options is used by the script for which it was written.
+# The user should still get exactly what their expect from a GNU-like program.
 
 escape_for_shell() {
 	printf \'
@@ -7,13 +8,14 @@ escape_for_shell() {
 	printf \'
 }
 
-# The descriptions of short and long options have the same syntax as for "getopt".
+# The descriptions of short and long options have the same general syntax as for "getopt" (except for prefixes "-" and "+" which aren't supported here).
 # Options:
-# -R - Don't reorder entries by placing all non-option arguments after "--" (normalize only).
+# -P - Posixly correct mode - treat everything after the first non-option as non-options (and preserve the first "==" if it's after a non-option).
+# -R - Don't reorder entries by placing all non-option arguments after "--" (normalize only) and don't generate an additional "--" if not present. (Normally options are shuffled like by "getopt".)
 # Returns 0 on success.
 # Returns 1 on failure to parse options.
-# Returns 2 on error.
-get_options() ( # [-R] short_options_string long_options_string [argument...]
+# Returns 2 on error with the usage of the function itself.
+get_options() ( # [-P | -R] short_options_string long_options_string [argument...]
 	set -eu
 	
 	fatal() { # printf_arg...
@@ -24,8 +26,13 @@ get_options() ( # [-R] short_options_string long_options_string [argument...]
 		return 2
 	} 1>&2
 	
+	posixly=n
 	reorder=y
-	if [ "${1-}" = '-R' ]
+	if [ "${1-}" = '-P' ]
+	then
+		posixly=y
+		shift
+	elif [ "${1-}" = '-R' ]
 	then
 		reorder=n
 		shift
@@ -170,7 +177,10 @@ get_options() ( # [-R] short_options_string long_options_string [argument...]
 				done
 				;;
 			*)
-				if [ "$reorder" = y ]
+				if [ "$posixly" = y ]
+				then
+					break
+				elif [ "$reorder" = y ]
 				then
 					non_option_args="$non_option_args $(printf '%s' "$1" | escape_for_shell)"
 				else
