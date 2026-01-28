@@ -80,7 +80,12 @@ done
 if [ $# -ne 0 ]
 then
 	printf 'No argument is allowed.\n' 1>&2
-	exit 1
+	exit 2
+fi
+if [ "$only_altered" = y ] && [ "$skip_tests" = y ]
+then
+	printf 'Options "--altered" and "--skip-tests" are incompatible.\n' 1>&2
+	exit 2
 fi
 
 cd "$(dirname "$0")/.."
