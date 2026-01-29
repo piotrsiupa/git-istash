@@ -15,6 +15,7 @@ test_get_options_success \
 	"" \
 	" --" \
 	" --" \
+	" --" \
 	
 
 __test_section__ 'Without only --'
@@ -24,6 +25,7 @@ test_get_options_success \
 	" '--'" \
 	" --" \
 	" --" \
+	" -- '--'" \
 	--
 
 __test_section__ 'With an argument'
@@ -31,6 +33,7 @@ test_get_options_success \
 	'' \
 	'' \
 	" 'abcd'" \
+	" -- 'abcd'" \
 	" -- 'abcd'" \
 	" -- 'abcd'" \
 	abcd
@@ -42,6 +45,7 @@ test_get_options_success \
 	" ''" \
 	" -- ''" \
 	" -- ''" \
+	" -- ''" \
 	''
 
 __test_section__ 'With some arguments'
@@ -49,6 +53,7 @@ test_get_options_success \
 	'' \
 	'' \
 	" 'abcd' 'a b'\\\\''c d'" \
+	" -- 'abcd' 'a b'\\\\''c d'" \
 	" -- 'abcd' 'a b'\\\\''c d'" \
 	" -- 'abcd' 'a b'\\\\''c d'" \
 	abcd 'a b'\''c d'
@@ -60,6 +65,7 @@ test_get_options_success \
 	" '--' 'abcd' 'a b'\\\\''c d'" \
 	" -- 'abcd' 'a b'\\\\''c d'" \
 	" -- 'abcd' 'a b'\\\\''c d'" \
+	" -- '--' 'abcd' 'a b'\\\\''c d'" \
 	-- abcd 'a b'\''c d'
 
 __test_section__ 'With "--" in middle of arguments'
@@ -68,6 +74,7 @@ test_get_options_success \
 	'' \
 	" 'abcd' '--' 'a b'\\\\''c d'" \
 	" -- 'abcd' 'a b'\\\\''c d'" \
+	" -- 'abcd' '--' 'a b'\\\\''c d'" \
 	" -- 'abcd' '--' 'a b'\\\\''c d'" \
 	abcd -- 'a b'\''c d'
 
@@ -78,6 +85,7 @@ test_get_options_success \
 	" 'abcd' 'a b'\\\\''c d' '--'" \
 	" -- 'abcd' 'a b'\\\\''c d'" \
 	" -- 'abcd' 'a b'\\\\''c d' '--'" \
+	" -- 'abcd' 'a b'\\\\''c d' '--'" \
 	abcd 'a b'\''c d' --
 
 __test_section__ 'With thinks looking like options after "--"'
@@ -86,6 +94,7 @@ test_get_options_success \
 	'' \
 	" 'abcd' 'a b'\\\\''c d' '--' '-abcd' '--abcd'" \
 	" -- 'abcd' 'a b'\\\\''c d' '-abcd' '--abcd'" \
+	" -- 'abcd' 'a b'\\\\''c d' '--' '-abcd' '--abcd'" \
 	" -- 'abcd' 'a b'\\\\''c d' '--' '-abcd' '--abcd'" \
 	abcd 'a b'\''c d' -- -abcd --abcd
 
@@ -96,4 +105,5 @@ test_get_options_success \
 	" '--' 'abcd' '--' 'a b'\\\\''c d' '--'" \
 	" -- 'abcd' '--' 'a b'\\\\''c d' '--'" \
 	" -- 'abcd' '--' 'a b'\\\\''c d' '--'" \
+	" -- '--' 'abcd' '--' 'a b'\\\\''c d' '--'" \
 	-- abcd -- 'a b'\''c d' --

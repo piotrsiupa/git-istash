@@ -12,10 +12,11 @@ escape_for_shell() {
 # Options:
 # -P - Posixly correct mode - treat everything after the first non-option as non-options (and preserve the first "==" if it's after a non-option).
 # -R - Don't reorder entries by placing all non-option arguments after "--" (normalize only) and don't generate an additional "--" if not present. (Normally options are shuffled like by "getopt".)
+# -U - Like -P but treat unknown options as non-options and never skip the first "--". (Good for pre-parsing when not all options are known yet.) WARNING: it assumes that there is no ambiguous abbreviations between known and unknown option names!
 # Returns 0 on success.
 # Returns 1 on failure to parse options.
 # Returns 2 on error with the usage of the function itself.
-get_options() ( # [-P | -R] short_options_string long_options_string [argument...]
+get_options() ( # [-P | -R | -U] short_options_string long_options_string [argument...]
 	set -eu
 	
 	fatal() { # printf_arg...
@@ -28,6 +29,7 @@ get_options() ( # [-P | -R] short_options_string long_options_string [argument..
 	
 	posixly=n
 	reorder=y
+	partial=n
 	if [ "${1-}" = '-P' ]
 	then
 		posixly=y
@@ -35,6 +37,10 @@ get_options() ( # [-P | -R] short_options_string long_options_string [argument..
 	elif [ "${1-}" = '-R' ]
 	then
 		reorder=n
+		shift
+	elif [ "${1-}" = '-U' ]
+	then
+		partial=y
 		shift
 	fi
 	printf '%s' "${1-}" | grep -E -q '^-' &&
@@ -106,15 +112,24 @@ get_options() ( # [-P | -R] short_options_string long_options_string [argument..
 				then
 					printf \ \'--\'
 				fi
-				shift
+				if [ "$partial" = n ]
+				then
+					shift
+				fi
 				break
 				;;
 			--*)
 				option_name="$(printf '%s' "$1" | head -n1 | cut -d= -f1 | cut -c3-)"
 				if ! long_option_nr="$(printf '%s\n' "$long_options" | grep -n -F -x -- "$option_name")"
 				then
-					long_option_nr="$(printf '%s\n' "$long_options" | cut -c-${#option_name} | grep -n -F -x -- "$option_name")" ||
-						error 'unknown option `%s'\' "$option_name"
+					long_option_nr="$(printf '%s\n' "$long_options" | cut -c-${#option_name} | grep -n -F -x -- "$option_name")" || {
+						if [ "$partial" = n ]
+						then
+							error 'unknown option `%s'\' "$option_name"
+						else
+							break
+						fi
+					}
 					test "$(printf '%s\n' "$long_option_nr" | wc -l)" -eq 1 ||
 						error 'ambiguous option abbreviation `%s'\' "$option_name"
 				fi
@@ -149,12 +164,22 @@ get_options() ( # [-P | -R] short_options_string long_options_string [argument..
 				;;
 			-*)
 				i=2
+				was_non_option=n
 				while [ ${#1} -ge $i ]
 				do
 					option_letter="$(printf '%s' "$1" | head -c$i | tail -c+$i)"
+					short_option_nr="$(printf '%s\n' "$short_options" | grep -n -F -x -- "$option_letter")" || {
+						if [ "$partial" = n ]
+						then
+							error 'unknown switch `%s'\' "$option_letter"
+						else
+							non_option_args="$non_option_args $({ printf -- '-' ; printf '%s' "$1" | tail -c+$i ; } | escape_for_shell)"
+							shift
+							was_non_option=y
+							break
+						fi
+					}
 					printf ' -%s' "$option_letter"
-					short_option_nr="$(printf '%s\n' "$short_options" | grep -n -F -x -- "$option_letter")" ||
-						error 'unknown switch `%s'\' "$option_letter"
 					short_option_nr="$(printf '%s' "$short_option_nr" | cut -d: -f1)"
 					has_parameter="$(printf '%s' "$short_options_args" | cut -c"$short_option_nr")"
 					if [ "$has_parameter" = y ]
@@ -175,9 +200,13 @@ get_options() ( # [-P | -R] short_options_string long_options_string [argument..
 						i=$((i+1))
 					fi
 				done
+				if [ "$was_non_option" = y ]
+				then
+					break
+				fi
 				;;
 			*)
-				if [ "$posixly" = y ]
+				if [ "$posixly" = y ] || [ "$partial" = y ]
 				then
 					break
 				elif [ "$reorder" = y ]

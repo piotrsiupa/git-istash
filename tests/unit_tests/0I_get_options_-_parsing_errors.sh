@@ -11,12 +11,24 @@ cd - 1>/dev/null
 cd - 1>/dev/null
 
 __test_section__ 'Unknown short option'
-assert_exit_code 1 get_options $MODE_FLAGS 'ab:cd:' 'veni,vidi:,vici' -c --vidi=qwerty --veni -axdy 
-assert_outputs '.*' 'error: unknown switch `x'\'
+if IS_PARTIAL_PARSE_ON
+then
+	assert_exit_code 0 get_options $MODE_FLAGS 'ab:cd:' 'veni,vidi:,vici' -c --vidi=qwerty --veni -axdy 
+	assert_outputs " -c --vidi 'qwerty' --veni -a -- '-xdy'" ''
+else
+	assert_exit_code 1 get_options $MODE_FLAGS 'ab:cd:' 'veni,vidi:,vici' -c --vidi=qwerty --veni -axdy 
+	assert_outputs '.*' 'error: unknown switch `x'\'
+fi
 
 __test_section__ 'Unknown long option'
-assert_exit_code 1 get_options $MODE_FLAGS 'ab:cd:' 'veni,vidi:,vici' -c --xyz --vidi=qwerty --veni -ady
-assert_outputs '.*' 'error: unknown option `xyz'\'
+if IS_PARTIAL_PARSE_ON
+then
+	assert_exit_code 0 get_options $MODE_FLAGS 'ab:cd:' 'veni,vidi:,vici' -c --xyz --vidi=qwerty --veni -ady
+	assert_outputs " -c -- '--xyz' '--vidi=qwerty' '--veni' '-ady'" ''
+else
+	assert_exit_code 1 get_options $MODE_FLAGS 'ab:cd:' 'veni,vidi:,vici' -c --xyz --vidi=qwerty --veni -ady
+	assert_outputs '.*' 'error: unknown option `xyz'\'
+fi
 
 __test_section__ 'Short option without the required argument'
 assert_exit_code 1 get_options $MODE_FLAGS 'ab:cd:' 'veni,vidi:,vici' -c --vidi=qwerty --veni -ad
@@ -47,7 +59,7 @@ assert_exit_code 1 get_options $MODE_FLAGS 'ab:cd:' 'abcde,xyz,abc' --abcd -c --
 assert_outputs '.*' 'error: ambiguous option abbreviation `ab'\'
 
 __test_section__ 'Short option without the required argument after a non-option'
-if IS_POSIXLY_ON
+if IS_POSIXLY_ON || IS_PARTIAL_PARSE_ON
 then
 	assert_exit_code 0 get_options $MODE_FLAGS 'ab:cd:' 'veni,vidi:,vici' -c --vidi=qwerty blah --veni -ad
 	assert_outputs " -c --vidi 'qwerty' -- 'blah' '--veni' '-ad'" ''
