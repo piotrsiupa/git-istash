@@ -850,14 +850,11 @@ eval set -- "$normalized_options"
 complete='non-essential,head-type,subcommand,options|non-essential,pathspec-style,end-options-indicator,long-running|short-options,pathspec-style,partial-options'
 quickie='non-essential,subcommand|non-essential,head-type|non-essential,options|short-options|pathspec-style'
 parse_meticulousnesses() { # value
-	if [ "$1" = 'complete' ]
-	then
-		set -- "$complete"
-	elif [ "$1" = 'quickie' ]
-	then
-		set -- "$quickie"
-	fi
-	printf '%s\n' "$1" | tr '|' '\n' \
+	printf '%s\n' "$1" \
+	| tr '|' '\n' \
+	| sed -E -e "s/^complete\$/$complete/" \
+		-e "s/^quickie\$/$quickie/" \
+	| tr '|' '\n' \
 	| while read -r x
 	do
 		meticulousness="$(parse_meticulousness "$x")"
