@@ -4,6 +4,10 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 PARAMETRIZE_SUBCOMMAND
+if [ "$SUBCOMMAND" = 'c' ] || [ "$SUBCOMMAND" = 'continue' ] || [ "$SUBCOMMAND" = 'abort' ] || [ "$SUBCOMMAND" = 'quit' ]
+then
+	skip_silently
+fi
 PARAMETRIZE_COLOR NO  # Randomly chosen value
 
 __end_of_initialization__
