@@ -287,8 +287,8 @@ check_for_option_h_in_make_command() ( # option...
 	then
 		return 0  # Fall back to showing help, to not accidentaly break the repository.
 	fi
-	getopt_result="$(getopt -o"-$getopt_short_options" --long="$getopt_long_options" -n'fatal' -ssh -- "$@" 2>/dev/null)"
-	eval set -- "$getopt_result"
+	normalized_options="$(get_options "$getopt_short_options" "$getopt_long_options" "$@" 2>/dev/null)"
+	eval set -- "$normalized_options"
 	while [ $# -ne 0 ]
 	do
 		if [ "$1" = '-h' ]

@@ -127,8 +127,8 @@ monitor_tests() { # [filter]...
 
 getopt_short_options='aA:c:hm:s'
 getopt_long_options='altered,since:,color:,help,meticulousness:,skip-init,version'
-getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
-eval set -- "$getopt_result"
+normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
+eval set -- "$normalized_options"
 only_altered=n
 altered_reference=HEAD
 use_color=auto
@@ -167,10 +167,9 @@ do
 		;;
 	-m|--meticulousness)
 		shift
-		test "$1" = 'complete' \
-		|| test "$1" = 'quickie' \
-		|| printf '%s\n' "$1" \
+		printf '%s\n' "$1" \
 		| tr '|' '\n' \
+		| sed -E '/^(quickie|complete)$/d' \
 		| while read -r x
 		do
 			parse_meticulousness "$x" 1>/dev/null

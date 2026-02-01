@@ -55,8 +55,8 @@ find_master() {
 
 getopt_short_options='aA:eEhRv'
 getopt_long_options='altered,since:,essential,non-essential,help,relative,version'
-getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
-eval set -- "$getopt_result"
+normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
+eval set -- "$normalized_options"
 only_changed=n
 changed_reference=HEAD
 essential=n

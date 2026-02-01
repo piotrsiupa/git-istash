@@ -7,6 +7,8 @@ PARAMETRIZE_APPLY_OPERATION
 
 __end_of_initialization__
 
+prepare_repository
+
 __test_section__ 'Prepare repository'
 mkdir xxx yyy
 if ! IS_HEAD_ORPHAN

@@ -11,12 +11,13 @@ PARAMETRIZE_STAGED 'NO'
 PARAMETRIZE_UNSTAGED 'NO'
 PARAMETRIZE_COLOR NO  # Randomly chosen value
 
+__end_of_initialization__
+
+prepare_repository
 # We don't need those in this test.
 rm ignored0 ignored1
 # But we need to ignore those.
 printf 'a/\nb/0/\nb/1/i\n' >>.git/info/exclude
-
-__end_of_initialization__
 
 correct_head_sha="$(get_head_sha)"
 SWITCH_HEAD_TYPE

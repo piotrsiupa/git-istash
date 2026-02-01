@@ -15,6 +15,8 @@ PARAMETRIZE_COLOR NO  # Randomly chosen value
 
 __end_of_initialization__
 
+prepare_repository
+
 __test_section__ 'Prepare repository'
 printf 'xxx\n' >aaa0
 printf 'xxx\n' >aaa1

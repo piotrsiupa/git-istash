@@ -13,6 +13,8 @@ PARAMETRIZE_COLOR NO  # Randomly chosen value
 
 __end_of_initialization__
 
+prepare_repository
+
 __test_section__ 'Create pre-existing stash (0)'
 printf 'xxx\n' >aaa
 git stash push -um 'pre-existing stash 0'

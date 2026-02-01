@@ -13,6 +13,8 @@ PARAMETRIZE_COLOR NO  # Randomly chosen value
 
 __end_of_initialization__
 
+prepare_repository
+
 correct_head_sha="$(get_head_sha)"
 SWITCH_HEAD_TYPE
 git branch -m 'new-and-cool-branch'

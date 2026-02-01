@@ -5,6 +5,8 @@ PARAMETRIZE_APPLY_OPERATION
 
 __end_of_initialization__
 
+prepare_repository
+
 __test_section__ 'Create stash'
 mkdir xxx yyy
 printf 'aaa0\n' >aaa

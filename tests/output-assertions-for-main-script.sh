@@ -19,18 +19,18 @@ assert_outputs__main_script__unrecognised_short_option() { # option
 	# "getopt" doesn't give a very consistent output between inplementations
 	assert_outputs '
 	' '
-		error: (unrecognized|invalid|unknown) option:? (-- )?'\''?'"$(sanitize_for_sed "$1")"\''?
+		error: unknown switch `'"$(sanitize_for_sed "$1")"\''
 	'
 }
 
 assert_outputs__main_script__unrecognised_long_option() { # option
 	assert_outputs '
 	' '
-		error: (unrecognized|unknown) option:? '\''?(-- ?)?'"$(sanitize_for_sed "$1")"\''?
+		error: unknown option `'"$(sanitize_for_sed "$1")"\''
 	'
 }
 
-assert_outputs__main_script__help() {
+assert_outputs__main_script__help() { # [is_fallback]
 	assert_outputs '
 		.{20,}+\n
 		\n
@@ -38,8 +38,27 @@ assert_outputs__main_script__help() {
 		\n
 		Options:\n.+
 		(\n\n.+)?
-	' '
-	'
+	' "$(
+		if [ "${1-n}" = y ]
+		then
+			printf 'fatal: unable to open the manual entry\\n'
+			printf 'fatal: falling back to the built-in help text'
+		fi
+	)"
+	#shellcheck disable=SC2154
+	mentions_of_this_subcommand="$(printf '%s\n' "$stdout" | grep -Fc "git istash $SUBCOMMAND" || true)"
+	mentions_of_any_subcommand="$(printf '%s\n' "$stdout" | grep -Ec 'git istash \w+' || true)"
+	test "$mentions_of_this_subcommand" -ge 1 ||
+		fail 'The "-h" help is not for the subcommand "%s"!\n' "$SUBCOMMAND"
+	test "$mentions_of_this_subcommand" -ge "$mentions_of_any_subcommand" ||
+		fail 'Other subcommands are mentioned in the "-h" help. (Did you copy it form other file?)\n'  # Not a real bug but currently the condition is fulfilled for all commands and this check will help to catch developer errors.
+	usage_line_regex="^Usage: git istash $SUBCOMMAND"
+	printf '%s\n' "$stdout" | grep -Eq "$usage_line_regex" ||
+		fail 'The "-h" help doesn'\''t have a "usage" line!\n'
+	printf '%s\n' "$stdout" | tail -n +3 | grep -Eq "$usage_line_regex" ||
+		fail 'The "-h" help starts with the "usage" line!\n(There should be a short description.)\n'
+	printf '%s\n' "$stdout" | grep -Fxq 'Options:' ||
+		fail 'The "-h" help doesn'\''t have an "options" section!\n'
 }
 
 assert_outputs__main_script__version() {

@@ -12,3 +12,4 @@ fi
 . ./utils-for-main-script.sh
 . ./utils-for-applying.sh
 . ./utils-for-creating.sh
+. ./utils-for-unit-tests.sh

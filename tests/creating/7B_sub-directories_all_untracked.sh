@@ -11,10 +11,11 @@ PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_COLOR NO  # Randomly chosen value
 
+__end_of_initialization__
+
+prepare_repository
 # We don't need those in this test.
 rm ignored0 ignored1
-
-__end_of_initialization__
 
 correct_head_sha="$(get_head_sha)"
 SWITCH_HEAD_TYPE

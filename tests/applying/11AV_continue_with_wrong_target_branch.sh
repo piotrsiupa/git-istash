@@ -9,6 +9,8 @@ PARAMETRIZE_COLOR YES  # Randomly chosen value
 
 __end_of_initialization__
 
+prepare_repository
+
 git branch wrong_branch
 
 __test_section__ 'Prepare repository'
