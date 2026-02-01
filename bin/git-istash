@@ -21,7 +21,7 @@ print_help() {
 	printf 'Options:\n'
 	printf '\t--abort\t\t- Abort apply / pop when one is in progress.\n'
 	printf '    -c, --continue\t- Continue apply / pop when one is in progress.\n'
-	printf '    -h\t\t\t- Show this help text and exit.\n'
+	printf '    -h\t\t\t- Print this help text and exit.\n'
 	printf '\t--help\t\t- Show manual page if possible.\n\t\t\t  (If you run it through "git", it will handle this in\n\t\t\t  its own way, which fails on Windows. See --man.)\n'
 	printf '\t--man\t\t- Alias for --help that is not intercepted by "git".\n\t\t\t  (Which makes it work on Windows.)\n'
 	printf '\t--quit\t\t- Like --abort but don'\''t restore the repository state\n\t\t\t  nor move the HEAD.\n'

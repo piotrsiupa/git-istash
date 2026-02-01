@@ -10,7 +10,7 @@ print_help() {
 	printf 'Usage: %s [<options...>]\n' "$(basename "$0")"
 	printf '\n'
 	printf 'Options:\n'
-	printf '    -h, --help\t\t- Print this help message and exit.\n'
+	printf '    -h, --help\t\t- Print this help text and exit.\n'
 	printf '\t--version\t- Print version information and exit.\n'
 }
 

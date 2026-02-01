@@ -15,7 +15,7 @@ print_help() {
 	printf 'Options:\n'
 	printf '    -a, --all\t\t- Stash and clean also untracked and ignored files.\n'
 	printf '\t--allow-empty\t- Create a stash even if there are no suitable changes.\n'
-	printf '    -h\t\t\t- Show this help text and exit.\n'
+	printf '    -h\t\t\t- Print this help text and exit.\n'
 	printf '    -k, --keep-index\t- Left intact all changes already added to the index.\n'
 	printf '\t--no-keep-index\t- Cancel --keep-index.\n'
 	printf '    -l, --leave-staged\t- Left intact all changes already added to the index\n\t\t\t  and don'\''t add them to stash.\n'

@@ -13,7 +13,7 @@ print_help() {
 	printf '\n'
 	printf 'Usage: %s [-h | --help | -Q | --quick | --version]\n' "$(basename "$0")"
 	printf 'Options:\n'
-	printf '    -h, --help\t\t- Print this help message end exit.\n'
+	printf '    -h, --help\t\t- Print this help text end exit.\n'
 	printf '    -Q, --quick\t\t- Use binary search to try to find the oldest supported\n\t\t\t  version of Git without thoroughly testing all of them.\n'
 	printf '\t--version\t- Print version information and exit.\n'
 }

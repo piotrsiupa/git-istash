@@ -42,7 +42,7 @@ print_help() {
 	printf 'Usage: %s [<options>] [--] [<filter>...]\n' "$(basename "$0")"
 	printf '\n'
 	printf 'Options:\n'
-	printf '    -h, --help\t\t- Print this help message end exit.\n'
+	printf '    -h, --help\t\t- Print this help text end exit.\n'
 	printf '    -a, --altered\t- Run only the tests changed since the last commit.\n\t\t\t  (Only changes in individual test files count, not in\n\t\t\t  the common test utilities that affect every test.)\n\t\t\t  Renamed tests with 100%% similarity are omitted.\n\t\t\t  (See also "--since".)\n'
 	printf '    -A, --since=X\t- Selects the commit used as reference by "--altered".\n\t\t\t  (It implies "--altered".)\n\t\t\t  Special cases:\n\t\t\t  * Empty / blank string means INDEX.\n\t\t\t  * Strings starting with "~" or "^" imply HEAD.\n\t\t\t    (So "~2" means the same as "HEAD~2".)\n\t\t\t  * "-" means all changes since branching from "master".\n'
 	printf '    -c, --color=when\t- Set color mode (always / never / auto).\n'
