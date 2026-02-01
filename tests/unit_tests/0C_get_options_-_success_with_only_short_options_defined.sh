@@ -1,12 +1,9 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 PARAMETRIZE_GET_OPTIONS_MODE
+PARAMETRIZE_GET_OPTIONS_CALL_STYLE
 
 __end_of_initialization__
-
-cd - 1>/dev/null
-. ../lib/git-istash/get_options
-cd - 1>/dev/null
 
 __test_section__ 'Without arguments'
 test_get_options_success \

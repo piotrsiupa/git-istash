@@ -847,8 +847,8 @@ getopt_short_options='aA:c:Cdfhj:l:m:pRqQrsSvV'
 getopt_long_options='altered,since:,color:,check,debug,failed,file-name,help,jobs:,limit:,meticulousness:,complete,quickie,facets:,print-paths,relative-paths,progress,no-progress,quiet,quieter,raw,raw-name,skip-at-fail,skip-at-error,skip-on-fail,skip-on-error,stop-at-fail,stop-at-error,stop-on-fail,stop-on-error,verbose,version,skip-version'
 normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$normalized_options"
-complete='non-essential,head-type,subcommand,options|non-essential,pathspec-style,end-options-indicator,long-running|short-options,pathspec-style,partial-options'
-quickie='non-essential,subcommand|non-essential,head-type|non-essential,options|short-options|pathspec-style'
+complete='non-essential,head-type,subcommand,options,miscellaneous|non-essential,pathspec-style,end-options-indicator,long-running|short-options,pathspec-style,partial-options'
+quickie='non-essential,subcommand|non-essential,head-type|non-essential,options,miscellaneous|short-options|pathspec-style'
 parse_meticulousnesses() { # value
 	printf '%s\n' "$1" \
 	| tr '|' '\n' \

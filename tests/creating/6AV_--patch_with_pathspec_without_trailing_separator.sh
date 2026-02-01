@@ -58,9 +58,9 @@ new_stash_sha_CO="$(
 		# A child shell tends to eat all the stdin if it's able to. This prevents it. If it still doesn't work, try to increase the time.
 		if [ "$(uname)" = 'Linux' ]
 		then
-			sleep 1
+			sleep 2
 		else
-			sleep 5
+			sleep 10
 		fi
 		cat .git/answers_for_patch1
 	} | {

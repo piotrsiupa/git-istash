@@ -48,6 +48,9 @@ raw_facets='
 	# Run the tests that take a long time to execute.
 	# (Only a few tests are like that but they still inhibit things noticeably.)
 	long-running = lr|l(o?ng)?[-_]r(u(n(n(ing)?)?)?)?
+	
+	# Run also alternative versions of some tests.
+	miscellaneous = m(i(s(c(ell?(a(n(e?o?u?s)?)?)?)?)?)?)?
 '
 facets="$(normalize_facet_list "$raw_facets")"
 
@@ -67,7 +70,7 @@ raw_facet_categories='
 	
 	# Test the most important things.
 	# (It is fast but not that thorough. It is usually good enough for testing mid-development.)
-	fast = fa?st: non-essential, head-type, subcommand, options
+	fast = fa?st: non-essential, head-type, subcommand, options, miscellaneous
 	
 	# Only non essential tests.
 	# (Checks if the shell is able run the scripts but not that much more - no tricky cases.)

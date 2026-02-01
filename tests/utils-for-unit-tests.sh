@@ -11,7 +11,7 @@ fi
 
 
 #shellcheck disable=SC2120
-PARAMETRIZE_GET_OPTIONS_MODE() { # [modes...]
+PARAMETRIZE_GET_OPTIONS_MODE() { # [mode...]
 	if [ $# -eq 0 ]
 	then
 		PARAMETRIZE 'MODE' 'options' 'DEFAULT' 'NO_REORDER' 'POSIXLY_CORRECT' 'PARTIAL_PARSE'
@@ -19,6 +19,10 @@ PARAMETRIZE_GET_OPTIONS_MODE() { # [modes...]
 		PARAMETRIZE 'MODE' 'options' "$@"
 	fi
 	case "$MODE" in
+		DEFAULT)
+			#shellcheck disable=SC2034
+			MODE_FLAGS=''
+			;;
 		NO_REORDER)
 			#shellcheck disable=SC2034
 			MODE_FLAGS='-R'
@@ -30,10 +34,6 @@ PARAMETRIZE_GET_OPTIONS_MODE() { # [modes...]
 		PARTIAL_PARSE)
 			#shellcheck disable=SC2034
 			MODE_FLAGS='-U'
-			;;
-		*)
-			#shellcheck disable=SC2034
-			MODE_FLAGS=''
 			;;
 	esac
 }
@@ -47,6 +47,32 @@ IS_PARTIAL_PARSE_ON() {
 	test "$MODE" = 'PARTIAL_PARSE'
 }
 
+#shellcheck disable=SC2120
+PARAMETRIZE_GET_OPTIONS_CALL_STYLE() { # [style...]
+	if [ $# -eq 0 ]
+	then
+		PARAMETRIZE 'CALL_STYLE' 'miscellaneous' 'SOURCED' 'STANDALONE'
+	else
+		PARAMETRIZE 'CALL_STYLE' 'miscellaneous' "$@"
+	fi
+	cd - 1>/dev/null
+	case "$CALL_STYLE" in
+		STANDALONE)
+			#shellcheck disable=SC2034
+			GET_OPTIONS_COMMAND="$(pwd)/../lib/git-istash/get_options"
+			;;
+		SOURCED)
+			. ../lib/git-istash/get_options
+			#shellcheck disable=SC2034
+			GET_OPTIONS_COMMAND='get_options'
+			;;
+	esac
+	cd - 1>/dev/null
+}
+IS_GET_OPTIONS_STANDALONE() {
+	test "$CALL_STYLE" = 'STANDALONE'
+}
+
 test_get_options_success() { # short_options long_options no_reorder_stdout reorder_stdout posixly_stdout partial_parse_stdout [argument_to_parse...]
 	short_options="$1"
 	long_options="$2"
@@ -56,7 +82,7 @@ test_get_options_success() { # short_options long_options no_reorder_stdout reor
 	partial_parse_stdout="$6"
 	shift 6
 	#shellcheck disable=SC2086
-	assert_exit_code 0 get_options $MODE_FLAGS "$short_options" "$long_options" "$@"
+	assert_exit_code 0 "$GET_OPTIONS_COMMAND" $MODE_FLAGS "$short_options" "$long_options" "$@"
 	if IS_POSIXLY_ON
 	then
 		expected_stdout="$posixly_stdout"
@@ -75,7 +101,7 @@ test_get_options_success() { # short_options long_options no_reorder_stdout reor
 	if ! IS_PARTIAL_PARSE_ON
 	then
 		#shellcheck disable=SC2086
-		assert_exit_code 0 get_options $MODE_FLAGS "$short_options" "$long_options" "$@"
+		assert_exit_code 0 "$GET_OPTIONS_COMMAND" $MODE_FLAGS "$short_options" "$long_options" "$@"
 		assert_outputs "$expected_stdout" ''
 	fi
 }
