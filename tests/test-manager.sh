@@ -143,9 +143,9 @@ create_test() { # new_test_name...
 					return 1
 				fi
 			else
-				if [ "${#new_prefix}" != "${category}A" ]
+				if [ "$new_prefix" != "$(extract_prefix "${category}A")" ]
 				then
-					printf 'The new prefix should be "%s" because it'\''s a new sub-category.\n' "${category}A" 1>&2
+					printf 'The new prefix should be "%s" because it'\''s a new sub-category.\n' "$(extract_prefix "${category}A")" 1>&2
 					return 1
 				fi
 			fi
@@ -156,7 +156,7 @@ create_test() { # new_test_name...
 			then
 				new_prefix="$(increment_prefix "$last_prefix")"
 			else
-				new_prefix="${category}A"
+				new_prefix="$(extract_prefix "${category}A")"
 			fi
 			new_test_name="$(printf '%s' "$1" | sed -E 's;^(.*/)?[0-9]+(_[^/]+)$;\1'"$new_prefix"'\2;')"
 		fi
