@@ -8,3 +8,4 @@ Each sub-category tests a single function.
 The first character of the prefix (sub-category) can be:
 - `0` - Tests for `get_options`.
 - `1` - Tests for `is_color_enabled`.
+- `2` - Tests for `get_color`.

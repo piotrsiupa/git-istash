@@ -32,6 +32,22 @@ is_color_enabled() { # config_variable...
 	git config --get-colorbool "$1"
 }
 
+get_color() { # default_value config_variable...
+	if [ $# -eq 0 ]
+	then
+		# This is here to not forget a value during the developoment.
+		printf 'fatal: not enough arguments for get_color\n' 1>&2
+		return 128
+	fi
+	default_color="$1"
+	shift
+	while [ $# -gt 1 ] && ! git config --get "$1" 1>/dev/null
+	do
+		shift
+	done
+	git config --get-color "${1-}" "$default_color"
+}
+
 if command -v od 1>/dev/null 2>&1
 then
 	convert_to_octal() {

@@ -27,14 +27,21 @@ assert_exit_code() { # expected_code command [arguments...]
 	unset expected_exit_code_for_assert
 }
 
+# It's for the sake of seing them clearly in the error message.
+# This function may produce ambiguous strings and cannot be used in the actual logic.
+# E.g. escape character will produce string '\033' but the actual string '\033' will remain unchanged.
+escape_escape_characters() {
+	sed -E "s/$(printf '\033')/\\\\033/g"
+}
+
 # Requires outputs to be saved via "capture_outputs". ("assert_exit_code" does run this function intenally.)
 assert_outputs() { # stdout_regex stderr_regex
 	#shellcheck disable=SC2154
 	match_multiline_regex "$stdout" "$(dedent_regex "$1")" ||
-		fail 'Expected stdout of "%s" to match:\n"%s"\nbut it is:\n"%s"!\n' "$last_command" "$(dedent_regex "$1" | sed 's/\\n/&\n/g')" "$stdout"
+		fail 'Expected stdout of "%s" to match:\n"%s"\nbut it is:\n"%s"!\n' "$last_command" "$(dedent_regex "$1" | sed 's/\\n/&\n/g' | escape_escape_characters)" "$(printf '%s' "$stdout" | escape_escape_characters)"
 	#shellcheck disable=SC2154
 	match_multiline_regex "$stderr" "$(dedent_regex "$2")" ||
-		fail 'Expected stderr of "%s" to match:\n"%s"\nbut it is:\n"%s"!\n' "$last_command" "$(dedent_regex "$2" | sed 's/\\n/&\n/g')" "$stderr"
+		fail 'Expected stderr of "%s" to match:\n"%s"\nbut it is:\n"%s"!\n' "$last_command" "$(dedent_regex "$2" | sed 's/\\n/&\n/g' | escape_escape_characters)" "$(printf '%s' "$stderr" | escape_escape_characters)"
 }
 
 _convert_zero_separated_path_list() {
