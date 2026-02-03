@@ -18,6 +18,20 @@ printf_color() { # stream_num args...
 	fi
 }
 
+is_color_enabled() { # config_variable...
+	if [ $# -eq 0 ]
+	then
+		# This is here to not forget a value during the developoment.
+		printf 'fatal: not enough arguments for is_color_enabled\n' 1>&2
+		return 128
+	fi
+	while [ $# -gt 1 ] && ! git config --get "$1" 1>/dev/null
+	do
+		shift
+	done
+	git config --get-colorbool "$1"
+}
+
 if command -v od 1>/dev/null 2>&1
 then
 	convert_to_octal() {

@@ -7,16 +7,24 @@ then
 fi
 
 
+# It doesn't capture outputs (and thus it doesn't tinker with I/O streams).
+assert_exit_code__light() { # expected_code command [arguments...]
+	expected_exit_code_for_assert="$1"
+	shift
+	"$@" && exit_code_for_assert=0 || exit_code_for_assert=$?
+	#shellcheck disable=SC2154
+	test "$exit_code_for_assert" -eq "$expected_exit_code_for_assert" ||
+		fail 'Command "%s" returned exit code %i but %i was expected!\n' "$*" "$exit_code_for_assert" "$expected_exit_code_for_assert"
+	unset expected_exit_code_for_assert
+	unset exit_code_for_assert
+}
+
 # It also captures the command stdout and stderr for "assert_outputs" (just because it would be too much boiler plate to call "capture_outputs" every time).
 assert_exit_code() { # expected_code command [arguments...]
 	expected_exit_code_for_assert="$1"
 	shift
-	capture_outputs "$@" && exit_code_for_assert=0 || exit_code_for_assert=$?
-	#shellcheck disable=SC2154
-	test "$exit_code_for_assert" -eq "$expected_exit_code_for_assert" ||
-		fail 'Command "%s" returned exit code %i but %i was expected!\n' "$last_command" "$exit_code_for_assert" "$expected_exit_code_for_assert"
+	assert_exit_code__light "$expected_exit_code_for_assert" capture_outputs "$@"
 	unset expected_exit_code_for_assert
-	unset exit_code_for_assert
 }
 
 # Requires outputs to be saved via "capture_outputs". ("assert_exit_code" does run this function intenally.)
