@@ -48,6 +48,15 @@ get_color() { # default_value config_variable...
 	git config --get-color "${1-}" "$default_color"
 }
 
+# Applies color to each line from stdin.
+# The arguments are passed to "get_color".
+color_lines() { # default_value config_variable
+	set -e
+	color_escape_code="$(get_color "$@")"
+	reset_escape_code="$(git config --get-color '' 'reset')"
+	sed -E "s/^.*\$/$color_escape_code&$reset_escape_code/"
+}
+
 if command -v od 1>/dev/null 2>&1
 then
 	convert_to_octal() {
