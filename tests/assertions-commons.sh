@@ -38,10 +38,25 @@ escape_escape_characters() {
 assert_outputs() { # stdout_regex stderr_regex
 	#shellcheck disable=SC2154
 	match_multiline_regex "$stdout" "$(dedent_regex "$1")" ||
-		fail 'Expected stdout of "%s" to match:\n"%s"\nbut it is:\n"%s"!\n' "$last_command" "$(dedent_regex "$1" | sed 's/\\n/&\n/g' | escape_escape_characters)" "$(printf '%s' "$stdout" | escape_escape_characters)"
+		fail 'Expected stdout of "%s" to match:\n"%s"\nbut it is:\n"%s"!\n' \
+			"$last_command" \
+			"$(dedent_regex "$1" | sed 's/\\n/&\n/g' | escape_escape_characters)" \
+			"$(printf '%s' "$stdout" | escape_escape_characters)"
 	#shellcheck disable=SC2154
 	match_multiline_regex "$stderr" "$(dedent_regex "$2")" ||
-		fail 'Expected stderr of "%s" to match:\n"%s"\nbut it is:\n"%s"!\n' "$last_command" "$(dedent_regex "$2" | sed 's/\\n/&\n/g' | escape_escape_characters)" "$(printf '%s' "$stderr" | escape_escape_characters)"
+		fail 'Expected stderr of "%s" to match:\n"%s"\nbut it is:\n"%s"!\n' \
+			"$last_command" \
+			"$(dedent_regex "$2" | sed 's/\\n/&\n/g' | escape_escape_characters)" \
+			"$(printf '%s' "$stderr" | escape_escape_characters)"
+}
+
+# Like "assert_outputs" but is removes ANSI color codes if color parametrization is set to off.
+assert_outputs_with_color() { # stdout_regex stderr_regex
+	if ! IS_COLOR_ON
+	then
+		set -- "$(printf '%s' "$1" | sed -E 's/\\\[([0-9;]+|0\?)m//g')" "$(printf '%s' "$2" | sed -E 's/\\\[([0-9;]+|0\?)m//g')"
+	fi
+	assert_outputs "$@"
 }
 
 _convert_zero_separated_path_list() {
