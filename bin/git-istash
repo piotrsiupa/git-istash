@@ -82,10 +82,10 @@ show_manual() {
 	then
 		return 0
 	fi
-	printf 'fatal: unable to open the manual entry\n' 1>&2
-	printf 'fatal: falling back to the built-in help text\n' 1>&2
-	printf '\n' 1>&2
-	return 1
+	. "$(dirname "$0")/../lib/git-istash/git-istash-commons"
+	printf_fatal 'unable to open the manual entry\n'
+	printf_fatal 'falling back to the built-in help text\n'
+	fatal '\n'
 }
 
 getopt_short_options='ch'
@@ -140,7 +140,8 @@ do
 		;;
 	--color)
 		shift
-		options_to_put_back="$options_to_put_back --color $(printf -- '--%s' "$1" | escape_for_shell)"
+		. "$(dirname "$0")/../lib/git-istash/git-istash-commons"
+		set_color_for_all "$1"
 		;;
 	-h)
 		if [ -z "$subcommand" ] || is_option_alias "$subcommand"
@@ -226,8 +227,8 @@ fi
 git_version="$(git --version | head -n 1 | grep -Eo '\<\S+$')"
 if [ "$skip_version_check" = n ] && ! printf '%s' "$git_version" | grep -Exq "$min_git_version_regex"
 then
-	printf 'fatal: the current Git version (%s) is less than minimum required (%s)\n' "$git_version" "$min_git_version" 1>&2
-	exit 1
+	. "$(dirname "$0")/../lib/git-istash/git-istash-commons"
+	fatal 'the current Git version (%s) is less than minimum required (%s)\n' "$git_version" "$min_git_version"
 fi
 
 exec_subcommand "$subcommand" "$@"

@@ -31,7 +31,7 @@ assert_outputs__main_script__unrecognised_long_option() { # option
 }
 
 assert_outputs__main_script__help() { # [is_fallback]
-	assert_outputs '
+	assert_outputs_with_color '
 		.{20,}+\n
 		\n
 		Usage: .+\n
@@ -41,8 +41,8 @@ assert_outputs__main_script__help() { # [is_fallback]
 	' "$(
 		if [ "${1-n}" = y ]
 		then
-			printf 'fatal: unable to open the manual entry\\n'
-			printf 'fatal: falling back to the built-in help text'
+			printf '%s' '\[1;31mfatal: unable to open the manual entry\[0?m\n'
+			printf '%s' '\[1;31mfatal: falling back to the built-in help text\[0?m'
 		fi
 	)"
 	#shellcheck disable=SC2154

@@ -539,6 +539,7 @@ do
 		;;
 	--color)
 		shift
+		set_color_for_all "$1"
 		;;
 	-h)
 		print_help

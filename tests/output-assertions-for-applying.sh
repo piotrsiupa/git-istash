@@ -96,69 +96,69 @@ assert_outputs__apply__no_operation_in_progress() { # operation
 }
 
 assert_outputs__apply__data_file_not_1_line() { # broken_op data_file
-	assert_outputs '
+	assert_outputs_with_color '
 	' '
 		'"$(create_broken_operation_header_regex "$1")"'\n
-		fatal: '\''\.git\/'"$(sanitize_for_sed "$2")"\'' doesn'\''t have exactly 1 line\n
+		\[1;31mfatal: '\''\.git\/'"$(sanitize_for_sed "$2")"\'' doesn'\''t have exactly 1 line\[0?m\n
 		'"$(create_broken_operation_hint_regex)"'
 	'
 }
 
 assert_outputs__apply__data_file_invalid_commit() { # broken_op data_file
-	assert_outputs '
+	assert_outputs_with_color '
 	' '
 		'"$(create_broken_operation_header_regex "$1")"'\n
-		fatal: '\''\.git\/'"$(sanitize_for_sed "$2")"\'' contains an invalid commit hash\n
+		\[1;31mfatal: '\''\.git\/'"$(sanitize_for_sed "$2")"\'' contains an invalid commit hash\[0?m\n
 		'"$(create_broken_operation_hint_regex)"'
 	'
 }
 
 assert_outputs__apply__data_file_invalid_integer() { # broken_op data_file
-	assert_outputs '
+	assert_outputs_with_color '
 	' '
 		'"$(create_broken_operation_header_regex "$1")"'\n
-		fatal: '\''\.git\/'"$(sanitize_for_sed "$2")"\'' doesn'\''t contain a positive integer\n
+		\[1;31mfatal: '\''\.git\/'"$(sanitize_for_sed "$2")"\'' doesn'\''t contain a positive integer\[0?m\n
 		'"$(create_broken_operation_hint_regex)"'
 	'
 }
 
 assert_outputs__apply__data_file_invalid_stash_number() { # broken_op data_file stash_number
-	assert_outputs '
+	assert_outputs_with_color '
 	' '
 		'"$(create_broken_operation_header_regex "$1")"'\n
-		fatal: '\''\.git\/'"$(sanitize_for_sed "$2")"\'' contains an invalid stash number\n
+		\[1;31mfatal: '\''\.git\/'"$(sanitize_for_sed "$2")"\'' contains an invalid stash number\[0?m\n
 		'"$(create_broken_operation_hint_regex)"'
 	'
 }
 
 assert_outputs__apply__branch_already_used() { # current_op branch
-	assert_outputs '
+	assert_outputs_with_color '
 	' '
-		fatal: failed to restore HEAD to initial position\n
-		fatal: '\'"$(sanitize_for_sed "$2")"\'' is already used by worktree at '\''.*'\''\n
+		\[1;31mfatal: failed to restore HEAD to initial position\[0?m\n
+		\[1;31mfatal: '\'"$(sanitize_for_sed "$2")"\'' is already used by worktree at '\''.*'\''\[0?m\n
 		hint: fix the problems and rerun '\''git istash --abort'\''\n
 		hint: or run '\''git istash --quit'\'' to forcefully cancel it
 	'
 }
 
 assert_outputs__apply__wrong_head_position_after_rebase() {
-	assert_outputs '
+	assert_outputs_with_color '
 	' '
-		fatal: HEAD is not in the correct position after rebasing
+		\[1;31mfatal: HEAD is not in the correct position after rebasing\[0?m
 	'
 }
 
 assert_outputs__apply__no_rebase_in_progress() {
-	assert_outputs '
+	assert_outputs_with_color '
 	' '
-		fatal: [Nn]o rebase in progress\??
+		\[1;31mfatal: [Nn]o rebase in progress\??\[0?m
 	'
 }
 
 assert_outputs__apply__no_rebase_in_progress_on_abort() { # operation
-	assert_outputs '
+	assert_outputs_with_color '
 	' '
-		fatal: [Nn]o rebase in progress\??\n
+		\[1;31mfatal: [Nn]o rebase in progress\??\[0?m\n
 		Successfully aborted '\''git istash '"$(sanitize_for_sed "$1")"\''
 	'
 }
@@ -192,37 +192,37 @@ assert_outputs__apply__continue_abort_quit() {
 }
 
 assert_outputs__apply__wrong_number_of_stash_parents() { # stash_name
-	assert_outputs '
+	assert_outputs_with_color '
 	' '
-		fatal: '\'"$(sanitize_for_sed "$1")"\'' doesn'\''t have 2 or 3 parents required to be a stash
+		\[1;31mfatal: '\'"$(sanitize_for_sed "$1")"\'' doesn'\''t have 2 or 3 parents required to be a stash\[0?m
 	'
 }
 
 assert_outputs__apply__wrong_number_of_untracked_stash_parents() { # stash_name
-	assert_outputs '
+	assert_outputs_with_color '
 	' '
-		fatal: '\'"$(sanitize_for_sed "$1")"'\^3'\'' have parents unlike in a stash
+		\[1;31mfatal: '\'"$(sanitize_for_sed "$1")"'\^3'\'' have parents unlike in a stash\[0?m
 	'
 }
 
 assert_outputs__apply__wrong_number_of_staged_stash_parents() { # stash_name
-	assert_outputs '
+	assert_outputs_with_color '
 	' '
-		fatal: '\'"$(sanitize_for_sed "$1")"'\^2'\'' doesn'\''t have one parent like in a stash
+		\[1;31mfatal: '\'"$(sanitize_for_sed "$1")"'\^2'\'' doesn'\''t have one parent like in a stash\[0?m
 	'
 }
 
 assert_outputs__apply__wrong_staged_stash_parent() { # stash_name
-	assert_outputs '
+	assert_outputs_with_color '
 	' '
-		fatal: '\'"$(sanitize_for_sed "$1")"'\^1'\'' isn'\''t the parent of '\'"$(sanitize_for_sed "$1")"'\^2'\'' like in a stash
+		\[1;31mfatal: '\'"$(sanitize_for_sed "$1")"'\^1'\'' isn'\''t the parent of '\'"$(sanitize_for_sed "$1")"'\^2'\'' like in a stash\[0?m
 	'
 }
 
 assert_outputs__apply__wrong_stash_commit_messages() { # stash_name
-	assert_outputs '
+	assert_outputs_with_color '
 	' '
-		fatal: some of '\'"$(sanitize_for_sed "$1")"\'' commits don'\''t have correct messages for a stash\n
-		fatal: it may not be a stash entry or it may be damaged
+		\[1;31mfatal: some of '\'"$(sanitize_for_sed "$1")"\'' commits don'\''t have correct messages for a stash\[0?m\n
+		\[1;31mfatal: it may not be a stash entry or it may be damaged\[0?m
 	'
 }

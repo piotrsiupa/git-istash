@@ -10,3 +10,4 @@ The first character of the prefix (sub-category) can be:
 - `1` - Tests for `is_color_enabled`.
 - `2` - Tests for `get_color`.
 - `3` - Tests for `color_lines`.
+- `4` - Tests for `color_fatal`.

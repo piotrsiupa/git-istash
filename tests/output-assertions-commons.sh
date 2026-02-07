@@ -34,7 +34,7 @@ assert_outputs__external_operation_in_progress() { # operation
 
 create_broken_operation_header_regex() { # broken_op
 	printf '%s' '
-		fatal: '\''git istash '"$1"\'' seems to be in progress but the data files are broken
+		\[1;31mfatal: '\''git istash '"$1"\'' seems to be in progress but the data files are broken\[0?m
 	'
 }
 
@@ -46,14 +46,14 @@ create_broken_operation_hint_regex() {
 }
 
 assert_outputs__missing_data_file() { # broken_op data_file [second_data_file]
-	assert_outputs '
+	assert_outputs_with_color '
 	' '
 		'"$(create_broken_operation_header_regex "$1")"'\n
 		'"$(if [ $# -eq 2 ]
 		then
-			printf '%s' 'fatal: '\''\.git\/'"$(sanitize_for_sed "$2")"\'' is missing'
+			printf '%s' '\[1;31mfatal: '\''\.git\/'"$(sanitize_for_sed "$2")"\'' is missing\[0?m'
 		else
-			printf '%s' 'fatal: '\''\.git\/'"$(sanitize_for_sed "$2")"\'' and '\''\.git\/'"$(sanitize_for_sed "$3")"\'' are missing'
+			printf '%s' '\[1;31mfatal: '\''\.git\/'"$(sanitize_for_sed "$2")"\'' and '\''\.git\/'"$(sanitize_for_sed "$3")"\'' are missing\[0?m'
 		fi)"'\n
 		'"$(create_broken_operation_hint_regex)"'
 	'

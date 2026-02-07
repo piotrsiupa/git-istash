@@ -18,6 +18,30 @@ printf_color() { # stream_num args...
 	fi
 }
 
+set_color_for_all() { # value
+	if [ -z "${GIT_CONFIG_COUNT-}" ]
+	then
+		GIT_CONFIG_COUNT=0
+	fi
+	export GIT_CONFIG_COUNT
+	#shellcheck disable=SC2034,SC2041
+	for key in 'color.istash.error'
+	do
+		eval "GIT_CONFIG_KEY_$GIT_CONFIG_COUNT"='"$key"'
+		export "GIT_CONFIG_KEY_$GIT_CONFIG_COUNT"
+		eval "GIT_CONFIG_VALUE_$GIT_CONFIG_COUNT"='"$1"'
+		export "GIT_CONFIG_VALUE_$GIT_CONFIG_COUNT"
+		GIT_CONFIG_COUNT=$((GIT_CONFIG_COUNT + 1))
+	done
+	#TODO The code below is a temporary solution to make tests pass while not all colors are yet implemented.
+	#TODO It needs to be replaced with something robust before a merge to master.
+	eval "GIT_CONFIG_KEY_$GIT_CONFIG_COUNT"='color.ui'
+	export "GIT_CONFIG_KEY_$GIT_CONFIG_COUNT"
+	eval "GIT_CONFIG_VALUE_$GIT_CONFIG_COUNT"='never'
+	export "GIT_CONFIG_VALUE_$GIT_CONFIG_COUNT"
+	GIT_CONFIG_COUNT=$((GIT_CONFIG_COUNT + 1))
+}
+
 is_color_enabled() { # config_variable...
 	if [ $# -eq 0 ]
 	then
@@ -55,6 +79,30 @@ color_lines() { # default_value config_variable
 	color_escape_code="$(get_color "$@")"
 	reset_escape_code="$(git config --get-color '' 'reset')"
 	sed -E "/./s/^.*\$/$color_escape_code&$reset_escape_code/"
+}
+
+color_fatal() {
+	if is_color_enabled 'color.istash.error' 'color.istash'
+	then
+		color_lines 'bold red' 'color.istash.error.fatal' #TODO default to a normal error (after it's implemented)
+	else
+		cat
+	fi
+}
+
+printf_fatal() { # arg...
+	#shellcheck disable=SC2059
+	printf "$@" \
+	| sed -E '/./s/^/fatal: /' \
+	| color_fatal
+} 1>&2
+
+fatal() { # arg...
+	if [ $# -ne 0 ]
+	then
+		printf_fatal "$@"
+	fi
+	return 1
 }
 
 if command -v od 1>/dev/null 2>&1
@@ -169,15 +217,15 @@ print_error_for_data_files_check() { # current_operation called_operation
 	if printf '%s\n' "$1" | grep -E -q '^error-'
 	then
 		operation_in_progress="$(printf '%s' "$1" | tail -c +7)"
-		printf 'fatal: '\''git istash %s'\'' seems to be in progress but the data files are broken\n' "$operation_in_progress"
+		printf_fatal \''git istash %s'\'' seems to be in progress but the data files are broken\n' "$operation_in_progress"
 		if [ -f "$(make_target_data_file_path)" ]
 		then
-			printf 'fatal: '\''%s'\'' is missing\n' "$(make_working_dir_sha_file_path)"
+			printf_fatal \''%s'\'' is missing\n' "$(make_working_dir_sha_file_path)"
 		elif [ -f "$(make_working_dir_sha_file_path)" ]
 		then
-			printf 'fatal: '\''%s'\'' is missing\n' "$(make_target_data_file_path)"
+			printf_fatal \''%s'\'' is missing\n' "$(make_target_data_file_path)"
 		else
-			printf 'fatal: '\''%s'\'' and '\''%s'\'' are missing\n' "$(make_target_data_file_path)" "$(make_working_dir_sha_file_path)"
+			printf_fatal \''%s'\'' and '\''%s'\'' are missing\n' "$(make_target_data_file_path)" "$(make_working_dir_sha_file_path)"
 		fi
 		print_broken_operation_hint "$2"
 	elif [ "$1" != 'nothing' ]
@@ -246,23 +294,19 @@ check_stash() { # stash
 	parents_num="$(git rev-list --no-walk --count "$stash_commit^@")"
 	if [ "$parents_num" -lt 2 ] || [ "$parents_num" -gt 3 ]
 	then
-		printf 'fatal: '\''%s'\'' doesn'\''t have 2 or 3 parents required to be a stash\n' "$stash_commit" 1>&2
-		return 1
+		fatal \''%s'\'' doesn'\''t have 2 or 3 parents required to be a stash\n' "$stash_commit"
 	fi
 	if [ "$parents_num" -eq 3 ] && [ "$(git rev-list --no-walk --count "$stash_commit^3^@")" -ne 0 ]
 	then
-		printf 'fatal: '\''%s^3'\'' have parents unlike in a stash\n' "$stash_commit" 1>&2
-		return 1
+		fatal \''%s^3'\'' have parents unlike in a stash\n' "$stash_commit"
 	fi
 	if [ "$(git rev-list --no-walk --count "$stash_commit^2^@")" -ne 1 ]
 	then
-		printf 'fatal: '\''%s^2'\'' doesn'\''t have one parent like in a stash\n' "$stash_commit" 1>&2
-		return 1
+		fatal \''%s^2'\'' doesn'\''t have one parent like in a stash\n' "$stash_commit"
 	fi
 	if [ "$(git rev-parse "$stash_commit^1")" != "$(git rev-parse "$stash_commit^2^")" ]
 	then
-		printf 'fatal: '\''%s^1'\'' isn'\''t the parent of '\''%s^2'\'' like in a stash\n' "$stash_commit" "$stash_commit" 1>&2
-		return 1
+		fatal \''%s^1'\'' isn'\''t the parent of '\''%s^2'\'' like in a stash\n' "$stash_commit" "$stash_commit"
 	fi
 	correct_commit_msgs=0
 	if [ "$parents_num" -eq 3 ] && git rev-list --format='%B' --max-count=1 "$stash_commit^3" | head -n 2 | tail -n 1 | grep -qE '^untracked files on .+:'
@@ -279,9 +323,9 @@ check_stash() { # stash
 	fi
 	if [ $correct_commit_msgs -ne "$parents_num" ]
 	then
-		printf 'fatal: some of '\''%s'\'' commits don'\''t have correct messages for a stash\n' "$stash_commit" 1>&2
-		printf 'fatal: it may not be a stash entry or it may be damaged\n' 1>&2
-		return 1
+		printf_fatal 'some of '\''%s'\'' commits don'\''t have correct messages for a stash\n' "$stash_commit"
+		printf_fatal 'it may not be a stash entry or it may be damaged\n'
+		fatal
 	fi
 }
 
@@ -316,8 +360,7 @@ set_getopt_options_from_make_command() {
 	if [ "$(printf '%s\n' "$getopt_short_options" | wc -l)" -ne 1 ] || [ "$(printf '%s\n' "$getopt_long_options" | wc -l)" -ne 1 ]
 	then
 		# Not tested because it cannot be triggered. It's here in a case something gets broken by a future change.
-		printf 'fatal: cannot determine if there is option '\''-h'\'' in the arguments\n' 1>&2
-		return 1
+		fatal 'cannot determine if there is option '\''-h'\'' in the arguments\n'
 	fi
 }
 
