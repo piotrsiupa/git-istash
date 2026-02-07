@@ -24,6 +24,7 @@ printf 'Whoever reads this - you are great!' >"$short_text_no_eol_file"
 { cat "$short_text_no_eol_file" ; printf '\n' ; } >"$short_text_file"
 printf '%s' 'Lorem ipsum dolor sit amet, consectetur adipiscing elit,
 sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
 Ut enim ad minim veniam,
 quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.' >"$long_text_no_eol_file"
 { cat "$long_text_no_eol_file" ; printf '\n' ; } >"$long_text_file"
@@ -45,6 +46,7 @@ assert_exit_code 0 './color_lines.sh' 'magenta' <"$long_text_no_eol_file"
 assert_outputs '#
 	\[35mLorem ipsum dolor sit amet, consectetur adipiscing elit,\[0?m\n
 	\[35msed do eiusmod tempor incididunt ut labore et dolore magna aliqua\.\[0?m\n
+	\n
 	\[35mUt enim ad minim veniam,\[0?m\n
 	\[35mquis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat\.\[0?m
 	#' ''
@@ -54,6 +56,7 @@ assert_exit_code 0 './color_lines.sh' 'magenta' <"$long_text_file"
 assert_outputs '#
 	\[35mLorem ipsum dolor sit amet, consectetur adipiscing elit,\[0?m\n
 	\[35msed do eiusmod tempor incididunt ut labore et dolore magna aliqua\.\[0?m\n
+	\n
 	\[35mUt enim ad minim veniam,\[0?m\n
 	\[35mquis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat\.\[0?m\n
 	#' ''
