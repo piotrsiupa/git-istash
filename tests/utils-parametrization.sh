@@ -205,8 +205,8 @@ PARAMETRIZE_COLOR() { # keys
 	case "$COLOR" in
 		COLOR-DEFAULT) COLOR_FLAGS='' ;;
 		COLOR-YES-LONG) COLOR_FLAGS='--color=always' ;;
-		COLOR-YES-LONGISH0) COLOR_FLAGS='--colo always' ;;
-		COLOR-YES-LONGISH1) COLOR_FLAGS='--col=always' ;;
+		COLOR-YES-LONGISH0) COLOR_FLAGS='--colo YES' ;;
+		COLOR-YES-LONGISH1) COLOR_FLAGS='--col=t' ;;
 	esac
 }
 IS_COLOR_ON() {

@@ -23,6 +23,13 @@ assert_outputs__main_script__unrecognised_short_option() { # option
 	'
 }
 
+assert_outputs__main_script__invalid_color_boolean() { # value
+	assert_outputs '
+	' '
+		error: `'"$(sanitize_for_sed "$1")"\'' is not a valid color boolean
+	'
+}
+
 assert_outputs__main_script__unrecognised_long_option() { # option
 	assert_outputs '
 	' '

@@ -10,6 +10,7 @@ prepare_repository
 # A wrapper because shell anticks will screw up error handling if it's sourced directly.
 cat >'is_color_enabled.sh' <<EOF
 #!/usr/bin/env sh
+set -eu
 . '$(cd - 1>/dev/null ; pwd)/../lib/git-istash/git-istash-commons'
 is_color_enabled "\$@"
 EOF

@@ -7,6 +7,7 @@ prepare_repository
 # A wrapper because shell anticks will screw up error handling if it's sourced directly.
 cat >'color_lines.sh' <<EOF
 #!/usr/bin/env sh
+set -eu
 . '$(cd - 1>/dev/null ; pwd)/../lib/git-istash/git-istash-commons'
 color_lines "\$@"
 EOF
