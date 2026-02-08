@@ -5,7 +5,7 @@ non_essential_test
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_CONTINUE
-PARAMETRIZE_COLOR YES  # Randomly chosen value
+PARAMETRIZE_COLOR
 if IS_APPLY
 then
 	skip_silently  # this test is "pop" specific

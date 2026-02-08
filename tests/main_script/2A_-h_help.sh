@@ -4,7 +4,7 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 PARAMETRIZE_SUBCOMMAND
-PARAMETRIZE_COLOR NO  # Randomly chosen value
+PARAMETRIZE_COLOR
 
 __end_of_initialization__
 

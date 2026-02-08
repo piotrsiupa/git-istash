@@ -200,13 +200,17 @@ get_head_sha_HT() {
 
 #shellcheck disable=SC2120
 PARAMETRIZE_COLOR() { # keys
-	PARAMETRIZE_OPTION true 'COLOR' '' 'YES: && COLOR-YES-LONG && COLOR-YES-LONGISH0 & COLOR-YES-LONGISH1 | NO: && COLOR-DEFAULT &&' "$@"
+	# "auto" is not tested here, because it's not really viable to capture program output while doing that.
+	PARAMETRIZE_OPTION true 'COLOR' 'color' 'YES: && COLOR-YES-LONG && COLOR-YES-LONGISH0 & COLOR-YES-LONGISH1 | NO: COLOR-NO-LONG && COLOR-DEFAULT && COLOR-NO-LONGISH0 & COLOR-NO-LONGISH1' "$@"
 	#shellcheck disable=SC2034
 	case "$COLOR" in
 		COLOR-DEFAULT) COLOR_FLAGS='' ;;
 		COLOR-YES-LONG) COLOR_FLAGS='--color=always' ;;
 		COLOR-YES-LONGISH0) COLOR_FLAGS='--colo YES' ;;
 		COLOR-YES-LONGISH1) COLOR_FLAGS='--col=t' ;;
+		COLOR-NO-LONG) COLOR_FLAGS='--color=never' ;;
+		COLOR-NO-LONGISH0) COLOR_FLAGS='--colo NO' ;;
+		COLOR-NO-LONGISH1) COLOR_FLAGS='--col=0' ;;
 	esac
 }
 IS_COLOR_ON() {

@@ -5,7 +5,7 @@ non_essential_test
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_OPTION true 'ABORT_COMMAND' 'option' 'ABORT: a && abo && ab & abor'
-PARAMETRIZE_COLOR YES  # Randomly chosen value
+PARAMETRIZE_COLOR
 
 __end_of_initialization__
 

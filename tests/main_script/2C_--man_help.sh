@@ -10,7 +10,7 @@ then
 fi
 
 PARAMETRIZE_SUBCOMMAND
-PARAMETRIZE_COLOR NO  # Randomly chosen value
+PARAMETRIZE_COLOR
 PARAMETRIZE_OPTION true 'MAN_FLAG' '' 'man: && --man && --ma & --m'
 
 __end_of_initialization__

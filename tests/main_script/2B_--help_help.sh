@@ -10,7 +10,7 @@ then
 fi
 
 PARAMETRIZE_SUBCOMMAND
-PARAMETRIZE_COLOR YES
+PARAMETRIZE_COLOR
 PARAMETRIZE_OPTION true 'HELP_FLAG' '' 'help: && --help && --hel & --h'
 
 __end_of_initialization__

@@ -31,7 +31,9 @@ raw_facets='
 	# Run tests for all the subcommands applicable for the given test. (E.g. instead of just "create" test "create", "save", "snatch" and "push".)
 	subcommand = (s(u?b)?[-_]?)?(c(om(m(an(ds?)?)?)?)?|subs?|cmds?)
 	
-	# Test all options applicable for given test. (E.g. try to run the same test with and without "--keep-index".)
+	# Test various options applicable for given test. (E.g. try to run the same test with and without "--keep-index".)
+	# (See also "short-options" and "partial-options".)
+	# This focuses on the options that tends to inteact with each other. See also "color".
 	options = o(p(t(i(o(ns?)?)?|s|))?)?
 	
 	# Test both short and long variants of the same option.
@@ -41,6 +43,10 @@ raw_facets='
 	# Test also shortened spelling for options.
 	# (E.g. "--conti" instead of "--continue".)
 	partial-options = po|p(a(r(t(ial)?)?)?)?[-_]o(p(t(i(o(ns?)?)?|s|))?)?
+	
+	# Test both with colors tuner on and off. (They are on by default in tests.)
+	# (See also "short-options" and "partial-options".)
+	color = c(o(l(o(rs?)?)?)?)?
 	
 	# Test also the command run with "--" between options and arguments.
 	end-options-indicator = e?oi|(e(nd)?[-_])?o(p(t(i(o(ns?)?)?|s|))?)?[-_]i(n(d(i(c(a(t(or)?)?)?)?)?)?)?|eo|e(nd)?[-_]o(p(t(i(o(ns?)?)?|s|))?)?|ei|e(nd)?[-_]i(n(d(i(c(a(t(ors?)?)?)?)?)?)?)?
@@ -61,8 +67,8 @@ raw_facet_categories='
 	# (Some tests will not even finish, because there will be too many runs.)
 	all = a(ll)?: '"$(printf '%s' "$facets" | sed -E 's/^(.+)=.*$/\1/' | tr '\n' ',')"'
 	
-	# Test everything important and a little more, just ot be sure.
-	full = fu?ll: standard, full-pathspec-style, long-running
+	# Test everything important and a little more, just to be sure.
+	full = fu?ll: standard, full-pathspec-style, color, long-running
 	
 	# Test the important things.
 	# (It gives a pretty good idea of whether everything works.)

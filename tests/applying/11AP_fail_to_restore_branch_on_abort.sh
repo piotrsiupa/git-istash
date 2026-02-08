@@ -5,7 +5,7 @@ non_essential_test
 PARAMETRIZE_HEAD_TYPE 'BRANCH'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_ABORT
-PARAMETRIZE_COLOR YES  # Randomly chosen value
+PARAMETRIZE_COLOR
 
 __end_of_initialization__
 

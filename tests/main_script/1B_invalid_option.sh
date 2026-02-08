@@ -8,7 +8,7 @@ if [ "$SUBCOMMAND" = 'c' ] || [ "$SUBCOMMAND" = 'continue' ] || [ "$SUBCOMMAND" 
 then
 	skip_silently
 fi
-PARAMETRIZE_COLOR NO  # Randomly chosen value
+PARAMETRIZE_COLOR
 
 __end_of_initialization__
 

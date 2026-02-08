@@ -1,7 +1,7 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
-PARAMETRIZE_COLOR YES  # Randomly chosen value
+PARAMETRIZE_COLOR
 
 __end_of_initialization__
 

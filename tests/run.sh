@@ -32,6 +32,8 @@ format_facets_for_help() { # facets
 	printf '\t\t  It'\''s equivalent to:\n'
 	printf '%s\n' "$1" \
 	| tr '|' '\n' \
+	| tr -d '\t' \
+	| grep -E '.' \
 	| sed -E -e 's/,/, /g' -e 's/^/\t\t  + /' \
 	| break_long_lines '\t\t    '
 }
@@ -847,14 +849,28 @@ getopt_short_options='aA:c:Cdfhj:l:m:pRqQrsSvV'
 getopt_long_options='altered,since:,color:,check,debug,failed,file-name,help,jobs:,limit:,meticulousness:,complete,quickie,facets:,print-paths,relative-paths,progress,no-progress,quiet,quieter,raw,raw-name,skip-at-fail,skip-at-error,skip-on-fail,skip-on-error,stop-at-fail,stop-at-error,stop-on-fail,stop-on-error,verbose,version,skip-version'
 normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$normalized_options"
-complete='non-essential,head-type,subcommand,options,miscellaneous|non-essential,pathspec-style,end-options-indicator,long-running|short-options,pathspec-style,partial-options'
-quickie='non-essential,subcommand|non-essential,head-type|non-essential,options,miscellaneous|short-options|pathspec-style'
+complete='
+	non-essential,head-type,subcommand,options,color,miscellaneous
+	non-essential,pathspec-style,end-options-indicator,long-running
+	options,short-options,pathspec-style,partial-options
+	color,short-options,partial-options
+'
+quickie='
+	non-essential,subcommand
+	non-essential,head-type
+	non-essential,options,miscellaneous
+	non-essential,color
+	options,short-options
+	pathspec-style
+'
 parse_meticulousnesses() { # value
 	printf '%s\n' "$1" \
 	| tr '|' '\n' \
-	| sed -E -e "s/^complete\$/$complete/" \
-		-e "s/^quickie\$/$quickie/" \
+	| sed -E -e "s/^complete\$/$(printf '%s' "$complete" | tr '\n' '|')/" \
+		-e "s/^quickie\$/$(printf '%s' "$quickie" | tr '\n' '|')/" \
 	| tr '|' '\n' \
+	| tr -d '\t ' \
+	| grep -E '.' \
 	| while read -r x
 	do
 		meticulousness="$(parse_meticulousness "$x")"

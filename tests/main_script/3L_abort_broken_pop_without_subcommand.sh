@@ -4,7 +4,7 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_ABORT
-PARAMETRIZE_COLOR YES  # Randomly chosen value
+PARAMETRIZE_COLOR
 
 __end_of_initialization__
 
