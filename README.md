@@ -5,7 +5,7 @@ Alternative Git command for reliably handling stashes, without the arbitrary lim
 
 It is written (almost[^1]) entirely in POSIX (Portable Operating System Interface) shell script, making it compatible with basically every operating system (except Windows, but fortunately, Git for Windows can handle POSIX scripts on its own).
 
-[^1]: The scripts use the flag `-r` for `xargs` which is not a part of the standard but it's widely supported. (Tests are slightly more liberal with non POSIX things but they still should run on an average system.)
+[^1]: The scripts use the flag `-r` for `xargs` which is not a part of the standard but it's widely supported. (Tests are slightly more liberal with non POSIX commands but they still should run on an average system.)
 
 
 ## Overview
