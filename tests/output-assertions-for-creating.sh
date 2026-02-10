@@ -144,31 +144,31 @@ assert_outputs__create__success() { # ('*' stash_num message | summary_code bran
 
 #shellcheck disable=SC2120
 assert_outputs__create__no_changes_to_stash() { # [call_description...]
-	assert_outputs '
+	assert_outputs_with_color '
 	' '
 		'"$(create_patch_output_regex "$@")"'
 		'"$(if [ $# -ne 0 ] ; then printf '%s' '\n' ; fi)"'
-		error: no suitable changes to stash
+		\[31merror: no suitable changes to stash\[0?m
 	'
 }
 
 assert_outputs__create__unmatching_pathspec() { # pathspec
-	assert_outputs '
+	assert_outputs_with_color '
 	' '
-		error: pathspec '"'$(sanitize_for_sed "$1")'"' did not match any file\(s\)
+		\[31merror: pathspec '"'$(sanitize_for_sed "$1")'"' did not match any file\(s\)\[0?m
 	'
 }
 
 assert_outputs__create__pfn_without_pff() {
-	assert_outputs '
+	assert_outputs_with_color '
 	' '
-		error: option '\''--pathspec-file-nul'\'' is not valid without '\''--pathspec-from-file'\''
+		\[31merror: option '\''--pathspec-file-nul'\'' is not valid without '\''--pathspec-from-file'\''\[0?m
 	'
 }
 
 assert_outputs_create__patch_with_patchspec() {
-	assert_outputs '
+	assert_outputs_with_color '
 	' '
-		error: stdin cannot be assigned to both '\''--patch'\'' and the pathspec
+		\[31merror: stdin cannot be assigned to both '\''--patch'\'' and the pathspec\[0?m
 	'
 }

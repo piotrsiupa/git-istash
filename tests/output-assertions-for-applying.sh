@@ -75,23 +75,23 @@ assert_outputs__apply__quit() { # operation
 }
 
 assert_outputs__apply__non_stash_on_pop() {
-	assert_outputs '
+	assert_outputs_with_color '
 	' '
-		error: can only pop '\''refs\/stash'\'' or entries of its reflog
+		\[31merror: can only pop '\''refs\/stash'\'' or entries of its reflog\[0?m
 	'
 }
 
 assert_outputs__apply__no_such_commit() { # commit
-	assert_outputs '
+	assert_outputs_with_color '
 	' '
-		error: no commit '\'"$(sanitize_for_sed "$1")"\''
+		\[31merror: no commit '\'"$(sanitize_for_sed "$1")"\''\[0?m
 	'
 }
 
 assert_outputs__apply__no_operation_in_progress() { # operation
-	assert_outputs '
+	assert_outputs_with_color '
 	' '
-		error: no '"$(sanitize_for_sed "$1")"' in progress
+		\[31merror: no '"$(sanitize_for_sed "$1")"' in progress\[0?m
 	'
 }
 
@@ -164,30 +164,30 @@ assert_outputs__apply__no_rebase_in_progress_on_abort() { # operation
 }
 
 assert_outputs__apply__continue_abort() {
-	assert_outputs '
+	assert_outputs_with_color '
 	' '
-		error: unclear whether to continue aborting or to abort continuing
+		\[31merror: unclear whether to continue aborting or to abort continuing\[0?m
 	'
 }
 
 assert_outputs__apply__continue_quit() {
-	assert_outputs '
+	assert_outputs_with_color '
 	' '
-		error: unclear whether to continue quitting or to quit continuing
+		\[31merror: unclear whether to continue quitting or to quit continuing\[0?m
 	'
 }
 
 assert_outputs__apply__abort_quit() {
-	assert_outputs '
+	assert_outputs_with_color '
 	' '
-		error: either abort or quit\; there is no middle road
+		\[31merror: either abort or quit\; there is no middle road\[0?m
 	'
 }
 
 assert_outputs__apply__continue_abort_quit() {
-	assert_outputs '
+	assert_outputs_with_color '
 	' '
-		error: you can choose continue, abort or quit at your discretion but the rule is that you can only have one
+		\[31merror: you can choose continue, abort or quit at your discretion but the rule is that you can only have one\[0?m
 	'
 }
 

@@ -2,7 +2,7 @@
 
 set -eu
 
-. "$(dirname "$0")/../lib/git-istash/get_options"
+. "$(dirname "$0")/../lib/git-istash/git-istash-commons"
 
 min_git_version='2.42.0'
 min_git_version_regex='2\.(4[2-9]|[5-9][0-9]|[1-9][0-9]{2,})(\..+)?'
@@ -82,7 +82,6 @@ show_manual() {
 	then
 		return 0
 	fi
-	. "$(dirname "$0")/../lib/git-istash/git-istash-commons"
 	printf_fatal 'unable to open the manual entry\n'
 	printf_fatal 'falling back to the built-in help text\n'
 	fatal '\n'
@@ -94,7 +93,7 @@ subcommand=''
 needs_additional_pass=y
 while [ "$needs_additional_pass" = y ]
 do
-	normalized_options="$(get_options -U "$getopt_short_options" "$getopt_long_options" "$@")"
+	normalized_options="$(get_options_color -U "$getopt_short_options" "$getopt_long_options" "$@")"
 	eval set -- "$normalized_options"
 	known_options_at_front=''
 	while [ "$1" != '--' ]
@@ -126,7 +125,7 @@ do
 	unset known_options_at_front
 done
 unset needs_additional_pass
-normalized_options="$(get_options -U "$getopt_short_options" "$getopt_long_options" "$@")"
+normalized_options="$(get_options_color -U "$getopt_short_options" "$getopt_long_options" "$@")"
 eval set -- "$normalized_options"
 
 skip_version_check=n
@@ -140,7 +139,6 @@ do
 		;;
 	--color)
 		shift
-		. "$(dirname "$0")/../lib/git-istash/git-istash-commons"
 		set_color_for_all "$1"
 		;;
 	-h)
@@ -198,12 +196,10 @@ then
 		subcommand='push'
 		set -- '--_implicit-push_' "$@"
 	else
-		. "$(dirname "$0")/../lib/git-istash/git-istash-commons"
 		data_files="$(find_data_files)"
 		case "$data_files" in
 			nothing)
-				printf 'error: no istash operation in progress\n' 1>&2
-				exit 1
+				error 'no istash operation in progress\n'
 				;;
 			apply)
 				subcommand='apply'
@@ -227,7 +223,6 @@ fi
 git_version="$(git --version | head -n 1 | grep -Eo '\<\S+$')"
 if [ "$skip_version_check" = n ] && ! printf '%s' "$git_version" | grep -Exq "$min_git_version_regex"
 then
-	. "$(dirname "$0")/../lib/git-istash/git-istash-commons"
 	fatal 'the current Git version (%s) is less than minimum required (%s)\n' "$git_version" "$min_git_version"
 fi
 

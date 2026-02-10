@@ -12,6 +12,7 @@ set -eu
 printf 'foo\n' | color_fatal
 EOF
 chmod +x 'color_fatal.sh'
+ln -s "$(cd - 1>/dev/null ; pwd)/../lib/git-istash/get_options" ./
 
 __test_section__ 'never'
 git config --local color.ui never

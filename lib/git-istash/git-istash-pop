@@ -2,7 +2,6 @@
 
 set -eu
 
-. "$(dirname "$0")/get_options"
 . "$(dirname "$0")/git-istash-commons"
 
 print_help() {
@@ -71,8 +70,7 @@ check_stash_for_pop() {
 	then
 		:
 	else
-		printf 'error: can only pop '\''refs/stash'\'' or entries of its reflog\n' 1>&2
-		return 1
+		error 'can only pop '\''refs/stash'\'' or entries of its reflog\n'
 	fi
 }
 
@@ -82,22 +80,21 @@ check_data_files() { # resume abort quit
 		pop)
 			if [ "$1" = y ] || [ "$2" = y ] || [ "$3" = y ] ; then return 0 ; fi
 			print_error_for_data_files_check "$operation_in_progress" 'pop'
-			return 1
+			error
 			;;
 		apply)
 			if [ "$2" = y ] || [ "$3" = y ] ; then return 0 ; fi
 			print_error_for_data_files_check "$operation_in_progress" 'pop'
-			return 1
+			error
 			;;
 		error-*)
 			if [ "$3" = y ] ; then return 0 ; fi
 			print_error_for_data_files_check "$operation_in_progress" 'pop'
-			return 1
+			error
 			;;
 		nothing)
 			if [ "$1" = n ] && [ "$2" = n ] && [ "$3" = n ] ; then return 0 ; fi
-			printf 'error: no istash pop in progress\n' 1>&2
-			return 1
+			error 'no istash pop in progress\n'
 			;;
 	esac
 }
@@ -164,7 +161,7 @@ do_pop() { # args...
 
 getopt_short_options='chq'
 getopt_long_options='abort,color:,continue,quit'
-normalized_options="$(get_options "$getopt_short_options" "$getopt_long_options" "$@")"
+normalized_options="$(get_options_color "$getopt_short_options" "$getopt_long_options" "$@")"
 eval set -- "$normalized_options"
 abort_set=n
 continue_set=n
@@ -198,23 +195,19 @@ do
 done
 if [ $continue_set = y ] && [ $abort_set = y ] && [ $quit_set = y ]
 then
-	printf 'error: you can choose continue, abort or quit at your discretion but the rule is that you can only have one\n' 1>&2
-	exit 1
+	error 'you can choose continue, abort or quit at your discretion but the rule is that you can only have one\n'
 fi
 if [ $abort_set = y ] && [ $quit_set = y ]
 then
-	printf 'error: either abort or quit; there is no middle road\n' 1>&2
-	exit 1
+	error 'either abort or quit; there is no middle road\n'
 fi
 if [ $continue_set = y ] && [ $abort_set = y ]
 then
-	printf 'error: unclear whether to continue aborting or to abort continuing\n' 1>&2
-	exit 1
+	error 'unclear whether to continue aborting or to abort continuing\n'
 fi
 if [ $continue_set = y ] && [ $quit_set = y ]
 then
-	printf 'error: unclear whether to continue quitting or to quit continuing\n' 1>&2
-	exit 1
+	error 'unclear whether to continue quitting or to quit continuing\n'
 fi
 
 lib_dir="$(cd "$(dirname "$0")" ; pwd)"

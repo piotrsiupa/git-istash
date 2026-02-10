@@ -1,5 +1,12 @@
 # A set of utility functions for istash scripts.
 
+if [ -f "$(dirname "$0")/../lib/git-istash/get_options" ]
+then
+	. "$(dirname "$0")/../lib/git-istash/get_options"
+else
+	. "$(dirname "$0")/get_options"
+fi
+
 is_color_allowed() { # stream_num
 	case "$(git config --get color.ui)" in
 		always|true|1) return 0 ;;
@@ -18,6 +25,22 @@ printf_color() { # stream_num args...
 	fi
 }
 
+# Wrapper for "get_options" that adds color to error messages.
+# "get_options" is written to be usable in different project. (So it can't refer to Git config.)
+get_options_color() { # [-P | -R | -U] short_options_string long_options_string [argument...]
+	exec 3>&1
+	set +e
+	error_message="$(set -e ; get_options "$@" 2>&1 1>&3)"
+	exit_code=$?
+	set -e
+	exec 3>&-
+	case $exit_code in
+		0) ;;
+		1) printf '%s\n' "$error_message" | color_error 1>&2 ; return 1 ;;
+		*) printf '%s\n' "$error_message" | color_fatal 1>&2 ; return 2 ;;
+	esac
+}
+
 set_color_for_all() { # value
 	set -- "$1" "$(printf '%s' "$1" | tr 'A-Z\n' 'a-zX')"
 	if printf '%s' "$2" | grep -Exq 'a(lways)?|y(es)?|t(rue)?|affirmative|1'
@@ -30,8 +53,8 @@ set_color_for_all() { # value
 	then
 		set -- 'auto'
 	else
-		printf 'error: `%s'\'' is not a valid color boolean' "$1" 1>&2
-		return 1
+		printf 'error: `%s'\'' is not a valid color boolean' "$1" | color_error 1>&2
+		error
 	fi
 	if [ -z "${GIT_CONFIG_COUNT-}" ]
 	then
@@ -93,6 +116,30 @@ color_lines() { # default_value config_variable
 	color_escape_code="$(get_color "$@")"
 	reset_escape_code="$(git config --get-color '' 'reset')"
 	sed -E "/./s/^.*\$/$color_escape_code&$reset_escape_code/"
+}
+
+color_error() {
+	if is_color_enabled 'color.istash.error' 'color.istash'
+	then
+		color_lines 'red' 'color.istash.error.normal'
+	else
+		cat
+	fi
+}
+
+printf_error() { # arg...
+	#shellcheck disable=SC2059
+	printf "$@" \
+	| sed -E '/./s/^/error: /' \
+	| color_error
+} 1>&2
+
+error() { # arg...
+	if [ $# -ne 0 ]
+	then
+		printf_error "$@"
+	fi
+	return 1
 }
 
 color_fatal() {
@@ -178,12 +225,12 @@ check_args() { # max_free_args args...
 	shift 2
 	if [ $# -gt "$_max_free_args" ]
 	then
+		printf_error 'too many arguments\n'
 		{
-			printf 'error: too many arguments\n'
 			printf 'hint: type '\''git %s --help'\'' for detailed information\n' "$_script_name"
 			printf 'hint: or '\''git %s -h'\'' for a short help text\n' "$_script_name"
 		} 1>&2
-		return 1
+		error
 	fi
 }
 
@@ -208,9 +255,9 @@ check_other_git_commands_state() {
 	fi
 	if [ -n "$other_git_command" ]
 	then
-		printf 'error: there is currently '\''git %s'\'' in progress\n' "$other_git_command"
+		printf_error 'there is currently '\''git %s'\'' in progress\n' "$other_git_command"
 		printf 'hint: finalize it before running '\''git istash'\'
-		return 1
+		error
 	fi 1>&2
 }
 
@@ -244,7 +291,7 @@ print_error_for_data_files_check() { # current_operation called_operation
 		print_broken_operation_hint "$2"
 	elif [ "$1" != 'nothing' ]
 	then
-		printf 'error: there is currently '\''git istash %s'\'' in progress\n' "$1"
+		printf_error 'there is currently '\''git istash %s'\'' in progress\n' "$1"
 		printf 'hint: use '\''git istash --continue'\'' or '\''git istash --abort'\''\n'
 	fi
 	printf_color 2 '\033[39m'
@@ -255,11 +302,11 @@ check_data_files() { # operation
 	if printf '%s\n' "$current_operation" | grep -E -q '^error-'
 	then
 		print_error_for_data_files_check "$current_operation" "$1"
-		return 1
+		fatal
 	elif [ "$current_operation" != 'nothing' ]
 	then
 		print_error_for_data_files_check "$current_operation" "$1"
-		return 1
+		fatal
 	fi
 }
 
@@ -302,8 +349,7 @@ check_stash() { # stash
 	stash_commit="$(get_stash_commit "$1")"
 	if ! git rev-parse --quiet --verify "$stash_commit^{commit}" 1>/dev/null
 	then
-		printf 'error: no commit '\''%s'\''\n' "$stash_commit" 1>&2
-		return 1
+		error 'no commit '\''%s'\''\n' "$stash_commit"
 	fi
 	parents_num="$(git rev-list --no-walk --count "$stash_commit^@")"
 	if [ "$parents_num" -lt 2 ] || [ "$parents_num" -gt 3 ]
@@ -383,7 +429,7 @@ check_for_option_h_in_make_command() ( # option...
 	then
 		return 0  # Fall back to showing help, to not accidentaly break the repository.
 	fi
-	normalized_options="$(get_options "$getopt_short_options" "$getopt_long_options" "$@" 2>/dev/null)"
+	normalized_options="$(get_options_color "$getopt_short_options" "$getopt_long_options" "$@" 2>/dev/null)"
 	eval set -- "$normalized_options"
 	while [ $# -ne 0 ]
 	do

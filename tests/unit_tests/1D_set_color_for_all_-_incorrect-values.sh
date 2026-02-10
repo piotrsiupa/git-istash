@@ -12,6 +12,7 @@ set -eu
 set_color_for_all "\$1"
 EOF
 chmod +x 'set_color_for_all_and_check.sh'
+ln -s "$(cd - 1>/dev/null ; pwd)/../lib/git-istash/get_options" ./
 
 
 __test_section__ 'blue'

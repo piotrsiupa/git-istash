@@ -15,6 +15,7 @@ set -eu
 is_color_enabled "\$@"
 EOF
 chmod +x 'is_color_enabled.sh'
+ln -s "$(cd - 1>/dev/null ; pwd)/../lib/git-istash/get_options" ./
 
 git config --local 'color.ui' "$FALLBACK"
 git config --local 'color.foo' 'always'

@@ -8,26 +8,26 @@ fi
 
 
 assert_outputs__too_many_arguments() { # operation
-	assert_outputs '
+	assert_outputs_with_color '
 	' '
-		error: too many arguments\n
+		\[31merror: too many arguments\[0?m\n
 		hint: type '\''git istash '"$1"' --help'\'' for detailed information\n
 		hint: or '\''git istash '"$1"' -h'\'' for a short help text
 	'
 }
 
 assert_outputs__operation_in_progress() { # operation
-	assert_outputs '
+	assert_outputs_with_color '
 	' '
-		error: there is currently '\''git '"$(sanitize_for_sed "$1")"\'' in progress\n
+		\[31merror: there is currently '\''git '"$(sanitize_for_sed "$1")"\'' in progress\[0?m\n
 		hint: use '\''git istash --continue'\'' or '\''git istash --abort'\''
 	'
 }
 
 assert_outputs__external_operation_in_progress() { # operation
-	assert_outputs '
+	assert_outputs_with_color '
 	' '
-		error: there is currently '\''git '"$(sanitize_for_sed "$1")"\'' in progress\n
+		\[31merror: there is currently '\''git '"$(sanitize_for_sed "$1")"\'' in progress\[0?m\n
 		hint: finalize it before running '\''git istash'\''
 	'
 }

@@ -15,6 +15,7 @@ git config --get-colorbool 'color.istash.error' 'true'
 git config --get-colorbool 'color.istash.error' 'false'
 EOF
 chmod +x 'set_color_for_all_and_check.sh'
+ln -s "$(cd - 1>/dev/null ; pwd)/../lib/git-istash/get_options" ./
 
 
 git config --local 'color.foo' 'never'

@@ -14,6 +14,7 @@ color_lines "\$@"
 printf '#'
 EOF
 chmod +x 'color_lines.sh'
+ln -s "$(cd - 1>/dev/null ; pwd)/../lib/git-istash/get_options" ./
 
 empty_text_file='empty-text.txt'
 short_text_no_eol_file='short-text.txt'

@@ -12,6 +12,7 @@ set -eu
 color_lines "\$@"
 EOF
 chmod +x 'color_lines.sh'
+ln -s "$(cd - 1>/dev/null ; pwd)/../lib/git-istash/get_options" ./
 
 git config --local 'color.thebestcolor' 'bold cyan'
 git config --local 'color.alittleworsecolor' 'green'

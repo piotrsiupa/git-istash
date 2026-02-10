@@ -12,6 +12,7 @@ set -eu
 get_color "\$@"
 EOF
 chmod +x 'get_color.sh'
+ln -s "$(cd - 1>/dev/null ; pwd)/../lib/git-istash/get_options" ./
 
 # Parsing colors won't be extensively tested because it's done by a Git function.
 # This focuses on the fallback system and corner cases.

@@ -2,7 +2,6 @@
 
 set -eu
 
-. "$(dirname "$0")/get_options"
 . "$(dirname "$0")/git-istash-commons"
 
 print_help() {
@@ -31,7 +30,7 @@ print_help() {
 }
 
 check_pathspec_for_implicit_push() ( # args...
-	normalized_options="$(get_options -R "$getopt_short_options" "$getopt_long_options" "$@")"
+	normalized_options="$(get_options_color -R "$getopt_short_options" "$getopt_long_options" "$@")"
 	eval set -- "$normalized_options"
 	while [ $# -ne 0 ]
 	do
@@ -42,7 +41,11 @@ check_pathspec_for_implicit_push() ( # args...
 		then
 			option_name="$(printf '%s' "$1" | sed -E 's/^--//')"
 			shift
-			if printf '%s' "$getopt_long_options" | grep -Eq "(^|,)$option_name:(,|\$)"
+			if [ "$option_name" = 'color' ]
+			then
+				set_color_for_all "$1"
+				shift
+			elif printf '%s' "$getopt_long_options" | grep -Eq "(^|,)$option_name:(,|\$)"
 			then
 				shift
 			fi
@@ -55,9 +58,9 @@ check_pathspec_for_implicit_push() ( # args...
 				shift
 			fi
 		else
-			printf 'error: subcommand wasn'\''t specified; '\''push'\'' can'\''t be assumed due to unexpected token '\''%s'\''\n' "$1" 1>&2
+			printf_error 'subcommand wasn'\''t specified; '\''push'\'' can'\''t be assumed due to unexpected token '\''%s'\''\n' "$1"
 			printf 'hint: pathspecs for an implicit '\''push'\'' subcommand must be preceded by '\''--'\''\n' 1>&2
-			exit 1
+			error
 		fi
 	done
 )
