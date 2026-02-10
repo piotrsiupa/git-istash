@@ -121,7 +121,7 @@ color_lines() { # default_value config_variable
 color_error() {
 	if is_color_enabled 'color.istash.error' 'color.istash'
 	then
-		color_lines 'red' 'color.istash.error.normal'
+		color_lines 'red' 'color.istash.error.normal' 'color.istash.error.default'
 	else
 		cat
 	fi
@@ -145,7 +145,7 @@ error() { # arg...
 color_fatal() {
 	if is_color_enabled 'color.istash.error' 'color.istash'
 	then
-		color_lines 'bold red' 'color.istash.error.fatal' #TODO default to a normal error (after it's implemented)
+		color_lines 'bold red' 'color.istash.error.fatal' 'color.istash.error.default'
 	else
 		cat
 	fi
