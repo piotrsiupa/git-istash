@@ -67,7 +67,7 @@ assert_exit_code 1 "$GET_OPTIONS_COMMAND" $MODE_FLAGS 'ab:cd:' 'abcde,xyz,abc' -
 assert_outputs '.*' 'error: ambiguous option abbreviation `ab'\'
 
 __test_section__ 'Short option without the required argument after a non-option'
-if IS_POSIXLY_ON || IS_PARTIAL_PARSE_ON
+if IS_POSIXLY_ON
 then
 	#shellcheck disable=SC2086
 	assert_exit_code 0 "$GET_OPTIONS_COMMAND" $MODE_FLAGS 'ab:cd:' 'veni,vidi:,vici' -c --vidi=qwerty blah --veni -ad

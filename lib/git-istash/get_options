@@ -203,7 +203,7 @@ get_options() ( # [-P | -R | -U] short_options_string long_options_string [argum
 				fi
 				;;
 			*)
-				if [ "$posixly" = y ] || [ "$partial" = y ]
+				if [ "$posixly" = y ]
 				then
 					break
 				elif [ "$reorder" = y ]
@@ -250,7 +250,7 @@ then
 		printf 'Options:\n'
 		printf '    -P\t- Posixly correct mode - after the first encountered non-option, treat\n\t  everything else as non-options. Preserve the first "--" if it'\''s after\n\t  a non-option.\n'
 		printf '    -R\t- Don'\''t reorder entries by placing all non-option arguments after "--"\n\t  (normalize only) and don'\''t generate an additional "--" if not present.\n'
-		printf '    -U\t- Like -P but treat unrecognized options as non-options and never skip\n\t  the first "--" even if it isn'\''t preceded by any non-options.\n\t  (Good for pre-parsing when not all options are known yet.)\n\t  WARNING: it assumes that there is no ambiguous abbreviations between\n\t  known and unknown option names!\n'
+		printf '    -U\t- When you encounter an unrecognized option don'\''t show error but instead\n\t  treat everything from this point onward as non-options.\n\t  Preserve all "--" as non-options.\n\t  (Good for pre-parsing when not all options are known yet.)\n\t  WARNING: it assumes that there is no ambiguous abbreviations between\n\t  known and unknown option names!\n'
 		printf 'Standalone mode options:\n'
 		printf '    -h, --help\t\t- Print this help text end exit.\n'
 		printf '    -V, --version\t- Print version information and exit.\n'

@@ -132,7 +132,7 @@ test_get_options_success \
 	" --cruelty --bloodlust 'a' 'abcd' --depravity 'a' 'a b'\\\\''c d' --anger" \
 	" --cruelty --bloodlust 'a' --depravity 'a' --anger -- 'abcd' 'a b'\\\\''c d'" \
 	" --cruelty --bloodlust 'a' -- 'abcd' '--deprav' 'a' 'a b'\\\\''c d' '--anger'" \
-	" --cruelty --bloodlust 'a' -- 'abcd' '--deprav' 'a' 'a b'\\\\''c d' '--anger'" \
+	" --cruelty --bloodlust 'a' --depravity 'a' --anger -- 'abcd' 'a b'\\\\''c d'" \
 	--cruelty --bl=a abcd --deprav a 'a b'\''c d' --anger
 
 __test_section__ 'With some options and arguments and "--" before arguments'
@@ -152,7 +152,7 @@ test_get_options_success \
 	" --cruelty --bloodlust 'a' 'abcd' --depravity 'a' --anger '--' 'a b'\\\\''c d'" \
 	" --cruelty --bloodlust 'a' --depravity 'a' --anger -- 'abcd' 'a b'\\\\''c d'" \
 	" --cruelty --bloodlust 'a' -- 'abcd' '--depr' 'a' '--anger' '--' 'a b'\\\\''c d'" \
-	" --cruelty --bloodlust 'a' -- 'abcd' '--depr' 'a' '--anger' '--' 'a b'\\\\''c d'" \
+	" --cruelty --bloodlust 'a' --depravity 'a' --anger -- 'abcd' '--' 'a b'\\\\''c d'" \
 	--cruelty --bloodlust=a abcd --depr a --anger -- 'a b'\''c d'
 
 __test_section__ 'With some options and arguments and "--" after arguments'
@@ -162,7 +162,7 @@ test_get_options_success \
 	" --cruelty --bloodlust 'a' 'abcd' --depravity 'a' 'a b'\\\\''c d' --anger '--'" \
 	" --cruelty --bloodlust 'a' --depravity 'a' --anger -- 'abcd' 'a b'\\\\''c d'" \
 	" --cruelty --bloodlust 'a' -- 'abcd' '--depravity' 'a' 'a b'\\\\''c d' '--an' '--'" \
-	" --cruelty --bloodlust 'a' -- 'abcd' '--depravity' 'a' 'a b'\\\\''c d' '--an' '--'" \
+	" --cruelty --bloodlust 'a' --depravity 'a' --anger -- 'abcd' 'a b'\\\\''c d' '--'" \
 	--cruelty --bloo=a abcd --depravity a 'a b'\''c d' --an --
 
 __test_section__ 'With some options and arguments and things looking like options after "--"'
@@ -172,7 +172,7 @@ test_get_options_success \
 	" --cruelty --bloodlust 'a' 'abcd' --depravity 'a' '--' '--anger' 'a b'\\\\''c d' '--deprav' 'as'\\\\''\\\\dfg '" \
 	" --cruelty --bloodlust 'a' --depravity 'a' -- 'abcd' '--anger' 'a b'\\\\''c d' '--deprav' 'as'\\\\''\\\\dfg '" \
 	" --cruelty --bloodlust 'a' -- 'abcd' '--depra' 'a' '--' '--anger' 'a b'\\\\''c d' '--deprav' 'as'\\\\''\\\\dfg '" \
-	" --cruelty --bloodlust 'a' -- 'abcd' '--depra' 'a' '--' '--anger' 'a b'\\\\''c d' '--deprav' 'as'\\\\''\\\\dfg '" \
+	" --cruelty --bloodlust 'a' --depravity 'a' -- 'abcd' '--' '--anger' 'a b'\\\\''c d' '--deprav' 'as'\\\\''\\\\dfg '" \
 	--cr --b=a abcd --depra a -- --anger 'a b'\''c d' --deprav as\'\\dfg' '
 
 __test_section__ 'With some options and arguments and a few "--"'

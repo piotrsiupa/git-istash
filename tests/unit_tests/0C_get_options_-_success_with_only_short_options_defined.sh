@@ -112,7 +112,7 @@ test_get_options_success \
 	" -c -b 'a' 'abcd' -d 'a' 'a b'\\\\''c d' -a" \
 	" -c -b 'a' -d 'a' -a -- 'abcd' 'a b'\\\\''c d'" \
 	" -c -b 'a' -- 'abcd' '-da' 'a b'\\\\''c d' '-a'" \
-	" -c -b 'a' -- 'abcd' '-da' 'a b'\\\\''c d' '-a'" \
+	" -c -b 'a' -d 'a' -a -- 'abcd' 'a b'\\\\''c d'" \
 	-cba abcd -da 'a b'\''c d' -a
 
 __test_section__ 'With some options and arguments and "--" before arguments'
@@ -132,7 +132,7 @@ test_get_options_success \
 	" -c -b 'a' 'abcd' -d 'a' -a '--' 'a b'\\\\''c d'" \
 	" -c -b 'a' -d 'a' -a -- 'abcd' 'a b'\\\\''c d'" \
 	" -c -b 'a' -- 'abcd' '-da' '-a' '--' 'a b'\\\\''c d'" \
-	" -c -b 'a' -- 'abcd' '-da' '-a' '--' 'a b'\\\\''c d'" \
+	" -c -b 'a' -d 'a' -a -- 'abcd' '--' 'a b'\\\\''c d'" \
 	-cba abcd -da -a -- 'a b'\''c d'
 
 __test_section__ 'With some options and arguments and "--" after arguments'
@@ -142,7 +142,7 @@ test_get_options_success \
 	" -c -b 'a' 'abcd' -d 'a' 'a b'\\\\''c d' -a '--'" \
 	" -c -b 'a' -d 'a' -a -- 'abcd' 'a b'\\\\''c d'" \
 	" -c -b 'a' -- 'abcd' '-da' 'a b'\\\\''c d' '-a' '--'" \
-	" -c -b 'a' -- 'abcd' '-da' 'a b'\\\\''c d' '-a' '--'" \
+	" -c -b 'a' -d 'a' -a -- 'abcd' 'a b'\\\\''c d' '--'" \
 	-cba abcd -da 'a b'\''c d' -a --
 
 __test_section__ 'With some options and arguments and things looking like options after "--"'
@@ -152,7 +152,7 @@ test_get_options_success \
 	" -c -b 'a' 'abcd' -d 'a' '--' '-a' 'a b'\\\\''c d' '-das'\\\\''\\\\dfg '" \
 	" -c -b 'a' -d 'a' -- 'abcd' '-a' 'a b'\\\\''c d' '-das'\\\\''\\\\dfg '" \
 	" -c -b 'a' -- 'abcd' '-da' '--' '-a' 'a b'\\\\''c d' '-das'\\\\''\\\\dfg '" \
-	" -c -b 'a' -- 'abcd' '-da' '--' '-a' 'a b'\\\\''c d' '-das'\\\\''\\\\dfg '" \
+	" -c -b 'a' -d 'a' -- 'abcd' '--' '-a' 'a b'\\\\''c d' '-das'\\\\''\\\\dfg '" \
 	-cba abcd -da -- -a 'a b'\''c d' -das\'\\dfg' '
 
 __test_section__ 'With some options and arguments and a few "--"'
