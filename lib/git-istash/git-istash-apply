@@ -103,13 +103,7 @@ put_files_into_working_copy() { # untracked_changes_sha non_staged_changes_sha s
 }
 
 end_with_rebase_problem() {
-	{
-		printf_color 2 '\033[33m'
-		sub_command_name="$(get_sub_command_name)"
-		printf 'hint: use '\''git istash --continue'\'' after fixing the conflicts\n'
-		printf 'hint: or, to undo everything '\''git istash %s'\'' did, run '\''git istash --abort'\''\n' "$sub_command_name"
-		printf_color 2 '\033[39m'
-	} 1>&2
+	printf_hint 'use '\''git istash --continue'\'' after fixing the conflicts\nor, to undo everything '\''git istash %s'\'' did, run '\''git istash --abort'\''\n' "$(get_sub_command_name)"
 	return 2
 }
 end_with_success() {

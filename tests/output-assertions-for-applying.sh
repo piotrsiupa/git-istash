@@ -9,8 +9,8 @@ fi
 
 create_continue_or_abort_hint_regex() { # operation
 	printf '%s' '
-		hint: use '\''git istash --continue'\'' after fixing the conflicts\n
-		hint: or, to undo everything '\''git istash '"$1"\'' did, run '\''git istash --abort'\''
+		\[33mhint: use '\''git istash --continue'\'' after fixing the conflicts\[0?m\n
+		\[33mhint: or, to undo everything '\''git istash '"$1"\'' did, run '\''git istash --abort'\''\[0?m
 	'
 }
 
@@ -18,16 +18,16 @@ create_continue_or_abort_hint_regex() { # operation
 assert_outputs__apply__conflict() { # operation conflicts
 	# This assertion may be a little frafile because it asserts outputs originated from other Git commands.
 	# The goal is not as much to presisely check this output but rather if it is the intended thing in general and whether there is any additional unwanted text.
-	assert_outputs "$(
+	assert_outputs_with_color "$(
 		sanitize_for_ere "$2" \
 		| sed -E -e 's/^\t+//' -e 's/^(..) (.*)$/\2 \1/' \
 		| sort \
 		| sed -E -e 's/^(.*) (..)$/\2 \1/' -e '$!s/.$/&\n\\n/' \
 		| sed -E \
-			-e 's/^UU (.+)$/Auto-merging \1\\nCONFLICT \\(content\\): Merge conflict in \1/' \
-			-e 's/^AA (.+)$/Auto-merging \1\\nCONFLICT \\(add\\\/add\\): Merge conflict in \1/' \
-			-e 's/^DU (.+)$/CONFLICT \\(modify\\\/delete\\): \1 deleted in HEAD and modified in [0-9a-fA-F]{7,40} \\(.*\\)\\.  Version [0-9a-zA-Z]{7,40} \\(.*\\) of \1 left in tree\\./' \
-			-e 's/^UD (.+)$/CONFLICT \\(modify\\\/delete\\): \1 deleted in [0-9a-fA-F]{7,40} \\(.*\\) and modified in HEAD\\.  Version HEAD of \1 left in tree\\./' \
+			-e 's/^UU (.+)$/<no-strip-color>Auto-merging \1\\nCONFLICT \\(content\\): Merge conflict in \1/' \
+			-e 's/^AA (.+)$/<no-strip-color>Auto-merging \1\\nCONFLICT \\(add\\\/add\\): Merge conflict in \1/' \
+			-e 's/^DU (.+)$/<no-strip-color>CONFLICT \\(modify\\\/delete\\): \1 deleted in HEAD and modified in [0-9a-fA-F]{7,40} \\(.*\\)\\.  Version [0-9a-zA-Z]{7,40} \\(.*\\) of \1 left in tree\\./' \
+			-e 's/^UD (.+)$/<no-strip-color>CONFLICT \\(modify\\\/delete\\): \1 deleted in [0-9a-fA-F]{7,40} \\(.*\\) and modified in HEAD\\.  Version HEAD of \1 left in tree\\./' \
 		| convert_escapes
 	)" "
 		$(create_continue_or_abort_hint_regex "$1")
@@ -43,7 +43,7 @@ assert_outputs__apply__conflict_HT() { # operation normal_conflicts orphan_confl
 }
 
 assert_outputs__apply__failed_resolution() { # operation unresolved_files
-	assert_outputs '
+	assert_outputs_with_color '
 		'"$(sanitize_for_sed "$2")"': needs merge\nYou must edit all merge conflicts and then\nmark them as resolved using git add
 	' "
 		$(create_continue_or_abort_hint_regex "$1")
@@ -136,8 +136,8 @@ assert_outputs__apply__branch_already_used() { # current_op branch
 	' '
 		\[1;31mfatal: failed to restore HEAD to initial position\[0?m\n
 		\[1;31mfatal: '\'"$(sanitize_for_sed "$2")"\'' is already used by worktree at '\''.*'\''\[0?m\n
-		hint: fix the problems and rerun '\''git istash --abort'\''\n
-		hint: or run '\''git istash --quit'\'' to forcefully cancel it
+		\[33mhint: fix the problems and rerun '\''git istash --abort'\''\[0?m\n
+		\[33mhint: or run '\''git istash --quit'\'' to forcefully cancel it\[0?m
 	'
 }
 

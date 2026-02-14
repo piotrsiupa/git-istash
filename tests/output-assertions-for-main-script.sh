@@ -11,7 +11,7 @@ assert_outputs__main_script__no_such_command() { # command
 	assert_outputs_with_color '
 	' '
 		\[31merror: subcommand wasn'\''t specified; '\''push'\'' can'\''t be assumed due to unexpected token '\'"$(sanitize_for_sed "$1")"\''\[0?m\n
-		hint: pathspecs for an implicit '\''push'\'' subcommand must be preceded by '\''--'\''
+		\[33mhint: pathspecs for an implicit '\''push'\'' subcommand must be preceded by '\''--'\''\[0?m
 	'
 }
 

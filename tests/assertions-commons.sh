@@ -50,12 +50,19 @@ assert_outputs() { # stdout_regex stderr_regex
 			"$(printf '%s' "$stderr" | escape_escape_characters)"
 }
 
+_remove_color_from_output_pattern() { # output_pattern
+	printf '%s' "$1" \
+	| if IS_COLOR_ON
+	then
+		sed -E -e 's/^<no-strip-color>//'
+	else
+		sed -E -e '/^<no-strip-color>/!s/\\\[([0-9;]+|0\?)m//g' -e 's/^<no-strip-color>//'
+	fi
+}
+
 # Like "assert_outputs" but is removes ANSI color codes if color parametrization is set to off.
 assert_outputs_with_color() { # stdout_regex stderr_regex
-	if ! IS_COLOR_ON
-	then
-		set -- "$(printf '%s' "$1" | sed -E 's/\\\[([0-9;]+|0\?)m//g')" "$(printf '%s' "$2" | sed -E 's/\\\[([0-9;]+|0\?)m//g')"
-	fi
+	set -- "$(_remove_color_from_output_pattern "$1")" "$(_remove_color_from_output_pattern "$2")"
 	assert_outputs "$@"
 }
 

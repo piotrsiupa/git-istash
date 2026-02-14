@@ -59,7 +59,7 @@ check_pathspec_for_implicit_push() ( # args...
 			fi
 		else
 			printf_error 'subcommand wasn'\''t specified; '\''push'\'' can'\''t be assumed due to unexpected token '\''%s'\''\n' "$1"
-			printf 'hint: pathspecs for an implicit '\''push'\'' subcommand must be preceded by '\''--'\''\n' 1>&2
+			printf_hint 'pathspecs for an implicit '\''push'\'' subcommand must be preceded by '\''--'\''\n'
 			error
 		fi
 	done

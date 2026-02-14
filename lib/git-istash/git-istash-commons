@@ -62,7 +62,7 @@ set_color_for_all() { # value
 	fi
 	export GIT_CONFIG_COUNT
 	#shellcheck disable=SC2034,SC2041
-	for key in 'color.istash.error'
+	for key in 'color.istash.error' 'color.istash.advice'
 	do
 		eval "GIT_CONFIG_KEY_$GIT_CONFIG_COUNT"='"$key"'
 		export "GIT_CONFIG_KEY_$GIT_CONFIG_COUNT"
@@ -166,6 +166,22 @@ fatal() { # arg...
 	return 1
 }
 
+color_hint() {
+	if is_color_enabled 'color.istash.advice' 'color.istash' 'color.advice'
+	then
+		color_lines 'yellow' 'color.istash.advice.hint' 'color.advice.hint'
+	else
+		cat
+	fi
+}
+
+printf_hint() { # arg...
+	#shellcheck disable=SC2059
+	printf "$@" \
+	| sed -E '/./s/^/hint: /' \
+	| color_hint
+} 1>&2
+
 if command -v od 1>/dev/null 2>&1
 then
 	convert_to_octal() {
@@ -226,10 +242,8 @@ check_args() { # max_free_args args...
 	if [ $# -gt "$_max_free_args" ]
 	then
 		printf_error 'too many arguments\n'
-		{
-			printf 'hint: type '\''git %s --help'\'' for detailed information\n' "$_script_name"
-			printf 'hint: or '\''git %s -h'\'' for a short help text\n' "$_script_name"
-		} 1>&2
+		printf_hint 'type '\''git %s --help'\'' for detailed information\n' "$_script_name"
+		printf_hint 'or '\''git %s -h'\'' for a short help text\n' "$_script_name"
 		error
 	fi
 }
@@ -256,25 +270,22 @@ check_other_git_commands_state() {
 	if [ -n "$other_git_command" ]
 	then
 		printf_error 'there is currently '\''git %s'\'' in progress\n' "$other_git_command"
-		printf 'hint: finalize it before running '\''git istash'\'
+		printf_hint 'finalize it before running '\''git istash'\'
 		error
-	fi 1>&2
+	fi
 }
 
 print_broken_operation_hint() { # called_operation
-	printf_color 2 '\033[33m'
 	if printf '%s' "$1" | grep -E -q '^-'
 	then
-		printf 'hint: fix the problems and rerun '\''git istash %s'\''\n' "$1"
+		printf_hint 'fix the problems and rerun '\''git istash %s'\''\n' "$1"
 	else
-		printf 'hint: fix the problem and finalize that operation before starting a new one\n'
+		printf_hint 'fix the problem and finalize that operation before starting a new one\n'
 	fi
-	printf 'hint: or run '\''git istash --quit'\'' to forcefully cancel it\n'
-	printf_color 2 '\033[39m'
-} 1>&2
+	printf_hint 'or run '\''git istash --quit'\'' to forcefully cancel it\n'
+}
 
 print_error_for_data_files_check() { # current_operation called_operation
-	printf_color 2 '\033[31m'
 	if printf '%s\n' "$1" | grep -E -q '^error-'
 	then
 		operation_in_progress="$(printf '%s' "$1" | tail -c +7)"
@@ -292,10 +303,9 @@ print_error_for_data_files_check() { # current_operation called_operation
 	elif [ "$1" != 'nothing' ]
 	then
 		printf_error 'there is currently '\''git istash %s'\'' in progress\n' "$1"
-		printf 'hint: use '\''git istash --continue'\'' or '\''git istash --abort'\''\n'
+		printf_hint 'use '\''git istash --continue'\'' or '\''git istash --abort'\''\n'
 	fi
-	printf_color 2 '\033[39m'
-} 1>&2
+}
 
 check_data_files() { # operation
 	current_operation="$(find_data_files)"
