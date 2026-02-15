@@ -23,6 +23,7 @@ print_help() {
 	printf 'Options:\n'
 	printf '\t--abort\t\t- Abort apply / pop when one is in progress.\n'
 	printf '\t--color=<when>\t- Allow use of ANSI color codes.\n\t\t\t  <when> can be one of always, never, or auto.\n'
+	printf '\t--no-color\t- Same as --color=never.\n'
 	printf '    -c, --continue\t- Continue apply / pop when one is in progress.\n'
 	printf '    -h\t\t\t- Show this help text and exit.\n'
 	printf '\t--help\t\t- Show manual page if possible.\n\t\t\t  (If you run it through "git", it will handle this in\n\t\t\t  its own way, which fails on Windows. See --man.)\n'
@@ -88,7 +89,7 @@ show_manual() {
 }
 
 getopt_short_options='ch'
-getopt_long_options='_skip-version-check_,abort,color:,continue,help,man,quit,version'
+getopt_long_options='_skip-version-check_,abort,color:,no-color,continue,help,man,quit,version'
 normalized_options="$(get_options_color -U "$getopt_short_options" "$getopt_long_options" "$@")"
 eval set -- "$normalized_options"
 skip_version_check=n
@@ -104,6 +105,9 @@ do
 	--color)
 		shift
 		set_color_for_all "$1"
+		;;
+	--no-color)
+		set_color_for_all 'never'
 		;;
 	-h)
 		while [ "$1" != '--' ]

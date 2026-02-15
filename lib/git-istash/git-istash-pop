@@ -17,6 +17,7 @@ print_help() {
 	printf 'Options:\n'
 	printf '\t--abort\t\t- Abort the previous operation and return the repository\n\t\t\t  to the state before it started.\n'
 	printf '\t--color=<when>\t- Allow use of ANSI color codes.\n\t\t\t  <when> can be one of always, never, or auto.\n'
+	printf '\t--no-color\t- Same as --color=never.\n'
 	printf '    -c, --continue\t- Resume the previous operation.\n\t\t\t  (Conflicts need to be resolved before that.)\n'
 	printf '    -h\t\t\t- Show this help text and exit.\n'
 	printf '\t--quit\t\t- Abort the operation but don'\''t restore the repository\n\t\t\t  state nor move the HEAD.\n'
@@ -161,7 +162,7 @@ do_pop() { # args...
 }
 
 getopt_short_options='chq'
-getopt_long_options='abort,color:,continue,quit'
+getopt_long_options='abort,color:,no-color,continue,quit'
 normalized_options="$(get_options_color "$getopt_short_options" "$getopt_long_options" "$@")"
 eval set -- "$normalized_options"
 abort_set=n
@@ -176,6 +177,9 @@ do
 	--color)
 		shift
 		set_color_for_all "$1"
+		;;
+	--no-color)
+		set_color_for_all 'never'
 		;;
 	-c|--continue)
 		continue_set=y
