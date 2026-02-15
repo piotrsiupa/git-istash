@@ -53,13 +53,6 @@ set_color_for_all() { # value
 		export "GIT_CONFIG_VALUE_$GIT_CONFIG_COUNT"
 		GIT_CONFIG_COUNT=$((GIT_CONFIG_COUNT + 1))
 	done
-	#TODO The code below is a temporary solution to make tests pass while not all colors are yet implemented.
-	#TODO It needs to be replaced with something robust before a merge to master.
-	eval "GIT_CONFIG_KEY_$GIT_CONFIG_COUNT"='color.ui'
-	export "GIT_CONFIG_KEY_$GIT_CONFIG_COUNT"
-	eval "GIT_CONFIG_VALUE_$GIT_CONFIG_COUNT"='never'
-	export "GIT_CONFIG_VALUE_$GIT_CONFIG_COUNT"
-	GIT_CONFIG_COUNT=$((GIT_CONFIG_COUNT + 1))
 }
 
 is_color_enabled() { # config_variable...
