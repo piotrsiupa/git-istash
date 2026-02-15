@@ -221,6 +221,7 @@ set_getopt_options_from_make_command() {
 }
 
 check_for_option_h_in_make_command() ( # option...
+	set -e
 	if ! set_getopt_options_from_make_command
 	then
 		return 0  # Fall back to showing help, to not accidentaly break the repository.

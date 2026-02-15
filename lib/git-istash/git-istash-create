@@ -29,7 +29,11 @@ print_help() {
 	printf '\t--no-include-untracked - Do not stash untracked files even with --all.\n'
 }
 
-if check_for_option_h_in_make_command "$@"
+set +e
+check_for_option_h_in_make_command "$@"
+result=$?
+set -e
+if [ $result -eq 0 ]
 then
 	print_help
 	exit 0
