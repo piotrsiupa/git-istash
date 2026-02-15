@@ -8,7 +8,7 @@ prepare_repository
 cat >'set_color_for_all_and_check.sh' <<EOF
 #!/usr/bin/env sh
 set -eu
-. '$(cd - 1>/dev/null ; pwd)/../lib/git-istash/git-istash-commons'
+. '$(cd - 1>/dev/null ; pwd)/../lib/git-istash/git-istash-io'
 set_color_for_all "\$1"
 # Checking only one variable. The rest are covered by setting-specific tests.
 git config --get-colorbool 'color.istash.error' 'true'

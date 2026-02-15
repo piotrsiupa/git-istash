@@ -8,7 +8,7 @@ prepare_repository
 cat >'color_lines.sh' <<EOF
 #!/usr/bin/env sh
 set -eu
-. '$(cd - 1>/dev/null ; pwd)/../lib/git-istash/git-istash-commons'
+. '$(cd - 1>/dev/null ; pwd)/../lib/git-istash/git-istash-io'
 color_lines "\$@"
 EOF
 chmod +x 'color_lines.sh'

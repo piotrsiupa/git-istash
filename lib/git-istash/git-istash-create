@@ -3,6 +3,7 @@
 set -eu
 
 . "$(dirname "$0")/git-istash-commons"
+. "$(dirname "$0")/git-istash-io"
 
 print_help() {
 	printf 'git istash create - An improved version of "git stash create" that can handle\n     orphan branches and supports a bunch of options.\n'

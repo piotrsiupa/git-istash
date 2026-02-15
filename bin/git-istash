@@ -2,7 +2,7 @@
 
 set -eu
 
-. "$(dirname "$0")/../lib/git-istash/git-istash-commons"
+. "$(dirname "$0")/../lib/git-istash/git-istash-io"
 
 min_git_version='2.42.0'
 min_git_version_regex='2\.(4[2-9]|[5-9][0-9]|[1-9][0-9]{2,})(\..+)?'
@@ -180,6 +180,7 @@ then
 		subcommand='push'
 		set -- '--_implicit-push_' "$@"
 	else
+		. "$(dirname "$0")/../lib/git-istash/git-istash-commons"
 		data_files="$(find_data_files)"
 		case "$data_files" in
 			nothing)

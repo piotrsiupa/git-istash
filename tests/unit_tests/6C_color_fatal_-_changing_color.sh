@@ -8,7 +8,7 @@ prepare_repository
 cat >'color_fatal.sh' <<EOF
 #!/usr/bin/env sh
 set -eu
-. '$(cd - 1>/dev/null ; pwd)/../lib/git-istash/git-istash-commons'
+. '$(cd - 1>/dev/null ; pwd)/../lib/git-istash/git-istash-io'
 printf 'foo\n' | color_fatal
 EOF
 chmod +x 'color_fatal.sh'

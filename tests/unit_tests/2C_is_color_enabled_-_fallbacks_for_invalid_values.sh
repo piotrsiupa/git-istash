@@ -8,7 +8,7 @@ prepare_repository
 cat >'is_color_enabled.sh' <<EOF
 #!/usr/bin/env sh
 set -eu
-. '$(cd - 1>/dev/null ; pwd)/../lib/git-istash/git-istash-commons'
+. '$(cd - 1>/dev/null ; pwd)/../lib/git-istash/git-istash-io'
 is_color_enabled "\$@"
 EOF
 chmod +x 'is_color_enabled.sh'

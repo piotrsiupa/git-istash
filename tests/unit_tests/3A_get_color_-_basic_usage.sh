@@ -8,7 +8,7 @@ prepare_repository
 cat >'get_color.sh' <<EOF
 #!/usr/bin/env sh
 set -eu
-. '$(cd - 1>/dev/null ; pwd)/../lib/git-istash/git-istash-commons'
+. '$(cd - 1>/dev/null ; pwd)/../lib/git-istash/git-istash-io'
 get_color "\$@"
 EOF
 chmod +x 'get_color.sh'

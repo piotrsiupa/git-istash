@@ -3,6 +3,7 @@
 set -eu
 
 . "$(dirname "$0")/git-istash-commons"
+. "$(dirname "$0")/git-istash-io"
 
 print_help() {
 	printf 'git istash save - A version of "git istash push" that doesn'\''t remove any changes\n    from the working directory.\n'

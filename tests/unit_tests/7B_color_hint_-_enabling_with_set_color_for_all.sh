@@ -8,7 +8,7 @@ prepare_repository
 cat >'color_hint.sh' <<EOF
 #!/usr/bin/env sh
 set -eu
-. '$(cd - 1>/dev/null ; pwd)/../lib/git-istash/git-istash-commons'
+. '$(cd - 1>/dev/null ; pwd)/../lib/git-istash/git-istash-io'
 set_color_for_all "\$1"
 printf 'foo\n' | color_hint
 EOF

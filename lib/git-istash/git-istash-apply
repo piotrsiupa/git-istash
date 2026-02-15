@@ -3,6 +3,7 @@
 set -eu
 
 . "$(dirname "$0")/git-istash-commons"
+. "$(dirname "$0")/git-istash-io"
 . "$(dirname "$0")/git-istash-vanilla-format"
 
 print_help() {
