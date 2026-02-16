@@ -56,12 +56,13 @@ capture_outputs() { # command [arguments...]
 	stderr_file="$(mktemp)"
 	exec 7>&1
 	error_code="$(
-		set +e
 		{
 			{
 				{
-					"$@" 8>&2 2>&1 1>&8 8>&-
+					set +e
+					(set -e ; "$@") 8>&2 2>&1 1>&8 8>&-
 					printf '%i\n' $? 1>&7
+					set -e
 				} | tee "$stderr_file"
 			} 8>&2 2>&1 1>&8 8>&- | tee "$stdout_file"
 		} 8>&7 7>&1 1>&8 8>&-

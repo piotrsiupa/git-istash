@@ -11,7 +11,10 @@ fi
 assert_exit_code__light() { # expected_code command [arguments...]
 	expected_exit_code_for_assert="$1"
 	shift
-	"$@" && exit_code_for_assert=0 || exit_code_for_assert=$?
+	set +e
+	(set -e ; "$@")
+	exit_code_for_assert=$?
+	set -e
 	#shellcheck disable=SC2154
 	test "$exit_code_for_assert" -eq "$expected_exit_code_for_assert" ||
 		fail 'Command "%s" returned exit code %i but %i was expected!\n' "$*" "$exit_code_for_assert" "$expected_exit_code_for_assert"
@@ -23,8 +26,15 @@ assert_exit_code__light() { # expected_code command [arguments...]
 assert_exit_code() { # expected_code command [arguments...]
 	expected_exit_code_for_assert="$1"
 	shift
-	assert_exit_code__light "$expected_exit_code_for_assert" capture_outputs "$@"
+	set +e
+	capture_outputs "$@"
+	exit_code_for_assert=$?
+	set -e
+	#shellcheck disable=SC2154
+	test "$exit_code_for_assert" -eq "$expected_exit_code_for_assert" ||
+		fail 'Command "%s" returned exit code %i but %i was expected!\n' "$*" "$exit_code_for_assert" "$expected_exit_code_for_assert"
 	unset expected_exit_code_for_assert
+	unset exit_code_for_assert
 }
 
 # It's for the sake of seing them clearly in the error message.
