@@ -201,21 +201,22 @@ get_head_sha_HT() {
 #shellcheck disable=SC2120
 PARAMETRIZE_COLOR() { # keys
 	# "auto" is not tested here, because it's not really viable to capture program output while doing that.
-	PARAMETRIZE_OPTION true 'COLOR' 'color' 'YES: && COLOR-YES-LONG && COLOR-YES-LONGISH0 & COLOR-YES-LONGISH1 | NO: COLOR-NO-LONG & NO-COLOR-LONG && COLOR-DEFAULT && COLOR-NO-LONGISH0 & COLOR-NO-LONGISH1 & NO-COLOR-LONGISH0 & NO-COLOR-LONGISH1' "$@"
+	PARAMETRIZE_OPTION true 'COLOR' 'color' 'YES: COLOR-LONG && COLOR-YES-LONG && COLOR-YES-LONGISH0 & COLOR-YES-LONGISH1 | NO: COLOR-NO-LONG & NO-COLOR-LONG && COLOR-DEFAULT && COLOR-NO-LONGISH0 & COLOR-NO-LONGISH1 & NO-COLOR-LONGISH0 & NO-COLOR-LONGISH1' "$@"
 	#shellcheck disable=SC2034
 	case "$COLOR" in
+		COLOR-LONG) COLOR_FLAGS='--color' ;;
 		COLOR-YES-LONG) COLOR_FLAGS='--color=always' ;;
-		COLOR-YES-LONGISH0) COLOR_FLAGS='--colo YES' ;;
+		COLOR-YES-LONGISH0) COLOR_FLAGS='--colo=YES' ;;
 		COLOR-YES-LONGISH1) COLOR_FLAGS='--col=t' ;;
 		COLOR-DEFAULT) COLOR_FLAGS='' ;;
 		COLOR-NO-LONG) COLOR_FLAGS='--color=never' ;;
 		NO-COLOR-LONG) COLOR_FLAGS='--no-color' ;;
-		COLOR-NO-LONGISH0) COLOR_FLAGS='--colo NO' ;;
+		COLOR-NO-LONGISH0) COLOR_FLAGS='--colo=NO' ;;
 		COLOR-NO-LONGISH1) COLOR_FLAGS='--col=0' ;;
 		NO-COLOR-LONGISH0) COLOR_FLAGS='--no-col' ;;
 		NO-COLOR-LONGISH1) COLOR_FLAGS='--no-c' ;;
 	esac
 }
 IS_COLOR_ON() {
-	printf '%s' "$COLOR" | grep -Eq '^COLOR-YES-'
+	printf '%s' "$COLOR" | grep -Eq '^COLOR-YES-|^COLOR-LONG$'
 }

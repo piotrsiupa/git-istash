@@ -22,7 +22,7 @@ print_help() {
 	printf '\n'
 	printf 'Options:\n'
 	printf '\t--abort\t\t- Abort apply / pop when one is in progress.\n'
-	printf '\t--color=<when>\t- Allow use of ANSI color codes.\n\t\t\t  <when> can be one of always, never, or auto.\n'
+	printf '\t--color[=<when>] - Allow use of ANSI color codes.\n\t\t\t  <when> can be one of always, never, or auto.\n\t\t\t  Omitting the argument is equivalent to always.\n'
 	printf '\t--no-color\t- Same as --color=never.\n'
 	printf '    -c, --continue\t- Continue apply / pop when one is in progress.\n'
 	printf '    -h\t\t\t- Show this help text and exit.\n'
@@ -89,7 +89,7 @@ show_manual() {
 }
 
 getopt_short_options='ch'
-getopt_long_options='_skip-version-check_,abort,color:,no-color,continue,help,man,quit,version'
+getopt_long_options='_skip-version-check_,abort,color::,no-color,continue,help,man,quit,version'
 normalized_options="$(get_options_color -U "$getopt_short_options" "$getopt_long_options" "$@")"
 eval set -- "$normalized_options"
 skip_version_check=n
