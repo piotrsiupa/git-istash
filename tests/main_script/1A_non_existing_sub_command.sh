@@ -1,5 +1,7 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
+PARAMETRIZE_COLOR
+
 __end_of_initialization__
 
 prepare_repository
@@ -14,7 +16,8 @@ git add -N bbb
 printf 'bbb\n' >aaa
 printf 'ddd\n' >ddd
 
-assert_exit_code 1 git istash asdf
+#shellcheck disable=SC2086
+assert_exit_code 1 git istash $COLOR_FLAGS asdf
 assert_outputs__main_script__no_such_command 'asdf'
 assert_files '
 AM aaa		bbb	aaa
