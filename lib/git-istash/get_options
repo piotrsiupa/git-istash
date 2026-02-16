@@ -49,31 +49,31 @@ get_options() ( # [-P | -R | -U] short_options_string long_options_string [argum
 		fatal 'white character in short options definition for get_options'
 	printf '%s' "$1" | grep -E -q '^:' &&
 		fatal 'empty entry in short options definition for get_options'
-	printf '%s' "$1" | grep -E -q '::' &&
-		fatal 'double : in short options definition for get_options'
+	printf '%s' "$1" | grep -E -q ':::' &&
+		fatal 'triple : in short options definition for get_options'
 	short_options="$(
 		printf '%s' "$1" \
-		| sed -E 's/([^:]):?/\1\n/g'
+		| sed -E 's/([^:]):*/\1\n/g'
 	)"
 	repeated_option="$(printf '%s' "$short_options" | sort | uniq -c | sed -E -n '/^\s*1\s/!s/^\s*[0-9]+\s+//p' | head -n 1)"
 	test -z "$repeated_option" ||
 		fatal 'option -%s repeats in options definition for get_options' "$repeated_option"
 	short_options_args="$(
 		printf '%s' "$1" \
-		| sed -E 's/[^:]:?/&\n/g' \
-		| sed -E -e 's/^.$/n/' -e 's/^.:$/y/' \
+		| sed -E 's/[^:]:*/&\n/g' \
+		| sed -E -e 's/^.$/n/' -e 's/^.:$/y/' -e 's/^.::$/o/' \
 		| tr -d '\n'
 	)"
 	printf '%s' "$2" | tr '\n' ' ' | grep -E -q '\s' &&
 		fatal 'white character in long options definition for get_options'
-	printf '%s' "$2" | grep -E -q '(^|,):?,|,:?$' &&
+	printf '%s' "$2" | grep -E -q '(^|,):*,|,:*$' &&
 		fatal 'empty entry in long options definition for get_options'
-	printf '%s' "$2" | grep -E -q '::' &&
-		fatal 'double : in long options definition for get_options'
+	printf '%s' "$2" | grep -E -q ':::' &&
+		fatal 'triple : in long options definition for get_options'
 	long_options="$(
 		printf '%s' "$2" \
 		| tr ',' '\n' \
-		| sed -E 's/:$//'
+		| sed -E 's/:+$//'
 	)"
 	printf '%s' "$long_options" | grep -E -q ':' &&
 		fatal ': in a name of a long option in definition for get_options'
@@ -85,7 +85,7 @@ get_options() ( # [-P | -R | -U] short_options_string long_options_string [argum
 	long_options_args="$(
 		printf '%s' "$2" \
 		| tr ',' '\n' \
-		| sed -E -e 's/^.*[^:]$/n/' -e 's/^.+:$/y/' \
+		| sed -E -e 's/^.*[^:]$/n/' -e 's/^.*[^:]:$/y/' -e 's/^.*[^:]::$/o/' \
 		| tr -d '\n'
 	)"
 	shift 2
@@ -154,6 +154,22 @@ get_options() ( # [-P | -R | -U] short_options_string long_options_string [argum
 					else
 						error 'option `%s'\'' requires a value' "$option_name"
 					fi
+				elif [ "$has_parameter" = o ]
+				then
+					printf ' '
+					if printf '%s' "$1" | grep -E -q '='
+					then
+						{
+							printf '%s' "$1" | head -n1 | cut -d= -f2- | tr -d '\n'
+							if [ "$(printf '%s\n' "$1" | wc -l)" -gt 1 ]
+							then
+								printf '\n'
+								printf '%s' "$1" | tail -n+2
+							fi
+						} | escape_for_shell
+					else
+						printf \'\'
+					fi
 				elif printf '%s' "$1" | grep -E -q '='
 				then
 					error 'option `%s'\'' takes no value' "$option_name"
@@ -191,6 +207,16 @@ get_options() ( # [-P | -R | -U] short_options_string long_options_string [argum
 							shift
 						else
 							error 'switch `%s'\'' requires a value' "$option_letter"
+						fi
+						break
+					elif [ "$has_parameter" = o ]
+					then
+						printf ' '
+						if [ ${#1} -gt $i ]
+						then
+							printf '%s' "$1" | tail -c+$((i+1)) | escape_for_shell
+						else
+							printf \'\'
 						fi
 						break
 					else
@@ -257,16 +283,17 @@ then
 		printf '\n'
 		printf '<short_opts_descr> - a string describing all allowed short options.\n'
 		printf 'Short option string contains a list of options names as individual characters,\nwithout separators. '
-		printf 'A special character ":" may follow another character to\nsymbolize that the option has an argument.\n'
-		printf 'Characters "-" and ":" may not be used as short option names.\n'
-		printf '(Weird characters such as whitespaces aren'\''t tested and may not work.)\n'
+		printf 'A special character ":" may follow another character to\nsymbolize that the option has an argument. '
+		printf 'Using double ":" instead of a single\none means that the argument is not mandatory. '
+		printf 'Characters "-" and ":" may not be\nused as short option names. '
+		printf '(Weird characters such as whitespaces aren'\''t tested\nand may not work.)\n'
 		printf 'E.g. "abc:d" defines options "-a", "-b", "-c" and "-d", where "-c" takes an\nargument and the other options don'\''t.\n'
 		printf '(An empty string means that short options are not allowed.)\n'
 		printf '\n'
 		printf '<long_opts_descr> - a string describing all known long options.\n'
 		printf 'Long options are a list of option names separated with ",". '
 		printf 'A special character\n":" may be placed at the end of an option name to symbolize that the option has\nan argument. '
-		printf '(Optional arguments are not supported.)\n'
+		printf 'Using double ":" instead of a single one means that the argument is\nnot mandatory. '
 		printf 'Characters ":" and "," may not be used in long option names.\n'
 		printf '(Weird characters such as whitespaces aren'\''t tested and may not work.)\n'
 		printf 'E.g. "foo,bar:,baz" defines options "--foo", "--bar" and "--baz", where "--bar"\ntakes an argument and the other options don'\''t.\n'

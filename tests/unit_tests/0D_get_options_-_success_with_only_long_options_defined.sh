@@ -8,7 +8,7 @@ __end_of_initialization__
 __test_section__ 'Without arguments'
 test_get_options_success \
 	'' \
-	'anger,bloodlust:,cruelty,depravity:' \
+	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
 	"" \
 	" --" \
 	" --" \
@@ -18,7 +18,7 @@ test_get_options_success \
 __test_section__ 'Without only --'
 test_get_options_success \
 	'' \
-	'anger,bloodlust:,cruelty,depravity:' \
+	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
 	" '--'" \
 	" --" \
 	" --" \
@@ -28,7 +28,7 @@ test_get_options_success \
 __test_section__ 'With an argument'
 test_get_options_success \
 	'' \
-	'anger,bloodlust:,cruelty,depravity:' \
+	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
 	" 'anger'" \
 	" -- 'anger'" \
 	" -- 'anger'" \
@@ -38,7 +38,7 @@ test_get_options_success \
 __test_section__ 'With an option'
 test_get_options_success \
 	'' \
-	'anger,bloodlust:,cruelty,depravity:' \
+	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
 	" --anger" \
 	" --anger --" \
 	" --anger --" \
@@ -48,7 +48,7 @@ test_get_options_success \
 __test_section__ 'With an option with a parameter'
 test_get_options_success \
 	'' \
-	'anger,bloodlust:,cruelty,depravity:' \
+	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
 	" --bloodlust ' xyz '" \
 	" --bloodlust ' xyz ' --" \
 	" --bloodlust ' xyz ' --" \
@@ -58,7 +58,7 @@ test_get_options_success \
 __test_section__ 'With an option with an empty parameter'
 test_get_options_success \
 	'' \
-	'anger,bloodlust:,cruelty,depravity:' \
+	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
 	" --bloodlust ''" \
 	" --bloodlust '' --" \
 	" --bloodlust '' --" \
@@ -68,7 +68,7 @@ test_get_options_success \
 __test_section__ 'With an option with a parameter separated by "="'
 test_get_options_success \
 	'' \
-	'anger,bloodlust:,cruelty,depravity:' \
+	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
 	" --bloodlust ' xyz '" \
 	" --bloodlust ' xyz ' --" \
 	" --bloodlust ' xyz ' --" \
@@ -78,109 +78,139 @@ test_get_options_success \
 __test_section__ 'With an option with an empty parameter separated by "="'
 test_get_options_success \
 	'' \
-	'anger,bloodlust:,cruelty,depravity:' \
+	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
 	" --bloodlust ''" \
 	" --bloodlust '' --" \
 	" --bloodlust '' --" \
 	" --bloodlust '' --" \
 	--bloodlust=
 
+__test_section__ 'With an option with an optional parameter'
+test_get_options_success \
+	'' \
+	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
+	" --evilness '' ' xyz '" \
+	" --evilness '' -- ' xyz '" \
+	" --evilness '' -- ' xyz '" \
+	" --evilness '' -- ' xyz '" \
+	--evilness ' xyz '
+
+__test_section__ 'With an option with an optional parameter separated by "="'
+test_get_options_success \
+	'' \
+	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
+	" --evilness ' xyz '" \
+	" --evilness ' xyz ' --" \
+	" --evilness ' xyz ' --" \
+	" --evilness ' xyz ' --" \
+	--evilness=' xyz '
+
+__test_section__ 'With an option with an optional empty parameter separated by "="'
+test_get_options_success \
+	'' \
+	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
+	" --evilness ''" \
+	" --evilness '' --" \
+	" --evilness '' --" \
+	" --evilness '' --" \
+	--evilness=
+
 __test_section__ 'With a few options'
 test_get_options_success \
 	'' \
-	'anger,bloodlust:,cruelty,depravity:' \
-	" --bloodlust ' xyz ' --cruelty --depravity 'a'" \
-	" --bloodlust ' xyz ' --cruelty --depravity 'a' --" \
-	" --bloodlust ' xyz ' --cruelty --depravity 'a' --" \
-	" --bloodlust ' xyz ' --cruelty --depravity 'a' --" \
-	--bloodlust ' xyz ' --cruelty --depravity=a
+	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
+	" --bloodlust ' xyz ' --evilness '' --cruelty --fury 'xyz' --depravity 'a'" \
+	" --bloodlust ' xyz ' --evilness '' --cruelty --fury 'xyz' --depravity 'a' --" \
+	" --bloodlust ' xyz ' --evilness '' --cruelty --fury 'xyz' --depravity 'a' --" \
+	" --bloodlust ' xyz ' --evilness '' --cruelty --fury 'xyz' --depravity 'a' --" \
+	--bloodlust ' xyz ' --evilness --cruelty --fury=xyz --depravity=a
 
 __test_section__ 'With a few repeated options'
 test_get_options_success \
 	'' \
-	'anger,bloodlust:,cruelty,depravity:' \
-	" --bloodlust ' xyz ' --cruelty --depravity '--anger' --bloodlust 'qwerty' --anger --cruelty" \
-	" --bloodlust ' xyz ' --cruelty --depravity '--anger' --bloodlust 'qwerty' --anger --cruelty --" \
-	" --bloodlust ' xyz ' --cruelty --depravity '--anger' --bloodlust 'qwerty' --anger --cruelty --" \
-	" --bloodlust ' xyz ' --cruelty --depravity '--anger' --bloodlust 'qwerty' --anger --cruelty --" \
-	--bloodlust ' xyz ' --cruelty --depravity --anger --bloodlust qwerty --anger --cruelty
+	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
+	" --bloodlust ' xyz ' --evilness '' --cruelty --fury 'xyz' --depravity '--anger' --evilness 'asdfgh' --bloodlust 'qwerty' --anger --fury '' --cruelty" \
+	" --bloodlust ' xyz ' --evilness '' --cruelty --fury 'xyz' --depravity '--anger' --evilness 'asdfgh' --bloodlust 'qwerty' --anger --fury '' --cruelty --" \
+	" --bloodlust ' xyz ' --evilness '' --cruelty --fury 'xyz' --depravity '--anger' --evilness 'asdfgh' --bloodlust 'qwerty' --anger --fury '' --cruelty --" \
+	" --bloodlust ' xyz ' --evilness '' --cruelty --fury 'xyz' --depravity '--anger' --evilness 'asdfgh' --bloodlust 'qwerty' --anger --fury '' --cruelty --" \
+	--bloodlust ' xyz ' --evilness --cruelty --fury=xyz --depravity --anger --evilness=asdfgh --bloodlust qwerty --anger --fury --cruelty
 
 __test_section__ 'With a few abbreviated options'
 test_get_options_success \
 	'' \
-	'anger,bloodlust:,cruelty,depravity:' \
-	" --bloodlust ' xyz ' --cruelty --depravity 'a'" \
-	" --bloodlust ' xyz ' --cruelty --depravity 'a' --" \
-	" --bloodlust ' xyz ' --cruelty --depravity 'a' --" \
-	" --bloodlust ' xyz ' --cruelty --depravity 'a' --" \
-	--blood ' xyz ' --cruelt --d=a
+	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
+	" --bloodlust ' xyz ' --evilness '' --cruelty --fury 'xyz' --depravity 'a'" \
+	" --bloodlust ' xyz ' --evilness '' --cruelty --fury 'xyz' --depravity 'a' --" \
+	" --bloodlust ' xyz ' --evilness '' --cruelty --fury 'xyz' --depravity 'a' --" \
+	" --bloodlust ' xyz ' --evilness '' --cruelty --fury 'xyz' --depravity 'a' --" \
+	--blood ' xyz ' --evil --cruelt --fu=xyz --d=a
 
 __test_section__ 'With a few abbreviation that is a name of a different option'
 test_get_options_success \
 	'' \
-	'anger,bloodlust:,cruelty,blood,depravity:' \
-	" --bloodlust ' xyz ' --cruelty --blood --depravity 'a'" \
-	" --bloodlust ' xyz ' --cruelty --blood --depravity 'a' --" \
-	" --bloodlust ' xyz ' --cruelty --blood --depravity 'a' --" \
-	" --bloodlust ' xyz ' --cruelty --blood --depravity 'a' --" \
-	--bloodl ' xyz ' --cruelt --blood --d=a
+	'anger,bloodlust:,cruelty,blood,depravity:,evilness::,evil,fury::' \
+	" --bloodlust ' xyz ' --evil --cruelty --blood --fury 'xyz' --depravity 'a'" \
+	" --bloodlust ' xyz ' --evil --cruelty --blood --fury 'xyz' --depravity 'a' --" \
+	" --bloodlust ' xyz ' --evil --cruelty --blood --fury 'xyz' --depravity 'a' --" \
+	" --bloodlust ' xyz ' --evil --cruelty --blood --fury 'xyz' --depravity 'a' --" \
+	--bloodl ' xyz ' --evil --cruelt --blood --fury=xyz --d=a
 
 __test_section__ 'With some options and arguments'
 test_get_options_success \
 	'' \
-	'anger,bloodlust:,cruelty,depravity:' \
-	" --cruelty --bloodlust 'a' 'abcd' --depravity 'a' 'a b'\\\\''c d' --anger" \
-	" --cruelty --bloodlust 'a' --depravity 'a' --anger -- 'abcd' 'a b'\\\\''c d'" \
-	" --cruelty --bloodlust 'a' -- 'abcd' '--deprav' 'a' 'a b'\\\\''c d' '--anger'" \
-	" --cruelty --bloodlust 'a' --depravity 'a' --anger -- 'abcd' 'a b'\\\\''c d'" \
-	--cruelty --bl=a abcd --deprav a 'a b'\''c d' --anger
+	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
+	" --cruelty --bloodlust 'a' --evilness '' 'abcd' --fury 'xyz' --depravity 'a' 'a b'\\\\''c d' --anger" \
+	" --cruelty --bloodlust 'a' --evilness '' --fury 'xyz' --depravity 'a' --anger -- 'abcd' 'a b'\\\\''c d'" \
+	" --cruelty --bloodlust 'a' --evilness '' -- 'abcd' '--f=xyz' '--deprav' 'a' 'a b'\\\\''c d' '--anger'" \
+	" --cruelty --bloodlust 'a' --evilness '' --fury 'xyz' --depravity 'a' --anger -- 'abcd' 'a b'\\\\''c d'" \
+	--cruelty --bl=a --ev abcd --f=xyz --deprav a 'a b'\''c d' --anger
 
 __test_section__ 'With some options and arguments and "--" before arguments'
 test_get_options_success \
 	'' \
-	'anger,bloodlust:,cruelty,depravity:' \
-	" --cruelty --bloodlust 'a' --depravity 'a' --anger '--' 'abcd' 'a b'\\\\''c d'" \
-	" --cruelty --bloodlust 'a' --depravity 'a' --anger -- 'abcd' 'a b'\\\\''c d'" \
-	" --cruelty --bloodlust 'a' --depravity 'a' --anger -- 'abcd' 'a b'\\\\''c d'" \
-	" --cruelty --bloodlust 'a' --depravity 'a' --anger -- '--' 'abcd' 'a b'\\\\''c d'" \
-	--cruelty --bloodlust=a --depravity a --ang -- abcd 'a b'\''c d'
+	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
+	" --cruelty --bloodlust 'a' --evilness '' --fury 'xyz' --depravity 'a' --anger '--' 'abcd' 'a b'\\\\''c d'" \
+	" --cruelty --bloodlust 'a' --evilness '' --fury 'xyz' --depravity 'a' --anger -- 'abcd' 'a b'\\\\''c d'" \
+	" --cruelty --bloodlust 'a' --evilness '' --fury 'xyz' --depravity 'a' --anger -- 'abcd' 'a b'\\\\''c d'" \
+	" --cruelty --bloodlust 'a' --evilness '' --fury 'xyz' --depravity 'a' --anger -- '--' 'abcd' 'a b'\\\\''c d'" \
+	--cruelty --bloodlust=a --evilness --fury=xyz --depravity a --ang -- abcd 'a b'\''c d'
 
 __test_section__ 'With some options and arguments and "--" in middle of arguments'
 test_get_options_success \
 	'' \
-	'anger,bloodlust:,cruelty,depravity:' \
-	" --cruelty --bloodlust 'a' 'abcd' --depravity 'a' --anger '--' 'a b'\\\\''c d'" \
-	" --cruelty --bloodlust 'a' --depravity 'a' --anger -- 'abcd' 'a b'\\\\''c d'" \
-	" --cruelty --bloodlust 'a' -- 'abcd' '--depr' 'a' '--anger' '--' 'a b'\\\\''c d'" \
-	" --cruelty --bloodlust 'a' --depravity 'a' --anger -- 'abcd' '--' 'a b'\\\\''c d'" \
-	--cruelty --bloodlust=a abcd --depr a --anger -- 'a b'\''c d'
+	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
+	" --cruelty --bloodlust 'a' --evilness '' 'abcd' --fury 'xyz' --depravity 'a' --anger '--' 'a b'\\\\''c d'" \
+	" --cruelty --bloodlust 'a' --evilness '' --fury 'xyz' --depravity 'a' --anger -- 'abcd' 'a b'\\\\''c d'" \
+	" --cruelty --bloodlust 'a' --evilness '' -- 'abcd' '--fury=xyz' '--depr' 'a' '--anger' '--' 'a b'\\\\''c d'" \
+	" --cruelty --bloodlust 'a' --evilness '' --fury 'xyz' --depravity 'a' --anger -- 'abcd' '--' 'a b'\\\\''c d'" \
+	--cruelty --bloodlust=a --evilness abcd --fury=xyz --depr a --anger -- 'a b'\''c d'
 
 __test_section__ 'With some options and arguments and "--" after arguments'
 test_get_options_success \
 	'' \
-	'anger,bloodlust:,cruelty,depravity:' \
-	" --cruelty --bloodlust 'a' 'abcd' --depravity 'a' 'a b'\\\\''c d' --anger '--'" \
-	" --cruelty --bloodlust 'a' --depravity 'a' --anger -- 'abcd' 'a b'\\\\''c d'" \
-	" --cruelty --bloodlust 'a' -- 'abcd' '--depravity' 'a' 'a b'\\\\''c d' '--an' '--'" \
-	" --cruelty --bloodlust 'a' --depravity 'a' --anger -- 'abcd' 'a b'\\\\''c d' '--'" \
-	--cruelty --bloo=a abcd --depravity a 'a b'\''c d' --an --
+	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
+	" --cruelty --bloodlust 'a' --evilness '' 'abcd' --fury 'xyz' --depravity 'a' 'a b'\\\\''c d' --anger '--'" \
+	" --cruelty --bloodlust 'a' --evilness '' --fury 'xyz' --depravity 'a' --anger -- 'abcd' 'a b'\\\\''c d'" \
+	" --cruelty --bloodlust 'a' --evilness '' -- 'abcd' '--fury=xyz' '--depravity' 'a' 'a b'\\\\''c d' '--an' '--'" \
+	" --cruelty --bloodlust 'a' --evilness '' --fury 'xyz' --depravity 'a' --anger -- 'abcd' 'a b'\\\\''c d' '--'" \
+	--cruelty --bloo=a --evilness abcd --fury=xyz --depravity a 'a b'\''c d' --an --
 
 __test_section__ 'With some options and arguments and things looking like options after "--"'
 test_get_options_success \
 	'' \
-	'anger,bloodlust:,cruelty,depravity:' \
-	" --cruelty --bloodlust 'a' 'abcd' --depravity 'a' '--' '--anger' 'a b'\\\\''c d' '--deprav' 'as'\\\\''\\\\dfg '" \
-	" --cruelty --bloodlust 'a' --depravity 'a' -- 'abcd' '--anger' 'a b'\\\\''c d' '--deprav' 'as'\\\\''\\\\dfg '" \
-	" --cruelty --bloodlust 'a' -- 'abcd' '--depra' 'a' '--' '--anger' 'a b'\\\\''c d' '--deprav' 'as'\\\\''\\\\dfg '" \
-	" --cruelty --bloodlust 'a' --depravity 'a' -- 'abcd' '--' '--anger' 'a b'\\\\''c d' '--deprav' 'as'\\\\''\\\\dfg '" \
-	--cr --b=a abcd --depra a -- --anger 'a b'\''c d' --deprav as\'\\dfg' '
+	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
+	" --cruelty --bloodlust 'a' --evilness '' 'abcd' --depravity 'a' '--' '--fury=xyz' '--anger' 'a b'\\\\''c d' '--deprav' 'as'\\\\''\\\\dfg '" \
+	" --cruelty --bloodlust 'a' --evilness '' --depravity 'a' -- 'abcd' '--fury=xyz' '--anger' 'a b'\\\\''c d' '--deprav' 'as'\\\\''\\\\dfg '" \
+	" --cruelty --bloodlust 'a' --evilness '' -- 'abcd' '--depra' 'a' '--' '--fury=xyz' '--anger' 'a b'\\\\''c d' '--deprav' 'as'\\\\''\\\\dfg '" \
+	" --cruelty --bloodlust 'a' --evilness '' --depravity 'a' -- 'abcd' '--' '--fury=xyz' '--anger' 'a b'\\\\''c d' '--deprav' 'as'\\\\''\\\\dfg '" \
+	--cr --b=a --e abcd --depra a -- --fury=xyz --anger 'a b'\''c d' --deprav as\'\\dfg' '
 
 __test_section__ 'With some options and arguments and a few "--"'
 test_get_options_success \
 	'' \
-	'anger,bloodlust:,cruelty,depravity:' \
-	" --cruelty --bloodlust 'a' 'abcd' '--' '--d=a' '--' '--ang' 'a b'\\\\''c d' '--depravity' 'asdfg' '--'" \
-	" --cruelty --bloodlust 'a' -- 'abcd' '--d=a' '--' '--ang' 'a b'\\\\''c d' '--depravity' 'asdfg' '--'" \
-	" --cruelty --bloodlust 'a' -- 'abcd' '--' '--d=a' '--' '--ang' 'a b'\\\\''c d' '--depravity' 'asdfg' '--'" \
-	" --cruelty --bloodlust 'a' -- 'abcd' '--' '--d=a' '--' '--ang' 'a b'\\\\''c d' '--depravity' 'asdfg' '--'" \
-	--cruelty --blood=a abcd -- --d=a -- --ang 'a b'\''c d' --depravity asdfg --
+	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
+	" --cruelty --bloodlust 'a' --evilness '' 'abcd' '--' '--f=xyz' '--d=a' '--' '--ang' 'a b'\\\\''c d' '--depravity' 'asdfg' '--'" \
+	" --cruelty --bloodlust 'a' --evilness '' -- 'abcd' '--f=xyz' '--d=a' '--' '--ang' 'a b'\\\\''c d' '--depravity' 'asdfg' '--'" \
+	" --cruelty --bloodlust 'a' --evilness '' -- 'abcd' '--' '--f=xyz' '--d=a' '--' '--ang' 'a b'\\\\''c d' '--depravity' 'asdfg' '--'" \
+	" --cruelty --bloodlust 'a' --evilness '' -- 'abcd' '--' '--f=xyz' '--d=a' '--' '--ang' 'a b'\\\\''c d' '--depravity' 'asdfg' '--'" \
+	--cruelty --blood=a --evil abcd -- --f=xyz --d=a -- --ang 'a b'\''c d' --depravity asdfg --

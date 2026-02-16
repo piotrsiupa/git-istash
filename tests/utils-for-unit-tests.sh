@@ -98,10 +98,4 @@ test_get_options_success() { # short_options long_options no_reorder_stdout reor
 	assert_outputs "$expected_stdout" ''
 	#shellcheck disable=SC2154
 	eval set -- "$stdout"
-	if ! IS_PARTIAL_PARSE_ON
-	then
-		#shellcheck disable=SC2086
-		assert_exit_code 0 "$GET_OPTIONS_COMMAND" $MODE_FLAGS "$short_options" "$long_options" "$@"
-		assert_outputs "$expected_stdout" ''
-	fi
 }

@@ -1,3 +1,6 @@
+# BE VERY CAREFULL EDITING THIS FILE!
+# There is a good chance your editor will mangle the characters used here.
+
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 non_essential_test
@@ -11,8 +14,8 @@ __end_of_initialization__
 
 __test_section__ 'With whitespaces'
 test_get_options_success \
-	'ab:cd:' \
-	'anger,bloodlust:,cruelty,depravity:' \
+	'ab:cd:e::f::' \
+	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
 	"N/A" \
 	"N/A" \
 	"N/A" \
@@ -22,8 +25,8 @@ test_get_options_success \
 
 __test_section__ 'With whitespaces and even more line breaks'
 test_get_options_success \
-	'ab:cd:' \
-	'anger,bloodlust:,cruelty,depravity:' \
+	'ab:cd:e::f::' \
+	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
 	"N/A" \
 	"N/A" \
 	"N/A" \
@@ -36,8 +39,8 @@ __test_section__ 'With WTF arguments'
 wtf_string='bo	=ÿþ€{b}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'
 escaped_wtf_string='bo	=ÿþ€\{b\}\\\*\?#@!\[1;35;4;5m\|:<>\(\)\^&\[0mðŸ’©th'
 test_get_options_success \
-	'ab:cd:' \
-	'anger,bloodlust:,cruelty,depravity:' \
+	'ab:cd:e::f::' \
+	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
 	"N/A" \
 	"N/A" \
 	"N/A" \
