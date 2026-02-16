@@ -7,21 +7,21 @@ git\-istash \- Handle Git stashes without arbitrary limitations of the original 
 
 .SH SYNOPSIS
 .nf
-\fBgit istash\fR [<subcommand>] (-h\~|\~--help\~|\~--man)
-\fBgit istash\fR (create\~|\~snatch\~|\~save\~|\~push) [\-a\~|\~\-\-all] [\-\-allow-empty]
-            [\-k\~|\~\-\-[no\-]keep\-index] [\-l\~|\~\-\-leave\-staged]
-            [(\-m\~|\~\-\-message)\~<\fImessage\fR>] [\-\-patch]
-            [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<\fIfile\fR>]
-            [\-S\~|\~\-\-staged] [\-u\~|\~\-\-[no\-]include\-untracked]
-            [\-\-] [<\fIpathspec\fR>...]
-\fBgit istash\fR [\-a\~|\~\-\-all] [\-\-allow\-empty] [\-k\~|\~\-\-[no\-]keep\-index]
+\fBgit istash\fR [<options>] [<subcommand>] (\-h\~|\~\-\-help\~|\~\-\-man)
+\fBgit istash\fR [<options>] (create\~|\~snatch\~|\~save\~|\~push) [\-a\~|\~\-\-all]
+            [\-\-allow-empty] [\-k\~|\~\-\-[no\-]keep\-index]
             [\-l\~|\~\-\-leave\-staged] [(\-m\~|\~\-\-message)\~<\fImessage\fR>] [\-\-patch]
             [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<\fIfile\fR>]
             [\-S\~|\~\-\-staged] [\-u\~|\~\-\-[no\-]include\-untracked]
-            [\-\-\~<\fIpathspec\fR>...]
-\fBgit istash\fR (pop\~|\~apply) [<\fIstash\fR>]
-\fBgit istash\fR [pop\~|\~apply] (\-c\~|\~\-\-continue\~|\~\-\-abort\~|\~\-\-quit)
-\fBgit istash\fR (c\~|\~continue\~|\~abort\~|\~quit)
+            [\-\-] [<\fIpathspec\fR>...]
+\fBgit istash\fR [<options>] [\-a\~|\~\-\-all] [\-\-allow\-empty]
+            [\-k\~|\~\-\-[no\-]keep\-index] [\-l\~|\~\-\-leave\-staged]
+            [(\-m\~|\~\-\-message)\~<\fImessage\fR>] [\-\-patch] [\-\-patchspec\-file\-nul]
+            [\-\-patchspec\-from\-file=<\fIfile\fR>] [\-S\~|\~\-\-staged]
+            [\-u\~|\~\-\-[no\-]include\-untracked] [\-\-\~<\fIpathspec\fR>...]
+\fBgit istash\fR [<options>] (pop\~|\~apply) [<\fIstash\fR>]
+\fBgit istash\fR [<options>] [pop\~|\~apply] (\-c\~|\~\-\-continue\~|\~\-\-abort\~|\~\-\-quit)
+\fBgit istash\fR [<options>] (c\~|\~continue\~|\~abort\~|\~quit)
 .fi
 
 .SH DESCRIPTION
@@ -262,7 +262,7 @@ Pathspec elements are separated with NUL character and all other characters are 
 .RE
 
 .PP
-\fB--remove-stashed\fR
+\fB\-\-remove\-stashed\fR
 .RS 4
 This option is only valid for \fBcreate\fR and \fBsave\fR subcommands and also allowed for \fBsnatch\fR and \fBpush\fR.
 .sp
@@ -285,7 +285,7 @@ See also \fB\-\-leave\-staged\fR.
 .RE
 
 .PP
-\fB--no-store\fR
+\fB\-\-no\-store\fR
 .RS 4
 This option is only valid for \fBsave\fR and \fBpush\fR subcommands and also allowed for \fBcreate\fR and \fBsnatch\fR.
 .sp
@@ -341,6 +341,23 @@ Cancel the operation without restoring the state of the repository. \
 .sp
 Quitting is apply / pop agnostic. \
 You can call \fBgit istash apply --abort\fR on an active pop operation and it will still work correctly (and vice versa).
+.RE
+
+.PP
+\fB\-\-color[=<when>]\fR
+.RS 4
+Use color in output. \
+\fI<when>\fR can be one of \fBalways\fR, \fBnever\fR, or \fBauto\fR. \
+\fB--color\fR (i.e. without \fI=<when>\fR) is the same as \fB--color=always\fR.
+.sp
+Color can be also changed way by configuration settings (allowing more granularity) but this option has higher priority.
+.RE
+
+.PP
+\fB\-\-no\-color\fR
+.RS 4
+Turn off color in output. \
+It is the same as \fB--color=never\fR.
 .RE
 
 .PP
