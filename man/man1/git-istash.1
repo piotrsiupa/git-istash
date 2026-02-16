@@ -2,8 +2,10 @@
 .nh
 .ad l
 
+
 .SH NAME
 git\-istash \- Handle Git stashes without arbitrary limitations of the original command
+
 
 .SH SYNOPSIS
 .nf
@@ -23,6 +25,7 @@ git\-istash \- Handle Git stashes without arbitrary limitations of the original 
 \fBgit istash\fR [<options>] [pop\~|\~apply] (\-c\~|\~\-\-continue\~|\~\-\-abort\~|\~\-\-quit)
 \fBgit istash\fR [<options>] (c\~|\~continue\~|\~abort\~|\~quit)
 .fi
+
 
 .SH DESCRIPTION
 \fBgit istash\fR ("improved stash") is an alternative implementation for \fBgit stash\fR, mostly compatible with stash entries created by it (other than special cases in \fBgit stash\fR which are not present in \fBgit istash\fR). \
@@ -78,6 +81,7 @@ Those are aliases for options with the same name. (Just a syntax sugar.)
 .br
 See \fB-c\fR, \fB--continue\fR, \fB--abort\fR and \fB--quit\fR.
 .RE
+
 
 .SH SUBCOMMANDS
 
@@ -177,6 +181,7 @@ This is just a convenient alias for \fB--abort\fR. \
 This is just a convenient alias for \fB--quit\fR. \
 (\fBgit istash quit\fR is the same as \fBgit istash --quit\fR.)
 .RE
+
 
 .SH OPTIONS
 
@@ -422,12 +427,24 @@ In case of \fBapply\fR an arbitrary commit is allowed, as long as it looks like 
 When no \fB<stash>\fR is given, the latest stash is assumed (that is, \fBstash@{0}\fR).
 .RE
 
+
 .SH EXIT CODES
 .nf
 \fB0\fR - command succeeded
 \fB1\fR - command failed
 \fB2\fR - (only \fBapply\fR and \fBpop\fR) command was stopped by a conflict and can be resumed with \fB\-\-continue\fR, aborted with \fB\-\-abort\fR or canceled with \fB\-\-quit\fR
 .fi
+
+
+.SH ERRORS
+Errors printed by \fBistash\fR are divided into two general categories:
+.br
+- Normal errors (prefixed with "error:") are most likely a result of a user error (such as providing an incorrect stash number).
+.br
+- Fatal errors (prefixed with "fatal:") are caused by an internal error (such as missing data file or failure of another Git command).
+.sp
+The same prefixes are used by native Git commands but there their choice comes more to technical details than any user-facing distinction.
+
 
 .SH EXAMPLES
 
@@ -525,8 +542,81 @@ $ git istash pop
 .RE
 .RE
 
+
+.SH CONFIGURATION
+Some descriptions in this section are selectively included from \fBgit-config\fR(1) documentation. \
+The content is the same as what was found there at the time of writing / updating this.
+.sp
+Variables with \fBistash\fR in their names are described only here.
+
+color.advice
+.RS 4
+A boolean to enable/disable color in hints (e.g. when a push failed, see \fBadvice.*\fR  for a list). \
+May be set to \fBalways\fR, \fBfalse\fR (or \fBnever\fR) or \fBauto\fR (or \fBtrue\fR), in which case colors are used only when the error output goes to a terminal. \
+If unset, then the value of \fBcolor.ui\fR is used (\fBauto\fR by default).
+.RE
+
+color.advice.hint
+.RS 4
+Use customized color for hints.
+.RE
+
+color.istash
+.RS 4
+This variable determines the default value for variables such as \fBcolor.istash.advice\fR and \fBcolor.istash.error\fR that control the use of color by \fBistash\fR per category. \
+It functions analogously to \fBcolor.ui\fR except its scope is limited to \fBistash\fR. \
+If unset, then the value of \fBcolor.ui\fR is used (\fBauto\fR by default).
+.RE
+
+color.istash.advice
+.RS 4
+A boolean to enable/disable color in hints printed by \fBistash\fR (e.g. when a conflict occurred). \
+May be set to \fBalways\fR, \fBfalse\fR (or \fBnever\fR) or \fBauto\fR (or \fBtrue\fR), in which case colors are used only when the error output goes to a terminal. \
+If unset, then the value of \fBcolor.istash\fR is used, and if it is unset too \fBcolor.advice\fR is used.
+.RE
+
+color.istash.advice.hint
+.RS 4
+Use customized color for hints printed by \fBistash\fR. \
+If unset, then the value of \fBcolor.advice.hint\fR is used (\fByellow\fR by default).
+.RE
+
+color.istash.error
+.RS 4
+A boolean to enable/disable color in errors printed by \fBistash\fR. \
+May be set to \fBalways\fR, \fBfalse\fR (or \fBnever\fR) or \fBauto\fR (or \fBtrue\fR), in which case colors are used only when the error output goes to a terminal. \
+If unset, then the value of \fBcolor.istash\fR is used.
+.RE
+
+color.istash.error.default
+.RS 4
+Use customized color for errors printed by \fBistash\fR.
+.RE
+
+color.istash.error.fatal
+.RS 4
+Use customized color for fatal errors printed by \fBistash\fR. \
+If unset, then the value of \fBcolor.istash.error.default\fR is used (\fBbold red\fR by default).
+.RE
+
+color.istash.error.normal
+.RS 4
+Use customized color for normal (user) errors printed by \fBistash\fR. \
+If unset, then the value of \fBcolor.istash.error.default\fR is used (\fBred\fR by default).
+.RE
+
+color.ui
+.RS 4
+This variable determines the default value for variables such as \fBcolor.diff\fR and \fBcolor.grep\fR that control the use of color per command family. \
+Its scope will expand as more commands learn configuration to set a default for the \fB--color\fR option. \
+Set it to \fBfalse\fR or \fBnever\fR if you prefer Git commands not to use color unless enabled explicitly with some other configuration or the \fB--color\fR option. \
+Set it to \fBalways\fR if you want all output not intended for machine consumption to use color, to \fBtrue\fR or \fBauto\fR (this is the default since Git 1.8.4) if you want such output to use color when written to the terminal.
+.RE
+
+
 .SH SEE ALSO
 \fBgit\-stash\fR(1), \fBgit\-rebase\fR(1)
+
 
 .SH CURRENT LIMITATIONS
 .PP
@@ -541,6 +631,7 @@ The advantage of this is that it can run on every system with very little additi
 (A few seconds to make a stash isn't that a big deal, so the command probably won't be rewritten to a faster language anytime soon.)
 .PP
 There's no support for running the command while there are other unfinished operations in the repository (like rebase or merge).
+
 
 .SH AUTHOR
 git\-istash was written by Piotr Siupa. (\fIpiotr.siupa+stash@gmail.com\fR)
