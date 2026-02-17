@@ -11,8 +11,11 @@ PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_PATHSPEC_STYLE 'ARGS' 'FILE' 'NULL-FILE'
 PARAMETRIZE_OPTIONS_INDICATOR IS_PATHSPEC_IN_ARGS
+PARAMETRIZE_COLOR
 
 __end_of_initialization__
+
+prepare_repository
 
 __test_section__ 'Prepare repository'
 printf 'xxx\nxxx\n' >aaa0
@@ -51,10 +54,10 @@ printf 'aaa0 bbb? *5 ./?dd* fff1? ' | PREPARE_PATHSPEC_FILE
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash "$CREATE_OPERATION" 'aaa0' $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS 'bbb?' --patch $EOI '*5' './?dd*' 'fff1?' <.git/answers_for_patch
+	assert_exit_code 0 git istash "$CREATE_OPERATION" 'aaa0' $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS 'bbb?' $COLOR_FLAGS --patch $EOI '*5' './?dd*' 'fff1?' <.git/answers_for_patch
 else
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS --patch $PATHSPEC_NULL_FLAGS "$PATHSPEC_FROM_FILE_FLAG" .git/pathspec_for_test <.git/answers_for_patch
+	assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $COLOR_FLAGS --patch $PATHSPEC_NULL_FLAGS "$PATHSPEC_FROM_FILE_FLAG" .git/pathspec_for_test <.git/answers_for_patch
 fi
 assert_outputs__create__success '*' 0 '' 't,1' 'u,1'
 new_stash_sha_CO="$stdout"
@@ -151,6 +154,7 @@ remove_all_changes
 RESTORE_HEAD_TYPE
 
 __test_section__ 'Pop stash'
+#shellcheck disable=SC2086
 assert_exit_code 0 git stash pop --index
 assert_files '
 M  aaa0		yyy\nxxx\nxxx\nyyy

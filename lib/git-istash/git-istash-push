@@ -3,6 +3,7 @@
 set -eu
 
 . "$(dirname "$0")/git-istash-commons"
+. "$(dirname "$0")/git-istash-io"
 
 print_help() {
 	printf 'git istash push - Improved version of "git stash push" that can handle orphan\n    branches.\n'
@@ -15,6 +16,8 @@ print_help() {
 	printf 'Options:\n'
 	printf '    -a, --all\t\t- Stash and clean also untracked and ignored files.\n'
 	printf '\t--allow-empty\t- Create a stash even if there are no suitable changes.\n'
+	printf '\t--color[=<when>] - Allow use of ANSI color codes.\n\t\t\t  <when> can be one of always, never, or auto.\n\t\t\t  Omitting the argument is equivalent to always.\n'
+	printf '\t--no-color\t- Same as --color=never.\n'
 	printf '    -h\t\t\t- Print this help text and exit.\n'
 	printf '    -k, --keep-index\t- Left intact all changes already added to the index.\n'
 	printf '\t--no-keep-index\t- Cancel --keep-index.\n'
@@ -29,8 +32,8 @@ print_help() {
 }
 
 check_pathspec_for_implicit_push() ( # args...
-	getopt_result="$(getopt -o"-$getopt_short_options" --long="$getopt_long_options" -n'error' -ssh -- "$@")"
-	eval set -- "$getopt_result"
+	normalized_options="$(get_options_color -R "$getopt_short_options" "$getopt_long_options" "$@")"
+	eval set -- "$normalized_options"
 	while [ $# -ne 0 ]
 	do
 		if [ "$1" = '--' ]
@@ -40,7 +43,11 @@ check_pathspec_for_implicit_push() ( # args...
 		then
 			option_name="$(printf '%s' "$1" | sed -E 's/^--//')"
 			shift
-			if printf '%s' "$getopt_long_options" | grep -Eq "(^|,)$option_name:(,|\$)"
+			if [ "$option_name" = 'color' ]
+			then
+				set_color_for_all "$1"
+				shift
+			elif printf '%s' "$getopt_long_options" | grep -Eq "(^|,)$option_name:(,|\$)"
 			then
 				shift
 			fi
@@ -53,9 +60,9 @@ check_pathspec_for_implicit_push() ( # args...
 				shift
 			fi
 		else
-			printf 'error: subcommand wasn'\''t specified; '\''push'\'' can'\''t be assumed due to unexpected token '\''%s'\''\n' "$1" 1>&2
-			printf 'hint: pathspecs for an implicit '\''push'\'' subcommand must be preceded by '\''--'\''\n' 1>&2
-			exit 1
+			printf_error 'subcommand wasn'\''t specified; '\''push'\'' can'\''t be assumed due to unexpected token '\''%s'\''\n' "$1"
+			printf_hint 'pathspecs for an implicit '\''push'\'' subcommand must be preceded by '\''--'\''\n'
+			error
 		fi
 	done
 )
@@ -66,7 +73,11 @@ then
 	shift
 	check_pathspec_for_implicit_push "$@"
 fi
-if check_for_option_h_in_make_command "$@"
+set +e
+check_for_option_h_in_make_command "$@"
+result=$?
+set -e
+if [ $result -eq 0 ]
 then
 	print_help
 	exit 0

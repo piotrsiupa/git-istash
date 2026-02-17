@@ -18,11 +18,13 @@ PARAMETRIZE_UNTRACKED 'DEFAULT'
 PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
-
-# We don't need thos in this test.
-rm ignored0 ignored1
+PARAMETRIZE_COLOR
 
 __end_of_initialization__
+
+prepare_repository
+# We don't need thos in this test.
+rm ignored0 ignored1
 
 correct_head_sha="$(get_head_sha)"
 SWITCH_HEAD_TYPE
@@ -38,7 +40,7 @@ printf 'x\n' >'tra	=ÿþ€{}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©cked-dir1/tra
 printf 'x\n' >'tra	=ÿþ€{}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©cked-dir1/tracked-dir2/bo	=ÿþ€{}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'
 git add --intent-to-add .
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
+assert_exit_code 0 git istash "$CREATE_OPERATION" $COLOR_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
 assert_outputs__create__success '*' 0 ''
 new_stash_sha_CO="$stdout"
 assert_files_HTCO '
@@ -74,7 +76,8 @@ RESTORE_HEAD_TYPE
 
 __test_section__ 'Pop stash'
 stash_sha="$(git rev-parse stash)"
-assert_exit_code 0 git istash pop
+#shellcheck disable=SC2086
+assert_exit_code 0 git istash pop $COLOR_FLAGS
 assert_outputs__apply__success 'pop' 0 "$stash_sha"
 assert_files '
  A file						x

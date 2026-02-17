@@ -5,8 +5,11 @@ non_essential_test
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_CONTINUE
+PARAMETRIZE_COLOR
 
 __end_of_initialization__
+
+prepare_repository
 
 __test_section__ 'Create stash'
 mkdir xxx yyy
@@ -49,7 +52,8 @@ __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 mkdir -p xxx
 cd xxx
-assert_exit_code 2 git istash "$APPLY_OPERATION"
+#shellcheck disable=SC2086
+assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS
 cd -
 assert_outputs__apply__conflict "$APPLY_OPERATION" '
 AA aaa
@@ -75,7 +79,8 @@ printf 'fff1\n' >xxx/aaa
 printf 'fff2\n' >yyy/aaa
 git add aaa xxx/aaa yyy/aaa
 cd xxx
-assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS
 cd -
 assert_outputs__apply__conflict "$APPLY_OPERATION" '
 UU aaa
@@ -104,7 +109,8 @@ printf 'ggg1\n' >xxx/aaa
 printf 'ggg2\n' >yyy/aaa
 git add aaa xxx/aaa yyy/aaa
 cd xxx
-assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS
 cd -
 assert_outputs__apply__conflict "$APPLY_OPERATION" '
 UU aaa
@@ -139,7 +145,8 @@ printf 'hhh4\n' >xxx/bbb
 printf 'hhh5\n' >yyy/bbb
 git add aaa xxx/aaa yyy/aaa bbb xxx/bbb yyy/bbb
 cd xxx
-assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS
 cd -
 assert_outputs__apply__conflict "$APPLY_OPERATION" '
 AA zzz
@@ -172,7 +179,8 @@ printf 'xxx2\n' >yyy/zzz
 git add zzz xxx/zzz yyy/zzz
 stash_sha="$(git rev-parse stash)"
 cd xxx
-assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS
 cd -
 assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
 assert_files_HT '

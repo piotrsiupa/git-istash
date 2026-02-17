@@ -8,7 +8,7 @@ fi
 
 
 PARAMETRIZE_SUBCOMMAND() {
-	PARAMETRIZE 'SUBCOMMAND' 'subcommand' '_NONE_' 'apply' 'create' 'pop' 'push' 'save' 'snatch'
+	PARAMETRIZE 'SUBCOMMAND' 'subcommand' '_NONE_' 'apply' 'create' 'pop' 'push' 'save' 'snatch' 'c' 'continue' 'abort' 'quit'
 	if [ "$SUBCOMMAND" = '_NONE_' ]
 	then
 		SUBCOMMAND=''

@@ -5,12 +5,15 @@ non_essential_test
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_CONTINUE
+PARAMETRIZE_COLOR
 if IS_APPLY
 then
 	skip_silently  # this test is "pop" specific
 fi
 
 __end_of_initialization__
+
+prepare_repository
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
@@ -35,7 +38,8 @@ printf 'wdf1a\n' >wdf1
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
-assert_exit_code 2 git istash "$APPLY_OPERATION"
+#shellcheck disable=SC2086
+assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS
 assert_outputs__apply__conflict_HT "$APPLY_OPERATION" '
 UU aaa
 ' '
@@ -63,7 +67,8 @@ printf 'eee\n' >aaa
 git add aaa
 mv .git/ISTASH_STASH .git/ISTASH_STASH~
 printf 'fa4e08a58\n' >.git/ISTASH_STASH
-assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 1 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG"
 assert_outputs__apply__data_file_invalid_integer "$APPLY_OPERATION" 'ISTASH_STASH'
 assert_files_HT '
 M  aaa		eee
@@ -85,7 +90,8 @@ assert_dotgit_contents_for "$APPLY_OPERATION" 'ISTASH_STASH~'
 __test_section__ "Continue $APPLY_OPERATION stash (1)"
 mv .git/ISTASH_STASH~ .git/ISTASH_STASH
 stash_sha="$(git rev-parse stash)"
-assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 0 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG"
 assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
 assert_files_HT '
  M aaa		eee	ddd

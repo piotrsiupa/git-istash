@@ -9,11 +9,13 @@ PARAMETRIZE_UNTRACKED 'YES'
 PARAMETRIZE_KEEP_INDEX 'DEFAULT'
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
-
-# We don't need those in this test.
-rm ignored0 ignored1
+PARAMETRIZE_COLOR
 
 __end_of_initialization__
+
+prepare_repository
+# We don't need those in this test.
+rm ignored0 ignored1
 
 correct_head_sha="$(get_head_sha)"
 SWITCH_HEAD_TYPE
@@ -30,7 +32,7 @@ printf 'xxx\n' >'b/1/i'
 printf 'xxx\n' >'b/1/j'
 cd 'a'
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
+assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS $COLOR_FLAGS
 cd -
 assert_outputs__create__success '*' 0 ''
 new_stash_sha_CO="$stdout"

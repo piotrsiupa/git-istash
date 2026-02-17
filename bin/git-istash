@@ -2,6 +2,8 @@
 
 set -eu
 
+. "$(dirname "$0")/../lib/git-istash/git-istash-io"
+
 min_git_version='2.42.0'
 min_git_version_regex='2\.(4[2-9]|[5-9][0-9]|[1-9][0-9]{2,})(\..+)?'
 
@@ -20,6 +22,8 @@ print_help() {
 	printf '\n'
 	printf 'Options:\n'
 	printf '\t--abort\t\t- Abort apply / pop when one is in progress.\n'
+	printf '\t--color[=<when>] - Allow use of ANSI color codes.\n\t\t\t  <when> can be one of always, never, or auto.\n\t\t\t  Omitting the argument is equivalent to always.\n'
+	printf '\t--no-color\t- Same as --color=never.\n'
 	printf '    -c, --continue\t- Continue apply / pop when one is in progress.\n'
 	printf '    -h\t\t\t- Print this help text and exit.\n'
 	printf '\t--help\t\t- Show manual page if possible.\n\t\t\t  (If you run it through "git", it will handle this in\n\t\t\t  its own way, which fails on Windows. See --man.)\n'
@@ -30,7 +34,7 @@ print_help() {
 	printf 'Sub-commands:\n'
 	printf '\tabort\t- Alias for "git istash --abort".\n'
 	printf '\tapply\t- Analog to "git stash apply --index".\n'
-	printf '\tc\t- Alias for "git istash -c".\n'
+	printf '\tc\t- Alias for "git istash -c". (The same as --continue.)\n'
 	printf '\tcontinue- Alias for "git istash --continue".\n'
 	printf '\tcreate\t- Analog to "git stash create" (but with options).\n'
 	printf '\tpop\t- Analog to "git stash pop --index".\n'
@@ -44,6 +48,10 @@ print_version() {
 	printf 'git-istash version 1.6.0\n'
 	printf 'Author: Piotr Siupa\n'
 	printf 'Requires Git in version at least %s\n' "$min_git_version"
+}
+
+is_option_alias() { # subcommand
+	printf '%s\n' "$1" | grep -Eqx -- 'c(o(n(t(i(n(ue?)?)?)?)?)?)?|abort|quit'
 }
 
 exec_subcommand() { # subcommand [arguments...]
@@ -75,85 +83,136 @@ show_manual() {
 	then
 		return 0
 	fi
-	printf 'fatal: unable to open the manual entry\n' 1>&2
-	printf 'fatal: falling back to the built-in help text\n' 1>&2
-	printf '\n' 1>&2
-	return 1
+	printf_fatal 'unable to open the manual entry\n'
+	printf_fatal 'falling back to the built-in help text\n'
+	fatal '\n'
 }
 
-set +u
+getopt_short_options='ch'
+getopt_long_options='_skip-version-check_,abort,color::,no-color,continue,help,man,quit,version'
+normalized_options="$(get_options_color -U "$getopt_short_options" "$getopt_long_options" "$@")"
+eval set -- "$normalized_options"
 skip_version_check=n
-if [ "$1" = '--_skip-version-check_' ]
-then
-	shift
-	skip_version_check=y
-fi
-if [ "$1" = '--help' ] || [ "$2" = '--help' ] || [ "$1" = '--man' ] || [ "$2" = '--man' ]
-then
-	if show_manual
-	then
-		exit 0
-	else
-		if [ "$1" = '--help' ] || [ "$1" = '--man' ]
+options_to_put_back=''
+continuation_option=''
+subcommand=''
+while true
+do
+	case "$1" in
+	--_skip-version-check_)
+		skip_version_check=y
+		;;
+	--color)
+		shift
+		set_color_for_all "$1"
+		;;
+	--no-color)
+		set_color_for_all 'never'
+		;;
+	-h)
+		while [ "$1" != '--' ]
+		do
+			shift
+		done
+		shift
+		if [ $# -eq 0 ] || is_option_alias "$1"
 		then
 			print_help
 			exit 0
 		else
-			eval set -- "$1" -h
+			exec_subcommand "$1" '-h'
 		fi
-	fi
-elif [ "$1" = '-h' ] || [ "$1" = '--help' ]
-then
-	print_help
-	exit 0
-elif [ "$1" = '--version' ] || [ "$2" = '--version' ]
-then
-	print_version
-	exit 0
-elif printf '%s\n' "$1" | grep -Eqx -- '-c|(--)?c(o(n(t(i(n(ue?)?)?)?)?)?)?|--ab(o(r(t)?)?)?|abort|--q(u(it?)?)?|quit'  # Not a pretty solution but one that doesn't require knowing all options of every subcommand. (Although, it needs manual updating when something changes.)
-then
-	set -u
-	continuation_option="$1"
-	if printf '%s\n' "$continuation_option" | grep -qEv '^-'
-	then
-		continuation_option="--$continuation_option"
-	fi
-	shift
-	. "$(dirname "$0")/../lib/git-istash/git-istash-commons"
-	data_files="$(find_data_files)"
-	case "$data_files" in
-		nothing)
-			printf 'error: no istash operation in progress\n' 1>&2
-			exit 1
-			;;
-		apply)
-			exec_subcommand 'apply' "$continuation_option" "$@"
-			;;
-		pop)
-			exec_subcommand 'pop' "$continuation_option" "$@"
-			;;
-		error-*)
-			if printf '%s' "$continuation_option" | grep -Exq -- '--q(u(it?)?)?'
+		;;
+	--help)
+		if [ "$1" = '--help' ]
+		then
+			exec git istash --help
+		fi
+		;;
+	--man)
+		if show_manual
+		then
+			exit 0
+		else
+			shift
+			set -- '-h' "$@"
+			continue
+		fi
+		;;
+	--version)
+		print_version
+		exit 0
+		;;
+	-c|--continue|--abort|--quit)
+		options_to_put_back="$options_to_put_back $(printf '%s' "$1" | escape_for_shell)"
+		continuation_option="$1"
+		;;
+	--)
+		shift
+		if [ $# -ne 0 ] && printf '%s' "$1" | grep -E -q '^[^-]'
+		then
+			if is_option_alias "$1"
 			then
-				exec_subcommand "$(printf '%s' "$data_files" | tail -c+7)" "$continuation_option" "$@"
+				if [ "$(printf '%s' "$1" | head -c1)" = 'c' ]
+				then
+					shift
+					set -- 'continue' "$@"
+				fi
+				option_alias="$1"
+				shift
+				set -- "--$option_alias" '--' "$@"
+				unset option_alias
+				continue
 			else
-				print_error_for_data_files_check "$data_files" 'push'
-				exit 1
+				subcommand="$1"
+				shift
+				break
 			fi
-			;;
+		else
+			break
+		fi
+		;;
 	esac
+	shift
+done
+eval set -- "$options_to_put_back" '"$@"'
+
+if [ -z "$subcommand" ]
+then
+	if [ -z "$continuation_option" ]
+	then
+		subcommand='push'
+		set -- '--_implicit-push_' "$@"
+	else
+		. "$(dirname "$0")/../lib/git-istash/git-istash-commons"
+		data_files="$(find_data_files)"
+		case "$data_files" in
+			nothing)
+				error 'no istash operation in progress\n'
+				;;
+			apply)
+				subcommand='apply'
+				;;
+			pop)
+				subcommand='pop'
+				;;
+			error-*)
+				if [ "$continuation_option" = '--quit' ]
+				then
+					subcommand="$(printf '%s' "$data_files" | tail -c+7)"
+				else
+					print_error_for_data_files_check "$data_files" 'push'
+					exit 1
+				fi
+				;;
+		esac
+	fi
 fi
-set -u
 
 git_version="$(git --version | head -n 1 | grep -Eo '\<\S+$')"
 if [ "$skip_version_check" = n ] && ! printf '%s' "$git_version" | grep -Exq "$min_git_version_regex"
 then
-	printf 'fatal: the current Git version (%s) is less than minimum required (%s)\n' "$git_version" "$min_git_version" 1>&2
-	exit 1
+	fatal 'the current Git version (%s) is less than minimum required (%s)\n' "$git_version" "$min_git_version"
 fi
 
-if [ $# -eq 0 ] || printf '%s' "$1" | grep -Eq '^-'
-then
-	set -- 'push' '--_implicit-push_' "$@"
-fi
-exec_subcommand "$@"
+exec_subcommand "$subcommand" "$@"

@@ -11,8 +11,11 @@ PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_PATHSPEC_STYLE 'ARGS' 'FILE' 'NULL-FILE'
 PARAMETRIZE_OPTIONS_INDICATOR IS_PATHSPEC_IN_ARGS
+PARAMETRIZE_COLOR
 
 __end_of_initialization__
+
+prepare_repository
 
 __test_section__ 'Prepare repository'
 printf 'xxx\nxxx\n' >aaa0
@@ -55,19 +58,19 @@ new_stash_sha_CO="$(
 		# A child shell tends to eat all the stdin if it's able to. This prevents it. If it still doesn't work, try to increase the time.
 		if [ "$(uname)" = 'Linux' ]
 		then
-			sleep 1
+			sleep 2
 		else
-			sleep 5
+			sleep 10
 		fi
 		cat .git/answers_for_patch1
 	} | {
 		if IS_PATHSPEC_IN_ARGS
 		then
 			#shellcheck disable=SC2086
-			assert_exit_code 0 git istash "$CREATE_OPERATION" 'aaa0' $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS 'bbb?' --patch -m 'a very controlled stash' $EOI '*5' './?dd*' 'fff1?'
+			assert_exit_code 0 git istash "$CREATE_OPERATION" 'aaa0' $COLOR_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS 'bbb?' --patch -m 'a very controlled stash' $EOI '*5' './?dd*' 'fff1?'
 		else
 			#shellcheck disable=SC2086
-			assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'a very controlled stash' --patch $PATHSPEC_NULL_FLAGS "$PATHSPEC_FROM_FILE_FLAG" .git/pathspec_for_test
+			assert_exit_code 0 git istash "$CREATE_OPERATION" $COLOR_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'a very controlled stash' --patch $PATHSPEC_NULL_FLAGS "$PATHSPEC_FROM_FILE_FLAG" .git/pathspec_for_test
 		fi
 		assert_outputs__create__success '*' 0 'a very controlled stash' 't,1,3,3,1' 'u,1,1'
 	}
@@ -164,6 +167,7 @@ remove_all_changes
 RESTORE_HEAD_TYPE
 
 __test_section__ 'Pop stash'
+#shellcheck disable=SC2086
 assert_exit_code 0 git stash pop --index
 assert_files '
 M  aaa0		yyy\nxxx\nxxx\nyyy

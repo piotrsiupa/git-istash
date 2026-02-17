@@ -17,25 +17,23 @@ normalize_facet_list() { # list
 # Format: <canonical_spelling> = <other_spellings_regex>
 raw_facets='
 	# Run tests marked as non-essential. (Essential tests check mostly the happy path of the common cases.)
-	non-essential = ne|n(on)?[-_]e(ss(en(t(ial)?)?)?)?
+	non-essential = ne|n(on)?[-_]e(ss(en(t(ials?)?)?)?)?
 	
 	# Run tests for HEAD a normal branch, an orphan branch and a commit detached from a branch.
-	head-type = ht|h(ead)?([-_]t(ype)?)?
+	head-type = ht|h(ead)?([-_]t(ypes?)?)?
 	
 	# Run tests for a few chosen combinations of pathspec from arguments / stdin / file in a plain text / null separated format.
-	pathspec-style = p?ps|(p(a(r(t(ial)?)?)?)?[-_])?pa?(th)?s(p(ec)?)?[-_]s(t(y(le?)?)?)?
+	pathspec-style = p?ps|(p(a(r(t(ial)?)?)?)?[-_])?pa?(th)?s(p(ec)?)?[-_]s(t(y(l(es?)?)?)?)?
 	
 	# Run tests for all the combinations of pathspec from arguments / stdin / file in a plain text / null separated format.
-	full-pathspec-style = fps|f(u?ll)?[-_]?pa?(th)?s(p(ec)?)?[-_]s(t(y(le?)?)?)?
-	
-	# Run tests for outputs with and without colors.
-	# (By default it is tested only with colors.)
-	color = c(ol(or)?)?|clr?
+	full-pathspec-style = fps|f(u?ll)?[-_]?pa?(th)?s(p(ec)?)?[-_]s(t(y(l(es?)?)?)?)?
 	
 	# Run tests for all the subcommands applicable for the given test. (E.g. instead of just "create" test "create", "save", "snatch" and "push".)
-	subcommand = (s(u?b)?)?(c(om(m(and?)?)?)?|sub|cmd)
+	subcommand = (s(u?b)?[-_]?)?(c(om(m(an(ds?)?)?)?)?|subs?|cmds?)
 	
-	# Test all options applicable for given test. (E.g. try to run the same test with and without "--keep-index".)
+	# Test various options applicable for given test. (E.g. try to run the same test with and without "--keep-index".)
+	# (See also "short-options" and "partial-options".)
+	# This focuses on the options that tends to inteact with each other. See also "color".
 	options = o(p(t(i(o(ns?)?)?|s|))?)?
 	
 	# Test both short and long variants of the same option.
@@ -46,12 +44,19 @@ raw_facets='
 	# (E.g. "--conti" instead of "--continue".)
 	partial-options = po|p(a(r(t(ial)?)?)?)?[-_]o(p(t(i(o(ns?)?)?|s|))?)?
 	
+	# Test both with colors tuner on and off. (They are on by default in tests.)
+	# (See also "short-options" and "partial-options".)
+	color = c(o(l(o(rs?)?)?)?)?
+	
 	# Test also the command run with "--" between options and arguments.
-	end-options-indicator = e?oi|(e(nd)?[-_])?o(p(t(i(o(ns?)?)?|s|))?)?[-_]i(n(d(i(c(a(t(or)?)?)?)?)?)?)?|eo|e(nd)?[-_]o(p(t(i(o(ns?)?)?|s|))?)?|ei|e(nd)?[-_]i(n(d(i(c(a(t(or)?)?)?)?)?)?)?
+	end-options-indicator = e?oi|(e(nd)?[-_])?o(p(t(i(o(ns?)?)?|s|))?)?[-_]i(n(d(i(c(a(t(or)?)?)?)?)?)?)?|eo|e(nd)?[-_]o(p(t(i(o(ns?)?)?|s|))?)?|ei|e(nd)?[-_]i(n(d(i(c(a(t(ors?)?)?)?)?)?)?)?
 	
 	# Run the tests that take a long time to execute.
 	# (Only a few tests are like that but they still inhibit things noticeably.)
 	long-running = lr|l(o?ng)?[-_]r(u(n(n(ing)?)?)?)?
+	
+	# Run also alternative versions of some tests.
+	miscellaneous = m(i(s(c(ell?(a(n(e?o?u?s)?)?)?)?)?)?)?
 '
 facets="$(normalize_facet_list "$raw_facets")"
 
@@ -62,7 +67,7 @@ raw_facet_categories='
 	# (Some tests will not even finish, because there will be too many runs.)
 	all = a(ll)?: '"$(printf '%s' "$facets" | sed -E 's/^(.+)=.*$/\1/' | tr '\n' ',')"'
 	
-	# Test everything important and a little more, just ot be sure.
+	# Test everything important and a little more, just to be sure.
 	full = fu?ll: standard, full-pathspec-style, color, long-running
 	
 	# Test the important things.
@@ -71,7 +76,7 @@ raw_facet_categories='
 	
 	# Test the most important things.
 	# (It is fast but not that thorough. It is usually good enough for testing mid-development.)
-	fast = fa?st: non-essential, head-type, subcommand, options
+	fast = fa?st: non-essential, head-type, subcommand, options, miscellaneous
 	
 	# Only non essential tests.
 	# (Checks if the shell is able run the scripts but not that much more - no tricky cases.)
@@ -251,8 +256,8 @@ then
 	
 	getopt_short_options='hv'
 	getopt_long_options='help,version'
-	getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
-	eval set -- "$getopt_result"
+	normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
+	eval set -- "$normalized_options"
 	while true
 	do
 		case "$1" in

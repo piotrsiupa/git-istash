@@ -70,7 +70,7 @@ decrement_prefix() { # prefix_or_test_name
 
 sort_new_test_names() { # new_test_name...
 	printf '%s\n' "$@" \
-	| sed -n -E 's;^((.*/)?[0-9]+[A-Z]+)(_[0-9a-zA_Z][^/]*)$;\1 \3;p' \
+	| sed -n -E 's;^((.*/)?[0-9]+[A-Z]+)(_[^/]+)$;\1 \3;p' \
 	| awk '
 		BEGIN {
 			count = 0
@@ -99,7 +99,7 @@ sort_new_test_names() { # new_test_name...
 		}
 	'
 	printf '%s\n' "$@" \
-	| grep -E '^(.*/)?[0-9]+_[0-9a-zA_Z][^/]*$' || true
+	| grep -E '^(.*/)?[0-9]+_[^/]+$' || true
 }
 
 create_test() { # new_test_name...
@@ -109,7 +109,7 @@ create_test() { # new_test_name...
 		return 1
 	fi
 	
-	tests_with_bad_names="$(printf '%s\n' "$@" | grep -v -E '^(.*/)?[0-9]+[A-Z]*_[0-9a-zA_Z][^/]*$' || true)"
+	tests_with_bad_names="$(printf '%s\n' "$@" | grep -v -E '^(.*/)?[0-9]+[A-Z]*_[^/]+$' || true)"
 	if [ -n "$tests_with_bad_names" ]
 	then
 		printf 'The test name has to contain at least the number of the sub-category and some text.\n'
@@ -119,16 +119,15 @@ create_test() { # new_test_name...
 		return 1
 	fi 1>&2
 	
-	sorted_test_names="$(sort_new_test_names "$@")"
-	#shellcheck disable=SC2086
-	set -- $sorted_test_names
+	#shellcheck disable=SC2046
+	set -- $(sort_new_test_names "$@")
 	
 	while [ $# -ne 0 ]
 	do
 		category="$(extract_category "$1")"
 		last_test="$(list_category "$category" | sort -r | head -n 1)"
 		last_prefix="$(extract_prefix "$last_test" || true)"
-		if printf '%s' "$1" | grep -E -q '^(.*/)?[0-9]+[A-Z]+_[0-9a-zA_Z][^/]*$'
+		if printf '%s' "$1" | grep -E -q '^(.*/)?[0-9]+[A-Z]+_[^/]+$'
 		then
 			new_prefix="$(extract_prefix "$1")"
 			if [ -n "$last_prefix" ]
@@ -144,22 +143,22 @@ create_test() { # new_test_name...
 					return 1
 				fi
 			else
-				if [ "${#new_prefix}" != "${category}A" ]
+				if [ "$new_prefix" != "$(extract_prefix "${category}A")" ]
 				then
-					printf 'The new prefix should be "%s" because it'\''s a new sub-category.\n' "${category}A" 1>&2
+					printf 'The new prefix should be "%s" because it'\''s a new sub-category.\n' "$(extract_prefix "${category}A")" 1>&2
 					return 1
 				fi
 			fi
 			new_test_name="$1"
-		elif printf '%s' "$1" | grep -E -q '^(.*/)?[0-9]+_[0-9a-zA_Z][^/]*$'
+		elif printf '%s' "$1" | grep -E -q '^(.*/)?[0-9]+_[^/]+$'
 		then
 			if [ -n "$last_prefix" ]
 			then
 				new_prefix="$(increment_prefix "$last_prefix")"
 			else
-				new_prefix="${category}A"
+				new_prefix="$(extract_prefix "${category}A")"
 			fi
-			new_test_name="$(printf '%s' "$1" | sed -E 's;^(.*/)?[0-9]+(_[0-9a-zA_Z][^/]*)$;\1'"$new_prefix"'\2;')"
+			new_test_name="$(printf '%s' "$1" | sed -E 's;^(.*/)?[0-9]+(_[^/]+)$;\1'"$new_prefix"'\2;')"
 		fi
 		if ! printf '%s' "$new_test_name" | grep -E -q '\.sh$'
 		then
@@ -279,8 +278,8 @@ delete_test() { # test_name...
 
 getopt_short_options='hs'
 getopt_long_options='help,version'
-getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
-eval set -- "$getopt_result"
+normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
+eval set -- "$normalized_options"
 while true
 do
 	case "$1" in

@@ -5,8 +5,11 @@ non_essential_test
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_CONTINUE
+PARAMETRIZE_COLOR
 
 __end_of_initialization__
+
+prepare_repository
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
@@ -31,7 +34,8 @@ printf 'wdf1a\n' >wdf1
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
-assert_exit_code 2 git istash "$APPLY_OPERATION"
+#shellcheck disable=SC2086
+assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS
 assert_outputs__apply__conflict_HT "$APPLY_OPERATION" '
 UU aaa
 ' '
@@ -58,7 +62,8 @@ __test_section__ "Continue $APPLY_OPERATION stash (0)"
 correct_head_sha2="$(get_head_sha_HT)"
 printf 'ddd\n' >aaa
 git add aaa
-assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" 0
+#shellcheck disable=SC2086
+assert_exit_code 1 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS 0
 assert_outputs__too_many_arguments "$APPLY_OPERATION"
 assert_files_HT '
 M  aaa		ddd
@@ -80,7 +85,8 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 
 __test_section__ "Continue $APPLY_OPERATION stash (1)"
 stash_sha="$(git rev-parse stash)"
-assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS
 assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
 assert_files_HT '
  M aaa		ddd	ccc

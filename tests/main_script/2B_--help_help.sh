@@ -10,17 +10,32 @@ then
 fi
 
 PARAMETRIZE_SUBCOMMAND
+PARAMETRIZE_COLOR
+PARAMETRIZE_OPTION true 'HELP_FLAG' '' 'help: && --help && --hel & --h'
 
 __end_of_initialization__
 
+prepare_repository
 
-__test_section__ "Displaying manual with \"$SUBCOMMAND --help\""
+
+__test_section__ "Displaying manual with \"$SUBCOMMAND $HELP_FLAG\""
 #shellcheck disable=SC2016
-printf '%s\n' '#/usr/bin/env sh' 'cd "$(dirname "$0")" || exit' 'printf '\''"%s"\n'\'' "$@" >'\''./call-to-man.txt'\' >'./man'
+printf '%s\n' '#/usr/bin/env sh' \
+	'' \
+	'cd "$(dirname "$0")" || exit' \
+	'if [ "$OLDPWD" != "$(dirname "$0")" ]' \
+	'then' \
+	'	printf "Not called by Git!\n" >./error.txt' \
+	'fi' \
+	'printf '\''"%s"\n'\'' "$@" >'\''./call-to-man.txt'\' \
+	>'./man'
 chmod +x './man'
 PATH="$(pwd):$PATH"
 export PATH
-assert_exit_code 0 git istash "$SUBCOMMAND" --help
+#shellcheck disable=SC2086
+assert_exit_code 0 git -c help.format=man -c man.mock_man.cmd="$(pwd)/man" -c man.viewer=mock_man istash $COLOR_FLAGS $SUBCOMMAND "$HELP_FLAG"
+! test -f './error.txt' ||
+	fail '%s\n' "$(cat './error.txt')"
 test -f './call-to-man.txt' ||
 	fail '"man" was not called!\n'
 test "$(cat './call-to-man.txt')" = '"git-istash"' ||

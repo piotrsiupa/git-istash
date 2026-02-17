@@ -1,8 +1,11 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
+PARAMETRIZE_COLOR
 
 __end_of_initialization__
+
+prepare_repository
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
@@ -26,7 +29,8 @@ SWITCH_HEAD_TYPE
 
 __test_section__ 'Apply stash'
 correct_head_sha="$(get_head_sha_HT)"
-assert_exit_code 1 git istash apply "$stash_sha"
+#shellcheck disable=SC2086
+assert_exit_code 1 git istash apply $COLOR_FLAGS "$stash_sha"
 assert_outputs__apply__wrong_number_of_staged_stash_parents "$stash_sha"
 assert_files_HT '
    aaa		aaa

@@ -9,8 +9,11 @@ PARAMETRIZE_UNTRACKED 'NO'
 PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'NO'
+PARAMETRIZE_COLOR
 
 __end_of_initialization__
+
+prepare_repository
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
@@ -25,7 +28,7 @@ git rm aaa
 printf 'bbb\n' >aaa
 git add --intent-to-add aaa
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$CREATE_OPERATION" $ALL_FLAGS $UNTRACKED_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS --message 'stash, not a trash'
+assert_exit_code 0 git istash "$CREATE_OPERATION" $ALL_FLAGS $UNTRACKED_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS --message 'stash, not a trash' $COLOR_FLAGS
 assert_outputs__create__success '*' 0 'stash, not a trash'
 new_stash_sha_CO="$stdout"
 if ! IS_KEEP_INDEX_ON
@@ -69,7 +72,8 @@ RESTORE_HEAD_TYPE
 
 __test_section__ 'Pop stash'
 stash_sha="$(git rev-parse stash)"
-assert_exit_code 0 git istash pop
+#shellcheck disable=SC2086
+assert_exit_code 0 git istash pop $COLOR_FLAGS
 assert_outputs__apply__success 'pop' 0 "$stash_sha"
 assert_files '
 D  aaa

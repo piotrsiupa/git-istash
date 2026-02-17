@@ -134,8 +134,8 @@ check_versions() {
 
 getopt_short_options='hQ'
 getopt_long_options='help,quickie,version'
-getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
-eval set -- "$getopt_result"
+normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
+eval set -- "$normalized_options"
 quickie=n
 while true
 do

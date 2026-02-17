@@ -3,6 +3,7 @@
 set -eu
 
 . "$(dirname "$0")/git-istash-commons"
+. "$(dirname "$0")/git-istash-io"
 
 print_help() {
 	printf 'git istash pop - Improved version of "git stash pop" that can handle conflicts\n    without loosing information about the files in index.\n'
@@ -15,6 +16,8 @@ print_help() {
 	printf '\n'
 	printf 'Options:\n'
 	printf '\t--abort\t\t- Abort the previous operation and return the repository\n\t\t\t  to the state before it started.\n'
+	printf '\t--color[=<when>] - Allow use of ANSI color codes.\n\t\t\t  <when> can be one of always, never, or auto.\n\t\t\t  Omitting the argument is equivalent to always.\n'
+	printf '\t--no-color\t- Same as --color=never.\n'
 	printf '    -c, --continue\t- Resume the previous operation.\n\t\t\t  (Conflicts need to be resolved before that.)\n'
 	printf '    -h\t\t\t- Print this help text and exit.\n'
 	printf '\t--quit\t\t- Abort the operation but don'\''t restore the repository\n\t\t\t  state nor move the HEAD.\n'
@@ -26,25 +29,25 @@ save_data() {
 load_stash_data() { # subcommand
 	if [ "$(wc -l <"$stash_data_file")" -ne 1 ]
 	then
-		printf 'fatal: '\''git istash pop'\'' seems to be in progress but the data files are broken\n' 1>&2
-		printf 'fatal: '\''%s'\'' doesn'\''t have exactly 1 line\n' "$stash_data_file" 1>&2
+		printf_fatal \''git istash pop'\'' seems to be in progress but the data files are broken\n'
+		printf_fatal \''%s'\'' doesn'\''t have exactly 1 line\n' "$stash_data_file"
 		print_broken_operation_hint 'pop' "$1"
-		return 1
+		fatal
 	fi
 	stash="$(cat "$stash_data_file")"
 	if ! [ "$stash" -eq "$stash" ] 2>/dev/null || [ "$stash" -lt 0 ]
 	then
-		printf 'fatal: '\''git istash pop'\'' seems to be in progress but the data files are broken\n' 1>&2
-		printf 'fatal: '\''%s'\'' doesn'\''t contain a positive integer\n' "$stash_data_file" 1>&2
+		printf_fatal \''git istash pop'\'' seems to be in progress but the data files are broken\n'
+		printf_fatal \''%s'\'' doesn'\''t contain a positive integer\n' "$stash_data_file"
 		print_broken_operation_hint 'pop' "$1"
-		return 1
+		fatal
 	fi
 	if [ "$stash" -ge "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" ]
 	then
-		printf 'fatal: '\''git istash pop'\'' seems to be in progress but the data files are broken\n' 1>&2
-		printf 'fatal: '\''%s'\'' contains an invalid stash number\n' "$stash_data_file" 1>&2
+		printf_fatal \''git istash pop'\'' seems to be in progress but the data files are broken\n'
+		printf_fatal \''%s'\'' contains an invalid stash number\n' "$stash_data_file"
 		print_broken_operation_hint 'pop' "$1"
-		return 1
+		fatal
 	fi
 }
 load_data() { # subcommand
@@ -69,8 +72,7 @@ check_stash_for_pop() {
 	then
 		:
 	else
-		printf 'error: can only pop '\''refs/stash'\'' or entries of its reflog\n' 1>&2
-		return 1
+		error 'can only pop '\''refs/stash'\'' or entries of its reflog\n'
 	fi
 }
 
@@ -80,22 +82,21 @@ check_data_files() { # resume abort quit
 		pop)
 			if [ "$1" = y ] || [ "$2" = y ] || [ "$3" = y ] ; then return 0 ; fi
 			print_error_for_data_files_check "$operation_in_progress" 'pop'
-			return 1
+			error
 			;;
 		apply)
 			if [ "$2" = y ] || [ "$3" = y ] ; then return 0 ; fi
 			print_error_for_data_files_check "$operation_in_progress" 'pop'
-			return 1
+			error
 			;;
 		error-*)
 			if [ "$3" = y ] ; then return 0 ; fi
 			print_error_for_data_files_check "$operation_in_progress" 'pop'
-			return 1
+			error
 			;;
 		nothing)
 			if [ "$1" = n ] && [ "$2" = n ] && [ "$3" = n ] ; then return 0 ; fi
-			printf 'error: no istash pop in progress\n' 1>&2
-			return 1
+			error 'no istash pop in progress\n'
 			;;
 	esac
 }
@@ -161,9 +162,9 @@ do_pop() { # args...
 }
 
 getopt_short_options='chq'
-getopt_long_options='abort,continue,quit'
-getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n'error' -ssh -- "$@")"
-eval set -- "$getopt_result"
+getopt_long_options='abort,color::,no-color,continue,quit'
+normalized_options="$(get_options_color "$getopt_short_options" "$getopt_long_options" "$@")"
+eval set -- "$normalized_options"
 abort_set=n
 continue_set=n
 quit_set=n
@@ -172,6 +173,13 @@ do
 	case "$1" in
 	--abort)
 		abort_set=y
+		;;
+	--color)
+		shift
+		set_color_for_all "$1"
+		;;
+	--no-color)
+		set_color_for_all 'never'
 		;;
 	-c|--continue)
 		continue_set=y
@@ -192,23 +200,19 @@ do
 done
 if [ $continue_set = y ] && [ $abort_set = y ] && [ $quit_set = y ]
 then
-	printf 'error: you can choose continue, abort or quit at your discretion but the rule is that you can only have one\n' 1>&2
-	exit 1
+	error 'you can choose continue, abort or quit at your discretion but the rule is that you can only have one\n'
 fi
 if [ $abort_set = y ] && [ $quit_set = y ]
 then
-	printf 'error: either abort or quit; there is no middle road\n' 1>&2
-	exit 1
+	error 'either abort or quit; there is no middle road\n'
 fi
 if [ $continue_set = y ] && [ $abort_set = y ]
 then
-	printf 'error: unclear whether to continue aborting or to abort continuing\n' 1>&2
-	exit 1
+	error 'unclear whether to continue aborting or to abort continuing\n'
 fi
 if [ $continue_set = y ] && [ $quit_set = y ]
 then
-	printf 'error: unclear whether to continue quitting or to quit continuing\n' 1>&2
-	exit 1
+	error 'unclear whether to continue quitting or to quit continuing\n'
 fi
 
 lib_dir="$(cd "$(dirname "$0")" ; pwd)"

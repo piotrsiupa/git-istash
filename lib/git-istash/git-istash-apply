@@ -3,6 +3,7 @@
 set -eu
 
 . "$(dirname "$0")/git-istash-commons"
+. "$(dirname "$0")/git-istash-io"
 . "$(dirname "$0")/git-istash-vanilla-format"
 
 print_help() {
@@ -16,6 +17,8 @@ print_help() {
 	printf '\n'
 	printf 'Options:\n'
 	printf '\t--abort\t\t- Abort the previous operation and return the repository\n\t\t\t  to the state before it started.\n'
+	printf '\t--color[=<when>] - Allow use of ANSI color codes.\n\t\t\t  <when> can be one of always, never, or auto.\n\t\t\t  Omitting the argument is equivalent to always.\n'
+	printf '\t--no-color\t- Same as --color=never.\n'
 	printf '    -c, --continue\t- Resume the previous operation.\n\t\t\t  (Conflicts need to be resolved before that.)\n'
 	printf '    -h\t\t\t- Print this help text and exit.\n'
 	printf '\t--quit\t\t- Abort the operation but don'\''t restore the repository\n\t\t\t  state nor move the HEAD.\n'
@@ -39,10 +42,10 @@ save_data() {
 load_target_data() { # subcommand
 	if [ "$(wc -l <"$target_data_file")" -ne 1 ]
 	then
-		printf 'fatal: '\''git istash %s'\'' seems to be in progress but the data files are broken\n' "$(get_sub_command_name)" 1>&2
-		printf 'fatal: '\''%s'\'' doesn'\''t have exactly 1 line\n' "$target_data_file" 1>&2
+		printf_fatal \''git istash %s'\'' seems to be in progress but the data files are broken\n' "$(get_sub_command_name)"
+		printf_fatal \''%s'\'' doesn'\''t have exactly 1 line\n' "$target_data_file"
 		print_broken_operation_hint "$1"
-		return 1
+		fatal
 	fi
 	current_branch="$(cat "$target_data_file")"
 	if printf '%s' "$current_branch" | grep -qE '^~'
@@ -54,10 +57,10 @@ load_target_data() { # subcommand
 	fi
 	if ! git rev-parse --quiet --verify "$current_branch^{commit}" 1>/dev/null
 	then
-		printf 'fatal: '\''git istash %s'\'' seems to be in progress but the data files are broken\n' "$(get_sub_command_name)" 1>&2
-		printf 'fatal: '\''%s'\'' contains an invalid commit hash\n' "$target_data_file" 1>&2
+		printf_fatal \''git istash %s'\'' seems to be in progress but the data files are broken\n' "$(get_sub_command_name)"
+		printf_fatal \''%s'\'' contains an invalid commit hash\n' "$target_data_file"
 		print_broken_operation_hint "$1"
-		return 1
+		fatal
 	fi
 	if [ "$curr_branch_type" != 'orphan' ] && [ "$(git rev-parse "$current_branch")" = "$current_branch" ]
 	then
@@ -67,18 +70,18 @@ load_target_data() { # subcommand
 load_working_dir_data() { # subcommand
 	if [ "$(wc -l <"$working_dir_sha_file")" -ne 1 ]
 	then
-		printf 'fatal: '\''git istash %s'\'' seems to be in progress but the data files are broken\n' "$(get_sub_command_name)" 1>&2
-		printf 'fatal: '\''%s'\'' doesn'\''t have exactly 1 line\n' "$working_dir_sha_file" 1>&2
+		printf_fatal \''git istash %s'\'' seems to be in progress but the data files are broken\n' "$(get_sub_command_name)"
+		printf_fatal \''%s'\'' doesn'\''t have exactly 1 line\n' "$working_dir_sha_file"
 		print_broken_operation_hint "$1"
-		return 1
+		fatal
 	fi
 	working_dir_changes_sha="$(cat "$working_dir_sha_file")"
 	if ! git rev-parse --quiet --verify "$working_dir_changes_sha^{commit}" 1>/dev/null
 	then
-		printf 'fatal: '\''git istash %s'\'' seems to be in progress but the data files are broken\n' "$(get_sub_command_name)" 1>&2
-		printf 'fatal: '\''%s'\'' contains an invalid commit hash\n' "$working_dir_sha_file" 1>&2
+		printf_fatal \''git istash %s'\'' seems to be in progress but the data files are broken\n' "$(get_sub_command_name)"
+		printf_fatal \''%s'\'' contains an invalid commit hash\n' "$working_dir_sha_file"
 		print_broken_operation_hint "$1"
-		return 1
+		fatal
 	fi
 }
 load_data() { # subcommand
@@ -102,21 +105,14 @@ put_files_into_working_copy() { # untracked_changes_sha non_staged_changes_sha s
 }
 
 end_with_rebase_problem() {
-	{
-		printf_color 2 '\033[33m'
-		sub_command_name="$(get_sub_command_name)"
-		printf 'hint: use '\''git istash --continue'\'' after fixing the conflicts\n'
-		printf 'hint: or, to undo everything '\''git istash %s'\'' did, run '\''git istash --abort'\''\n' "$sub_command_name"
-		printf_color 2 '\033[39m'
-	} 1>&2
+	printf_hint 'use '\''git istash --continue'\'' after fixing the conflicts\nor, to undo everything '\''git istash %s'\'' did, run '\''git istash --abort'\''\n' "$(get_sub_command_name)"
 	return 2
 }
 end_with_success() {
 	if { [ "$curr_branch_type" != 'orphan' ] && [ "$(git rev-parse HEAD~6)" != "$(git rev-parse "$current_branch")" ] ; } \
 		|| { [ "$curr_branch_type" = 'orphan' ] && [ "$(git rev-list --no-walk --count HEAD~6^@)" != '0' ] ; }
 	then
-		printf 'fatal: HEAD is not in the correct position after rebasing\n' 1>&2
-		return 1
+		fatal 'HEAD is not in the correct position after rebasing\n'
 	fi
 	untracked_changes_sha="$(git rev-parse HEAD~0)"
 	non_staged_changes_sha="$(git rev-parse HEAD~2)"
@@ -126,8 +122,7 @@ end_with_success() {
 			if [ -n "$(git ls-tree -r --name-only HEAD~6)" ]
 			then
 				# This error is untested because it's hard to come up with a scenario so contrived that it would occur.
-				printf 'fatal: the empty commit created for the command is not empty\n' 1>&2
-				return 1
+				fatal 'the empty commit created for the command is not empty\n'
 			fi
 			git branch --quiet --delete --force "$current_branch"
 			git switch --quiet --orphan "$current_branch"
@@ -155,22 +150,21 @@ check_data_files() { # resume quit
 		pop)
 			if [ "$2" = y ] ; then return 0 ; fi
 			print_error_for_data_files_check "$operation_in_progress" 'apply'
-			return 1
+			error
 			;;
 		apply)
 			if [ "$1" = y ] || [ "$2" = y ] ; then return 0 ; fi
 			print_error_for_data_files_check "$operation_in_progress" 'apply'
-			return 1
+			error
 			;;
 		error-*)
 			if [ "$2" = y ] ; then return 0 ; fi
 			print_error_for_data_files_check "$operation_in_progress" 'apply'
-			return 1
+			error
 			;;
 		nothing)
 			if [ "$1" = n ] && [ "$2" = n ] ; then return 0 ; fi
-			printf 'error: no istash apply in progress\n' 1>&2
-			return 1
+			error 'no istash apply in progress\n'
 			;;
 	esac
 }
@@ -232,7 +226,7 @@ start_rebase() { # untangled_stash_sha
 		end_with_rebase_problem
 	else
 		do_abort
-		return 1
+		fatal
 	fi
 }
 
@@ -265,9 +259,9 @@ do_continue() { # args...
 		end_with_rebase_problem
 	else
 		exec 3>&-
-		printf '%s\n' "$stderr" 1>&2
 		git reset --quiet --soft HEAD~
-		return 1
+		printf '%s' "$stderr" | color_fatal 1>&2
+		fatal
 	fi
 	exec 3>&-
 }
@@ -277,7 +271,11 @@ do_abort() { # args...
 	check_data_files y n
 	load_data "$(get_sub_command_name)"
 	
-	git rebase --abort || true  # Errors are ignored because if rebase is not in progress, we still want to try to restore HEAD.
+	error_message="$(git rebase --abort 2>&1 || true)"  # Errors are ignored because if rebase is not in progress, we still want to try to restore HEAD.
+	if [ -n "$error_message" ]
+	then
+		printf '%s\n' "$error_message" | color_fatal 1>&2
+	fi
 	git reset --quiet --hard
 	succeeded_switch=n
 	exec 3>&1
@@ -315,12 +313,10 @@ do_abort() { # args...
 			printf 'Successfully aborted '\''git istash pop'\''\n'
 		fi 1>&2
 	else
-		{
-			printf 'fatal: failed to restore HEAD to initial position\n'
-			printf '%s\n' "$error_message"
-			print_broken_operation_hint '--abort'
-		} 1>&2
-		return 1
+		printf_fatal 'failed to restore HEAD to initial position\n'
+		printf '%s\n' "$error_message" | color_fatal 1>&2
+		print_broken_operation_hint '--abort'
+		fatal
 	fi
 }
 
@@ -361,9 +357,9 @@ do_apply() { # args...
 }
 
 getopt_short_options='chq'
-getopt_long_options='abort,_called-from-pop,_called-from-pop_,continue,quit'
-getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n'error' -ssh -- "$@")"
-eval set -- "$getopt_result"
+getopt_long_options='abort,_called-from-pop,_called-from-pop_,color::,no-color,continue,quit'
+normalized_options="$(get_options_color "$getopt_short_options" "$getopt_long_options" "$@")"
+eval set -- "$normalized_options"
 abort_set=n
 is_pop=n
 continue_set=n
@@ -376,6 +372,13 @@ do
 		;;
 	--_called-from-pop*)
 		is_pop=y
+		;;
+	--color)
+		shift
+		set_color_for_all "$1"
+		;;
+	--no-color)
+		set_color_for_all 'never'
 		;;
 	-c|--continue)
 		continue_set=y
@@ -396,23 +399,19 @@ do
 done
 if [ $continue_set = y ] && [ $abort_set = y ] && [ $quit_set = y ]
 then
-	printf 'error: you can choose continue, abort or quit at your discretion but the rule is that you can only have one\n' 1>&2
-	exit 1
+	error 'you can choose continue, abort or quit at your discretion but the rule is that you can only have one\n'
 fi
 if [ $abort_set = y ] && [ $quit_set = y ]
 then
-	printf 'error: either abort or quit; there is no middle road\n' 1>&2
-	exit 1
+	error 'either abort or quit; there is no middle road\n'
 fi
 if [ $continue_set = y ] && [ $abort_set = y ]
 then
-	printf 'error: unclear whether to continue aborting or to abort continuing\n' 1>&2
-	exit 1
+	error 'unclear whether to continue aborting or to abort continuing\n'
 fi
 if [ $continue_set = y ] && [ $quit_set = y ]
 then
-	printf 'error: unclear whether to continue quitting or to quit continuing\n' 1>&2
-	exit 1
+	error 'unclear whether to continue quitting or to quit continuing\n'
 fi
 
 lib_dir="$(cd "$(dirname "$0")" ; pwd)"

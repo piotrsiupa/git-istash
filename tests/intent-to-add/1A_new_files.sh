@@ -7,8 +7,11 @@ PARAMETRIZE_UNTRACKED 'DEFAULT'
 PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
+PARAMETRIZE_COLOR
 
 __end_of_initialization__
+
+prepare_repository
 
 correct_head_sha="$(get_head_sha)"
 SWITCH_HEAD_TYPE
@@ -17,7 +20,7 @@ __test_section__ "$CAP_CREATE_OPERATION stash"
 printf 'bbb\n' >aaa
 git add --intent-to-add aaa
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS -m 'new stash' $ALL_FLAGS $UNTRACKED_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS
+assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS -m 'new stash' $ALL_FLAGS $UNTRACKED_FLAGS $COLOR_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS
 assert_outputs__create__success '*' 0 'new stash'
 new_stash_sha_CO="$stdout"
 assert_files_HTCO '
@@ -47,7 +50,8 @@ RESTORE_HEAD_TYPE
 
 __test_section__ 'Pop stash'
 stash_sha="$(git rev-parse stash)"
-assert_exit_code 0 git istash pop
+#shellcheck disable=SC2086
+assert_exit_code 0 git istash pop $COLOR_FLAGS
 assert_outputs__apply__success 'pop' 0 "$stash_sha"
 assert_files '
  A aaa		bbb

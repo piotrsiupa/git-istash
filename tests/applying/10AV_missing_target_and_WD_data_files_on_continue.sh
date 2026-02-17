@@ -4,8 +4,11 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_CONTINUE
+PARAMETRIZE_COLOR
 
 __end_of_initialization__
+
+prepare_repository
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
@@ -30,7 +33,8 @@ printf 'wdf1a\n' >wdf1
 
 __test_section__ 'Pop stash'
 correct_head_sha="$(get_head_sha_HT)"
-assert_exit_code 2 git istash pop
+#shellcheck disable=SC2086
+assert_exit_code 2 git istash pop $COLOR_FLAGS
 assert_outputs__apply__conflict_HT 'pop' '
 UU aaa
 ' '
@@ -59,7 +63,8 @@ printf 'ddd\n' >aaa
 git add aaa
 mv .git/ISTASH_TARGET .git/ISTASH_TARGET~
 mv .git/ISTASH_WORKING-DIR .git/ISTASH_WORKING-DIR~
-assert_exit_code 1 git istash pop "$CONTINUE_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 1 git istash pop $COLOR_FLAGS "$CONTINUE_FLAG"
 assert_outputs__missing_data_file 'pop' 'ISTASH_TARGET' 'ISTASH_WORKING-DIR'
 assert_files_HT '
 M  aaa		ddd
@@ -82,7 +87,8 @@ __test_section__ 'Continue pop stash (1)'
 mv .git/ISTASH_TARGET~ .git/ISTASH_TARGET
 mv .git/ISTASH_WORKING-DIR~ .git/ISTASH_WORKING-DIR
 stash_sha="$(git rev-parse stash)"
-assert_exit_code 0 git istash pop "$CONTINUE_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 0 git istash pop $COLOR_FLAGS "$CONTINUE_FLAG"
 assert_outputs__apply__success 'pop' 0 "$stash_sha"
 assert_files_HT '
  M aaa		ddd	ccc

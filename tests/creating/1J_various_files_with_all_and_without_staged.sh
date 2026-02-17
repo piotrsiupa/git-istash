@@ -7,8 +7,11 @@ PARAMETRIZE_UNTRACKED 'DEFAULT' 'YES'
 PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_STAGED 'NO'
 PARAMETRIZE_UNSTAGED 'YES'
+PARAMETRIZE_COLOR
 
 __end_of_initialization__
+
+prepare_repository
 
 correct_head_sha="$(get_head_sha)"
 SWITCH_HEAD_TYPE
@@ -19,7 +22,7 @@ git add aaa
 printf 'bbb\n' >aaa
 printf 'ddd\n' >ddd
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $ALL_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $UNTRACKED_FLAGS --message 'name of the new stash'
+assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $COLOR_FLAGS $ALL_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $UNTRACKED_FLAGS --message 'name of the new stash'
 assert_outputs__create__success '*' 0 'name of the new stash'
 new_stash_sha_CO="$stdout"
 assert_files_HTCO '
@@ -52,7 +55,8 @@ RESTORE_HEAD_TYPE
 
 __test_section__ 'Pop stash'
 stash_sha="$(git rev-parse stash)"
-assert_exit_code 0 git istash pop  # "istash" is used here instead of "stash" because the vanilla command doesn't support files added to tracking but not to the index.
+#shellcheck disable=SC2086
+assert_exit_code 0 git istash pop $COLOR_FLAGS  # "istash" is used here instead of "stash" because the vanilla command doesn't support files added to tracking but not to the index.
 assert_outputs__apply__success 'pop' 0 "$stash_sha"
 assert_files '
  A aaa		bbb

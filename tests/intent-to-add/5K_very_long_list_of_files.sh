@@ -32,11 +32,13 @@ PARAMETRIZE_UNTRACKED 'YES'
 PARAMETRIZE_KEEP_INDEX 'NO'
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
-
-# It's messy enough without those.
-rm ignored0 ignored1
+PARAMETRIZE_COLOR
 
 __end_of_initialization__
+
+prepare_repository
+# It's messy enough without those.
+rm ignored0 ignored1
 
 gen_file_names() { # suffix
 	current_file_name="$(printf "%$((single_file_name_length - ${#1}))s" '' | tr ' ' 'a')$1"
@@ -74,7 +76,7 @@ do
 	printf 'ccc\n' >"$file_name"
 done
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $UNTRACKED_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS --message 'the biggest stash'
+assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $UNTRACKED_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS $COLOR_FLAGS --message 'the biggest stash'
 assert_outputs__create__success '*' 0 'the biggest stash'
 new_stash_sha_CO="$stdout"
 assert_files_HT '
@@ -99,7 +101,8 @@ RESTORE_HEAD_TYPE
 
 __test_section__ 'Pop stash'
 stash_sha="$(git rev-parse stash)"
-assert_exit_code 0 git istash pop
+#shellcheck disable=SC2086
+assert_exit_code 0 git istash pop $COLOR_FLAGS
 assert_outputs__apply__success pop 0 "$stash_sha"
 assert_files "$(
 	printf '%s\n' "$tracked_files" | sed -E -e 's/^/AM /' -e 's/$/ bbb aaa/'

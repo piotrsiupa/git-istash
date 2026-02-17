@@ -1,0 +1,191 @@
+# A set of utility functions related to color and error handling.
+# (They are also responsible for exit codes for errors.)
+
+if [ -f "$(dirname "$0")/../lib/git-istash/get_options" ]
+then
+	. "$(dirname "$0")/../lib/git-istash/get_options"
+else
+	. "$(dirname "$0")/get_options"
+fi
+
+# Wrapper for "get_options" that adds color to error messages.
+# "get_options" is written to be usable in different project. (So it can't refer to Git config.)
+get_options_color() { # [-P | -R | -U] short_options_string long_options_string [argument...]
+	exec 3>&1
+	set +e
+	error_message="$(set -e ; get_options "$@" 2>&1 1>&3)"
+	exit_code=$?
+	set -e
+	exec 3>&-
+	case $exit_code in
+		0) ;;
+		1) printf '%s\n' "$error_message" | color_error 1>&2 ; return 1 ;;
+		*) printf '%s\n' "$error_message" | color_fatal 1>&2 ; return 2 ;;
+	esac
+}
+
+set_color_for_all() { # value
+	set -- "$1" "$(printf '%s' "$1" | tr 'A-Z\n' 'a-zX')"
+	if printf '%s\n' "$2" | grep -Exq '|a(lways)?|y(es)?|t(rue)?|affirmative|1'
+	then
+		set -- 'always'
+	elif printf '%s' "$2" | grep -Exq 'n(ever)?|no|f(alse)?|negative|0'
+	then
+		set -- 'never'
+	elif printf '%s' "$2" | grep -Exq 'auto|d(efault)?|(terminal|tty)(-only)?|magic' # yeah, this is overdoing it, whatever, it's fun
+	then
+		set -- 'auto'
+	else
+		printf 'error: `%s'\'' is not a valid color boolean' "$1" | color_error 1>&2
+		error
+	fi
+	if [ -z "${GIT_CONFIG_COUNT-}" ]
+	then
+		GIT_CONFIG_COUNT=0
+	fi
+	export GIT_CONFIG_COUNT
+	#shellcheck disable=SC2034,SC2041
+	for key in 'color.istash.error' 'color.istash.advice'
+	do
+		eval "GIT_CONFIG_KEY_$GIT_CONFIG_COUNT"='"$key"'
+		export "GIT_CONFIG_KEY_$GIT_CONFIG_COUNT"
+		eval "GIT_CONFIG_VALUE_$GIT_CONFIG_COUNT"='"$1"'
+		export "GIT_CONFIG_VALUE_$GIT_CONFIG_COUNT"
+		GIT_CONFIG_COUNT=$((GIT_CONFIG_COUNT + 1))
+	done
+}
+
+is_color_enabled() { # config_variable...
+	if [ $# -eq 0 ]
+	then
+		# This is here to not forget a value during the developoment.
+		printf 'fatal: not enough arguments for is_color_enabled\n' 1>&2
+		return 128
+	fi
+	while [ $# -gt 1 ] && ! git config --get "$1" 1>/dev/null
+	do
+		shift
+	done
+	git config --get-colorbool "$1"
+}
+
+get_color() { # default_value config_variable...
+	if [ $# -eq 0 ]
+	then
+		# This is here to not forget a value during the developoment.
+		printf 'fatal: not enough arguments for get_color\n' 1>&2
+		return 128
+	fi
+	default_color="$1"
+	shift
+	while [ $# -gt 1 ] && ! git config --get "$1" 1>/dev/null
+	do
+		shift
+	done
+	git config --get-color "${1-}" "$default_color"
+}
+
+# Applies color to each line from stdin.
+# The arguments are passed to "get_color".
+color_lines() { # default_value config_variable
+	set -e
+	color_escape_code="$(get_color "$@")"
+	reset_escape_code="$(git config --get-color '' 'reset')"
+	sed -E "/./s/^.*\$/$color_escape_code&$reset_escape_code/"
+}
+
+color_error() {
+	if is_color_enabled 'color.istash.error' 'color.istash'
+	then
+		color_lines 'red' 'color.istash.error.normal' 'color.istash.error.default'
+	else
+		cat
+	fi
+}
+
+printf_error() { # arg...
+	#shellcheck disable=SC2059
+	printf "$@" \
+	| sed -E '/./s/^/error: /' \
+	| color_error
+} 1>&2
+
+error() { # arg...
+	if [ $# -ne 0 ]
+	then
+		printf_error "$@"
+	fi
+	return 1
+}
+
+color_fatal() {
+	if is_color_enabled 'color.istash.error' 'color.istash'
+	then
+		color_lines 'bold red' 'color.istash.error.fatal' 'color.istash.error.default'
+	else
+		cat
+	fi
+}
+
+printf_fatal() { # arg...
+	#shellcheck disable=SC2059
+	printf "$@" \
+	| sed -E '/./s/^/fatal: /' \
+	| color_fatal
+} 1>&2
+
+fatal() { # arg...
+	if [ $# -ne 0 ]
+	then
+		printf_fatal "$@"
+	fi
+	return 1
+}
+
+color_hint() {
+	if is_color_enabled 'color.istash.advice' 'color.istash' 'color.advice'
+	then
+		color_lines 'yellow' 'color.istash.advice.hint' 'color.advice.hint'
+	else
+		cat
+	fi
+}
+
+printf_hint() { # arg...
+	#shellcheck disable=SC2059
+	printf "$@" \
+	| sed -E '/./s/^/hint: /' \
+	| color_hint
+} 1>&2
+
+print_broken_operation_hint() { # called_operation
+	if printf '%s' "$1" | grep -E -q '^-'
+	then
+		printf_hint 'fix the problems and rerun '\''git istash %s'\''\n' "$1"
+	else
+		printf_hint 'fix the problem and finalize that operation before starting a new one\n'
+	fi
+	printf_hint 'or run '\''git istash --quit'\'' to forcefully cancel it\n'
+}
+
+print_error_for_data_files_check() { # current_operation called_operation
+	if printf '%s\n' "$1" | grep -E -q '^error-'
+	then
+		operation_in_progress="$(printf '%s' "$1" | tail -c +7)"
+		printf_fatal \''git istash %s'\'' seems to be in progress but the data files are broken\n' "$operation_in_progress"
+		if [ -f "$(make_target_data_file_path)" ]
+		then
+			printf_fatal \''%s'\'' is missing\n' "$(make_working_dir_sha_file_path)"
+		elif [ -f "$(make_working_dir_sha_file_path)" ]
+		then
+			printf_fatal \''%s'\'' is missing\n' "$(make_target_data_file_path)"
+		else
+			printf_fatal \''%s'\'' and '\''%s'\'' are missing\n' "$(make_target_data_file_path)" "$(make_working_dir_sha_file_path)"
+		fi
+		print_broken_operation_hint "$2"
+	elif [ "$1" != 'nothing' ]
+	then
+		printf_error 'there is currently '\''git istash %s'\'' in progress\n' "$1"
+		printf_hint 'use '\''git istash --continue'\'' or '\''git istash --abort'\''\n'
+	fi
+}

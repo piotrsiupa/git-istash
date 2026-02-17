@@ -4,8 +4,11 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_COLOR
 
 __end_of_initialization__
+
+prepare_repository
 
 __test_section__ 'Create stash'
 printf 'xxx0\n' >aaa
@@ -26,7 +29,8 @@ printf 'ddd\n' >ddd
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 stash_sha="$(git rev-parse stash)"
-assert_exit_code 0 git istash "$APPLY_OPERATION"
+#shellcheck disable=SC2086
+assert_exit_code 0 git istash "$APPLY_OPERATION" $COLOR_FLAGS
 assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
 assert_files_HT '
 AM aaa		xxx1	xxx0
@@ -58,7 +62,8 @@ assert_stash_count_AO 2
 __test_section__ "Restore old working directory"
 remove_all_changes
 stash_sha="$(git rev-parse stash)"
-assert_exit_code 0 git istash pop
+#shellcheck disable=SC2086
+assert_exit_code 0 git istash pop $COLOR_FLAGS
 assert_outputs__apply__success 'pop' 0 "$stash_sha"
 assert_files_HT '
 AM bbb		yyy1	yyy0

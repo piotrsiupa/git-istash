@@ -4,8 +4,11 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_CONTINUE
+PARAMETRIZE_COLOR
 
 __end_of_initialization__
+
+prepare_repository
 
 __test_section__ 'Create stash'
 printf 'aaa\n' >aaa
@@ -17,7 +20,8 @@ SWITCH_HEAD_TYPE
 
 __test_section__ "Continue stash (without changes)"
 correct_head_sha="$(get_head_sha_HT)"
-assert_exit_code 1 git istash "$CONTINUE_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 1 git istash $COLOR_FLAGS "$CONTINUE_FLAG"
 assert_outputs__main_script__no_operation_in_progress
 assert_files_HT '
 !! ignored0	ignored0
@@ -36,7 +40,8 @@ __test_section__ "Continue stash (with changes)"
 printf 'ccc\n' >aaa
 git add aaa
 printf 'ddd\n' >aaa
-assert_exit_code 1 git istash "$CONTINUE_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 1 git istash "$CONTINUE_FLAG" $COLOR_FLAGS
 assert_outputs__main_script__no_operation_in_progress
 assert_files_HT '
 AM aaa		ddd	ccc

@@ -3,6 +3,7 @@
 set -eu
 
 . "$(dirname "$0")/git-istash-commons"
+. "$(dirname "$0")/git-istash-io"
 . "$(dirname "$0")/git-istash-vanilla-format"
 
 print_help() {
@@ -15,6 +16,8 @@ print_help() {
 	printf 'Options:\n'
 	printf '    -a, --all\t\t- Stash and clean also untracked and ignored files.\n'
 	printf '\t--allow-empty\t- Create a stash even if there are no suitable changes.\n'
+	printf '\t--color[=<when>] - Allow use of ANSI color codes.\n\t\t\t  <when> can be one of always, never, or auto.\n\t\t\t  Omitting the argument is equivalent to always.\n'
+	printf '\t--no-color\t- Same as --color=never.\n'
 	printf '    -h\t\t\t- Print this help text and exit.\n'
 	printf '    -k, --keep-index\t- Left intact all changes already added to the index.\n'
 	printf '\t--no-keep-index\t- Cancel --keep-index.\n'
@@ -140,8 +143,7 @@ check_pathspec() {
 			if [ "$good" = n ]
 			then
 				#shellcheck disable=SC2059
-				printf 'error: pathspec '\'"$ps"\'' did not match any file(s)\n' 1>&2
-				return 1
+				error 'pathspec '\'"$ps"\'' did not match any file(s)\n'
 			fi
 		done
 	fi
@@ -315,8 +317,7 @@ commit_changes() {
 		then
 			printf '\n' 1>&2
 		fi
-		printf 'error: no suitable changes to stash\n' 1>&2
-		return 1
+		error 'no suitable changes to stash\n'
 	fi
 }
 undo_commit_changes() {
@@ -342,7 +343,7 @@ handle_rebase_conflict_using_theirs() {
 	do
 		if [ -z "$(git --no-literal-pathspecs ls-files --unmerged :/)" ]
 		then
-			return 1
+			fatal
 		fi
 		git --no-literal-pathspecs ls-files --unmerged --format='%(path)' -z :/ | xargs -0 -- git --literal-pathspecs restore --theirs --
 		git --no-literal-pathspecs add :/ 2>/dev/null || true
@@ -507,9 +508,9 @@ make_stash() { # pathspecs...
 }
 
 getopt_short_options='ahklm:Su'
-getopt_long_options='all,allow-empty,keep-index,no-keep-index,leave-staged,message:,patch,pathspec-file-null,pathspec-from-file:,remove-stashed,staged,no-store,include-untracked,no-include-untracked'
-getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n'error' -ssh -- "$@")"
-eval set -- "$getopt_result"
+getopt_long_options='all,allow-empty,color::,no-color,keep-index,no-keep-index,leave-staged,message:,patch,pathspec-file-null,pathspec-from-file:,remove-stashed,staged,no-store,include-untracked,no-include-untracked'
+normalized_options="$(get_options_color "$getopt_short_options" "$getopt_long_options" "$@")"
+eval set -- "$normalized_options"
 include_ignored=n
 allow_empty=n
 keep_index=n
@@ -534,6 +535,13 @@ do
 		;;
 	--allow-empty)
 		allow_empty=y
+		;;
+	--color)
+		shift
+		set_color_for_all "$1"
+		;;
+	--no-color)
+		set_color_for_all 'never'
 		;;
 	-h)
 		print_help
@@ -590,13 +598,11 @@ then
 fi
 if [ -n "$patch_options" ] && [ "$pathspec_from_file" = '-' ]
 then
-	printf 'error: stdin cannot be assigned to both '\''--patch'\'' and the pathspec\n' 1>&2
-	exit 1
+	error 'stdin cannot be assigned to both '\''--patch'\'' and the pathspec\n'
 fi
 if [ -z "$pathspec_from_file" ] && [ "$pathspec_file_nul" = y ]
 then
-	printf 'error: option '\''--pathspec-file-nul'\'' is not valid without '\''--pathspec-from-file'\''\n' 1>&2
-	exit 1
+	error 'option '\''--pathspec-file-nul'\'' is not valid without '\''--pathspec-from-file'\''\n'
 fi
 command_name="$1"
 shift

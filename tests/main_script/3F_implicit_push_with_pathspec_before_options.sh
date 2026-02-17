@@ -8,8 +8,11 @@ PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_PATHSPEC_STYLE 'ARGS'
 PARAMETRIZE_OPTIONS_INDICATOR true
+PARAMETRIZE_COLOR
 
 __end_of_initialization__
+
+prepare_repository
 
 __test_section__ 'Prepare repository'
 printf 'xxx\n' >aaa0
@@ -43,7 +46,7 @@ git add aaa0 bbb2 ccc4 ddd6 eee8
 printf 'zzz\n' >bbb2
 printf 'zzz\n' >ccc4
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash 'aaa0' $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS 'bbb?' -m 'new stash' $EOI '*5' './?dd*'
+assert_exit_code 1 git istash 'aaa0' $COLOR_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS 'bbb?' -m 'new stash' $EOI '*5' './?dd*'
 assert_outputs__main_script__no_such_command 'aaa0'
 assert_files_HT '
 M  aaa0		yyy

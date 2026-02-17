@@ -11,11 +11,13 @@ PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_PATHSPEC_STYLE
 PARAMETRIZE_OPTIONS_INDICATOR IS_PATHSPEC_IN_ARGS
-
-# We don't need those in this test.
-rm ignored0 ignored1
+PARAMETRIZE_COLOR
 
 __end_of_initialization__
+
+prepare_repository
+# We don't need those in this test.
+rm ignored0 ignored1
 
 # Some tracked files to make it harder on the algorithms creating the commit for untracked ones.
 __test_section__ 'Prepare repository'
@@ -54,20 +56,19 @@ rm 'b/0/k'
 printf 'yyy\n' >'b/1/k'
 git add 'b/1'
 printf 'zzz\n' >'b/1/i'
-#shellcheck disable=SC2086
 cd 'b'
 printf ':/a/0 ../a/1/k ../a/1/l 0 ./1/i ' | PREPARE_PATHSPEC_FILE
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $EOI ':/a/0' '../a/1/k' '../a/1/l' '0' './1/i'
+	assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $COLOR_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $EOI ':/a/0' '../a/1/k' '../a/1/l' '0' './1/i'
 elif IS_PATHSPEC_IN_STDIN
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $PATHSPEC_NULL_FLAGS "$PATHSPEC_FROM_FILE_FLAG"=- <../.git/pathspec_for_test
+	assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $COLOR_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $PATHSPEC_NULL_FLAGS "$PATHSPEC_FROM_FILE_FLAG"=- <../.git/pathspec_for_test
 else
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $PATHSPEC_NULL_FLAGS "$PATHSPEC_FROM_FILE_FLAG" ../.git/pathspec_for_test
+	assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $COLOR_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $PATHSPEC_NULL_FLAGS "$PATHSPEC_FROM_FILE_FLAG" ../.git/pathspec_for_test
 fi
 cd -
 assert_outputs__create__success '*' 0 ''
@@ -163,7 +164,8 @@ RESTORE_HEAD_TYPE
 
 __test_section__ 'Pop stash'
 stash_sha="$(git rev-parse stash)"
-assert_exit_code 0 git istash pop
+#shellcheck disable=SC2086
+assert_exit_code 0 git istash pop $COLOR_FLAGS
 assert_outputs__apply__success 'pop' 0 "$stash_sha"
 assert_files '
 M  a/0/i	yyy

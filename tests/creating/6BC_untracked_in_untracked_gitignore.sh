@@ -9,8 +9,11 @@ PARAMETRIZE_UNTRACKED 'YES'
 PARAMETRIZE_KEEP_INDEX 'YES'
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'NO'
+PARAMETRIZE_COLOR
 
 __end_of_initialization__
+
+prepare_repository
 
 correct_head_sha="$(get_head_sha)"
 SWITCH_HEAD_TYPE
@@ -20,7 +23,7 @@ printf 'aaa\n' >aaa
 printf 'bbb\n' >bbb
 printf 'aaa\n' >.gitignore
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS -mX
+assert_exit_code 0 git istash "$CREATE_OPERATION" $COLOR_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS -mX
 assert_outputs__create__success '*' 0 'X'
 new_stash_sha_CO="$stdout"
 assert_files_HTCO '

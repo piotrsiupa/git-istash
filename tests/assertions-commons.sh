@@ -7,26 +7,73 @@ then
 fi
 
 
+# It doesn't capture outputs (and thus it doesn't tinker with I/O streams).
+assert_exit_code__light() { # expected_code command [arguments...]
+	expected_exit_code_for_assert="$1"
+	shift
+	set +e
+	(set -e ; "$@")
+	exit_code_for_assert=$?
+	set -e
+	#shellcheck disable=SC2154
+	test "$exit_code_for_assert" -eq "$expected_exit_code_for_assert" ||
+		fail 'Command "%s" returned exit code %i but %i was expected!\n' "$*" "$exit_code_for_assert" "$expected_exit_code_for_assert"
+	unset expected_exit_code_for_assert
+	unset exit_code_for_assert
+}
+
 # It also captures the command stdout and stderr for "assert_outputs" (just because it would be too much boiler plate to call "capture_outputs" every time).
 assert_exit_code() { # expected_code command [arguments...]
 	expected_exit_code_for_assert="$1"
 	shift
-	capture_outputs "$@" && exit_code_for_assert=0 || exit_code_for_assert=$?
+	set +e
+	capture_outputs "$@"
+	exit_code_for_assert=$?
+	set -e
 	#shellcheck disable=SC2154
 	test "$exit_code_for_assert" -eq "$expected_exit_code_for_assert" ||
-		fail 'Command "%s" returned exit code %i but %i was expected!\n' "$last_command" "$exit_code_for_assert" "$expected_exit_code_for_assert"
+		fail 'Command "%s" returned exit code %i but %i was expected!\n' "$*" "$exit_code_for_assert" "$expected_exit_code_for_assert"
 	unset expected_exit_code_for_assert
 	unset exit_code_for_assert
+}
+
+# It's for the sake of seing them clearly in the error message.
+# This function may produce ambiguous strings and cannot be used in the actual logic.
+# E.g. escape character will produce string '\033' but the actual string '\033' will remain unchanged.
+escape_escape_characters() {
+	sed -E "s/$(printf '\033')/\\\\033/g"
 }
 
 # Requires outputs to be saved via "capture_outputs". ("assert_exit_code" does run this function intenally.)
 assert_outputs() { # stdout_regex stderr_regex
 	#shellcheck disable=SC2154
 	match_multiline_regex "$stdout" "$(dedent_regex "$1")" ||
-		fail 'Expected stdout of "%s" to match:\n"%s"\nbut it is:\n"%s"!\n' "$last_command" "$(dedent_regex "$1" | sed 's/\\n/&\n/g')" "$stdout"
+		fail 'Expected stdout of "%s" to match:\n"%s"\nbut it is:\n"%s"!\n' \
+			"$last_command" \
+			"$(dedent_regex "$1" | sed 's/\\n/&\n/g' | escape_escape_characters)" \
+			"$(printf '%s' "$stdout" | escape_escape_characters)"
 	#shellcheck disable=SC2154
 	match_multiline_regex "$stderr" "$(dedent_regex "$2")" ||
-		fail 'Expected stderr of "%s" to match:\n"%s"\nbut it is:\n"%s"!\n' "$last_command" "$(dedent_regex "$2" | sed 's/\\n/&\n/g')" "$stderr"
+		fail 'Expected stderr of "%s" to match:\n"%s"\nbut it is:\n"%s"!\n' \
+			"$last_command" \
+			"$(dedent_regex "$2" | sed 's/\\n/&\n/g' | escape_escape_characters)" \
+			"$(printf '%s' "$stderr" | escape_escape_characters)"
+}
+
+_remove_color_from_output_pattern() { # output_pattern
+	printf '%s' "$1" \
+	| if IS_COLOR_ON
+	then
+		sed -E -e 's/^<no-strip-color>//'
+	else
+		sed -E -e '/^<no-strip-color>/!s/\\\[([0-9;]+|0\?)m//g' -e 's/^<no-strip-color>//'
+	fi
+}
+
+# Like "assert_outputs" but is removes ANSI color codes if color parametrization is set to off.
+assert_outputs_with_color() { # stdout_regex stderr_regex
+	set -- "$(_remove_color_from_output_pattern "$1")" "$(_remove_color_from_output_pattern "$2")"
+	assert_outputs "$@"
 }
 
 _convert_zero_separated_path_list() {

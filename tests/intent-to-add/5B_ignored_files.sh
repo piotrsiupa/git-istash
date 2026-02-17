@@ -9,8 +9,11 @@ PARAMETRIZE_UNTRACKED 'NO'
 PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
+PARAMETRIZE_COLOR
 
 __end_of_initialization__
+
+prepare_repository
 
 correct_head_sha="$(get_head_sha)"
 SWITCH_HEAD_TYPE
@@ -21,7 +24,7 @@ printf 'xxx\n' >aaa1
 git add --intent-to-add aaa0 aaa1
 printf '*0\n' >.gitignore
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS --message 'name'
+assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $COLOR_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS --message 'name'
 assert_outputs__create__success '*' 0 'name'
 new_stash_sha_CO="$stdout"
 assert_files_HTCO '
@@ -55,7 +58,8 @@ RESTORE_HEAD_TYPE
 
 __test_section__ 'Pop stash'
 stash_sha="$(git rev-parse stash)"
-assert_exit_code 0 git istash pop
+#shellcheck disable=SC2086
+assert_exit_code 0 git istash pop $COLOR_FLAGS
 assert_outputs__apply__success 'pop' 0 "$stash_sha"
 assert_files '
  A aaa0		xxx

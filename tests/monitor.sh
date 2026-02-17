@@ -6,7 +6,7 @@ set -eu
 
 print_help() {
 	printf '%s - Script that runs "run.sh" first with all tests and then reruns it\nfor all failed test every time any relevant file changes.\n' "$(basename "$0")"
-	printf 'It exits when there are no failed tests.\n'
+	printf 'When there are no failed tests it reruns all tests again and exits if they pass\n(or else it goes back to running tests one by one).\n'
 	printf '\n'
 	printf 'Usage: %s [<options>] [--] [<filter>...]\n' "$(basename "$0")"
 	printf '\n'
@@ -107,10 +107,11 @@ initial_run() { # [filter]...
 }
 
 monitor_tests() { # [filter]...
-	if ! initial_run "$@"
-	then
-		if [ "$(get_all_tests_count "$@")" -eq 0 ]
+	while ! initial_run "$@"
+	do
+		if [ "$(get_all_tests_count "$@")" -eq 0 ] || [ "$(get_failing_tests_count "$@")" -eq 0 ]
 		then
+			printf 'Could not find tests to run!\n' 1>&2
 			return 1
 		fi
 		if [ "$skip_init" = n ]
@@ -122,13 +123,15 @@ monitor_tests() { # [filter]...
 			wait_for_change "$@"
 			printf '\n\n\n'
 		done
-	fi
+		printf '\n\n\n'
+		skip_init=n
+	done
 }
 
 getopt_short_options='aA:c:hm:s'
 getopt_long_options='altered,since:,color:,help,meticulousness:,skip-init,version'
-getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
-eval set -- "$getopt_result"
+normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
+eval set -- "$normalized_options"
 only_altered=n
 altered_reference=HEAD
 use_color=auto
@@ -167,10 +170,9 @@ do
 		;;
 	-m|--meticulousness)
 		shift
-		test "$1" = 'complete' \
-		|| test "$1" = 'quickie' \
-		|| printf '%s\n' "$1" \
+		printf '%s\n' "$1" \
 		| tr '|' '\n' \
+		| sed -E '/^(quickie|complete)$/d' \
 		| while read -r x
 		do
 			parse_meticulousness "$x" 1>/dev/null
