@@ -38,7 +38,6 @@ PARAMETRIZE() { # name facet values...
 			while [ "$CUR_VAL" != "$1" ] && [ $# -ne 0 ]
 			do
 				shift
-				continue
 			done
 			shift
 			CUR_VAL="$1"

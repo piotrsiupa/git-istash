@@ -399,12 +399,7 @@ run_test() ( # test_name
 			then
 				test_count=$((test_count + 1))
 				display_name="$(get_display_name "$1")"
-				if [ -z "$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | tail -n+2)" ]
-				then
-					parameters_string=''
-				else
-					parameters_string="$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | tail -n+2 | sed '/^_/ d' | awk '{if (NF == 4) {print $4} else {print $2}}' | sed -E 's/$/, /' | head -c-3 | tr -d '\n')"
-				fi
+				parameters_string="$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | tail -n+2 | sed -E '/^_/ d' | awk '{print $2}' | sed -E 's/$/, /' | head -c-3 | tr -d '\n')"
 				test_passed="$(printf '%s\n' "$test_result" | grep -Ev '^[-+]')"
 				if [ "$test_passed" = n ]
 				then
