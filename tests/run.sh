@@ -239,7 +239,8 @@ do_run_test() { # test_name
 	exec 3>&4
 	{
 		{
-			export WAS_IT_CALLED_FROM_RUN_SH='indeed'
+			WAS_IT_CALLED_FROM_RUN_SH='indeed'
+			export WAS_IT_CALLED_FROM_RUN_SH
 			if ! cleanup_test "$1" 'current' || ! create_test_dir "$1" 'current' || ! cd "$(get_test_dir "$1" 'current')"
 			then
 				printf '0' 1>&4
