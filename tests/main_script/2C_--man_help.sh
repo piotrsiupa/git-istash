@@ -17,7 +17,6 @@ __end_of_initialization__
 
 prepare_repository
 
-
 __test_section__ "Displaying manual with \"$SUBCOMMAND $MAN_FLAG\""
 #shellcheck disable=SC2016
 printf '%s\n' '#/usr/bin/env sh' \

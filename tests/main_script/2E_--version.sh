@@ -3,7 +3,7 @@
 # The output for every subcommand is the same as for the main script, btw.
 PARAMETRIZE_SUBCOMMAND
 PARAMETRIZE_COLOR
-PARAMETRIZE_OPTION true 'VERSION_FLAG' '' 'version: && --version && --vers & --v'
+PARAMETRIZE_OPTION true 'VERSION_FLAG' '' 'version: -V && --version && --vers & --v'
 
 __end_of_initialization__
 

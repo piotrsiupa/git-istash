@@ -9,7 +9,8 @@ git\-istash \- Handle Git stashes without arbitrary limitations of the original 
 
 .SH SYNOPSIS
 .nf
-\fBgit istash\fR [<options>] [<subcommand>] (\-h\~|\~\-\-help\~|\~\-\-man)
+\fBgit istash\fR [<options>] [<subcommand>] (\-h\~|\~\-\-help\~|\~\-\-man\~|
+            |\~-V\~|\~--version)
 \fBgit istash\fR [<options>] (create\~|\~snatch\~|\~save\~|\~push) [\-a\~|\~\-\-all]
             [\-\-allow-empty] [\-k\~|\~\-\-[no\-]keep\-index]
             [\-l\~|\~\-\-leave\-staged] [(\-m\~|\~\-\-message)\~<\fImessage\fR>] [\-\-patch]
@@ -369,7 +370,7 @@ It is the same as \fB--color=never\fR.
 \fB\-h\fR
 .RS 4
 Print a rudimentary help text to stdout. \
-(Each subcommand has its own version.)
+(Each subcommand has its own text.)
 .sp
 This is a fallback option that is to be used when the man page is not available. \
 Prefer \fBgit\~help\~istash\fR (or \fBgit\~istash\~--man\fR) over \fBgit\~istash\~[<subcommand>]\~\-h\fR.
@@ -395,7 +396,7 @@ This is exactly the same as \fB\-\-help\fR except it doesn't get intercepted by 
 .RE
 
 .PP
-\fB\-\-version\fR
+\fB\-V, \-\-version\fR
 .RS 4
 Display version information for the script.
 .RE

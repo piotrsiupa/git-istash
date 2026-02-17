@@ -11,12 +11,11 @@ fi
 
 PARAMETRIZE_SUBCOMMAND
 PARAMETRIZE_COLOR
-PARAMETRIZE_OPTION true 'HELP_FLAG' '' 'help: && --help && --hel & --h'
+PARAMETRIZE_OPTION true 'HELP_FLAG' '' 'help: && --help && --hel & --h'  # "-h" has a separate test because it behaves differently
 
 __end_of_initialization__
 
 prepare_repository
-
 
 __test_section__ "Displaying manual with \"$SUBCOMMAND $HELP_FLAG\""
 #shellcheck disable=SC2016

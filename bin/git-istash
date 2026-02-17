@@ -29,7 +29,7 @@ print_help() {
 	printf '\t--help\t\t- Show manual page if possible.\n\t\t\t  (If you run it through "git", it will handle this in\n\t\t\t  its own way, which fails on Windows. See --man.)\n'
 	printf '\t--man\t\t- Alias for --help that is not intercepted by "git".\n\t\t\t  (Which makes it work on Windows.)\n'
 	printf '\t--quit\t\t- Like --abort but don'\''t restore the repository state\n\t\t\t  nor move the HEAD.\n'
-	printf '\t--version\t- Show version information and exit.\n'
+	printf '    -V, --version\t- Show version information and exit.\n'
 	printf '\n'
 	printf 'Sub-commands:\n'
 	printf '\tabort\t- Alias for "git istash --abort".\n'
@@ -88,7 +88,7 @@ show_manual() {
 	fatal '\n'
 }
 
-getopt_short_options='ch'
+getopt_short_options='chV'
 getopt_long_options='_skip-version-check_,abort,color::,no-color,continue,help,man,quit,version'
 normalized_options="$(get_options_color -U "$getopt_short_options" "$getopt_long_options" "$@")"
 eval set -- "$normalized_options"
@@ -139,7 +139,7 @@ do
 			continue
 		fi
 		;;
-	--version)
+	-V|--version)
 		print_version
 		exit 0
 		;;
