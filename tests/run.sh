@@ -371,12 +371,12 @@ run_test() ( # test_name
 	error_count=0
 	PARAMETERS_FILE="$(mktemp)"
 	export PARAMETERS_FILE
+	PARAM_HISTORY_FILE="$(mktemp)"
+	export PARAM_HISTORY_FILE
 	output_file="$(mktemp)"
 	parametrized_run_cap=10000
 	iteration_cap=$((parametrized_run_cap * 8))
 	cleanup_test "$1"
-	export skip_after_init
-	skip_after_init=n
 	for meticulousness in $meticulousnesses
 	do
 		: >"$PARAMETERS_FILE"
@@ -457,13 +457,11 @@ run_test() ( # test_name
 				i=x
 				break
 			fi
-			skip_after_init=n
 		done
 		if [ "$i" = x ]
 		then
 			break
 		fi
-		skip_after_init=y
 	done
 	rmdir "$(get_test_dir "$1")" 2>/dev/null || true
 	test_end_time="$(get_timestamp)"
@@ -490,6 +488,7 @@ run_test() ( # test_name
 		printf '\n'
 	fi
 	rm -f "$PARAMETERS_FILE"
+	rm -f "$PARAM_HISTORY_FILE"
 	if [ $test_count -eq 0 ]
 	then
 		return 123

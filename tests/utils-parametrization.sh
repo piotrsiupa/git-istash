@@ -7,6 +7,17 @@ then
 fi
 
 
+# It's called after all parameters are initialised to skip the run if one of the previous runs had the exact same parameters.
+_DEDUPLICATE_PAREMETRIZATION() {
+	CURRENT_PARAMETERS="$(awk '$2 { print $2 }' "$PARAMETERS_FILE" | tr '\n' ' ')"
+	if grep -Fxq -- "$CURRENT_PARAMETERS" "$PARAM_HISTORY_FILE"
+	then
+		skip_silently
+	else
+		printf '%s\n' "$CURRENT_PARAMETERS" >>"$PARAM_HISTORY_FILE"
+	fi
+}
+
 # This makes the test be called multiple times with the variable from the 1st argument having each of the values from the remaining arguments if the specified facet is active.
 # If the facet is not active, the variable is just set to the first value.
 # (Reading this code is not sufficient for understanding the function's inner working because it requires cooperation of the script `run.sh` but you don't need that; you just need to know how to use it.)
