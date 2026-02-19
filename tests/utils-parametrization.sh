@@ -132,6 +132,9 @@ PARAMETRIZE_OPTION() { # condition name override_facet map values...
 	#shellcheck disable=SC2020
 	MAP="$(printf '%s' "$4" | sed -E 's/\s+//g' | tr '|' '\n' | sed -E 's/^(.+:)(.*&&)(.*&&)(.*)$/\1\3\2\4/')"
 	shift 4
+	PREVIOUS_VALUE="$(awk -v key="$NAME" '$1 == key { print $2 }' "$PARAMETERS_FILE")"
+	ALTERNATIVE_SPELLINGS="$(printf '%s\n' "$MAP" | sed -E 's/^.+:.*&&(.*&&)(.*)$/\1\2/' | tr '&' '\n' | grep -Ev '^$')"
+	DONE_ALTERNATIVE_SPELLINGS="$(awk -v key="$NAME" '$1 == key { for (i = 4; i <= NF; ++i) printf "%s ", $i }' "$PARAMETERS_FILE")"
 	if ! is_facet_active 'short-options'
 	then
 		MAP="$(printf '%s\n' "$MAP" | sed -E 's/^(.+:)(.*&&).*&&(.*)$/\1\2\3/')"
@@ -157,14 +160,32 @@ PARAMETRIZE_OPTION() { # condition name override_facet map values...
 	then
 		VALUES="$(printf '%s\n' "$VALUES" | grep -v '^$' | head -n1)"
 	fi
-	VALUES="$(printf '%s\n' "$VALUES" | tr '&' '\n' | sed -E -e '/^\s*$/ d' -e "s/'/'\\\\''/g" -e "s/^/'/" -e "s/$/'/" | tr '\n' ' ')"
+	VALUES="$(printf '%s\n' "$VALUES" | tr '&' '\n' | grep -Exv -- "$(printf '%s' "$DONE_ALTERNATIVE_SPELLINGS" | tr ' ' '|')" | tr '\n' ' ')"
 	eval set -- "$VALUES"
 	PARAMETRIZE_COND "$CONDITION" "$NAME" 'always' "$@"
+	if awk -v key="$NAME" -v first_val="$1" '$1 == key && $2 == first_val && $3 != first_val { printf "y" }' "$PARAMETERS_FILE" | grep -Eq '.'
+	then
+		shift $(($# - 2))
+		sed -i -E "s/^($NAME)\\t(.+)\\t(.+)$/\\1\\t\\2\\t$1/" "$PARAMETERS_FILE"
+	fi
+	if awk -v key="$NAME" -v prev_val="$PREVIOUS_VALUE" '$1 == key && $2 != prev_val { printf "y" }' "$PARAMETERS_FILE" | grep -Eq '.'
+	then
+		CURRENT_ALTERNATIVE_SPELLING="$(printf '%s\n' "$ALTERNATIVE_SPELLINGS" | grep -Fx -- "$PREVIOUS_VALUE" || true)"
+		DONE_ALTERNATIVE_SPELLINGS="$DONE_ALTERNATIVE_SPELLINGS $CURRENT_ALTERNATIVE_SPELLING"
+	fi
+	if printf '%s\n' "$DONE_ALTERNATIVE_SPELLINGS" | grep -Eq '[^ ]'
+	then
+		sed -iE "s/^$NAME\\>.*\$/&\t$DONE_ALTERNATIVE_SPELLINGS/" "$PARAMETERS_FILE"
+	fi
 	unset CONDITION
 	unset NAME
 	unset FACET
 	unset MAP
 	unset VALUES
+	unset PREVIOUS_VALUE
+	unset ALTERNATIVE_SPELLINGS
+	unset DONE_ALTERNATIVE_SPELLINGS
+	unset CURRENT_ALTERNATIVE_SPELLING
 }
 
 # It calls "PARAMETRIZE" with the name "HEAD_TYPE", the facet "head-type" and possible values "BRANCH", "DETACH" and "ORPHAN".
