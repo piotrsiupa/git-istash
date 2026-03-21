@@ -31,7 +31,9 @@ __test_section__ 'Apply stash'
 correct_head_sha="$(get_head_sha_HT)"
 #shellcheck disable=SC2086
 assert_exit_code 0 git istash apply "$stash_sha" $COLOR_FLAGS
-assert_outputs__apply__success apply 0 "$stash_sha"
+assert_outputs__apply__success apply '
+MM aaa
+' 0 "$stash_sha"
 assert_files_HT '
 MM aaa		ccc	bbb
 !! ignored0	ignored0

@@ -103,7 +103,10 @@ __test_section__ 'Pop stash'
 stash_sha="$(git rev-parse stash)"
 #shellcheck disable=SC2086
 assert_exit_code 0 git istash pop $COLOR_FLAGS
-assert_outputs__apply__success pop 0 "$stash_sha"
+assert_outputs__apply__success 'pop' "$(
+	printf '%s\n' "$tracked_files" | sed -E -e 's/^/AM /'
+	printf '%s\n' "$untracked_files" | sed -E -e 's/^/?A /'
+)" 0 "$stash_sha"
 assert_files "$(
 	printf '%s\n' "$tracked_files" | sed -E -e 's/^/AM /' -e 's/$/ bbb aaa/'
 	printf '%s\n' "$untracked_files" | sed -E -e 's/^/?? /' -e 's/$/ ccc/'

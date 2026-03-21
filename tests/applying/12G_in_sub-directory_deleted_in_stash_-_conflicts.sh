@@ -54,7 +54,10 @@ git add ccc
 stash_sha="$(git rev-parse stash)"
 #shellcheck disable=SC2086
 assert_exit_code 0 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG"
-assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
+assert_outputs__apply__success "$APPLY_OPERATION" '
+ D aaa/bbb
+ M ccc
+' 0 "$stash_sha"
 assert_files_HT '
  D aaa/bbb	foo
  M ccc		qux		baz

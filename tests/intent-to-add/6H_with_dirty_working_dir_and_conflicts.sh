@@ -182,7 +182,17 @@ cd xxx
 #shellcheck disable=SC2086
 assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS
 cd -
-assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
+assert_outputs__apply__success "$APPLY_OPERATION" '
+MM aaa
+MM xxx/aaa
+MM yyy/aaa
+ M bbb
+ M xxx/bbb
+ M yyy/bbb
+?M zzz
+?M xxx/zzz
+?M yyy/zzz
+' 0 "$stash_sha"
 assert_files_HT '
 AM aaa		hhh0	fff0
 AM xxx/aaa	hhh1	fff1

@@ -50,14 +50,78 @@ assert_outputs__apply__failed_resolution() { # operation unresolved_files
 	"
 }
 
-# "apply" needs only 1 argument, while "pop" requires all 3.
-assert_outputs__apply__success() { # operation [stash_id stash_sha]
+# "apply" needs only 2 arguments, while "pop" requires all 4.
+assert_outputs__apply__success() { # operation changes [stash_id stash_sha]
 	assert_outputs '
+		'"$(
+			changes="$(
+				sanitize_for_ere "$2" \
+				| convert_escapes \
+				| sed -E -e 's/^\t+//' -e '/^\s*$/ d' -e 's/^\\\?/?/' -e 's/^(..) (.+)$/\2 \1/' \
+				| sort \
+				| sed -E 's/^(.+) (..)$/\2 \1/'
+			)"
+			if printf '%s' "$changes" | grep -q '.'
+			then
+				printf 'Changes made to the working directory:\\n\n'
+				if printf '%s' "$changes" | grep -Eq '^[^ ?!]'
+				then
+					printf '    index:\\n\n'
+					printf '%s' "$changes" \
+					| grep -E '^[^ ?!]' \
+					| sed -E -e 's/^A. (.+)$/\\tadded:\\t\\t\1\\n/' \
+						-e 's/^M. (.+)$/\\tmodified:\\t\1\\n/' \
+						-e 's/^D. (.+)$/\\tdeleted:\\t\1\\n/'
+				fi
+				if printf '%s' "$changes" | grep -Eq '^[^?!][^ ]'
+				then
+					printf '    tracked files:\\n\n'
+					printf '%s' "$changes" \
+					| grep -E '^[^?!][^ ]' \
+					| sed -E -e 's/^.A (.+)$/\\tadded:\\t\\t\1\\n/' \
+						-e 's/^.M (.+)$/\\tmodified:\\t\1\\n/' \
+						-e 's/^.D (.+)$/\\tdeleted:\\t\1\\n/'
+				fi
+				if printf '%s' "$changes" | grep -Eq '^[?!]'
+				then
+					printf '    untracked files:\\n\n'
+					printf '%s' "$changes" \
+					| grep -E '^[?!]' \
+					| sed -E -e 's/^!! (.+)$/\\tignored:\\t\1\\n/' \
+						-e 's/^!. (.+)$/\\ttouched:\\t\1\\n/' \
+						-e 's/^.A (.+)$/\\tcreated:\\t\1\\n/' \
+						-e 's/^.M (.+)$/\\tmodified:\\t\1\\n/' \
+						-e 's/^.D (.+)$/\\tdeleted:\\t\1\\n/'
+				fi
+			else
+				printf 'No changes were made to the working directory.\\n\n'
+			fi
+		)"'
+		\n
 		Stash of the old working dir: [0-9a-fA-F]{40}\n
-		'"$(if [ "$1" = 'pop' ] ; then printf '%s' 'Dropped refs\/stash@\{'"$2"'\} \('"$3"'\)\n' ; fi)"'
+		'"$(if [ "$1" = 'pop' ] ; then printf '%s' 'Dropped refs\/stash@\{'"$3"'\} \('"$4"'\)\n' ; fi)"'
 		\n
 		Successfully '"$(if [ "$1" = 'pop' ] ; then printf 'popped' ; else printf 'applied' ; fi)"' the stash
 	' ''
+}
+# "apply" needs only 3 arguments, while "pop" requires all 5.
+assert_outputs__apply__success_HT() { # operation changes_normal changes_orphan [stash_id stash_sha]
+	if ! IS_HEAD_ORPHAN
+	then
+		if [ $# -eq 5 ]
+		then
+			assert_outputs__apply__success "$1" "$2" "$4" "$5"
+		else
+			assert_outputs__apply__success "$1" "$2"
+		fi
+	else
+		if [ $# -eq 5 ]
+		then
+			assert_outputs__apply__success "$1" "$3" "$4" "$5"
+		else
+			assert_outputs__apply__success "$1" "$3"
+		fi
+	fi
 }
 
 assert_outputs__apply__abort() { # operation

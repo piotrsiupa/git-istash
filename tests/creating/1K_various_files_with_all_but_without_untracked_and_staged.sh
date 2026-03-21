@@ -57,7 +57,11 @@ __test_section__ 'Pop stash'
 stash_sha="$(git rev-parse stash)"
 #shellcheck disable=SC2086
 assert_exit_code 0 git istash pop $COLOR_FLAGS  # "istash" is used here instead of "stash" because the vanilla command doesn't support files added to tracking but not to the index.
-assert_outputs__apply__success 'pop' 0 "$stash_sha"
+assert_outputs__apply__success 'pop' '
+ A aaa
+!A ignored0
+!A ignored1
+' 0 "$stash_sha"
 assert_files '
  A aaa		bbb
 !! ignored0	ignored0

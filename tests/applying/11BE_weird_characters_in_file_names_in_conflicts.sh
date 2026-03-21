@@ -105,7 +105,10 @@ git add 'bo	=ÿþ€{2}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'
 stash_sha="$(git rev-parse stash)"
 #shellcheck disable=SC2086
 assert_exit_code 0 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG"
-assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
+assert_outputs__apply__success "$APPLY_OPERATION" '
+MM bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th
+ M bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{2}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th
+' 0 "$stash_sha"
 assert_files_HT '
 MM bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th fff	quux
  M bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{2}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th xxx	yyy

@@ -156,7 +156,21 @@ stash_sha="$(git rev-parse stash)"
 cd xxx
 assert_exit_code 0 "$(get_relative_istash_path)" "$APPLY_OPERATION" "$CONTINUE_FLAG"
 cd -
-assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
+assert_outputs__apply__success_HT "$APPLY_OPERATION" '
+MM aaa
+MM xxx/aaa
+MM yyy/aaa
+ M zzz
+ M xxx/zzz
+ M yyy/zzz
+' '
+AM aaa
+AM xxx/aaa
+AM yyy/aaa
+?A zzz
+?A xxx/zzz
+?A yyy/zzz
+' 0 "$stash_sha"
 assert_files_HT '
 MM aaa		fff0	eee0
 MM xxx/aaa	fff1	eee1

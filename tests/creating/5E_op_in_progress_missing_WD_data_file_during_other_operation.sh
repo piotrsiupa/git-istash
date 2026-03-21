@@ -89,7 +89,11 @@ mv .git/ISTASH_WORKING-DIR~ .git/ISTASH_WORKING-DIR
 stash_sha="$(git rev-parse stash)"
 #shellcheck disable=SC2086
 assert_exit_code 0 git istash "$OTHER_APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG"
-assert_outputs__apply__success "$OTHER_APPLY_OPERATION" 0 "$stash_sha"
+assert_outputs__apply__success_HT "$OTHER_APPLY_OPERATION" '
+ M aaa
+' '
+ A aaa
+' 0 "$stash_sha"
 assert_files_HT '
  M aaa		ddd	ccc
 !! ignored0	ignored0

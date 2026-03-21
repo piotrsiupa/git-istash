@@ -33,7 +33,9 @@ then
 	stash_sha="$(git rev-parse 'earlier')"
 	#shellcheck disable=SC2086
 	assert_exit_code 0 git istash apply 'earlier' $COLOR_FLAGS
-	assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
+	assert_outputs__apply__success "$APPLY_OPERATION" '
+	?A aaa
+	' 0 "$stash_sha"
 	assert_files_HT '
 	?? aaa		aaa
 	!! ignored0	ignored0

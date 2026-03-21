@@ -33,7 +33,9 @@ if IS_APPLY
 then
 	#shellcheck disable=SC2086
 	assert_exit_code 0 git istash apply $COLOR_FLAGS "$earlier_stash_sha"
-	assert_outputs__apply__success "$APPLY_OPERATION" 0 "$earlier_stash_sha"
+	assert_outputs__apply__success "$APPLY_OPERATION" '
+	?A aaa
+	' 0 "$earlier_stash_sha"
 	assert_files_HT '
 	?? aaa		aaa
 	!! ignored0	ignored0

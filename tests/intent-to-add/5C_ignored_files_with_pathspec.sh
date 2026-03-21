@@ -91,7 +91,12 @@ __test_section__ 'Pop stash'
 stash_sha="$(git rev-parse stash)"
 #shellcheck disable=SC2086
 assert_exit_code 0 git istash pop $COLOR_FLAGS
-assert_outputs__apply__success 'pop' 0 "$stash_sha"
+assert_outputs__apply__success 'pop' '
+ A aaa0
+ A bbb0
+ A bbb1
+ A ddd1
+' 0 "$stash_sha"
 assert_files '
  A aaa0		xxx
  A bbb0		xxx

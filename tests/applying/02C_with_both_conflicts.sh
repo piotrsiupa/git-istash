@@ -77,7 +77,11 @@ git add aaa
 stash_sha="$(git rev-parse stash)"
 #shellcheck disable=SC2086
 assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS
-assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
+assert_outputs__apply__success_HT "$APPLY_OPERATION" '
+MM aaa
+' '
+AM aaa
+' 0 "$stash_sha"
 assert_files_HT '
 MM aaa		fff	eee
 !! ignored0	ignored0

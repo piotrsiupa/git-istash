@@ -36,7 +36,10 @@ correct_head_sha="$(get_head_sha)"
 stash_sha="$(git rev-parse stash)"
 #shellcheck disable=SC2086
 assert_exit_code 0 git istash "$APPLY_OPERATION" $COLOR_FLAGS
-assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
+assert_outputs__apply__success "$APPLY_OPERATION" '
+MM aaa
+?A ccc
+' 0 "$stash_sha"
 assert_files_HT '
 MM aaa		xxx1	xxx0
 MM bbb		yyy1	yyy0

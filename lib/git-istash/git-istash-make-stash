@@ -116,8 +116,7 @@ is_pathspec_exclude() { # pathspec
 check_pathspec() {
 	if [ -n "$pathspec_file" ]
 	then
-		convert_to_octal <"$pathspec_file" \
-		| sed 's/\\000/\n/g' \
+		convert_to_octal_lines <"$pathspec_file" \
 		| while read -r ps || [ -n "$ps" ]
 		do
 			good=n
@@ -150,8 +149,7 @@ check_pathspec() {
 }
 
 add_with_pathspec() {
-	convert_to_octal <"$pathspec_file" \
-	| sed 's/\\000/\n/g' \
+	convert_to_octal_lines <"$pathspec_file" \
 	| while read -r ps || [ -n "$ps" ]
 	do
 		#shellcheck disable=SC2059
@@ -166,8 +164,7 @@ add_with_pathspec() {
 
 add_with_patch_and_pathspec() {
 	exec 3<&0
-	convert_to_octal <"$pathspec_file" \
-	| sed 's/\\000/\n/g' \
+	convert_to_octal_lines <"$pathspec_file" \
 	| while read -r ps || [ -n "$ps" ]
 	do
 		#shellcheck disable=SC2059
