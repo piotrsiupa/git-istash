@@ -1,7 +1,7 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 # Tests for all the different cases for the algorithm deciding what status should be shown in the post-apply summary.
-# (See the Karnaugh maps in the log of the commit where this file were created.)
+# (See the Karnaugh maps in the log of the commit 50abf565859942c5e19dc2dbea8dd583ddd4bf76.)
 
 non_essential_test
 
