@@ -3,13 +3,9 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
-PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_APPLY_OPERATION 'pop'
 PARAMETRIZE_ABORT
 PARAMETRIZE_COLOR
-if IS_APPLY
-then
-	skip_silently  # this test is "pop" specific
-fi
 
 __end_of_initialization__
 

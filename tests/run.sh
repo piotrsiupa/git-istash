@@ -239,7 +239,8 @@ do_run_test() { # test_name
 	exec 3>&4
 	{
 		{
-			export WAS_IT_CALLED_FROM_RUN_SH='indeed'
+			WAS_IT_CALLED_FROM_RUN_SH='indeed'
+			export WAS_IT_CALLED_FROM_RUN_SH
 			if ! cleanup_test "$1" 'current' || ! create_test_dir "$1" 'current' || ! cd "$(get_test_dir "$1" 'current')"
 			then
 				printf '0' 1>&4
@@ -370,12 +371,12 @@ run_test() ( # test_name
 	error_count=0
 	PARAMETERS_FILE="$(mktemp)"
 	export PARAMETERS_FILE
+	PARAM_HISTORY_FILE="$(mktemp)"
+	export PARAM_HISTORY_FILE
 	output_file="$(mktemp)"
 	parametrized_run_cap=10000
 	iteration_cap=$((parametrized_run_cap * 8))
 	cleanup_test "$1"
-	export skip_after_init
-	skip_after_init=n
 	for meticulousness in $meticulousnesses
 	do
 		: >"$PARAMETERS_FILE"
@@ -398,12 +399,7 @@ run_test() ( # test_name
 			then
 				test_count=$((test_count + 1))
 				display_name="$(get_display_name "$1")"
-				if [ -z "$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | tail -n+2)" ]
-				then
-					parameters_string=''
-				else
-					parameters_string="$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | tail -n+2 | sed '/^_/ d' | awk '{if (NF == 4) {print $4} else {print $2}}' | sed -E 's/$/, /' | head -c-3 | tr -d '\n')"
-				fi
+				parameters_string="$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | tail -n+2 | sed -E '/^_/ d' | awk '{print $2}' | sed -E 's/$/, /' | head -c-3 | tr -d '\n')"
 				test_passed="$(printf '%s\n' "$test_result" | grep -Ev '^[-+]')"
 				if [ "$test_passed" = n ]
 				then
@@ -461,13 +457,11 @@ run_test() ( # test_name
 				i=x
 				break
 			fi
-			skip_after_init=n
 		done
 		if [ "$i" = x ]
 		then
 			break
 		fi
-		skip_after_init=y
 	done
 	rmdir "$(get_test_dir "$1")" 2>/dev/null || true
 	test_end_time="$(get_timestamp)"
@@ -494,6 +488,7 @@ run_test() ( # test_name
 		printf '\n'
 	fi
 	rm -f "$PARAMETERS_FILE"
+	rm -f "$PARAM_HISTORY_FILE"
 	if [ $test_count -eq 0 ]
 	then
 		return 123

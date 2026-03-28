@@ -31,11 +31,7 @@ skip_silently() {
 }
 
 __end_of_initialization__() {
-	#shellcheck disable=SC2154
-	if [ "$skip_after_init" = y ]
-	then
-		skip_silently
-	fi
+	_DEDUPLICATE_PAREMETRIZATION
 }
 
 is_facet_active() { # facet_regex

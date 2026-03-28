@@ -6,8 +6,10 @@ then
 	exit 1
 fi
 
-export GIT_CONFIG_SYSTEM=/dev/null
-export GIT_CONFIG_GLOBAL=/dev/null
+GIT_CONFIG_SYSTEM=/dev/null
+GIT_CONFIG_GLOBAL=/dev/null
+export GIT_CONFIG_SYSTEM
+export GIT_CONFIG_GLOBAL
 
 check_if_in_test_dir() {
 	if [ -e '.git' ] || [ -e '../.git' ] || [ -e '../../.git' ] || [ -e '../../../.git' ]

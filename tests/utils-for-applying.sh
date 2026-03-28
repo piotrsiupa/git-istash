@@ -10,8 +10,12 @@ fi
 # It calls "PARAMETRIZE" with the name "APPLY_OPERATION", the facet "subcommand" and values "apply" & "pop".
 # It also creates a variable "CAP_APPLY_OPERATION" which stores the same operation name but capitalized and a few other variables.
 # (See also assertions with suffix "_AO".)
-PARAMETRIZE_APPLY_OPERATION() {
-	PARAMETRIZE 'APPLY_OPERATION' 'subcommand' 'apply' 'pop'
+PARAMETRIZE_APPLY_OPERATION() { # keys
+	if [ $# -eq 0 ]
+	then
+		set -- 'apply' 'pop'
+	fi
+	PARAMETRIZE 'APPLY_OPERATION' 'subcommand' "$@"
 	#shellcheck disable=SC2034
 	case "$APPLY_OPERATION" in
 		apply)
