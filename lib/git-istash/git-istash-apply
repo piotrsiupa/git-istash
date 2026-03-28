@@ -140,14 +140,17 @@ print_changes_summary() {
 				| sed -E 's/^.*:.*$/0000000000000000000000000000000000000000/'
 			)"
 			ni_sha="$(
+				#shellcheck disable=SC2059
 				if ! printf -- "$file" \
 					| xargs -0 -- git --literal-pathspecs status --porcelain -- \
 					| grep -E -q '^.A'
 				then
+					#shellcheck disable=SC2059
 					printf -- "$file" \
 					| xargs -0 -- git --literal-pathspecs ls-files -s -- \
 					| cut -d' ' -f2
 				else
+					#shellcheck disable=SC2059
 					printf -- "$file" \
 					| xargs -0 -- git --literal-pathspecs status --porcelain=2 -- \
 					| head -n1 \
@@ -157,6 +160,7 @@ print_changes_summary() {
 				|| printf '0000000000000000000000000000000000000000'
 			)"
 			nt_sha="$(
+				#shellcheck disable=SC2059
 				printf -- "$file" \
 				| xargs -0 -- git --literal-pathspecs ls-files --error-unmatch -- 1>/dev/null 2>&1 \
 				&& printf -- "$file" \
@@ -164,6 +168,7 @@ print_changes_summary() {
 				|| printf '0000000000000000000000000000000000000000'
 			)"
 			nu_sha="$(
+				#shellcheck disable=SC2059
 				printf -- "$file" \
 				| xargs -0 -- git --literal-pathspecs hash-object -- 2>/dev/null \
 				|| printf '0000000000000000000000000000000000000000'
@@ -205,11 +210,13 @@ print_changes_summary() {
 				if [ "$ni_sha" = "$oi_sha" ] || [ "$nt_sha" != "$ni_sha" ]
 				then
 					old_changes="$(
+						#shellcheck disable=SC2059
 						printf -- "$file" \
 						| xargs -0 -- git --literal-pathspecs diff-files -p -- \
 						| sed -E -e 's/^@@.*$/@@/'
 					)"
 					new_changes="$(
+						#shellcheck disable=SC2059
 						printf -- "$file" \
 						| xargs -0 -- git --literal-pathspecs diff-tree -p "$working_dir_changes_sha~2" "$working_dir_changes_sha~1" -- \
 						| sed -E -e 's/^@@.*$/@@/'
@@ -221,6 +228,7 @@ print_changes_summary() {
 				fi
 			fi
 			# untracked
+			#shellcheck disable=SC2059
 			if ! printf -- "$file" \
 				| xargs -0 -- git check-ignore --quiet --
 			then
