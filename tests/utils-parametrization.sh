@@ -7,6 +7,17 @@ then
 fi
 
 
+# It's called after all parameters are initialised to skip the run if one of the previous runs had the exact same parameters.
+_DEDUPLICATE_PAREMETRIZATION() {
+	CURRENT_PARAMETERS="$(awk '$2 { print $2 }' "$PARAMETERS_FILE" | tr '\n' ' ')"
+	if grep -Fxq -- "$CURRENT_PARAMETERS" "$PARAM_HISTORY_FILE"
+	then
+		skip_silently
+	else
+		printf '%s\n' "$CURRENT_PARAMETERS" >>"$PARAM_HISTORY_FILE"
+	fi
+}
+
 # This makes the test be called multiple times with the variable from the 1st argument having each of the values from the remaining arguments if the specified facet is active.
 # If the facet is not active, the variable is just set to the first value.
 # (Reading this code is not sufficient for understanding the function's inner working because it requires cooperation of the script `run.sh` but you don't need that; you just need to know how to use it.)
@@ -22,9 +33,10 @@ PARAMETRIZE() { # name facet values...
 	CUR_VAL="$(awk -v key="$PARAM_NAME" '$1 == key { print $2 }' "$PARAMETERS_FILE")"
 	LAST_VAL="$(awk -v key="$PARAM_NAME" '$1 == key { print $3 }' "$PARAMETERS_FILE")"
 	sed -iE "/^$PARAM_NAME\\>/ d" "$PARAMETERS_FILE"
+	OTHER_IS_EXCLUSIVE="$(awk '$4 == "exclusive" { other_is_exclusive = 1 } END { print(other_is_exclusive ? "y" : "n") }' "$PARAMETERS_FILE")"
 	if [ "$CUR_VAL" = "$LAST_VAL" ]
 	then
-		if [ -z "$LAST_VAL" ] || [ "$ROTATE_PARAMETER" = y ]
+		if { [ -z "$LAST_VAL" ] || [ "$ROTATE_PARAMETER" = y ] ; } && [ "$OTHER_IS_EXCLUSIVE" = n ]
 		then
 			CUR_VAL="$1"
 		fi
@@ -33,12 +45,11 @@ PARAMETRIZE() { # name facet values...
 			ROTATE_PARAMETER=n
 		fi
 	else
-		if [ "$ROTATE_PARAMETER" = y ]
+		if [ "$ROTATE_PARAMETER" = y ] && [ "$OTHER_IS_EXCLUSIVE" = n ]
 		then
 			while [ "$CUR_VAL" != "$1" ] && [ $# -ne 0 ]
 			do
 				shift
-				continue
 			done
 			shift
 			CUR_VAL="$1"
@@ -52,6 +63,7 @@ PARAMETRIZE() { # name facet values...
 	unset PARAM_NAME
 	unset CUR_VAL
 	unset LAST_VAL
+	unset OTHER_IS_EXCLUSIVE
 }
 _SKIP_PARAMETER() { # name first_value
 	CUR_VAL="$(awk -v key="$1" '$1 == key { print $2 }' "$PARAMETERS_FILE")"
@@ -133,6 +145,9 @@ PARAMETRIZE_OPTION() { # condition name override_facet map values...
 	#shellcheck disable=SC2020
 	MAP="$(printf '%s' "$4" | sed -E 's/\s+//g' | tr '|' '\n' | sed -E 's/^(.+:)(.*&&)(.*&&)(.*)$/\1\3\2\4/')"
 	shift 4
+	PREVIOUS_VALUE="$(awk -v key="$NAME" '$1 == key { print $2 }' "$PARAMETERS_FILE")"
+	ALTERNATIVE_SPELLINGS="$(printf '%s\n' "$MAP" | sed -E 's/^.+:.*&&(.*&&)(.*)$/\1\2/' | tr '&' '\n' | grep -Ev '^$')"
+	DONE_ALTERNATIVE_SPELLINGS="$(awk -v key="$NAME" '$1 == key { for (i = 5; i <= NF; ++i) printf "%s ", $i }' "$PARAMETERS_FILE")"
 	if ! is_facet_active 'short-options'
 	then
 		MAP="$(printf '%s\n' "$MAP" | sed -E 's/^(.+:)(.*&&).*&&(.*)$/\1\2\3/')"
@@ -158,14 +173,40 @@ PARAMETRIZE_OPTION() { # condition name override_facet map values...
 	then
 		VALUES="$(printf '%s\n' "$VALUES" | grep -v '^$' | head -n1)"
 	fi
-	VALUES="$(printf '%s\n' "$VALUES" | tr '&' '\n' | sed -E -e '/^\s*$/ d' -e "s/'/'\\\\''/g" -e "s/^/'/" -e "s/$/'/" | tr '\n' ' ')"
+	VALUES="$(printf '%s\n' "$VALUES" | tr '&' '\n' | grep -Exv -- "$(printf '%s' "$DONE_ALTERNATIVE_SPELLINGS" | tr ' ' '|')" | tr '\n' ' ')"
 	eval set -- "$VALUES"
 	PARAMETRIZE_COND "$CONDITION" "$NAME" 'always' "$@"
+	if awk -v key="$NAME" -v first_val="$1" '$1 == key && $2 == first_val && $3 != first_val { printf "y" }' "$PARAMETERS_FILE" | grep -Eq '.'
+	then
+		shift $(($# - 2))
+		sed -i -E "s/^($NAME)\\t(.+)\\t(.+)$/\\1\\t\\2\\t$1/" "$PARAMETERS_FILE"
+	fi
+	if awk -v key="$NAME" -v prev_val="$PREVIOUS_VALUE" '$1 == key && $2 != prev_val { printf "y" }' "$PARAMETERS_FILE" | grep -Eq '.'
+	then
+		CURRENT_ALTERNATIVE_SPELLING="$(printf '%s\n' "$ALTERNATIVE_SPELLINGS" | grep -Fx -- "$PREVIOUS_VALUE" || true)"
+		DONE_ALTERNATIVE_SPELLINGS="$DONE_ALTERNATIVE_SPELLINGS $CURRENT_ALTERNATIVE_SPELLING"
+	fi
+	CURRENT_VALUE="$(awk -v key="$NAME" '$1 == key { print $2 }' "$PARAMETERS_FILE")"
+	if printf '%s\n' "$ALTERNATIVE_SPELLINGS" | grep -Fxq -- "$CURRENT_VALUE"
+	then
+		sed -iE "s/^$NAME\\>.*\$/&\texclusive/" "$PARAMETERS_FILE"
+	else
+		sed -iE "s/^$NAME\\>.*\$/&\tnormal/" "$PARAMETERS_FILE"
+	fi
+	if printf '%s\n' "$DONE_ALTERNATIVE_SPELLINGS" | grep -Eq '[^ ]'
+	then
+		sed -iE "s/^$NAME\\>.*\$/&\t$DONE_ALTERNATIVE_SPELLINGS/" "$PARAMETERS_FILE"
+	fi
 	unset CONDITION
 	unset NAME
 	unset FACET
 	unset MAP
 	unset VALUES
+	unset PREVIOUS_VALUE
+	unset ALTERNATIVE_SPELLINGS
+	unset DONE_ALTERNATIVE_SPELLINGS
+	unset CURRENT_ALTERNATIVE_SPELLING
+	unset CURRENT_VALUE
 }
 
 # It calls "PARAMETRIZE" with the name "HEAD_TYPE", the facet "head-type" and possible values "BRANCH", "DETACH" and "ORPHAN".

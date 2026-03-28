@@ -3,12 +3,8 @@
 non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
-PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_APPLY_OPERATION 'apply'
 PARAMETRIZE_COLOR
-if IS_POP
-then
-	skip_silently # "pop" doesn't support shaes, which is checked in an ealier test
-fi
 
 __end_of_initialization__
 
