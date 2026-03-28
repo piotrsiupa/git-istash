@@ -108,9 +108,11 @@ print_changes_summary() {
 	all_changes="$(
 		set -eu
 		{
-			git diff-tree --name-only -z "$working_dir_changes_sha~2" "$staged_changes_sha"
-			git diff-tree --name-only -z "$working_dir_changes_sha~1" "$non_staged_changes_sha"
-			git diff-tree --name-only -z "$working_dir_changes_sha~0" "$untracked_changes_sha"
+			git diff --no-renames --name-only -z "$working_dir_changes_sha~2" "$staged_changes_sha"
+			git diff --no-renames --name-only -z "$working_dir_changes_sha~1" "$non_staged_changes_sha"
+			git diff --no-renames --name-only -z "$working_dir_changes_sha~0" "$untracked_changes_sha"
+			git ls-files --no-cached --no-deleted --no-modified --others --no-ignored --no-stage --no-killed --exclude-standard -z
+			git ls-files --no-cached --no-deleted --no-modified --others --ignored --no-stage --no-killed --exclude-standard -z
 		} \
 		| convert_to_octal_lines \
 		| sort -u \
