@@ -82,7 +82,7 @@ capture_outputs() { # command [arguments...]
 }
 
 dedent_regex() ( # text
-	printf '%s' "$1" | sed -E 's/^\t+//' | tr -d '\n'
+	printf '%s' "$1" | sed -E -e 's/^\t+//' -e 's/^\\\\\t/\t/' | tr -d '\n'
 )
 
 match_multiline_regex() { # text regex
@@ -96,14 +96,20 @@ match_multiline_regex() { # text regex
 		)"
 }
 
-sanitize_for_ere() { # string
-	printf '%s' "$1" | sed -E 's/[.[\()*+?{|^$\/]/\\&/g'
+sanitize_for_ere() { # [string]
+	if [ $# -eq 0 ]
+	then
+		cat
+	else
+		printf '%s' "$1"
+	fi \
+	| sed -E 's/[.[\()*+?{|^$\/]/\\&/g'
 }
 
 # Interpret certain escape sequences using "printf". (octal encoded characters, "\t" and "\\")
 # The stream must be already sanitized for ERE.
 convert_escapes() {
-	sed -E -e 's/\\/\\\\/g' -e 's/\\\\\\\\([0-9t])/\\\1/g' -e 's/\\\\\\\\\\\\\\\\/\\\\\\\\/g' | xargs -0 -- printf
+	sed -E -e 's/\\/\\\\/g' -e 's/\\\\\\\\([0-9t])/\\\1/g' -e 's/\\\\\\\\n/\\\\n/g' -e 's/\\\\\\\\\\\\\\\\/\\\\\\\\/g' | xargs -0 -- printf
 }
 
 sanitize_for_sed() { # string

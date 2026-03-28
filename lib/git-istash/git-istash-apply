@@ -124,16 +124,19 @@ print_changes_summary() {
 			oi_sha="$(
 				printf -- "%s:$file" "$working_dir_changes_sha~2" \
 				| xargs -0 -- git --literal-pathspecs rev-parse 2>/dev/null \
+				| tr -d -c '0-9A-Za-z:' \
 				| sed -E 's/^.*:.*$/0000000000000000000000000000000000000000/'
 			)"
 			ot_sha="$(
 				printf -- "%s:$file" "$working_dir_changes_sha~1" \
 				| xargs -0 -- git --literal-pathspecs rev-parse 2>/dev/null \
+				| tr -d -c '0-9A-Za-z:' \
 				| sed -E 's/^.*:.*$/0000000000000000000000000000000000000000/'
 			)"
 			ou_sha="$(
 				printf -- "%s:$file" "$working_dir_changes_sha~0" \
 				| xargs -0 -- git --literal-pathspecs rev-parse 2>/dev/null \
+				| tr -d -c '0-9A-Za-z:' \
 				| sed -E 's/^.*:.*$/0000000000000000000000000000000000000000/'
 			)"
 			ni_sha="$(

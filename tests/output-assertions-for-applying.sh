@@ -21,7 +21,7 @@ assert_outputs__apply__conflict() { # operation conflicts
 	assert_outputs_with_color "$(
 		sanitize_for_ere "$2" \
 		| sed -E -e 's/^\t+//' -e 's/^(..) (.*)$/\2 \1/' \
-		| sort \
+		| LC_ALL=C sort \
 		| sed -E -e 's/^(.*) (..)$/\2 \1/' -e '$!s/.$/&\n\\n/' \
 		| sed -E \
 			-e 's/^UU (.+)$/<no-strip-color>Auto-merging \1\\nCONFLICT \\(content\\): Merge conflict in \1/' \
@@ -55,10 +55,9 @@ assert_outputs__apply__success() { # operation changes [stash_id stash_sha]
 	assert_outputs '
 		'"$(
 			changes="$(
-				sanitize_for_ere "$2" \
-				| convert_escapes \
+				printf '%s\n' "$2" \
 				| sed -E -e 's/^\t+//' -e '/^\s*$/ d' -e 's/^\\\?/?/' -e 's/^(..) (.+)$/\2 \1/' \
-				| sort \
+				| LC_ALL=C sort \
 				| sed -E 's/^(.+) (..)$/\2 \1/'
 			)"
 			if printf '%s' "$changes" | grep -q '.'
@@ -69,33 +68,35 @@ assert_outputs__apply__success() { # operation changes [stash_id stash_sha]
 					printf '    index:\\n\n'
 					printf '%s' "$changes" \
 					| grep -E '^[^ ?!]' \
-					| sed -E -e 's/^A. (.+)$/\\tadded:\\t\\t\1\\n/' \
-						-e 's/^M. (.+)$/\\tmodified:\\t\1\\n/' \
-						-e 's/^D. (.+)$/\\tdeleted:\\t\1\\n/'
+					| sed -E -e 's/^A. (.+)$/\\\\tadded:\\t\\t\1\\n/' \
+						-e 's/^M. (.+)$/\\\\tmodified:\\t\1\\n/' \
+						-e 's/^D. (.+)$/\\\\tdeleted:\\t\1\\n/'
 				fi
 				if printf '%s' "$changes" | grep -Eq '^[^?!][^ ]'
 				then
 					printf '    tracked files:\\n\n'
 					printf '%s' "$changes" \
 					| grep -E '^[^?!][^ ]' \
-					| sed -E -e 's/^.A (.+)$/\\tadded:\\t\\t\1\\n/' \
-						-e 's/^.M (.+)$/\\tmodified:\\t\1\\n/' \
-						-e 's/^.D (.+)$/\\tdeleted:\\t\1\\n/'
+					| sed -E -e 's/^.A (.+)$/\\\\tadded:\\t\\t\1\\n/' \
+						-e 's/^.M (.+)$/\\\\tmodified:\\t\1\\n/' \
+						-e 's/^.D (.+)$/\\\\tdeleted:\\t\1\\n/'
 				fi
 				if printf '%s' "$changes" | grep -Eq '^[?!]'
 				then
 					printf '    untracked files:\\n\n'
 					printf '%s' "$changes" \
 					| grep -E '^[?!]' \
-					| sed -E -e 's/^!! (.+)$/\\tignored:\\t\1\\n/' \
-						-e 's/^!. (.+)$/\\ttouched:\\t\1\\n/' \
-						-e 's/^.A (.+)$/\\tcreated:\\t\1\\n/' \
-						-e 's/^.M (.+)$/\\tmodified:\\t\1\\n/' \
-						-e 's/^.D (.+)$/\\tdeleted:\\t\1\\n/'
+					| sed -E -e 's/^!! (.+)$/\\\\tignored:\\t\1\\n/' \
+						-e 's/^!. (.+)$/\\\\ttouched:\\t\1\\n/' \
+						-e 's/^.A (.+)$/\\\\tcreated:\\t\1\\n/' \
+						-e 's/^.M (.+)$/\\\\tmodified:\\t\1\\n/' \
+						-e 's/^.D (.+)$/\\\\tdeleted:\\t\1\\n/'
 				fi
 			else
 				printf 'No changes were made to the working directory.\\n\n'
-			fi
+			fi \
+			| sanitize_for_ere \
+			| convert_escapes
 		)"'
 		\n
 		Stash of the old working dir: [0-9a-fA-F]{40}\n
