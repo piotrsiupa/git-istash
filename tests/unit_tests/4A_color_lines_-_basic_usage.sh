@@ -34,16 +34,16 @@ __test_section__ 'with variable instead of the default value'
 assert_exit_code 128 './color_lines.sh' 'color/alittleworsecolor' <"$short_text_file"
 
 __test_section__ 'with default value and a variable'
-assert_exit_code 0 './color_lines.sh' 'red' 'color.thebestcolor' <"$short_text_file"
+assert_exit_code 0 './color_lines.sh' 'color.thebestcolor' 'red' <"$short_text_file"
 assert_outputs '\[1;36mWhoever reads this - you are great!\[0?m' ''
 
 __test_section__ 'with default value and two variables'
-assert_exit_code 0 './color_lines.sh' 'red' 'color.thebestcolor' 'color.alittleworsecolor' <"$short_text_file"
+assert_exit_code 0 './color_lines.sh' 'color.thebestcolor' 'color.alittleworsecolor' 'red' <"$short_text_file"
 assert_outputs '\[1;36mWhoever reads this - you are great!\[0?m' ''
 
 __test_section__ 'with default value and two variables, first non-existing'
-assert_exit_code 0 './color_lines.sh' 'red' 'color.nonexistingcolor' 'color.alittleworsecolor' <"$short_text_file"
+assert_exit_code 0 './color_lines.sh' 'color.nonexistingcolor' 'color.alittleworsecolor' 'red' <"$short_text_file"
 assert_outputs '\[32mWhoever reads this - you are great!\[0?m' ''
 
 __test_section__ 'with default value and two variables, first incorrect'
-assert_exit_code 128 './color_lines.sh' 'red' 'color.incorrectcolor' 'color.alittleworsecolor' <"$short_text_file"
+assert_exit_code 128 './color_lines.sh' 'color.incorrectcolor' 'color.alittleworsecolor' 'red' <"$short_text_file"

@@ -23,59 +23,59 @@ git config --local 'color.somethirdcolor' 'blue'
 
 
 __test_section__ 'with default value and an existing variable'
-assert_exit_code 0 './get_color.sh' 'red' 'color.thebestcolor'
+assert_exit_code 0 './get_color.sh' 'color.thebestcolor' 'red'
 assert_outputs '\[1;36m' ''
 
 __test_section__ 'with default value and a non-existing variable'
-assert_exit_code 0 './get_color.sh' 'red' 'color.foo'
+assert_exit_code 0 './get_color.sh' 'color.foo' 'red'
 assert_outputs '\[31m' ''
 
 
 __test_section__ 'with default value and two existing variables'
-assert_exit_code 0 './get_color.sh' 'red' 'color.thebestcolor' 'color.alittleworsecolor'
+assert_exit_code 0 './get_color.sh' 'color.thebestcolor' 'color.alittleworsecolor' 'red'
 assert_outputs '\[1;36m' ''
 
 __test_section__ 'with default value and good variables, first non-existing'
-assert_exit_code 0 './get_color.sh' 'red' 'color.foo' 'color.alittleworsecolor'
+assert_exit_code 0 './get_color.sh' 'color.foo' 'color.alittleworsecolor' 'red'
 assert_outputs '\[32m' ''
 
 __test_section__ 'with default value and two variables, second non-existing'
-assert_exit_code 0 './get_color.sh' 'red' 'color.thebestcolor' 'color.bar'
+assert_exit_code 0 './get_color.sh' 'color.thebestcolor' 'color.bar' 'red'
 assert_outputs '\[1;36m' ''
 
 __test_section__ 'with default value and two non-existing variables'
-assert_exit_code 0 './get_color.sh' 'red' 'color.foo' 'color.bar'
+assert_exit_code 0 './get_color.sh' 'color.foo' 'color.bar' 'red'
 assert_outputs '\[31m' ''
 
 
 __test_section__ 'with default value and three existing variables, variant 0'
-assert_exit_code 0 './get_color.sh' 'red' 'color.thebestcolor' 'color.alittleworsecolor' 'color.somethirdcolor'
+assert_exit_code 0 './get_color.sh' 'color.thebestcolor' 'color.alittleworsecolor' 'color.somethirdcolor' 'red'
 assert_outputs '\[1;36m' ''
 
 __test_section__ 'with default value and three existing variables, variant 1'
-assert_exit_code 0 './get_color.sh' 'red' 'color.foo' 'color.alittleworsecolor' 'color.somethirdcolor'
+assert_exit_code 0 './get_color.sh' 'color.foo' 'color.alittleworsecolor' 'color.somethirdcolor' 'red'
 assert_outputs '\[32m' ''
 
 __test_section__ 'with default value and three existing variables, variant 2'
-assert_exit_code 0 './get_color.sh' 'red' 'color.thebestcolor' 'color.bar' 'color.somethirdcolor'
+assert_exit_code 0 './get_color.sh' 'color.thebestcolor' 'color.bar' 'color.somethirdcolor' 'red'
 assert_outputs '\[1;36m' ''
 
 __test_section__ 'with default value and three existing variables, variant 3'
-assert_exit_code 0 './get_color.sh' 'red' 'color.foo' 'color.bar' 'color.somethirdcolor'
+assert_exit_code 0 './get_color.sh' 'color.foo' 'color.bar' 'color.somethirdcolor' 'red'
 assert_outputs '\[34m' ''
 
 __test_section__ 'with default value and three existing variables, variant 4'
-assert_exit_code 0 './get_color.sh' 'red' 'color.thebestcolor' 'color.alittleworsecolor' 'color.baz'
+assert_exit_code 0 './get_color.sh' 'color.thebestcolor' 'color.alittleworsecolor' 'color.baz' 'red'
 assert_outputs '\[1;36m' ''
 
 __test_section__ 'with default value and three existing variables, variant 5'
-assert_exit_code 0 './get_color.sh' 'red' 'color.foo' 'color.alittleworsecolor' 'color.baz'
+assert_exit_code 0 './get_color.sh' 'color.foo' 'color.alittleworsecolor' 'color.baz' 'red'
 assert_outputs '\[32m' ''
 
 __test_section__ 'with default value and three existing variables, variant 6'
-assert_exit_code 0 './get_color.sh' 'red' 'color.thebestcolor' 'color.bar' 'color.baz'
+assert_exit_code 0 './get_color.sh' 'color.thebestcolor' 'color.bar' 'color.baz' 'red'
 assert_outputs '\[1;36m' ''
 
 __test_section__ 'with default value and three existing variables, variant 7'
-assert_exit_code 0 './get_color.sh' 'red' 'color.foo' 'color.bar' 'color.baz'
+assert_exit_code 0 './get_color.sh' 'color.foo' 'color.bar' 'color.baz' 'red'
 assert_outputs '\[31m' ''

@@ -69,35 +69,37 @@ is_color_enabled() { # config_variable...
 	git config --get-colorbool "$1"
 }
 
-get_color() { # default_value config_variable...
+get_color() { # [config_variable...] default_value
 	if [ $# -eq 0 ]
 	then
 		# This is here to not forget a value during the developoment.
 		printf 'fatal: not enough arguments for get_color\n' 1>&2
 		return 128
+	elif [ $# -eq 1 ]
+	then
+		set -- '' "$1"
+	else
+		while [ $# -gt 2 ] && ! git config --get "$1" 1>/dev/null
+		do
+			shift
+		done
 	fi
-	default_color="$1"
-	shift
-	while [ $# -gt 1 ] && ! git config --get "$1" 1>/dev/null
-	do
-		shift
-	done
-	git config --get-color "${1-}" "$default_color"
+	git config --get-color "$1" "$2"
 }
 
 # Applies color to each line from stdin.
 # The arguments are passed to "get_color".
-color_lines() { # default_value config_variable
+color_lines() { # [config_variable...] default_value
 	set -e
 	color_escape_code="$(get_color "$@")"
-	reset_escape_code="$(git config --get-color '' 'reset')"
+	reset_escape_code="$(get_color 'reset')"
 	sed -E "/./s/^.*\$/$color_escape_code&$reset_escape_code/"
 }
 
 color_error() {
 	if is_color_enabled 'color.istash.error' 'color.istash'
 	then
-		color_lines 'red' 'color.istash.error.normal' 'color.istash.error.default'
+		color_lines 'color.istash.error.normal' 'color.istash.error.default' 'red'
 	else
 		cat
 	fi
@@ -121,7 +123,7 @@ error() { # arg...
 color_fatal() {
 	if is_color_enabled 'color.istash.error' 'color.istash'
 	then
-		color_lines 'bold red' 'color.istash.error.fatal' 'color.istash.error.default'
+		color_lines 'color.istash.error.fatal' 'color.istash.error.default' 'bold red'
 	else
 		cat
 	fi
@@ -145,7 +147,7 @@ fatal() { # arg...
 color_hint() {
 	if is_color_enabled 'color.istash.advice' 'color.istash' 'color.advice'
 	then
-		color_lines 'yellow' 'color.istash.advice.hint' 'color.advice.hint'
+		color_lines 'color.istash.advice.hint' 'color.advice.hint' 'yellow'
 	else
 		cat
 	fi
