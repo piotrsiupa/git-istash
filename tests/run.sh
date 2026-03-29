@@ -420,11 +420,14 @@ run_test() ( # test_name
 				if [ "$test_result_is_correct" = n ]
 				then
 					error_count=$((error_count + 1))
-					if [ -n "$parameters_string" ]
+					test_dir="$(get_test_dir "$1" 'current')"
+					if [ -e "$test_dir" ]
 					then
-						test_dir="$(get_test_dir "$1" 'current')"
-						if [ -e "$test_dir" ]
+						if [ -z "$parameters_string" ]
 						then
+							not_parametrized_test_dir="$(get_test_dir "$1" 'default')"
+							mv "$test_dir" "$not_parametrized_test_dir"
+						else
 							parameters_string="$(awk 'x{print $2} /^--------$/{x=1}' "$PARAMETERS_FILE" | head -c-1 | tr '\n' '_')"
 							parametrized_test_dir="$(get_test_dir "$1" "$parameters_string")"
 							mv "$test_dir" "$parametrized_test_dir"
