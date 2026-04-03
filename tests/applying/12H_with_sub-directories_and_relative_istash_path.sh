@@ -2,6 +2,7 @@
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_COLOR
 
 __end_of_initialization__
 
@@ -28,7 +29,8 @@ correct_head_sha="$(get_head_sha_HT)"
 stash_sha="$(git rev-parse stash)"
 mkdir xxx
 cd xxx
-assert_exit_code 0 "$(get_relative_istash_path)" "$APPLY_OPERATION"
+#shellcheck disable=SC2086
+assert_exit_code 0 "$(get_relative_istash_path)" "$APPLY_OPERATION" $COLOR_FLAGS
 cd -
 assert_outputs__apply__success "$APPLY_OPERATION" '
 AM aaa

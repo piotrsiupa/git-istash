@@ -45,7 +45,7 @@ set_color_for_all() { # value
 	fi
 	export GIT_CONFIG_COUNT
 	#shellcheck disable=SC2034,SC2041
-	for key in 'color.istash.error' 'color.istash.advice'
+	for key in 'color.istash.error' 'color.istash.advice' 'color.istash.summary'
 	do
 		eval "GIT_CONFIG_KEY_$GIT_CONFIG_COUNT"='"$key"'
 		export "GIT_CONFIG_KEY_$GIT_CONFIG_COUNT"
@@ -190,4 +190,18 @@ print_error_for_data_files_check() { # current_operation called_operation
 		printf_error 'there is currently '\''git istash %s'\'' in progress\n' "$1"
 		printf_hint 'use '\''git istash --continue'\'' or '\''git istash --abort'\''\n'
 	fi
+}
+
+is_color_enabled_for_summary() {
+	is_color_enabled 'color.istash.summary' 'color.istash' 'color.status'
+}
+
+get_color_for_summary() { # category
+	case "$1" in
+		'added') get_color 'color.istash.summary.added' 'color.status.added' 'green' ;;
+		'updated') get_color 'color.istash.summary.updated' 'color.status.updated' 'green' ;;
+		'changed') get_color 'color.istash.summary.changed' 'color.status.changed' 'red' ;;
+		'untracked') get_color 'color.istash.summary.untracked' 'color.status.untracked' 'red' ;;
+		*) printf 'No such color category for summary ("%s")!' "$1" ; return 1 ;;
+	esac
 }
