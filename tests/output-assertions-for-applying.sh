@@ -53,6 +53,9 @@ assert_outputs__apply__failed_resolution() { # operation unresolved_files
 # "apply" needs only 2 arguments, while "pop" requires all 4.
 assert_outputs__apply__success() { # operation changes [stash_id stash_sha]
 	assert_outputs_with_color '
+		Stash of the old working dir: [0-9a-fA-F]{40}\n
+		\n
+		Changes made to the working directory:\n
 		'"$(
 			changes="$(
 				printf '%s\n' "$2" \
@@ -62,7 +65,6 @@ assert_outputs__apply__success() { # operation changes [stash_id stash_sha]
 			)"
 			if printf '%s' "$changes" | grep -q '.'
 			then
-				printf 'Changes made to the working directory:\\n\n'
 				if printf '%s' "$changes" | grep -Eq '^[^ ?!]'
 				then
 					printf '    index:\\n\n'
@@ -93,16 +95,14 @@ assert_outputs__apply__success() { # operation changes [stash_id stash_sha]
 						-e 's/^.D (.+)$/\\\\t\[31mdeleted:\\t\1\[0?m\\n/'
 				fi
 			else
-				printf 'No changes were made to the working directory.\\n\n'
+				printf '\\\\tno changes were made\\n\n'
 			fi \
 			| sanitize_for_ere \
 			| convert_escapes \
 			| sed -E -e 's/\\\\n/\\n/g' \
 				-e 's/\\\[0\\\?m/\\[0?m/g'
 		)"'
-		\n
-		Stash of the old working dir: [0-9a-fA-F]{40}\n
-		'"$(if [ "$1" = 'pop' ] ; then printf '%s' 'Dropped refs\/stash@\{'"$3"'\} \('"$4"'\)\n' ; fi)"'
+		'"$(if [ "$1" = 'pop' ] ; then printf '%s' '\nDropped refs\/stash@\{'"$3"'\} \('"$4"'\)\n' ; fi)"'
 		\n
 		Successfully '"$(if [ "$1" = 'pop' ] ; then printf 'popped' ; else printf 'applied' ; fi)"' the stash
 	' ''

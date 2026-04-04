@@ -105,6 +105,7 @@ put_files_into_working_copy() { # untracked_changes_sha non_staged_changes_sha s
 }
 
 print_changes_summary() {
+	printf '\nChanges made to the working directory:\n'
 	all_changes="$(
 		set -eu
 		{
@@ -279,7 +280,6 @@ print_changes_summary() {
 	)"
 	if [ -n "$all_changes" ]
 	then
-		printf 'Changes made to the working directory:\n'
 		if is_color_enabled_for_summary
 		then
 			added_color_escape_code="$(get_color_for_summary 'added')"
@@ -326,7 +326,7 @@ print_changes_summary() {
 		| tr '\n' '\0' \
 		| xargs -0 -n1 -- printf --
 	else
-		printf 'No changes were made to the working directory.\n'
+		printf '\tno changes were made\n'
 	fi
 	printf '\n'
 }
@@ -363,11 +363,11 @@ end_with_success() {
 	esac
 	put_files_into_working_copy "$untracked_changes_sha" "$non_staged_changes_sha" "$staged_changes_sha"
 	delete_data
-	print_changes_summary
 	printf 'Stash of the old working dir: %s\n' "$(prepare_stash_of_working_dir)"
+	print_changes_summary
 	if [ "$is_pop" = n ]
 	then
-		printf '\nSuccessfully applied the stash\n'
+		printf 'Successfully applied the stash\n'
 	fi
 }
 
