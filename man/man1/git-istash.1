@@ -1,4 +1,4 @@
-.TH GIT-ISTASH 1 "2025-12-15" "git-istash 1.6.0"
+.TH GIT\-ISTASH 1 "2025-12-15" "git\-istash 1.6.0"
 .nh
 .ad l
 
@@ -10,9 +10,9 @@ git\-istash \- Handle Git stashes without arbitrary limitations of the original 
 .SH SYNOPSIS
 .nf
 \fBgit istash\fR [<options>] [<subcommand>] (\-h\~|\~\-\-help\~|\~\-\-man\~|
-            |\~-V\~|\~--version)
+            |\~\-V\~|\~\-\-version)
 \fBgit istash\fR [<options>] (create\~|\~snatch\~|\~save\~|\~push) [\-a\~|\~\-\-all]
-            [\-\-allow-empty] [\-k\~|\~\-\-[no\-]keep\-index]
+            [\-\-allow\-empty] [\-k\~|\~\-\-[no\-]keep\-index]
             [\-l\~|\~\-\-leave\-staged] [(\-m\~|\~\-\-message)\~<\fImessage\fR>] [\-\-patch]
             [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<\fIfile\fR>]
             [\-S\~|\~\-\-staged] [\-u\~|\~\-\-[no\-]include\-untracked]
@@ -80,7 +80,7 @@ Additionally, the state of working copy, from before the \fBapply\fR / \fBpop\fR
 .RS 4
 Those are aliases for options with the same name. (Just a syntax sugar.)
 .br
-See \fB-c\fR, \fB--continue\fR, \fB--abort\fR and \fB--quit\fR.
+See \fB\-c\fR, \fB\-\-continue\fR, \fB\-\-abort\fR and \fB\-\-quit\fR.
 .RE
 
 
@@ -163,8 +163,8 @@ This is the inverse operation of \fBgit stash push\fR.
 .PP
 \fBc\fR | \fBcontinue\fR
 .RS 4
-This is just a convenient alias for \fB-c\fR / \fB--continue\fR. \
-(\fBgit istash continue\fR is the same as \fBgit istash --continue\fR.)
+This is just a convenient alias for \fB\-c\fR / \fB\-\-continue\fR. \
+(\fBgit istash continue\fR is the same as \fBgit istash \-\-continue\fR.)
 .br
 Other abbreviations (like \fBconti\fR) are also allowed.
 .RE
@@ -172,15 +172,15 @@ Other abbreviations (like \fBconti\fR) are also allowed.
 .PP
 \fBabort\fR
 .RS 4
-This is just a convenient alias for \fB--abort\fR. \
-(\fBgit istash abort\fR is the same as \fBgit istash --abort\fR.)
+This is just a convenient alias for \fB\-\-abort\fR. \
+(\fBgit istash abort\fR is the same as \fBgit istash \-\-abort\fR.)
 .RE
 
 .PP
 \fBquit\fR
 .RS 4
-This is just a convenient alias for \fB--quit\fR. \
-(\fBgit istash quit\fR is the same as \fBgit istash --quit\fR.)
+This is just a convenient alias for \fB\-\-quit\fR. \
+(\fBgit istash quit\fR is the same as \fBgit istash \-\-quit\fR.)
 .RE
 
 
@@ -211,7 +211,7 @@ This option is only valid for \fBsnatch\fR and \fBpush\fR subcommands, and also 
 All changes already added to the index are left intact (but still stashed). \
 See also \fB\-\-leave\-staged\fR.
 .br
-(For subcommands \fBcreate\fR and \fBsave\fR it has no effect unless \fB--remove-stashed\fR is also specified.)
+(For subcommands \fBcreate\fR and \fBsave\fR it has no effect unless \fB\-\-remove\-stashed\fR is also specified.)
 .br
 (\fB\-\-no\-keep\-index\fR not that useful; it exist mainly to comply with the standard stash command.)
 .RE
@@ -333,7 +333,7 @@ This option is only valid for \fBapply\fR and \fBpop\fR subcommands. \
 Cancel the operation and restore the repository to the state before it started.
 .sp
 Aborting is apply / pop agnostic. \
-You can call \fBgit istash apply --abort\fR on an active pop operation and it will still work correctly (and vice versa).
+You can call \fBgit istash apply \-\-abort\fR on an active pop operation and it will still work correctly (and vice versa).
 .RE
 
 .PP
@@ -346,7 +346,7 @@ Cancel the operation without restoring the state of the repository. \
 (In an unlikely scenario where an operation breaks for any reason, this is the most reliable way to cancel it because it doesn't require the state to be in any way valid.)
 .sp
 Quitting is apply / pop agnostic. \
-You can call \fBgit istash apply --abort\fR on an active pop operation and it will still work correctly (and vice versa).
+You can call \fBgit istash apply \-\-abort\fR on an active pop operation and it will still work correctly (and vice versa).
 .RE
 
 .PP
@@ -354,7 +354,7 @@ You can call \fBgit istash apply --abort\fR on an active pop operation and it wi
 .RS 4
 Use color in output. \
 \fI<when>\fR can be one of \fBalways\fR, \fBnever\fR, or \fBauto\fR. \
-\fB--color\fR (i.e. without \fI=<when>\fR) is the same as \fB--color=always\fR.
+\fB\-\-color\fR (i.e. without \fI=<when>\fR) is the same as \fB\-\-color=always\fR.
 .sp
 Color can be also changed way by configuration settings (allowing more granularity) but this option has higher priority.
 .RE
@@ -363,7 +363,7 @@ Color can be also changed way by configuration settings (allowing more granulari
 \fB\-\-no\-color\fR
 .RS 4
 Turn off color in output. \
-It is the same as \fB--color=never\fR.
+It is the same as \fB\-\-color=never\fR.
 .RE
 
 .PP
@@ -373,7 +373,7 @@ Print a rudimentary help text to stdout. \
 (Each subcommand has its own text.)
 .sp
 This is a fallback option that is to be used when the man page is not available. \
-Prefer \fBgit\~help\~istash\fR (or \fBgit\~istash\~--man\fR) over \fBgit\~istash\~[<subcommand>]\~\-h\fR.
+Prefer \fBgit\~help\~istash\fR (or \fBgit\~istash\~\-\-man\fR) over \fBgit\~istash\~[<subcommand>]\~\-h\fR.
 .RE
 
 .PP
@@ -545,7 +545,7 @@ $ git istash pop
 
 
 .SH CONFIGURATION
-Some descriptions in this section are selectively included from \fBgit-config\fR(1) documentation. \
+Some descriptions in this section are selectively included from \fBgit\-config\fR(1) documentation. \
 The content is the same as what was found there at the time of writing / updating this.
 .sp
 Variables with \fBistash\fR in their names are described only here.
@@ -609,8 +609,8 @@ If unset, then the value of \fBcolor.istash.error.default\fR is used (\fBred\fR 
 color.ui
 .RS 4
 This variable determines the default value for variables such as \fBcolor.diff\fR and \fBcolor.grep\fR that control the use of color per command family. \
-Its scope will expand as more commands learn configuration to set a default for the \fB--color\fR option. \
-Set it to \fBfalse\fR or \fBnever\fR if you prefer Git commands not to use color unless enabled explicitly with some other configuration or the \fB--color\fR option. \
+Its scope will expand as more commands learn configuration to set a default for the \fB\-\-color\fR option. \
+Set it to \fBfalse\fR or \fBnever\fR if you prefer Git commands not to use color unless enabled explicitly with some other configuration or the \fB\-\-color\fR option. \
 Set it to \fBalways\fR if you want all output not intended for machine consumption to use color, to \fBtrue\fR or \fBauto\fR (this is the default since Git 1.8.4) if you want such output to use color when written to the terminal.
 .RE
 
@@ -621,7 +621,7 @@ Set it to \fBalways\fR if you want all output not intended for machine consumpti
 
 .SH CURRENT LIMITATIONS
 .PP
-Changes are not removed from working directory when \fB--patch\fR with \fBe\fR was used to stash only some of consecutive changed lines. \
+Changes are not removed from working directory when \fB\-\-patch\fR with \fBe\fR was used to stash only some of consecutive changed lines. \
 (It will be fixed if I can figure out a way to do it in a consistent way.)
 .PP
 Not all subcommands present in the vanilla command are avaible here (e.g. \fBgit stash show\fR, \fBgit stash list\fR...).
