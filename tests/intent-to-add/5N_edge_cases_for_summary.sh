@@ -9,6 +9,7 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_CONTINUE
 PARAMETRIZE_COLOR
+PARAMETRIZE_SUMMARY
 
 __end_of_initialization__
 
@@ -404,7 +405,7 @@ printf 'aaa21\n' >t2u
 git add x2x_ u2x u2u u2u_ t2u
 stash_sha="$(git rev-parse stash)"
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG"
+assert_exit_code 0 git istash "$APPLY_OPERATION" $COLOR_FLAGS $SUMMARY_FLAGS "$CONTINUE_FLAG"
 assert_outputs__apply__success "$APPLY_OPERATION" '
 !A n2x
 !A n2x__

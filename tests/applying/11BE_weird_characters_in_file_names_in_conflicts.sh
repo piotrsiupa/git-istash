@@ -15,6 +15,7 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_CONTINUE
 PARAMETRIZE_COLOR
+PARAMETRIZE_SUMMARY
 
 __end_of_initialization__
 
@@ -104,7 +105,7 @@ printf 'xxx\n' >'bo	=ÿþ€{2}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'
 git add 'bo	=ÿþ€{2}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'
 stash_sha="$(git rev-parse stash)"
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG"
+assert_exit_code 0 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG" $SUMMARY_FLAGS
 assert_outputs__apply__success "$APPLY_OPERATION" '
 MM bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th
  M bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{2}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th

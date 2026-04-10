@@ -3,6 +3,7 @@
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_COLOR
+PARAMETRIZE_SUMMARY
 
 __end_of_initialization__
 
@@ -42,16 +43,24 @@ __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 stash_sha="$(git rev-parse stash)"
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$APPLY_OPERATION" $COLOR_FLAGS
-assert_outputs__apply__success "$APPLY_OPERATION" '
- M .gitignore
-?A aaa
-?A ddd
-!! yyy
-!A zzz
-!A ignored0
-!A ignored1
-' 0 "$stash_sha"
+assert_exit_code 0 git istash "$APPLY_OPERATION" $SUMMARY_FLAGS $COLOR_FLAGS
+if IS_SUMMARY_COMPL
+then
+	assert_outputs__apply__success "$APPLY_OPERATION" '
+	 M .gitignore
+	?A aaa
+	?A ddd
+	!! yyy
+	!A zzz
+	!A ignored0
+	!A ignored1
+	' 0 "$stash_sha"
+else
+	assert_outputs__apply__success "$APPLY_OPERATION" '
+	 M .gitignore
+	?A aaa
+	' 0 "$stash_sha"
+fi
 assert_files_HT '
  M .gitignore	zzz\nbbb\nccc\nyyy	aaa\nbbb\nccc\nddd
 ?? aaa		aaa

@@ -6,6 +6,7 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_COLOR
 PARAMETRIZE_CONTINUE
+PARAMETRIZE_SUMMARY
 
 __end_of_initialization__
 
@@ -48,7 +49,8 @@ __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 mkdir -p xxx
 cd xxx
-assert_exit_code 2 "$(get_relative_istash_path)" "$APPLY_OPERATION" "$COLOR_FLAGS"
+#shellcheck disable=SC2086
+assert_exit_code 2 "$(get_relative_istash_path)" "$APPLY_OPERATION" $COLOR_FLAGS
 cd -
 assert_outputs__apply__conflict_HT "$APPLY_OPERATION" '
 UU aaa
@@ -87,7 +89,8 @@ printf 'eee1\n' >xxx/aaa
 printf 'eee2\n' >yyy/aaa
 git add aaa xxx/aaa yyy/aaa
 cd xxx
-assert_exit_code 2 "$(get_relative_istash_path)" "$APPLY_OPERATION" "$COLOR_FLAGS" "$CONTINUE_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 2 "$(get_relative_istash_path)" "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG"
 cd -
 assert_outputs__apply__conflict "$APPLY_OPERATION" '
 UU aaa
@@ -124,7 +127,8 @@ git add aaa xxx/aaa yyy/aaa
 if [ "$HEAD_TYPE" != 'ORPHAN' ]
 then
 	cd xxx
-	assert_exit_code 2 "$(get_relative_istash_path)" "$COLOR_FLAGS" "$APPLY_OPERATION" "$CONTINUE_FLAG"
+	#shellcheck disable=SC2086
+	assert_exit_code 2 "$(get_relative_istash_path)" $COLOR_FLAGS "$APPLY_OPERATION" $CONTINUE_FLAG
 	cd -
 	assert_outputs__apply__conflict "$APPLY_OPERATION" '
 	AA zzz
@@ -155,7 +159,8 @@ then
 fi
 stash_sha="$(git rev-parse stash)"
 cd xxx
-assert_exit_code 0 "$(get_relative_istash_path)" "$APPLY_OPERATION" "$CONTINUE_FLAG" "$COLOR_FLAGS"
+#shellcheck disable=SC2086
+assert_exit_code 0 "$(get_relative_istash_path)" "$APPLY_OPERATION" $SUMMARY_FLAGS "$CONTINUE_FLAG" $COLOR_FLAGS
 cd -
 assert_outputs__apply__success_HT "$APPLY_OPERATION" '
 MM aaa

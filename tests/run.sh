@@ -845,16 +845,17 @@ getopt_long_options='altered,since:,color:,check,debug,failed,file-name,help,job
 normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$normalized_options"
 complete='
-	non-essential,head-type,subcommand,options,color,miscellaneous
+	non-essential,head-type,subcommand,options,color,summary,miscellaneous
 	non-essential,pathspec-style,end-options-indicator,long-running
-	options,short-options,pathspec-style,partial-options
-	color,short-options,partial-options
+	options,short-options,partial-options,pathspec-style
+	color,summary,short-options,partial-options
 '
 quickie='
 	non-essential,subcommand
 	non-essential,head-type
 	non-essential,options,miscellaneous
 	non-essential,color
+	non-essential,summary
 	options,short-options
 	pathspec-style
 '

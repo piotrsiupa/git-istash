@@ -3,6 +3,7 @@
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_COLOR
+PARAMETRIZE_SUMMARY
 
 __end_of_initialization__
 
@@ -92,7 +93,7 @@ printf 'xxx\n' >zzz
 git add aaa zzz
 stash_sha="$(git rev-parse stash)"
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash continue $COLOR_FLAGS
+assert_exit_code 0 git istash continue $SUMMARY_FLAGS $COLOR_FLAGS
 assert_outputs__apply__success "$APPLY_OPERATION" '
 MM aaa
  M zzz

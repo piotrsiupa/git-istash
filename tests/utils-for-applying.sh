@@ -70,3 +70,29 @@ PARAMETRIZE_QUIT() { # keys
 		QUIT-LONGISH1) QUIT_FLAG='--qu' ;;
 	esac
 }
+
+PARAMETRIZE_SUMMARY() { # keys
+	PARAMETRIZE_OPTION true 'SUMMARY' 'summary' 'COMPL: && SUM-DEFAULT & SUM-COMPL-LONG && SUM-COMPL-LONGISH0 & SUM-COMPL-LONGISH2 | NON-IGNORED: && SUM-NON-IGN-LONG && SUM-NON-IGN-LONGINSH0 & SUM-NON-IGN-LONGINS1 | NO: && SUM-NO-LONG && SUM-NO-LONGISH0 & SUM-NO-LONGISH1'
+	#shellcheck disable=SC2034
+	case "$SUMMARY" in
+		SUM-DEFAULT) SUMMARY_FLAGS='' ;;
+		SUM-COMPL-LONG) SUMMARY_FLAGS='--summary=complete' ;;
+		SUM-COMPL-LONGISH0) SUMMARY_FLAGS='--summ compl' ;;
+		SUM-COMPL-LONGISH2) SUMMARY_FLAGS='--sum=y' ;;
+		SUM-NON-IGN-LONG) SUMMARY_FLAGS='--summary=non-ignored-only' ;;
+		SUM-NON-IGN-LONGINSH0) SUMMARY_FLAGS='--summ no-ingor' ;;
+		SUM-NON-IGN-LONGINS1) SUMMARY_FLAGS='--sum=without-ign' ;;
+		SUM-NO-LONG) SUMMARY_FLAGS='--summary=off' ;;
+		SUM-NO-LONGISH0) SUMMARY_FLAGS='--summ none' ;;
+		SUM-NO-LONGISH1) SUMMARY_FLAGS='--sum=nope' ;;
+	esac
+}
+IS_SUMMARY_COMPL() {
+	printf '%s' "$SUMMARY" | grep -E -q '^SUM-(DEFAULT$|COMPL-)'
+}
+IS_SUMMARY_NON_IGNORED() {
+	printf '%s' "$SUMMARY" | grep -E -q '^SUM-NON-IGN-'
+}
+IS_SUMMARY_ON() {
+	! printf '%s' "$SUMMARY" | grep -E -q '^SUM-NO-'
+}

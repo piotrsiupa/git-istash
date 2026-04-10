@@ -4,6 +4,7 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_CONTINUE
 PARAMETRIZE_COLOR
+PARAMETRIZE_SUMMARY
 
 __end_of_initialization__
 
@@ -59,7 +60,7 @@ __test_section__ "Continue $APPLY_OPERATION stash (1)"
 git add aaa
 stash_sha="$(git rev-parse stash)"
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS
+assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS $SUMMARY_FLAGS
 assert_outputs__apply__success "$APPLY_OPERATION" '
  M aaa
 ' 0 "$stash_sha"

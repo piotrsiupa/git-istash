@@ -54,53 +54,62 @@ assert_outputs__apply__failed_resolution() { # operation unresolved_files
 assert_outputs__apply__success() { # operation changes [stash_id stash_sha]
 	assert_outputs_with_color '
 		Stash of the old working dir: [0-9a-fA-F]{40}\n
-		\n
-		Changes made to the working directory:\n
 		'"$(
-			changes="$(
-				printf '%s\n' "$2" \
-				| sed -E -e 's/^\t+//' -e '/^\s*$/ d' -e 's/^\\\?/?/' -e 's/^(..) (.+)$/\2 \1/' \
-				| LC_ALL=C sort \
-				| sed -E 's/^(.+) (..)$/\2 \1/'
-			)"
-			if printf '%s' "$changes" | grep -q '.'
+			if IS_SUMMARY_ON
 			then
-				if printf '%s' "$changes" | grep -Eq '^[^ ?!]'
+				printf '\\nChanges made to the working directory:\\n'
+				changes="$(
+					printf '%s\n' "$2" \
+					| if IS_SUMMARY_NON_IGNORED
+					then
+						grep -E -v '^!' || true
+					else
+						cat
+					fi \
+					| sed -E -e 's/^\t+//' -e '/^\s*$/ d' -e 's/^\\\?/?/' -e 's/^(..) (.+)$/\2 \1/' \
+					| LC_ALL=C sort \
+					| sed -E 's/^(.+) (..)$/\2 \1/'
+				)"
+				if printf '%s' "$changes" | grep -q '.'
 				then
-					printf '    index:\\n\n'
-					printf '%s' "$changes" \
-					| grep -E '^[^ ?!]' \
-					| sed -E -e 's/^A. (.+)$/\\\\t\[<color>32madded:\\t\\t\1\[<color>0?m\\n/' \
-						-e 's/^M. (.+)$/\\\\t\[<color>32mmodified:\\t\1\[<color>0?m\\n/' \
-						-e 's/^D. (.+)$/\\\\t\[<color>32mdeleted:\\t\1\[<color>0?m\\n/'
-				fi
-				if printf '%s' "$changes" | grep -Eq '^[^?!][^ ]'
-				then
-					printf '    tracked files:\\n\n'
-					printf '%s' "$changes" \
-					| grep -E '^[^?!][^ ]' \
-					| sed -E -e 's/^.A (.+)$/\\\\t\[<color>31madded:\\t\\t\1\[<color>0?m\\n/' \
-						-e 's/^.M (.+)$/\\\\t\[<color>31mmodified:\\t\1\[<color>0?m\\n/' \
-						-e 's/^.D (.+)$/\\\\t\[<color>31mdeleted:\\t\1\[<color>0?m\\n/'
-				fi
-				if printf '%s' "$changes" | grep -Eq '^[?!]'
-				then
-					printf '    untracked files:\\n\n'
-					printf '%s' "$changes" \
-					| grep -E '^[?!]' \
-					| sed -E -e 's/^!! (.+)$/\\\\t\[<color>31mignored:\\t\1\[<color>0?m\\n/' \
-						-e 's/^!. (.+)$/\\\\t\[<color>31mtouched:\\t\1\[<color>0?m\\n/' \
-						-e 's/^.A (.+)$/\\\\t\[<color>31mcreated:\\t\1\[<color>0?m\\n/' \
-						-e 's/^.M (.+)$/\\\\t\[<color>31mmodified:\\t\1\[<color>0?m\\n/' \
-						-e 's/^.D (.+)$/\\\\t\[<color>31mdeleted:\\t\1\[<color>0?m\\n/'
-				fi
-			else
-				printf '\\\\tno changes were made\\n\n'
-			fi \
-			| sanitize_for_ere \
-			| convert_escapes \
-			| sed -E -e 's/\\\\n/\\n/g' \
-				-e 's/\\\[<color>0\\\?m/\\[<color>0?m/g'
+					if printf '%s' "$changes" | grep -Eq '^[^ ?!]'
+					then
+						printf '    index:\\n\n'
+						printf '%s' "$changes" \
+						| grep -E '^[^ ?!]' \
+						| sed -E -e 's/^A. (.+)$/\\\\t\[<color>32madded:\\t\\t\1\[<color>0?m\\n/' \
+							-e 's/^M. (.+)$/\\\\t\[<color>32mmodified:\\t\1\[<color>0?m\\n/' \
+							-e 's/^D. (.+)$/\\\\t\[<color>32mdeleted:\\t\1\[<color>0?m\\n/'
+					fi
+					if printf '%s' "$changes" | grep -Eq '^[^?!][^ ]'
+					then
+						printf '    tracked files:\\n\n'
+						printf '%s' "$changes" \
+						| grep -E '^[^?!][^ ]' \
+						| sed -E -e 's/^.A (.+)$/\\\\t\[<color>31madded:\\t\\t\1\[<color>0?m\\n/' \
+							-e 's/^.M (.+)$/\\\\t\[<color>31mmodified:\\t\1\[<color>0?m\\n/' \
+							-e 's/^.D (.+)$/\\\\t\[<color>31mdeleted:\\t\1\[<color>0?m\\n/'
+					fi
+					if printf '%s' "$changes" | grep -Eq '^[?!]'
+					then
+						printf '    untracked files:\\n\n'
+						printf '%s' "$changes" \
+						| grep -E '^[?!]' \
+						| sed -E -e 's/^!! (.+)$/\\\\t\[<color>31mignored:\\t\1\[<color>0?m\\n/' \
+							-e 's/^!. (.+)$/\\\\t\[<color>31mtouched:\\t\1\[<color>0?m\\n/' \
+							-e 's/^.A (.+)$/\\\\t\[<color>31mcreated:\\t\1\[<color>0?m\\n/' \
+							-e 's/^.M (.+)$/\\\\t\[<color>31mmodified:\\t\1\[<color>0?m\\n/' \
+							-e 's/^.D (.+)$/\\\\t\[<color>31mdeleted:\\t\1\[<color>0?m\\n/'
+					fi
+				else
+					printf '\\tno changes were made\\n\n'
+				fi \
+				| sanitize_for_ere \
+				| convert_escapes \
+				| sed -E -e 's/\\\\n/\\n/g' \
+					-e 's/\\\[<color>0\\\?m/\\[<color>0?m/g'
+			fi
+
 		)"'
 		'"$(if [ "$1" = 'pop' ] ; then printf '%s' '\nDropped refs\/stash@\{'"$3"'\} \('"$4"'\)\n' ; fi)"'
 		\n

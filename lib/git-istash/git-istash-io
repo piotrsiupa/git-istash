@@ -24,6 +24,19 @@ get_options_color() { # [-P | -R | -U] short_options_string long_options_string 
 	esac
 }
 
+set_tmp_config_entry() { # key value
+	if [ -z "${GIT_CONFIG_COUNT-}" ]
+	then
+		GIT_CONFIG_COUNT=0
+	fi
+	export GIT_CONFIG_COUNT
+	eval "GIT_CONFIG_KEY_$GIT_CONFIG_COUNT"='"$1"'
+	export "GIT_CONFIG_KEY_$GIT_CONFIG_COUNT"
+	eval "GIT_CONFIG_VALUE_$GIT_CONFIG_COUNT"='"$2"'
+	export "GIT_CONFIG_VALUE_$GIT_CONFIG_COUNT"
+	GIT_CONFIG_COUNT=$((GIT_CONFIG_COUNT + 1))
+}
+
 set_color_for_all() { # value
 	set -- "$1" "$(printf '%s' "$1" | tr 'A-Z\n' 'a-zX')"
 	if printf '%s\n' "$2" | grep -Exq '|a(lways)?|y(es)?|t(rue)?|affirmative|1'
@@ -39,19 +52,9 @@ set_color_for_all() { # value
 		printf 'error: `%s'\'' is not a valid color boolean' "$1" | color_error 1>&2
 		error
 	fi
-	if [ -z "${GIT_CONFIG_COUNT-}" ]
-	then
-		GIT_CONFIG_COUNT=0
-	fi
-	export GIT_CONFIG_COUNT
-	#shellcheck disable=SC2034,SC2041
 	for key in 'color.istash.error' 'color.istash.advice' 'color.istash.summary'
 	do
-		eval "GIT_CONFIG_KEY_$GIT_CONFIG_COUNT"='"$key"'
-		export "GIT_CONFIG_KEY_$GIT_CONFIG_COUNT"
-		eval "GIT_CONFIG_VALUE_$GIT_CONFIG_COUNT"='"$1"'
-		export "GIT_CONFIG_VALUE_$GIT_CONFIG_COUNT"
-		GIT_CONFIG_COUNT=$((GIT_CONFIG_COUNT + 1))
+		set_tmp_config_entry "$key" "$1"
 	done
 }
 
@@ -190,6 +193,30 @@ print_error_for_data_files_check() { # current_operation called_operation
 		printf_error 'there is currently '\''git istash %s'\'' in progress\n' "$1"
 		printf_hint 'use '\''git istash --continue'\'' or '\''git istash --abort'\''\n'
 	fi
+}
+
+normalize_summary_mode() { # mode_from_user
+	if printf '%s\n' "$1" | grep -E -x -i -q '|co?mp(l(ete|t)?)?|fu(ll?)?|on|y(es)?|t(rue)?|al(w(ays)?|l)?'
+	then
+		printf 'complete'
+	elif printf '%s' "$1" | grep -E -x -i -q '(only?-)?n(on?)?-i(gn(or(ed?)?)?)?(-only?)?|without-i(gn(or(ed?)?)?)?|fast(er)?'
+	then
+		printf 'non-ignored'
+	elif printf '%s' "$1" | grep -E -x -i -q 'off|n(o(ne)?)?|f(alse?|ls)?|(never|nvr)|skip'
+	then
+		printf 'off'
+	else
+		return 1
+	fi
+}
+
+get_summary_mode() {
+	normalize_summary_mode "$(git config --get 'istash.summary')"
+}
+
+set_summary_mode() { # summary_mode_from_user
+	set -- "$(normalize_summary_mode "$1")"
+	set_tmp_config_entry 'istash.summary' "$1"
 }
 
 is_color_enabled_for_summary() {

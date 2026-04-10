@@ -22,6 +22,7 @@ print_help() {
 	printf '    -c, --continue\t- Resume the previous operation.\n\t\t\t  (Conflicts need to be resolved before that.)\n'
 	printf '    -h\t\t\t- Print this help text and exit.\n'
 	printf '\t--quit\t\t- Abort the operation but don'\''t restore the repository\n\t\t\t  state nor move the HEAD.\n'
+	printf '\t--summary=<mode> - Set summary to "complete" / "non-ignored" / "off".\n'
 }
 
 get_sub_command_name() {
@@ -104,7 +105,7 @@ put_files_into_working_copy() { # untracked_changes_sha non_staged_changes_sha s
 	| xargs -r0 -- git --literal-pathspecs add --intent-to-add --
 }
 
-print_changes_summary() {
+print_changes_summary() { # mode
 	printf '\nChanges made to the working directory:\n'
 	all_changes="$(
 		set -eu
@@ -112,8 +113,11 @@ print_changes_summary() {
 			git diff --no-renames --name-only -z "$working_dir_changes_sha~2" "$staged_changes_sha"
 			git diff --no-renames --name-only -z "$working_dir_changes_sha~1" "$non_staged_changes_sha"
 			git diff --no-renames --name-only -z "$working_dir_changes_sha~0" "$untracked_changes_sha"
-			git ls-files --no-cached --no-deleted --no-modified --others --no-ignored --no-stage --no-killed --exclude-standard -z
-			git ls-files --no-cached --no-deleted --no-modified --others --ignored --no-stage --no-killed --exclude-standard -z
+			if [ "$1" = 'complete' ]
+			then
+				git ls-files --no-cached --no-deleted --no-modified --others --no-ignored --no-stage --no-killed --exclude-standard -z
+				git ls-files --no-cached --no-deleted --no-modified --others --ignored --no-stage --no-killed --exclude-standard -z
+			fi
 		} \
 		| convert_to_octal_lines \
 		| sort -u \
@@ -248,7 +252,8 @@ print_changes_summary() {
 						printf 'u M\t%s\n' "$file"
 					fi
 				fi
-			else
+			elif [ "$1" = 'complete' ]
+			then
 				if [ "$ou" = '1' ]
 				then
 					printf 'u I\t%s\n' "$file"
@@ -328,7 +333,6 @@ print_changes_summary() {
 	else
 		printf '\tno changes were made\n'
 	fi
-	printf '\n'
 }
 
 end_with_rebase_problem() {
@@ -364,10 +368,14 @@ end_with_success() {
 	put_files_into_working_copy "$untracked_changes_sha" "$non_staged_changes_sha" "$staged_changes_sha"
 	delete_data
 	printf 'Stash of the old working dir: %s\n' "$(prepare_stash_of_working_dir)"
-	print_changes_summary
+	summary_mode="$(get_summary_mode)"
+	if [ "$summary_mode" != 'off' ]
+	then
+		print_changes_summary "$summary_mode"
+	fi
 	if [ "$is_pop" = n ]
 	then
-		printf 'Successfully applied the stash\n'
+		printf '\nSuccessfully applied the stash\n'
 	fi
 }
 
@@ -585,7 +593,7 @@ do_apply() { # args...
 }
 
 getopt_short_options='chq'
-getopt_long_options='abort,_called-from-pop,_called-from-pop_,color::,no-color,continue,quit'
+getopt_long_options='abort,_called-from-pop,_called-from-pop_,color::,no-color,continue,quit,summary:'
 normalized_options="$(get_options_color "$getopt_short_options" "$getopt_long_options" "$@")"
 eval set -- "$normalized_options"
 abort_set=n
@@ -617,6 +625,10 @@ do
 		;;
 	-q|--quit)
 		quit_set=y
+		;;
+	--summary)
+		shift
+		set_summary_mode "$1"
 		;;
 	--)
 		shift
