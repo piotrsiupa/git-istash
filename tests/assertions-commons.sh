@@ -64,9 +64,9 @@ _remove_color_from_output_pattern() { # output_pattern
 	printf '%s' "$1" \
 	| if IS_COLOR_ON
 	then
-		sed -E -e 's/^<no-strip-color>//'
+		sed -E 's/(\\\[)<color>([0-9;]+|0\?)m/\1\2m/g'
 	else
-		sed -E -e '/^<no-strip-color>/!s/\\\[([0-9;]+|0\?)m//g' -e 's/^<no-strip-color>//'
+		sed -E 's/\\\[<color>([0-9;]+|0\?)m//g'
 	fi
 }
 

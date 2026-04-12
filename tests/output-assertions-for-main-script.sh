@@ -10,8 +10,8 @@ fi
 assert_outputs__main_script__no_such_command() { # command
 	assert_outputs_with_color '
 	' '
-		\[31merror: subcommand wasn'\''t specified; '\''push'\'' can'\''t be assumed due to unexpected token '\'"$(sanitize_for_sed "$1")"\''\[0?m\n
-		\[33mhint: pathspecs for an implicit '\''push'\'' subcommand must be preceded by '\''--'\''\[0?m
+		\[<color>31merror: subcommand wasn'\''t specified; '\''push'\'' can'\''t be assumed due to unexpected token '\'"$(sanitize_for_sed "$1")"\''\[<color>0?m\n
+		\[<color>33mhint: pathspecs for an implicit '\''push'\'' subcommand must be preceded by '\''--'\''\[<color>0?m
 	'
 }
 
@@ -19,21 +19,21 @@ assert_outputs__main_script__unrecognised_short_option() { # option
 	# "getopt" doesn't give a very consistent output between inplementations
 	assert_outputs_with_color '
 	' '
-		\[31merror: unknown switch `'"$(sanitize_for_sed "$1")"\''\[0?m
+		\[<color>31merror: unknown switch `'"$(sanitize_for_sed "$1")"\''\[<color>0?m
 	'
 }
 
 assert_outputs__main_script__invalid_color_boolean() { # value
 	assert_outputs_with_color '
 	' '
-		\[31merror: `'"$(sanitize_for_sed "$1")"\'' is not a valid color boolean\[0?m
+		\[<color>31merror: `'"$(sanitize_for_sed "$1")"\'' is not a valid color boolean\[<color>0?m
 	'
 }
 
 assert_outputs__main_script__unrecognised_long_option() { # option
 	assert_outputs_with_color '
 	' '
-		\[31merror: unknown option `'"$(sanitize_for_sed "$1")"\''\[0?m
+		\[<color>31merror: unknown option `'"$(sanitize_for_sed "$1")"\''\[<color>0?m
 	'
 }
 
@@ -48,8 +48,8 @@ assert_outputs__main_script__help() { # [is_fallback]
 	' "$(
 		if [ "${1-n}" = y ]
 		then
-			printf '%s' '\[1;31mfatal: unable to open the manual entry\[0?m\n'
-			printf '%s' '\[1;31mfatal: falling back to the built-in help text\[0?m'
+			printf '%s' '\[<color>1;31mfatal: unable to open the manual entry\[<color>0?m\n'
+			printf '%s' '\[<color>1;31mfatal: falling back to the built-in help text\[<color>0?m'
 		fi
 	)"
 	#shellcheck disable=SC2154
@@ -80,6 +80,6 @@ assert_outputs__main_script__version() {
 assert_outputs__main_script__no_operation_in_progress() {
 	assert_outputs_with_color '
 	' '
-		\[31merror: no istash operation in progress\[0?m
+		\[<color>31merror: no istash operation in progress\[<color>0?m
 	'
 }
