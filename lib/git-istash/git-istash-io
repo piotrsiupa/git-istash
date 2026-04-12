@@ -225,8 +225,7 @@ is_color_enabled_for_summary() {
 
 get_color_for_summary() { # category
 	case "$1" in
-		'added') get_color 'color.istash.summary.added' 'color.status.added' 'green' ;;
-		'updated') get_color 'color.istash.summary.updated' 'color.status.updated' 'green' ;;
+		'updated') get_color 'color.istash.summary.updated' 'color.istash.summary.added' 'color.status.updated' 'color.status.added' 'green' ;;
 		'changed') get_color 'color.istash.summary.changed' 'color.status.changed' 'red' ;;
 		'untracked') get_color 'color.istash.summary.untracked' 'color.status.untracked' 'red' ;;
 		*) printf 'No such color category for summary ("%s")!' "$1" ; return 1 ;;
