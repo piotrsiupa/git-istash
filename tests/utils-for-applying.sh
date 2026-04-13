@@ -80,7 +80,7 @@ PARAMETRIZE_SUMMARY() { # keys
 		SUM-COMPL-LONGISH0) SUMMARY_FLAGS='--summ compl' ;;
 		SUM-COMPL-LONGISH2) SUMMARY_FLAGS='--sum=y' ;;
 		SUM-NON-IGN-LONG) SUMMARY_FLAGS='--summary=non-ignored-only' ;;
-		SUM-NON-IGN-LONGINSH0) SUMMARY_FLAGS='--summ no-ingor' ;;
+		SUM-NON-IGN-LONGINSH0) SUMMARY_FLAGS='--summ no-ignor' ;;
 		SUM-NON-IGN-LONGINS1) SUMMARY_FLAGS='--sum=without-ign' ;;
 		SUM-NO-LONG) SUMMARY_FLAGS='--summary=off' ;;
 		SUM-NO-LONGISH0) SUMMARY_FLAGS='--summ none' ;;

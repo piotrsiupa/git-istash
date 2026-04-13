@@ -202,7 +202,7 @@ normalize_summary_mode() { # mode_from_user
 	elif printf '%s' "$1" | grep -E -x -i -q '(only?-)?n(on?)?-i(gn(or(ed?)?)?)?(-only?)?|without-i(gn(or(ed?)?)?)?|fast(er)?'
 	then
 		printf 'non-ignored'
-	elif printf '%s' "$1" | grep -E -x -i -q 'off|n(o(ne)?)?|f(alse?|ls)?|(never|nvr)|skip'
+	elif printf '%s' "$1" | grep -E -x -i -q 'off|n(o([np]e)?)?|f(alse?|ls)?|(never|nvr)|skip'
 	then
 		printf 'off'
 	else
