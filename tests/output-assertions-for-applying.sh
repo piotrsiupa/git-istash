@@ -57,7 +57,7 @@ assert_outputs__apply__success() { # operation changes [stash_id stash_sha]
 		'"$(
 			if IS_SUMMARY_ON
 			then
-				printf '\\nChanges made to the working directory:\\n'
+				printf '\\n\[<color>34mChanges made to the working directory:\[<color>0?m\\n'
 				changes="$(
 					printf '%s\n' "$2" \
 					| if IS_SUMMARY_NON_IGNORED
@@ -74,7 +74,7 @@ assert_outputs__apply__success() { # operation changes [stash_id stash_sha]
 				then
 					if printf '%s' "$changes" | grep -Eq '^[^ ?!]'
 					then
-						printf '    index:\\n\n'
+						printf '    [<color>34mindex:[<color>0?m\\n\n'
 						printf '%s' "$changes" \
 						| grep -E '^[^ ?!]' \
 						| sed -E -e 's/^A. (.+)$/\\\\t\[<color>32madded:\\t\\t\1\[<color>0?m\\n/' \
@@ -83,7 +83,7 @@ assert_outputs__apply__success() { # operation changes [stash_id stash_sha]
 					fi
 					if printf '%s' "$changes" | grep -Eq '^[^?!][^ ]'
 					then
-						printf '    tracked files:\\n\n'
+						printf '    [<color>34mtracked files:[<color>0?m\\n\n'
 						printf '%s' "$changes" \
 						| grep -E '^[^?!][^ ]' \
 						| sed -E -e 's/^.A (.+)$/\\\\t\[<color>31madded:\\t\\t\1\[<color>0?m\\n/' \
@@ -92,7 +92,7 @@ assert_outputs__apply__success() { # operation changes [stash_id stash_sha]
 					fi
 					if printf '%s' "$changes" | grep -Eq '^[?!]'
 					then
-						printf '    untracked files:\\n\n'
+						printf '    [<color>34muntracked files:[<color>0?m\\n\n'
 						printf '%s' "$changes" \
 						| grep -E '^[?!]' \
 						| sed -E -e 's/^!! (.+)$/\\\\t\[<color>31mignored:\\t\1\[<color>0?m\\n/' \
@@ -102,7 +102,7 @@ assert_outputs__apply__success() { # operation changes [stash_id stash_sha]
 							-e 's/^.D (.+)$/\\\\t\[<color>31mdeleted:\\t\1\[<color>0?m\\n/'
 					fi
 				else
-					printf '\\tno changes were made\\n\n'
+					printf '\\t[<color>34mno changes were made[<color>0?m\\n\n'
 				fi \
 				| sanitize_for_ere \
 				| convert_escapes \

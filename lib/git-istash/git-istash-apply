@@ -106,7 +106,21 @@ put_files_into_working_copy() { # untracked_changes_sha non_staged_changes_sha s
 }
 
 print_changes_summary() { # mode
-	printf '\nChanges made to the working directory:\n'
+	if is_color_enabled_for_summary
+	then
+		header_color_escape_code="$(get_color_for_summary 'header')"
+		updated_color_escape_code="$(get_color_for_summary 'updated')"
+		changed_color_escape_code="$(get_color_for_summary 'changed')"
+		untracked_color_escape_code="$(get_color_for_summary 'untracked')"
+		reset_escape_code="$(get_color 'reset')"
+	else
+		header_color_escape_code=''
+		updated_color_escape_code=''
+		changed_color_escape_code=''
+		untracked_color_escape_code=''
+		reset_escape_code=''
+	fi
+	printf '\n%sChanges made to the working directory:%s\n' "$header_color_escape_code" "${header_color_escape_code:+$reset_escape_code}"
 	all_changes="$(
 		set -eu
 		{
@@ -285,54 +299,41 @@ print_changes_summary() { # mode
 	)"
 	if [ -n "$all_changes" ]
 	then
-		if is_color_enabled_for_summary
-		then
-			updated_color_escape_code="$(get_color_for_summary 'updated')"
-			changed_color_escape_code="$(get_color_for_summary 'changed')"
-			untracked_color_escape_code="$(get_color_for_summary 'untracked')"
-			reset_escape_code="$(get_color 'reset')"
-		else
-			updated_color_escape_code=''
-			changed_color_escape_code=''
-			untracked_color_escape_code=''
-			reset_escape_code=''
-		fi
 		{
 			if [ -n "$index_changes" ]
 			then
-				printf '    index:\n'
+				printf '    %sindex:%s\\n' "$header_color_escape_code" "${header_color_escape_code:+$reset_escape_code}"
 				printf '%s\n' "$index_changes" \
 				| sed -E -e 's/^A\t(.+)$/added:\t\t\1/' \
 					-e 's/^M\t(.+)$/modified:\t\1/' \
 					-e 's/^D\t(.+)$/deleted:\t\1/' \
-					-e 's/^.+$/\t'"$updated_color_escape_code"'&'"${updated_color_escape_code:+$reset_escape_code}"'/'
+					-e 's/^.+$/\t'"$updated_color_escape_code"'&'"${updated_color_escape_code:+$reset_escape_code}"'\\n/'
 			fi
 			if [ -n "$tracked_changes" ]
 			then
-				printf '    tracked files:\n'
+				printf '    %stracked files:%s\\n' "$header_color_escape_code" "${header_color_escape_code:+$reset_escape_code}"
 				printf '%s\n' "$tracked_changes" \
 				| sed -E -e 's/^A\t(.+)$/added:\t\t\1/' \
 					-e 's/^M\t(.+)$/modified:\t\1/' \
 					-e 's/^D\t(.+)$/deleted:\t\1/' \
-					-e 's/^.+$/\t'"$changed_color_escape_code"'&'"${changed_color_escape_code:+$reset_escape_code}"'/'
+					-e 's/^.+$/\t'"$changed_color_escape_code"'&'"${changed_color_escape_code:+$reset_escape_code}"'\\n/'
 			fi
 			if [ -n "$untracked_changes" ]
 			then
-				printf '    untracked files:\n'
+				printf '    %suntracked files:%s\\n' "$header_color_escape_code" "${header_color_escape_code:+$reset_escape_code}"
 				printf '%s\n' "$untracked_changes" \
 				| sed -E -e 's/^C\t(.+)$/created:\t\1/' \
 					-e 's/^M\t(.+)$/modified:\t\1/' \
 					-e 's/^D\t(.+)$/deleted:\t\1/' \
 					-e 's/^T\t(.+)$/touched:\t\1/' \
 					-e 's/^I\t(.+)$/ignored:\t\1/' \
-					-e 's/^.+$/\t'"$untracked_color_escape_code"'&'"${untracked_color_escape_code:+$reset_escape_code}"'/'
+					-e 's/^.+$/\t'"$untracked_color_escape_code"'&'"${untracked_color_escape_code:+$reset_escape_code}"'\\n/'
 			fi
 		} \
-		| sed -E 's/$/\\n/' \
 		| tr '\n' '\0' \
 		| xargs -0 -n1 -- printf --
 	else
-		printf '\tno changes were made\n'
+		printf '\t%sno changes were made%s\n' "$header_color_escape_code" "${header_color_escape_code:+$reset_escape_code}"
 	fi
 }
 
