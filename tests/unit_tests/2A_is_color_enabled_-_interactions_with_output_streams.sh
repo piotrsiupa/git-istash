@@ -15,7 +15,7 @@ chmod +x 'is_color_enabled.sh'
 ln -s "$(cd - 1>/dev/null ; pwd)/../lib/git-istash/get_options" ./
 
 
-git config --local 'color.foo' 'never'
+git config set --local 'color.foo' 'never'
 
 __test_section__ '"auto" with outputs attached to terminal'
 assert_exit_code__light 1 './is_color_enabled.sh' 'color.foo' 1>/dev/tty 2>&1
@@ -30,7 +30,7 @@ __test_section__ '"auto" with no output attached to terminal'
 assert_exit_code__light 1 './is_color_enabled.sh' 'color.foo' 1>/dev/null 2>&1
 
 
-git config --local 'color.foo' 'auto'
+git config set --local 'color.foo' 'auto'
 
 __test_section__ '"auto" with outputs attached to terminal'
 assert_exit_code__light 0 './is_color_enabled.sh' 'color.foo' 1>/dev/tty 2>&1
@@ -45,7 +45,7 @@ __test_section__ '"auto" with no output attached to terminal'
 assert_exit_code__light 1 './is_color_enabled.sh' 'color.foo' 1>/dev/null 2>&1
 
 
-git config --local 'color.foo' 'always'
+git config set --local 'color.foo' 'always'
 
 __test_section__ '"auto" with outputs attached to terminal'
 assert_exit_code__light 0 './is_color_enabled.sh' 'color.foo' 1>/dev/tty 2>&1

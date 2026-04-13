@@ -207,7 +207,7 @@ are_there_conflicts() {
 }
 
 parse_git_bool() { # boolean_to_parse
-     test "$(git -c 'istash.bool-parsing-tmp-value'="$1" config --get --type=bool 'istash.bool-parsing-tmp-value' 2>/dev/null)" = 'true'
+     test "$(git -c 'istash.bool-parsing-tmp-value'="$1" config get --type=bool 'istash.bool-parsing-tmp-value' 2>/dev/null)" = 'true'
 }
 
 set_getopt_options_from_make_command() {

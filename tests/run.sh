@@ -137,8 +137,8 @@ create_test_remote() {
 	(
 		cd 'remote-for-tests'
 		git init --quiet .
-		git config --local user.email 'test@localhost'
-		git config --local user.name 'test'
+		git config set --local user.email 'test@localhost'
+		git config set --local user.name 'test'
 		git commit --quiet --allow-empty --message='some commit'
 		git branch --move 'my-branch'
 	)

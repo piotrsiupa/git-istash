@@ -17,9 +17,9 @@ ln -s "$(cd - 1>/dev/null ; pwd)/../lib/git-istash/get_options" ./
 # Parsing colors won't be extensively tested because it's done by a Git function.
 # This focuses on the fallback system and corner cases.
 
-git config --local 'color.thebestcolor' 'bold cyan'
-git config --local 'color.alittleworsecolor' 'green'
-git config --local 'color.somethirdcolor' 'blue'
+git config set --local 'color.thebestcolor' 'bold cyan'
+git config set --local 'color.alittleworsecolor' 'green'
+git config set --local 'color.somethirdcolor' 'blue'
 
 
 __test_section__ 'with default value and an existing variable'

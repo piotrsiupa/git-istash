@@ -17,10 +17,10 @@ EOF
 chmod +x 'is_color_enabled.sh'
 ln -s "$(cd - 1>/dev/null ; pwd)/../lib/git-istash/get_options" ./
 
-git config --local 'color.ui' "$FALLBACK"
-git config --local 'color.foo' 'always'
-git config --local 'color.bar' 'never'
-git config --local 'color.baz' 'always'
+git config set --local 'color.ui' "$FALLBACK"
+git config set --local 'color.foo' 'always'
+git config set --local 'color.bar' 'never'
+git config set --local 'color.baz' 'always'
 
 
 __test_section__ 'no arguments'

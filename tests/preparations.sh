@@ -32,8 +32,8 @@ prepare_repository() {
 		exit 1
 	fi
 
-	git config --local user.email 'test@localhost'
-	git config --local user.name 'test'
+	git config set --local user.email 'test@localhost'
+	git config set --local user.name 'test'
 
 	git commit --allow-empty -m 'Initial commit'
 

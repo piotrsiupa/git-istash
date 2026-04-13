@@ -14,9 +14,9 @@ EOF
 chmod +x 'color_lines.sh'
 ln -s "$(cd - 1>/dev/null ; pwd)/../lib/git-istash/get_options" ./
 
-git config --local 'color.thebestcolor' 'bold cyan'
-git config --local 'color.alittleworsecolor' 'green'
-git config --local 'color.incorrectcolor' 'color'
+git config set --local 'color.thebestcolor' 'bold cyan'
+git config set --local 'color.alittleworsecolor' 'green'
+git config set --local 'color.incorrectcolor' 'color'
 
 short_text_file='short-text.txt'
 printf 'Whoever reads this - you are great!\n' >"$short_text_file"

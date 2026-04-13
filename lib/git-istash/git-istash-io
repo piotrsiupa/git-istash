@@ -62,7 +62,7 @@ is_color_enabled() { # config_variable...
 		printf 'fatal: not enough arguments for is_color_enabled\n' 1>&2
 		return 128
 	fi
-	while [ $# -gt 1 ] && ! git config --get "$1" 1>/dev/null
+	while [ $# -gt 1 ] && ! git config get "$1" 1>/dev/null
 	do
 		shift
 	done
@@ -78,11 +78,18 @@ get_color() { # default_value config_variable...
 	fi
 	default_color="$1"
 	shift
-	while [ $# -gt 1 ] && ! git config --get "$1" 1>/dev/null
-	do
-		shift
-	done
-	git config --get-color "${1-}" "$default_color"
+	if [ $# -ne 0 ]
+	then
+		while [ $# -gt 1 ] && ! git config get "$1" 1>/dev/null
+		do
+			shift
+		done
+	else
+		#TODO This doesn't seem to be necessary in newer versions of Git.
+		#TODO It probably won't be needed at the time of merging this to master.
+		set -- 'dummy.dummy'
+	fi
+	git config get --type=color --default="$default_color" "$1"
 }
 
 # Applies color to each line from stdin.
@@ -90,7 +97,7 @@ get_color() { # default_value config_variable...
 color_lines() { # default_value config_variable
 	set -e
 	color_escape_code="$(get_color "$@")"
-	reset_escape_code="$(git config --get-color '' 'reset')"
+	reset_escape_code="$(git config get --type=color --default='reset' 'dummy.dummy')"
 	sed -E "/./s/^.*\$/$color_escape_code&$reset_escape_code/"
 }
 

@@ -18,7 +18,7 @@ chmod +x 'set_color_for_all_and_check.sh'
 ln -s "$(cd - 1>/dev/null ; pwd)/../lib/git-istash/get_options" ./
 
 
-git config --local 'color.foo' 'never'
+git config set --local 'color.foo' 'never'
 
 
 __test_section__ 'auto'

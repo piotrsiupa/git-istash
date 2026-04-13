@@ -38,7 +38,7 @@ find_master() {
 			return 1
 		elif [ "$(printf '%s\n' "$remote_branches" | wc -l)" -gt 1 ]
 		then
-			if ! default_remote="$(git config --get checkout.defaultRemote)"
+			if ! default_remote="$(git config get checkout.defaultRemote)"
 			then
 				printf 'Multiple remotes have the master branch and there is no "checkout.defaultRemote"!\n' 1>&2
 				return 1
