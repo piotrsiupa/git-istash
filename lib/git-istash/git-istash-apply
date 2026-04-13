@@ -305,7 +305,7 @@ print_changes_summary() { # mode
 				| sed -E -e 's/^A\t(.+)$/added:\t\t\1/' \
 					-e 's/^M\t(.+)$/modified:\t\1/' \
 					-e 's/^D\t(.+)$/deleted:\t\1/' \
-					-e 's/^.+$/\t'"$updated_color_escape_code"'&'"$reset_escape_code"'/'
+					-e 's/^.+$/\t'"$updated_color_escape_code"'&'"${updated_color_escape_code:+$reset_escape_code}"'/'
 			fi
 			if [ -n "$tracked_changes" ]
 			then
@@ -314,7 +314,7 @@ print_changes_summary() { # mode
 				| sed -E -e 's/^A\t(.+)$/added:\t\t\1/' \
 					-e 's/^M\t(.+)$/modified:\t\1/' \
 					-e 's/^D\t(.+)$/deleted:\t\1/' \
-					-e 's/^.+$/\t'"$changed_color_escape_code"'&'"$reset_escape_code"'/'
+					-e 's/^.+$/\t'"$changed_color_escape_code"'&'"${changed_color_escape_code:+$reset_escape_code}"'/'
 			fi
 			if [ -n "$untracked_changes" ]
 			then
@@ -325,7 +325,7 @@ print_changes_summary() { # mode
 					-e 's/^D\t(.+)$/deleted:\t\1/' \
 					-e 's/^T\t(.+)$/touched:\t\1/' \
 					-e 's/^I\t(.+)$/ignored:\t\1/' \
-					-e 's/^.+$/\t'"$untracked_color_escape_code"'&'"$reset_escape_code"'/'
+					-e 's/^.+$/\t'"$untracked_color_escape_code"'&'"${untracked_color_escape_code:+$reset_escape_code}"'/'
 			fi
 		} \
 		| sed -E 's/$/\\n/' \
