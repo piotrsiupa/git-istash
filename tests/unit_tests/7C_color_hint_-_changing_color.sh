@@ -18,19 +18,19 @@ git config --local color.ui always
 
 __test_section__ 'none set'
 assert_exit_code 0 './color_hint.sh'
-assert_outputs '\[33mfoo\[0?m'
+assert_outputs '\[33mfoo\[0?m' ''
 
-__test_section__ 'only default set'
+__test_section__ 'only vanilla set'
 git config --local color.advice.hint green
 assert_exit_code 0 './color_hint.sh'
-assert_outputs '\[32mfoo\[0?m'
+assert_outputs '\[32mfoo\[0?m' ''
 
 __test_section__ 'both set'
 git config --local color.istash.advice.hint blue
 assert_exit_code 0 './color_hint.sh'
-assert_outputs '\[34mfoo\[0?m'
+assert_outputs '\[34mfoo\[0?m' ''
 
-__test_section__ 'default set'
+__test_section__ 'only istash set'
 git config --local --unset color.advice.hint
 assert_exit_code 0 './color_hint.sh'
-assert_outputs '\[34mfoo\[0?m'
+assert_outputs '\[34mfoo\[0?m' ''

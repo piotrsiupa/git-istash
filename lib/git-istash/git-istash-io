@@ -24,6 +24,19 @@ get_options_color() { # [-P | -R | -U] short_options_string long_options_string 
 	esac
 }
 
+set_tmp_config_entry() { # key value
+	if [ -z "${GIT_CONFIG_COUNT-}" ]
+	then
+		GIT_CONFIG_COUNT=0
+	fi
+	export GIT_CONFIG_COUNT
+	eval "GIT_CONFIG_KEY_$GIT_CONFIG_COUNT"='"$1"'
+	export "GIT_CONFIG_KEY_$GIT_CONFIG_COUNT"
+	eval "GIT_CONFIG_VALUE_$GIT_CONFIG_COUNT"='"$2"'
+	export "GIT_CONFIG_VALUE_$GIT_CONFIG_COUNT"
+	GIT_CONFIG_COUNT=$((GIT_CONFIG_COUNT + 1))
+}
+
 set_color_for_all() { # value
 	set -- "$1" "$(printf '%s' "$1" | tr 'A-Z\n' 'a-zX')"
 	if printf '%s\n' "$2" | grep -Exq '|a(lways)?|y(es)?|t(rue)?|affirmative|1'
@@ -39,19 +52,9 @@ set_color_for_all() { # value
 		printf 'error: `%s'\'' is not a valid color boolean' "$1" | color_error 1>&2
 		error
 	fi
-	if [ -z "${GIT_CONFIG_COUNT-}" ]
-	then
-		GIT_CONFIG_COUNT=0
-	fi
-	export GIT_CONFIG_COUNT
-	#shellcheck disable=SC2034,SC2041
-	for key in 'color.istash.error' 'color.istash.advice'
+	for key in 'color.istash.error' 'color.istash.advice' 'color.istash.summary'
 	do
-		eval "GIT_CONFIG_KEY_$GIT_CONFIG_COUNT"='"$key"'
-		export "GIT_CONFIG_KEY_$GIT_CONFIG_COUNT"
-		eval "GIT_CONFIG_VALUE_$GIT_CONFIG_COUNT"='"$1"'
-		export "GIT_CONFIG_VALUE_$GIT_CONFIG_COUNT"
-		GIT_CONFIG_COUNT=$((GIT_CONFIG_COUNT + 1))
+		set_tmp_config_entry "$key" "$1"
 	done
 }
 
@@ -69,35 +72,37 @@ is_color_enabled() { # config_variable...
 	git config --get-colorbool "$1"
 }
 
-get_color() { # default_value config_variable...
+get_color() { # [config_variable...] default_value
 	if [ $# -eq 0 ]
 	then
 		# This is here to not forget a value during the developoment.
 		printf 'fatal: not enough arguments for get_color\n' 1>&2
 		return 128
+	elif [ $# -eq 1 ]
+	then
+		set -- '' "$1"
+	else
+		while [ $# -gt 2 ] && ! git config --get "$1" 1>/dev/null
+		do
+			shift
+		done
 	fi
-	default_color="$1"
-	shift
-	while [ $# -gt 1 ] && ! git config --get "$1" 1>/dev/null
-	do
-		shift
-	done
-	git config --get-color "${1-}" "$default_color"
+	git config --get-color "$1" "$2"
 }
 
 # Applies color to each line from stdin.
 # The arguments are passed to "get_color".
-color_lines() { # default_value config_variable
+color_lines() { # [config_variable...] default_value
 	set -e
 	color_escape_code="$(get_color "$@")"
-	reset_escape_code="$(git config --get-color '' 'reset')"
-	sed -E "/./s/^.*\$/$color_escape_code&$reset_escape_code/"
+	reset_escape_code="$(get_color 'reset')"
+	sed -E "/./s/^.*\$/$color_escape_code&${color_escape_code:+$reset_escape_code}/"
 }
 
 color_error() {
 	if is_color_enabled 'color.istash.error' 'color.istash'
 	then
-		color_lines 'red' 'color.istash.error.normal' 'color.istash.error.default'
+		color_lines 'color.istash.error.normal' 'color.istash.error.default' 'red'
 	else
 		cat
 	fi
@@ -121,7 +126,7 @@ error() { # arg...
 color_fatal() {
 	if is_color_enabled 'color.istash.error' 'color.istash'
 	then
-		color_lines 'bold red' 'color.istash.error.fatal' 'color.istash.error.default'
+		color_lines 'color.istash.error.fatal' 'color.istash.error.default' 'bold red'
 	else
 		cat
 	fi
@@ -145,7 +150,7 @@ fatal() { # arg...
 color_hint() {
 	if is_color_enabled 'color.istash.advice' 'color.istash' 'color.advice'
 	then
-		color_lines 'yellow' 'color.istash.advice.hint' 'color.advice.hint'
+		color_lines 'color.istash.advice.hint' 'color.advice.hint' 'yellow'
 	else
 		cat
 	fi
@@ -188,4 +193,44 @@ print_error_for_data_files_check() { # current_operation called_operation
 		printf_error 'there is currently '\''git istash %s'\'' in progress\n' "$1"
 		printf_hint 'use '\''git istash --continue'\'' or '\''git istash --abort'\''\n'
 	fi
+}
+
+normalize_summary_mode() { # mode_from_user
+	if printf '%s\n' "$1" | grep -E -x -i -q '|co?mp(l(ete|t)?)?|fu(ll?)?|on|y(es)?|t(rue)?|al(w(ays)?|l)?'
+	then
+		printf 'complete'
+	elif printf '%s' "$1" | grep -E -x -i -q '(only?-)?n(on?)?-i(gn(or(ed?)?)?)?(-only?)?|without-i(gn(or(ed?)?)?)?|fast(er)?'
+	then
+		printf 'non-ignored'
+	elif printf '%s' "$1" | grep -E -x -i -q 'off|n(o([np]e)?)?|f(alse?|ls)?|(never|nvr)|skip'
+	then
+		printf 'off'
+	else
+		printf_error 'invalid summary mode '\''%s'\''\n' "$1"
+		return 1
+	fi
+}
+
+get_summary_mode() {
+	normalize_summary_mode "$(git config --get 'istash.summary')"
+}
+
+set_summary_mode() { # summary_mode_from_user
+	summary_mode="$(normalize_summary_mode "$1")"
+	set -- "$summary_mode"
+	set_tmp_config_entry 'istash.summary' "$1"
+}
+
+is_color_enabled_for_summary() {
+	is_color_enabled 'color.istash.summary' 'color.istash' 'color.status'
+}
+
+get_color_for_summary() { # category
+	case "$1" in
+		'header') get_color 'color.istash.summary.header' 'color.status.header' 'normal' ;;
+		'updated') get_color 'color.istash.summary.updated' 'color.istash.summary.added' 'color.status.updated' 'color.status.added' 'green' ;;
+		'changed') get_color 'color.istash.summary.changed' 'color.status.changed' 'red' ;;
+		'untracked') get_color 'color.istash.summary.untracked' 'color.status.untracked' 'red' ;;
+		*) printf 'No such color category for summary ("%s")!' "$1" ; return 1 ;;
+	esac
 }

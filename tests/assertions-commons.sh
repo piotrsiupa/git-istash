@@ -50,13 +50,13 @@ assert_outputs() { # stdout_regex stderr_regex
 	match_multiline_regex "$stdout" "$(dedent_regex "$1")" ||
 		fail 'Expected stdout of "%s" to match:\n"%s"\nbut it is:\n"%s"!\n' \
 			"$last_command" \
-			"$(dedent_regex "$1" | sed 's/\\n/&\n/g' | escape_escape_characters)" \
+			"$(dedent_regex "$1" | sed -e 's/\\n/\n/g' -e 's/\\t/\t/g' | escape_escape_characters)" \
 			"$(printf '%s' "$stdout" | escape_escape_characters)"
 	#shellcheck disable=SC2154
 	match_multiline_regex "$stderr" "$(dedent_regex "$2")" ||
 		fail 'Expected stderr of "%s" to match:\n"%s"\nbut it is:\n"%s"!\n' \
 			"$last_command" \
-			"$(dedent_regex "$2" | sed 's/\\n/&\n/g' | escape_escape_characters)" \
+			"$(dedent_regex "$2" | sed -e 's/\\n/\n/g' -e 's/\\t/\t/g' | escape_escape_characters)" \
 			"$(printf '%s' "$stderr" | escape_escape_characters)"
 }
 
@@ -64,9 +64,9 @@ _remove_color_from_output_pattern() { # output_pattern
 	printf '%s' "$1" \
 	| if IS_COLOR_ON
 	then
-		sed -E -e 's/^<no-strip-color>//'
+		sed -E 's/(\\\[)<color>([0-9;]+|0\?)m/\1\2m/g'
 	else
-		sed -E -e '/^<no-strip-color>/!s/\\\[([0-9;]+|0\?)m//g' -e 's/^<no-strip-color>//'
+		sed -E 's/\\\[<color>([0-9;]+|0\?)m//g'
 	fi
 }
 
@@ -141,8 +141,8 @@ assert_file_contents() { # file expected_current [expected_staged]
 	fi
 	if printf '%s' "$2" | grep -qE '\|'
 	then
-		ours_expected_contents="$(printf '%s' "$2" | cut -d'|' -f1)"
-		theirs_expected_contents="$(printf '%s' "$2" | cut -d'|' -f2)"
+		ours_expected_contents="$(printf '%s' "$2" | cut -d'|' -f1 | sed -E 's/^""$//')"
+		theirs_expected_contents="$(printf '%s' "$2" | cut -d'|' -f2 | sed -E 's/^""$//')"
 		test "$(printf '%s\n' "$value_for_assert" | grep -cE '^={7}')" -eq 1 ||
 			fail 'Expected file "'"$1"'" contain exactly 1 conflict!\n'
 		#shellcheck disable=SC2015
@@ -160,7 +160,7 @@ assert_file_contents() { # file expected_current [expected_staged]
 		unset theirs_expected_contents
 	else
 		#shellcheck disable=SC2059
-		expected_contents="$(printf -- "$2")"
+		expected_contents="$(printf -- "$2" | sed -E 's/^""$//')"
 		test "$value_for_assert" = "$expected_contents" ||
 			fail 'Expected content of file "'"$1"'" to be:\n"%s"\nbut it is:\n"%s"!\n' "$expected_contents" "$value_for_assert"
 		if [ $# -eq 3 ]
@@ -168,7 +168,7 @@ assert_file_contents() { # file expected_current [expected_staged]
 			#shellcheck disable=SC2059
 			value_for_assert="$(printf -- ":$1" | xargs -0 -- git show)"
 			#shellcheck disable=SC2059
-			expected_contents="$(printf -- "$3")"
+			expected_contents="$(printf -- "$3" | sed -E 's/^""$//')"
 			test "$value_for_assert" = "$expected_contents" ||
 				fail 'Expected staged content of file "'"$1"'" to be:\n"%s"\nbut it is:\n"%s"!\n' "$expected_contents" "$value_for_assert"
 		fi

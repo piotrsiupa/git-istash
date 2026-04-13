@@ -4,6 +4,7 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_CONTINUE
 PARAMETRIZE_COLOR
+PARAMETRIZE_SUMMARY
 
 __end_of_initialization__
 
@@ -29,7 +30,7 @@ SWITCH_HEAD_TYPE
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS
+assert_exit_code 2 git istash "$APPLY_OPERATION" $SUMMARY_FLAGS $COLOR_FLAGS
 assert_outputs__apply__conflict_HT "$APPLY_OPERATION" '
 UU aaa
 ' '
@@ -53,7 +54,7 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 __test_section__ "Continue $APPLY_OPERATION stash (0)"
 printf 'eee\n' >aaa
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS
+assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" $SUMMARY_FLAGS $COLOR_FLAGS
 assert_outputs__apply__failed_resolution "$APPLY_OPERATION" '
 aaa
 '
@@ -75,7 +76,7 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 __test_section__ "Continue $APPLY_OPERATION stash (1)"
 git add aaa
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS
+assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" $SUMMARY_FLAGS $COLOR_FLAGS
 assert_outputs__apply__conflict "$APPLY_OPERATION" '
 UU aaa
 '
@@ -93,7 +94,7 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 __test_section__ "Continue $APPLY_OPERATION stash (2)"
 printf 'fff\n' >aaa
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS
+assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" $SUMMARY_FLAGS $COLOR_FLAGS
 assert_outputs__apply__failed_resolution "$APPLY_OPERATION" '
 aaa
 '
@@ -112,8 +113,12 @@ __test_section__ "Continue $APPLY_OPERATION stash (3)"
 git add aaa
 stash_sha="$(git rev-parse stash)"
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS
-assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
+assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" $SUMMARY_FLAGS $COLOR_FLAGS
+assert_outputs__apply__success_HT "$APPLY_OPERATION" '
+MM aaa
+' '
+AM aaa
+' 0 "$stash_sha"
 assert_files_HT '
 MM aaa		fff	eee
 !! ignored0	ignored0

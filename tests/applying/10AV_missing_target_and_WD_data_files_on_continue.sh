@@ -5,6 +5,7 @@ non_essential_test
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_CONTINUE
 PARAMETRIZE_COLOR
+PARAMETRIZE_SUMMARY
 
 __end_of_initialization__
 
@@ -88,8 +89,12 @@ mv .git/ISTASH_TARGET~ .git/ISTASH_TARGET
 mv .git/ISTASH_WORKING-DIR~ .git/ISTASH_WORKING-DIR
 stash_sha="$(git rev-parse stash)"
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash pop $COLOR_FLAGS "$CONTINUE_FLAG"
-assert_outputs__apply__success 'pop' 0 "$stash_sha"
+assert_exit_code 0 git istash pop $COLOR_FLAGS $SUMMARY_FLAGS "$CONTINUE_FLAG"
+assert_outputs__apply__success_HT 'pop' '
+ M aaa
+' '
+ A aaa
+' 0 "$stash_sha"
 assert_files_HT '
  M aaa		ddd	ccc
 AM wdf0		wdf0b	wdf0a

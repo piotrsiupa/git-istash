@@ -31,9 +31,9 @@ __test_section__ 'with variable instead of the default value'
 assert_exit_code 128 './get_color.sh' 'color/alittleworsecolor'
 
 __test_section__ 'with default value and a variable'
-assert_exit_code 0 './get_color.sh' 'red' 'color.thebestcolor'
+assert_exit_code 0 './get_color.sh' 'color.thebestcolor' 'red'
 assert_outputs '\[1;36m' ''
 
 __test_section__ 'with default value and two variables'
-assert_exit_code 0 './get_color.sh' 'red' 'color.thebestcolor' 'color.alittleworsecolor'
+assert_exit_code 0 './get_color.sh' 'color.thebestcolor' 'color.alittleworsecolor' 'red'
 assert_outputs '\[1;36m' ''

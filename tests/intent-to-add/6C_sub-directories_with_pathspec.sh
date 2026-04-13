@@ -12,6 +12,7 @@ PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_PATHSPEC_STYLE
 PARAMETRIZE_OPTIONS_INDICATOR IS_PATHSPEC_IN_ARGS
 PARAMETRIZE_COLOR
+PARAMETRIZE_SUMMARY
 
 __end_of_initialization__
 
@@ -165,8 +166,16 @@ RESTORE_HEAD_TYPE
 __test_section__ 'Pop stash'
 stash_sha="$(git rev-parse stash)"
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash pop $COLOR_FLAGS
-assert_outputs__apply__success 'pop' 0 "$stash_sha"
+assert_exit_code 0 git istash pop $COLOR_FLAGS $SUMMARY_FLAGS
+assert_outputs__apply__success 'pop' '
+M  a/0/i
+D  a/0/k
+ D a/1/k
+ A a/1/l
+MM b/0/i
+MD b/0/k
+ M b/1/i
+' 0 "$stash_sha"
 assert_files '
 M  a/0/i	yyy
    a/0/j	xxx

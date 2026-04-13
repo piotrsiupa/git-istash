@@ -148,27 +148,27 @@ assert_outputs__create__no_changes_to_stash() { # [call_description...]
 	' '
 		'"$(create_patch_output_regex "$@")"'
 		'"$(if [ $# -ne 0 ] ; then printf '%s' '\n' ; fi)"'
-		\[31merror: no suitable changes to stash\[0?m
+		\[<color>31merror: no suitable changes to stash\[<color>0?m
 	'
 }
 
 assert_outputs__create__unmatching_pathspec() { # pathspec
 	assert_outputs_with_color '
 	' '
-		\[31merror: pathspec '"'$(sanitize_for_sed "$1")'"' did not match any file\(s\)\[0?m
+		\[<color>31merror: pathspec '"'$(sanitize_for_sed "$1")'"' did not match any file\(s\)\[<color>0?m
 	'
 }
 
 assert_outputs__create__pfn_without_pff() {
 	assert_outputs_with_color '
 	' '
-		\[31merror: option '\''--pathspec-file-nul'\'' is not valid without '\''--pathspec-from-file'\''\[0?m
+		\[<color>31merror: option '\''--pathspec-file-nul'\'' is not valid without '\''--pathspec-from-file'\''\[<color>0?m
 	'
 }
 
 assert_outputs_create__patch_with_patchspec() {
 	assert_outputs_with_color '
 	' '
-		\[31merror: stdin cannot be assigned to both '\''--patch'\'' and the pathspec\[0?m
+		\[<color>31merror: stdin cannot be assigned to both '\''--patch'\'' and the pathspec\[<color>0?m
 	'
 }

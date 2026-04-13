@@ -22,9 +22,11 @@ git\-istash \- Handle Git stashes without arbitrary limitations of the original 
             [(\-m\~|\~\-\-message)\~<\fImessage\fR>] [\-\-patch] [\-\-patchspec\-file\-nul]
             [\-\-patchspec\-from\-file=<\fIfile\fR>] [\-S\~|\~\-\-staged]
             [\-u\~|\~\-\-[no\-]include\-untracked] [\-\-\~<\fIpathspec\fR>...]
-\fBgit istash\fR [<options>] (pop\~|\~apply) [<\fIstash\fR>]
-\fBgit istash\fR [<options>] [pop\~|\~apply] (\-c\~|\~\-\-continue\~|\~\-\-abort\~|\~\-\-quit)
-\fBgit istash\fR [<options>] (c\~|\~continue\~|\~abort\~|\~quit)
+\fBgit istash\fR [<options>] (pop\~|\~apply) [\-\-summary\~<mode>] [<\fIstash\fR>]
+\fBgit istash\fR [<options>] [pop\~|\~apply] (\-c\~|\~\-\-continue) [\-\-summary\~<mode>]
+\fBgit istash\fR [<options>] [pop\~|\~apply] (\-\-abort\~|\~\-\-quit)
+\fBgit istash\fR [<options>] (c\~|\~continue) [\-\-summary\~<mode>]
+\fBgit istash\fR [<options>] (abort\~|\~quit)
 .fi
 
 
@@ -74,6 +76,10 @@ Alternatively, \fB\-\-abort\fR can be used to cancel the operation and return to
 Because of the multi-stage conflict resolution, \fIthe index saved to the stash entry will be preserved\fR (unlike in \fBgit stash\fR equivalent subcommands).
 .br
 Additionally, the state of working copy, from before the \fBapply\fR / \fBpop\fR has started, is backed up as a separate stash entry (which is not stored anywhere but it can be found in the command's output if needed).
+.br
+After the operation is complete, it prints a summary of all changes done to the working directory. \
+This includes \fIonly\fR the changes related to the stash and not the changes that were already there before running the command, which is different from vanilla stash which just runs \fBgit status\fR. \
+(See also \fB--summary\fR.)
 .RE
 
 \fBgit istash c\fR, \fBgit istash create\fR, \fBgit istash abort\fR and \fBgit istash quit\fR
@@ -142,14 +148,14 @@ And finally, the options \fB\-\-patch\fR and \fB\-\-pathspec\-from\-file\fR are 
 .RE
 
 .PP
-\fBapply\fR [<\fIstash\fR>\~|\~\-c\~|\~\-\-continue\~|\~\-\-abort\~|\~\-\-quit]
+\fBapply\fR [<\fIstash\fR>\~|\~\-c\~|\~\-\-continue\~|\~\-\-abort\~|\~\-\-quit] [\-\-summary\~<mode>]
 .RS 4
 Like \fBgit stash apply \-\-index\fR, but it handles staged and unstaged conflicts separately, preventing those scopes from mixing. \
 \fB<stash>\fR may be any commit that looks like a commit created by \fBgit stash push\fR or \fBgit stash create\fR.
 .RE
 
 .PP
-\fBpop\fR [<\fIstash\fR>\~|\~\-c\~|\~\-\-continue\~|\~\-\-abort\~|\~\-\-quit]
+\fBpop\fR [<\fIstash\fR>\~|\~\-c\~|\~\-\-continue\~|\~\-\-abort\~|\~\-\-quit] [\-\-summary\~<mode>]
 .RS 4
 Like \fBgit stash pop \-\-index\fR, but it handles staged and unstaged conflicts separately, preventing those scopes from mixing. \
 Unlike \fBgit stash pop\fR, it can handle stashes referenced by name (\fBstash^{/<name>}\fR).
@@ -161,7 +167,7 @@ This is the inverse operation of \fBgit stash push\fR.
 .RE
 
 .PP
-\fBc\fR | \fBcontinue\fR
+\fBc\fR | \fBcontinue\fR [\-\-summary\~<mode>]
 .RS 4
 This is just a convenient alias for \fB\-c\fR / \fB\-\-continue\fR. \
 (\fBgit istash continue\fR is the same as \fBgit istash \-\-continue\fR.)
@@ -356,7 +362,7 @@ Use color in output. \
 \fI<when>\fR can be one of \fBalways\fR, \fBnever\fR, or \fBauto\fR. \
 \fB\-\-color\fR (i.e. without \fI=<when>\fR) is the same as \fB\-\-color=always\fR.
 .sp
-Color can be also changed way by configuration settings (allowing more granularity) but this option has higher priority.
+Color can also be changed by config variables (allowing more granularity) but this option has a higher priority.
 .RE
 
 .PP
@@ -364,6 +370,27 @@ Color can be also changed way by configuration settings (allowing more granulari
 .RS 4
 Turn off color in output. \
 It is the same as \fB\-\-color=never\fR.
+.RE
+
+.PP
+\fB\-\-summary=<mode>\fR
+.RS 4
+This option is only valid for \fBapply\fR and \fBpop\fR subcommands.
+.sp
+Set how much of the post-apply summary is shown.
+.br
+There are 3 modes:
+.PD 0
+.IP \(em 2
+\fBcomplete\fR - shows all changed files in the working copy.
+.IP \(em 2
+\fBnon-ignored\fR - skips ignored files, including the ones that were ignored but aren't anymore after the operation. \
+(Ignored files are the most time-consuming to list.)
+.IP \(em 2
+\fBoff\fR - doesn't display the summary at all.
+.PD
+.sp
+Summary mode can also be changed by config variable but this option has a higher priority.
 .RE
 
 .PP
@@ -606,12 +633,46 @@ Use customized color for normal (user) errors printed by \fBistash\fR. \
 If unset, then the value of \fBcolor.istash.error.default\fR is used (\fBred\fR by default).
 .RE
 
+color.istash.summary
+.RS 4
+A boolean to enable/disable color of summary of changes in the output of the commands \fBapply\fR and \fBpop\fR. \
+May be set to \fBalways\fR, \fBfalse\fR (or \fBnever\fR) or auto (or \fBtrue\fR), in which case colors are used only when the output is to a terminal. \
+If unset, then the value of \fBcolor.istash\fR is used and if this is unset too, \fBcolor.status\fR is used.
+.RE
+
+color.istash.summary.<slot>
+.RS 4
+Use customized color for summary of changes in the output of the commands \fBapply\fR and \fBpop\fR. \
+\fB<slot>\fR is one of \fBheader\fR (the header text of the status message), \fBadded\fR or \fBupdated\fR (files which are added but not committed), \fBchanged\fR (files which are changed but not added in the index), \fBuntracked\fR (files which are not tracked by Git). \
+If unset, then the value of \fBcolor.status\fR with the same slot name is used.
+.RE
+
+color.status
+.RS 4
+A boolean to enable/disable color in the output of \fBgit-status\fR(1). \
+May be set to \fBalways\fR, \fBfalse\fR (or \fBnever\fR) or auto (or \fBtrue\fR), in which case colors are used only when the output is to a terminal. \
+If unset, then the value of \fBcolor.ui\fR is used (\fBauto\fR by default).
+.RE
+
+color.status.<slot>
+.RS 4
+Use customized color for status colorization. \
+\fB<slot>\fR is one of \fBheader\fR (the header text of the status message), \fBadded\fR or \fBupdated\fR (files which are added but not committed), \fBchanged\fR (files which are changed but not added in the index), \fBuntracked\fR (files which are not tracked by Git), \fBbranch\fR (the current branch), \fBnobranch\fR (the color the \fIno branch\fR warning is shown in, defaulting to red), \fBlocalBranch\fR or \fBremoteBranch\fR (the local and remote branch names, respectively, when branch and tracking information is displayed in the status short-format), or \fBunmerged\fR (files which have unmerged changes).
+.RE
+
 color.ui
 .RS 4
 This variable determines the default value for variables such as \fBcolor.diff\fR and \fBcolor.grep\fR that control the use of color per command family. \
 Its scope will expand as more commands learn configuration to set a default for the \fB\-\-color\fR option. \
 Set it to \fBfalse\fR or \fBnever\fR if you prefer Git commands not to use color unless enabled explicitly with some other configuration or the \fB\-\-color\fR option. \
 Set it to \fBalways\fR if you want all output not intended for machine consumption to use color, to \fBtrue\fR or \fBauto\fR (this is the default since Git 1.8.4) if you want such output to use color when written to the terminal.
+.RE
+
+istash.summary
+.RS 4
+This variable stores the default value for the option \fB\-\-summary\fR (when it's not given). \
+If unset, it defaults to \fBcomplete\fR. \
+(See \fB\-\-summary\fR for the description of all possible values.)
 .RE
 
 

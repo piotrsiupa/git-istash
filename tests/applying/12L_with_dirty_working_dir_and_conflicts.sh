@@ -6,6 +6,7 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_CONTINUE
 PARAMETRIZE_COLOR
+PARAMETRIZE_SUMMARY
 
 __end_of_initialization__
 
@@ -161,9 +162,19 @@ git add zzz xxx/zzz yyy/zzz
 stash_sha="$(git rev-parse stash)"
 cd xxx
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG"
+assert_exit_code 0 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG" $SUMMARY_FLAGS
 cd -
-assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
+assert_outputs__apply__success "$APPLY_OPERATION" '
+MM aaa
+MM xxx/aaa
+MM yyy/aaa
+ M bbb
+ M xxx/bbb
+ M yyy/bbb
+?M zzz
+?M xxx/zzz
+?M yyy/zzz
+' 0 "$stash_sha"
 assert_files_HT '
 MM aaa		ggg0	fff0
 MM xxx/aaa	ggg1	fff1

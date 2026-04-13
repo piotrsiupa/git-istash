@@ -10,6 +10,7 @@ PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_COLOR
+PARAMETRIZE_SUMMARY
 
 __end_of_initialization__
 
@@ -74,8 +75,14 @@ RESTORE_HEAD_TYPE
 __test_section__ 'Pop stash'
 stash_sha="$(git rev-parse stash)"
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash pop $COLOR_FLAGS
-assert_outputs__apply__success 'pop' 0 "$stash_sha"
+assert_exit_code 0 git istash pop $SUMMARY_FLAGS $COLOR_FLAGS
+assert_outputs__apply__success 'pop' '
+AM aaa
+ A bbb
+?A ddd
+!A ignored0
+!A ignored1
+' 0 "$stash_sha"
 assert_files '
 AM aaa		bbb	aaa
  A bbb		aaa
