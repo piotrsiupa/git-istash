@@ -302,3 +302,10 @@ assert_outputs__apply__wrong_stash_commit_messages() { # stash_name
 		\[<color>1;31mfatal: it may not be a stash entry or it may be damaged\[<color>0?m
 	'
 }
+
+assert_outputs__apply__invalid_summary_mode() { # mode
+	assert_outputs_with_color '
+	' '
+		\[<color>31merror: invalid summary mode '\'"$(sanitize_for_sed "$1")"\''\[<color>0?m
+	'
+}

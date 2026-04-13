@@ -206,6 +206,7 @@ normalize_summary_mode() { # mode_from_user
 	then
 		printf 'off'
 	else
+		printf_error 'invalid summary mode '\''%s'\''\n' "$1"
 		return 1
 	fi
 }
@@ -215,7 +216,8 @@ get_summary_mode() {
 }
 
 set_summary_mode() { # summary_mode_from_user
-	set -- "$(normalize_summary_mode "$1")"
+	summary_mode="$(normalize_summary_mode "$1")"
+	set -- "$summary_mode"
 	set_tmp_config_entry 'istash.summary' "$1"
 }
 
