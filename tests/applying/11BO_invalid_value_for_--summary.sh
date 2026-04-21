@@ -26,7 +26,7 @@ __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 #shellcheck disable=SC2086
 assert_exit_code 1 git istash "$APPLY_OPERATION" $COLOR_FLAGS --summary='maybe-or-maybe-not'
-assert_outputs__apply__invalid_summary_mode 'maybe-or-maybe-not'
+assert_outputs__apply__bad_summary_mode_in_flag 'maybe-or-maybe-not'
 assert_files_HT '
    aaa		aaa
 '

@@ -51,7 +51,7 @@ assert_outputs__apply__failed_resolution() { # operation unresolved_files
 }
 
 # "apply" needs only 2 arguments, while "pop" requires all 4.
-assert_outputs__apply__success() { # operation changes [stash_id stash_sha]
+assert_outputs__apply__success() { # operation changes [stash_id stash_sha] [error_message]
 	assert_outputs_with_color '
 		Stash of the old working dir: [0-9a-fA-F]{40}\n
 		'"$(
@@ -114,7 +114,14 @@ assert_outputs__apply__success() { # operation changes [stash_id stash_sha]
 		'"$(if [ "$1" = 'pop' ] ; then printf '%s' '\nDropped refs\/stash@\{'"$3"'\} \('"$4"'\)\n' ; fi)"'
 		\n
 		Successfully '"$(if [ "$1" = 'pop' ] ; then printf 'popped' ; else printf 'applied' ; fi)"' the stash
-	' ''
+	' "$(
+		if [ $# -ge 4 ]
+		then
+			printf '%s' "${5-}"
+		else
+			printf '%s' "${3-}"
+		fi
+	)"
 }
 # "apply" needs only 3 arguments, while "pop" requires all 5.
 assert_outputs__apply__success_HT() { # operation changes_normal changes_orphan [stash_id stash_sha]
@@ -303,9 +310,13 @@ assert_outputs__apply__wrong_stash_commit_messages() { # stash_name
 	'
 }
 
-assert_outputs__apply__invalid_summary_mode() { # mode
+create_bad_summary_mode_regex() { # mode
+	printf '%s' '\[<color>31merror: bad summary mode config value '\'"$(sanitize_for_sed "$1")"\'' for '\''istash\.summary'\''\[<color>0?m'
+}
+
+assert_outputs__apply__bad_summary_mode_in_flag() { # mode
 	assert_outputs_with_color '
 	' '
-		\[<color>31merror: invalid summary mode '\'"$(sanitize_for_sed "$1")"\''\[<color>0?m
+		\[<color>31merror: bad summary mode '\'"$(sanitize_for_sed "$1")"\''\[<color>0?m
 	'
 }

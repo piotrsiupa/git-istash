@@ -46,4 +46,5 @@ assert_exit_code 0 './color_lines.sh' 'color.nonexistingcolor' 'color.alittlewor
 assert_outputs '\[32mWhoever reads this - you are great!\[0?m' ''
 
 __test_section__ 'with default value and two variables, first incorrect'
-assert_exit_code 128 './color_lines.sh' 'color.incorrectcolor' 'color.alittleworsecolor' 'red' <"$short_text_file"
+assert_exit_code 0 './color_lines.sh' 'color.incorrectcolor' 'color.alittleworsecolor' 'red' <"$short_text_file"
+assert_outputs_with_color '\[32mWhoever reads this - you are great!\[0?m' "$(create_bad_color_config_value_regex 'color' 'color.incorrectcolor')"

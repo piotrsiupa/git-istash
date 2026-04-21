@@ -27,51 +27,76 @@ git config --local 'color.baz' 'zxcvbn'
 
 __test_section__ 'with default value and an existing variable'
 assert_exit_code 0 './get_color.sh' 'color.thebestcolor' 'color.alittleworsecolor' 'red'
-assert_outputs '\[1;36m' ''
+assert_outputs_with_color '\[1;36m' ''
 
 __test_section__ 'with default value and a non-existing variable'
-assert_exit_code 128 './get_color.sh' 'color.foo' 'color.alittleworsecolor' 'red'
+assert_exit_code 0 './get_color.sh' 'color.foo' 'color.alittleworsecolor' 'red'
+assert_outputs_with_color '\[32m' "
+	$(create_bad_color_config_value_regex 'qwerty' 'color.foo')
+"
 
 
 __test_section__ 'with default value and two existing variables'
 assert_exit_code 0 './get_color.sh' 'color.thebestcolor' 'color.alittleworsecolor' 'red'
-assert_outputs '\[1;36m' ''
+assert_outputs_with_color '\[1;36m' ''
 
 __test_section__ 'with default value and good variables, first non-existing'
-assert_exit_code 128 './get_color.sh' 'color.foo' 'color.alittleworsecolor' 'red'
+assert_exit_code 0 './get_color.sh' 'color.foo' 'color.alittleworsecolor' 'red'
+assert_outputs_with_color '\[32m' "
+	$(create_bad_color_config_value_regex 'qwerty' 'color.foo')
+"
 
 __test_section__ 'with default value and two variables, second non-existing'
 assert_exit_code 0 './get_color.sh' 'color.thebestcolor' 'color.bar' 'red'
-assert_outputs '\[1;36m' ''
+assert_outputs_with_color '\[1;36m' ''
 
 __test_section__ 'with default value and two non-existing variables'
-assert_exit_code 128 './get_color.sh' 'color.foo' 'color.bar' 'red'
+assert_exit_code 0 './get_color.sh' 'color.foo' 'color.bar' 'red'
+assert_outputs_with_color '\[31m' "
+	$(create_bad_color_config_value_regex 'qwerty' 'color.foo')\\n
+	$(create_bad_color_config_value_regex 'asdfgh' 'color.bar')
+"
 
 
 __test_section__ 'with default value and three existing variables, variant 0'
 assert_exit_code 0 './get_color.sh' 'color.thebestcolor' 'color.alittleworsecolor' 'color.somethirdcolor' 'red'
-assert_outputs '\[1;36m' ''
+assert_outputs_with_color '\[1;36m' ''
 
 __test_section__ 'with default value and three existing variables, variant 1'
-assert_exit_code 128 './get_color.sh' 'color.foo' 'color.alittleworsecolor' 'color.somethirdcolor' 'red'
+assert_exit_code 0 './get_color.sh' 'color.foo' 'color.alittleworsecolor' 'color.somethirdcolor' 'red'
+assert_outputs_with_color '\[32m' "
+	$(create_bad_color_config_value_regex 'qwerty' 'color.foo')
+"
 
 __test_section__ 'with default value and three existing variables, variant 2'
 assert_exit_code 0 './get_color.sh' 'color.thebestcolor' 'color.bar' 'color.somethirdcolor' 'red'
-assert_outputs '\[1;36m' ''
+assert_outputs_with_color '\[1;36m' ''
 
 __test_section__ 'with default value and three existing variables, variant 3'
-assert_exit_code 128 './get_color.sh' 'color.foo' 'color.bar' 'color.somethirdcolor' 'red'
+assert_exit_code 0 './get_color.sh' 'color.foo' 'color.bar' 'color.somethirdcolor' 'red'
+assert_outputs_with_color '\[34m' "
+	$(create_bad_color_config_value_regex 'qwerty' 'color.foo')\\n
+	$(create_bad_color_config_value_regex 'asdfgh' 'color.bar')
+"
 
 __test_section__ 'with default value and three existing variables, variant 4'
 assert_exit_code 0 './get_color.sh' 'color.thebestcolor' 'color.alittleworsecolor' 'color.baz' 'red'
-assert_outputs '\[1;36m' ''
+assert_outputs_with_color '\[1;36m' ''
 
 __test_section__ 'with default value and three existing variables, variant 5'
-assert_exit_code 128 './get_color.sh' 'color.foo' 'color.alittleworsecolor' 'color.baz' 'red'
+assert_exit_code 0 './get_color.sh' 'color.foo' 'color.alittleworsecolor' 'color.baz' 'red'
+assert_outputs_with_color '\[32m' "
+	$(create_bad_color_config_value_regex 'qwerty' 'color.foo')
+"
 
 __test_section__ 'with default value and three existing variables, variant 6'
 assert_exit_code 0 './get_color.sh' 'color.thebestcolor' 'color.bar' 'color.baz' 'red'
-assert_outputs '\[1;36m' ''
+assert_outputs_with_color '\[1;36m' ''
 
 __test_section__ 'with default value and three existing variables, variant 7'
-assert_exit_code 128 './get_color.sh' 'color.foo' 'color.bar' 'color.baz' 'red'
+assert_exit_code 0 './get_color.sh' 'color.foo' 'color.bar' 'color.baz' 'red'
+assert_outputs_with_color '\[31m' "
+	$(create_bad_color_config_value_regex 'qwerty' 'color.foo')\\n
+	$(create_bad_color_config_value_regex 'asdfgh' 'color.bar')\\n
+	$(create_bad_color_config_value_regex 'zxcvbn' 'color.baz')
+"

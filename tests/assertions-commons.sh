@@ -18,6 +18,7 @@ assert_exit_code__light() { # expected_code command [arguments...]
 	#shellcheck disable=SC2154
 	test "$exit_code_for_assert" -eq "$expected_exit_code_for_assert" ||
 		fail 'Command "%s" returned exit code %i but %i was expected!\n' "$*" "$exit_code_for_assert" "$expected_exit_code_for_assert"
+	last_command="$*"
 	unset expected_exit_code_for_assert
 	unset exit_code_for_assert
 }

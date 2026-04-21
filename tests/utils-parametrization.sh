@@ -263,5 +263,5 @@ PARAMETRIZE_COLOR() { # keys
 	esac
 }
 IS_COLOR_ON() {
-	printf '%s' "$COLOR" | grep -Eq '^COLOR-YES-|^COLOR-LONG$'
+	printf '%s' "${COLOR-}" | grep -Eq '^COLOR-YES-|^COLOR-LONG$'
 }
