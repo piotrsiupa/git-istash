@@ -127,7 +127,7 @@ color_lines() { # [config_variable...] default_value
 	set -e
 	color_escape_code="$(get_color "$@")"
 	reset_escape_code="$(get_color 'reset')"
-	sed -E "/./s/^.*\$/$color_escape_code&${color_escape_code:+$reset_escape_code}/"
+	sed -E "/[[:graph:]]/s/^([[:blank:]]*)(.*)\$/\\1$color_escape_code\\2${color_escape_code:+$reset_escape_code}/"
 }
 
 color_error() {
