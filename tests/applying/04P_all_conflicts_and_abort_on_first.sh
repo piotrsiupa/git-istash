@@ -22,6 +22,7 @@ git add aaa
 printf 'ccc\n' >aaa
 printf 'ddd\n' >bbb
 printf 'eee\n' >ccc
+git add ccc
 git stash push -u
 
 SWITCH_HEAD_TYPE
@@ -42,6 +43,7 @@ UU aaa
 '
 assert_files_HT '
 UU aaa		fff|bbb
+A  ccc		eee
 !! ignored0	ignored0
 !! ignored1	ignored1
 '

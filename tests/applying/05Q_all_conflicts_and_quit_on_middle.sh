@@ -23,6 +23,7 @@ git add aaa
 printf 'ccc\n' >aaa
 printf 'ddd\n' >bbb
 printf 'eee\n' >ccc
+git add ccc
 git stash push -u
 
 SWITCH_HEAD_TYPE
@@ -42,6 +43,7 @@ UU aaa
 '
 assert_files_HT '
 UU aaa		fff|bbb
+A  ccc		eee
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
@@ -51,7 +53,7 @@ assert_data_files "$APPLY_OPERATION"
 assert_rebase y
 assert_dotgit_contents_for "$APPLY_OPERATION"
 
-__test_section__ "Continue $APPLY_OPERATION stash"
+__test_section__ "Continue $APPLY_OPERATION stash (0)"
 printf 'jjj\n' >aaa
 git add aaa
 #shellcheck disable=SC2086
@@ -61,6 +63,27 @@ UU aaa
 '
 assert_files_HT '
 UU aaa		jjj|ggg
+   ccc		eee
+!! ignored0	ignored0
+!! ignored1	ignored1
+'
+assert_stash_count 1
+assert_branch_count_HT 1
+assert_data_files "$APPLY_OPERATION"
+assert_rebase y
+assert_dotgit_contents_for "$APPLY_OPERATION"
+
+__test_section__ "Continue $APPLY_OPERATION stash (1)"
+printf 'kkk\n' >aaa
+git add aaa
+#shellcheck disable=SC2086
+assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS
+assert_outputs__apply__conflict "$APPLY_OPERATION" 2 '
+UU aaa
+'
+assert_files_HT '
+UU aaa		kkk|ccc
+   ccc		eee
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
@@ -76,7 +99,8 @@ correct_head_sha="$(get_head_sha_HT)"
 assert_exit_code 0 git istash "$APPLY_OPERATION" "$QUIT_FLAG" $COLOR_FLAGS
 assert_outputs__apply__quit "$APPLY_OPERATION"
 assert_files_HT '
-UU aaa		jjj|ggg
+UU aaa		kkk|ccc
+   ccc		eee
 !! ignored0	ignored0
 !! ignored1	ignored1
 '
