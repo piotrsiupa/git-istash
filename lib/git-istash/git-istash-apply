@@ -338,6 +338,47 @@ print_changes_summary() { # mode
 }
 
 end_with_rebase_problem() {
+	if ! current_rebase_step="$(cat "$(git rev-parse --git-path 'rebase-merge')/msgnum")" \
+		|| ! [ "$current_rebase_step" -eq "$current_rebase_step" ] 2>/dev/null \
+		|| [ "$current_rebase_step" -lt 2 ] || [ "$current_rebase_step" -gt 6 ]
+	then
+		printf 'Cannot determine the current stage of merging the stash into the working directory!\n'
+	else
+		printf 'Currently merging '
+		case "$current_rebase_step" in
+			2) printf 'staged changes' ;;
+			3|4) printf 'unstaged changes' ;;
+			5|6) printf 'untracked changes' ;;
+		esac
+		printf ' from '
+		case "$current_rebase_step" in
+			2|4|6) printf 'stash' ;;
+			3|5) printf 'working directory' ;;
+		esac
+		printf ' into '
+		case "$current_rebase_step" in
+			2|4|6) ;;
+			3|5) printf 'already merged ' ;;
+		esac
+		case "$current_rebase_step" in
+			2|3|4) printf 'staged changes' ;;
+			5|6) printf 'tracked changes' ;;
+		esac
+		case "$current_rebase_step" in
+			2|3|5) ;;
+			4|6) printf ' already merged with ' ;;
+		esac
+		case "$current_rebase_step" in
+			2|3|5) ;;
+			4) printf 'unstaged changes' ;;
+			6) printf 'untracked changes' ;;
+		esac
+		case "$current_rebase_step" in
+			2|4|6) printf ' from working directory' ;;
+			3|5) ;;
+		esac
+		printf '.\n'
+	fi 1>&2
 	printf_hint 'use '\''git istash --continue'\'' after fixing the conflicts\nor, to undo everything '\''git istash %s'\'' did, run '\''git istash --abort'\''\n' "$(get_sub_command_name)"
 	return 2
 }

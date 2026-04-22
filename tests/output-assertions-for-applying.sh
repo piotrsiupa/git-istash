@@ -7,7 +7,14 @@ then
 fi
 
 
-create_continue_or_abort_hint_regex() { # operation
+create_continue_or_abort_hint_regex() { # operation stage
+	case "$2" in
+		0) printf '%s\n' 'Currently merging staged changes from stash into staged changes from working directory\.\n' ;;
+		1) printf '%s\n' 'Currently merging unstaged changes from working directory into already merged staged changes\.\n' ;;
+		2) printf '%s\n' 'Currently merging unstaged changes from stash into staged changes already merged with unstaged changes from working directory\.\n' ;;
+		3) printf '%s\n' 'Currently merging untracked changes from working directory into already merged tracked changes\.\n' ;;
+		4) printf '%s\n' 'Currently merging untracked changes from stash into tracked changes already merged with untracked changes from working directory\.\n' ;;
+	esac
 	printf '%s' '
 		\[<color>33mhint: use '\''git istash --continue'\'' after fixing the conflicts\[<color>0?m\n
 		\[<color>33mhint: or, to undo everything '\''git istash '"$1"\'' did, run '\''git istash --abort'\''\[<color>0?m
@@ -15,11 +22,11 @@ create_continue_or_abort_hint_regex() { # operation
 }
 
 # "conflicts" are one conflict per line in the format: CONFLICT_TYPE FILE_NAME
-assert_outputs__apply__conflict() { # operation conflicts
+assert_outputs__apply__conflict() { # operation stage conflicts
 	# This assertion may be a little frafile because it asserts outputs originated from other Git commands.
 	# The goal is not as much to presisely check this output but rather if it is the intended thing in general and whether there is any additional unwanted text.
 	assert_outputs_with_color "$(
-		sanitize_for_ere "$2" \
+		sanitize_for_ere "$3" \
 		| sed -E -e 's/^\t+//' -e 's/^(..) (.*)$/\2 \1/' \
 		| LC_ALL=C sort \
 		| sed -E -e 's/^(.*) (..)$/\2 \1/' -e '$!s/.$/&\n\\n/' \
@@ -30,23 +37,23 @@ assert_outputs__apply__conflict() { # operation conflicts
 			-e 's/^UD (.+)$/CONFLICT \\(modify\\\/delete\\): \1 deleted in [0-9a-fA-F]{7,40} \\(.*\\) and modified in HEAD\\.  Version HEAD of \1 left in tree\\./' \
 		| convert_escapes
 	)" "
-		$(create_continue_or_abort_hint_regex "$1")
+		$(create_continue_or_abort_hint_regex "$1" "$2")
 	"
 }
-assert_outputs__apply__conflict_HT() { # operation normal_conflicts orphan_conflicts
+assert_outputs__apply__conflict_HT() { # operation stage normal_conflicts orphan_conflicts
 	if ! IS_HEAD_ORPHAN
 	then
-		assert_outputs__apply__conflict "$1" "$2"
+		assert_outputs__apply__conflict "$1" "$2" "$3"
 	else
-		assert_outputs__apply__conflict "$1" "$3"
+		assert_outputs__apply__conflict "$1" "$2" "$4"
 	fi
 }
 
-assert_outputs__apply__failed_resolution() { # operation unresolved_files
+assert_outputs__apply__failed_resolution() { # operation stage unresolved_files
 	assert_outputs_with_color '
-		'"$(sanitize_for_sed "$2")"': needs merge\nYou must edit all merge conflicts and then\nmark them as resolved using git add
+		'"$(sanitize_for_sed "$3")"': needs merge\nYou must edit all merge conflicts and then\nmark them as resolved using git add
 	' "
-		$(create_continue_or_abort_hint_regex "$1")
+		$(create_continue_or_abort_hint_regex "$1" "$2")
 	"
 }
 

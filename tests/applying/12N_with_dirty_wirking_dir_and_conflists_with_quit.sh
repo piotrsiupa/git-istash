@@ -63,7 +63,7 @@ cd xxx
 #shellcheck disable=SC2086
 assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS
 cd -
-assert_outputs__apply__conflict "$APPLY_OPERATION" '
+assert_outputs__apply__conflict "$APPLY_OPERATION" 0 '
 UU aaa
 UU xxx/aaa
 UU yyy/aaa
@@ -93,7 +93,7 @@ cd xxx
 #shellcheck disable=SC2086
 assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS
 cd -
-assert_outputs__apply__conflict "$APPLY_OPERATION" '
+assert_outputs__apply__conflict "$APPLY_OPERATION" 2 '
 UU aaa
 UU xxx/aaa
 UU yyy/aaa
@@ -129,7 +129,7 @@ cd xxx
 #shellcheck disable=SC2086
 assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS
 cd -
-assert_outputs__apply__conflict "$APPLY_OPERATION" '
+assert_outputs__apply__conflict "$APPLY_OPERATION" 4 '
 AA zzz
 AA xxx/zzz
 AA yyy/zzz

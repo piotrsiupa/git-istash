@@ -35,7 +35,7 @@ __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 #shellcheck disable=SC2086
 assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS
-assert_outputs__apply__conflict "$APPLY_OPERATION" '
+assert_outputs__apply__conflict "$APPLY_OPERATION" 0 '
 UU aaa
 '
 assert_files_HT '
@@ -55,7 +55,7 @@ printf 'aaa\n' >aaa
 git add aaa
 #shellcheck disable=SC2086
 assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG"
-assert_outputs__apply__conflict "$APPLY_OPERATION" '
+assert_outputs__apply__conflict "$APPLY_OPERATION" 2 '
 UU bbb
 '
 assert_files_HT '

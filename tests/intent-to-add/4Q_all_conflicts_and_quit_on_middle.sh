@@ -38,7 +38,7 @@ printf 'iii\n' >ccc
 __test_section__ "$CAP_APPLY_OPERATION stash"
 #shellcheck disable=SC2086
 assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS
-assert_outputs__apply__conflict "$APPLY_OPERATION" '
+assert_outputs__apply__conflict "$APPLY_OPERATION" 0 '
 UU aaa
 '
 assert_files_HT '
@@ -57,7 +57,7 @@ printf 'jjj\n' >aaa
 git add aaa
 #shellcheck disable=SC2086
 assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS
-assert_outputs__apply__conflict "$APPLY_OPERATION" '
+assert_outputs__apply__conflict "$APPLY_OPERATION" 1 '
 UU aaa
 '
 assert_files_HT '
@@ -76,7 +76,7 @@ printf 'kkk\n' >aaa
 git add aaa
 #shellcheck disable=SC2086
 assert_exit_code 2 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS
-assert_outputs__apply__conflict "$APPLY_OPERATION" '
+assert_outputs__apply__conflict "$APPLY_OPERATION" 2 '
 UU aaa
 '
 assert_files_HT '

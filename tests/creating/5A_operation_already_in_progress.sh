@@ -37,7 +37,7 @@ __test_section__ "Apply $CAP_APPLY_OPERATION"
 correct_head_sha_0="$(get_head_sha_HT)"
 #shellcheck disable=SC2086
 assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS $SUMMARY_FLAGS
-assert_outputs__apply__conflict_HT "$APPLY_OPERATION" '
+assert_outputs__apply__conflict_HT "$APPLY_OPERATION" 2 '
 UU aaa
 ' '
 DU aaa

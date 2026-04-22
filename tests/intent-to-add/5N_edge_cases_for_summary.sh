@@ -120,7 +120,7 @@ correct_head_sha="$(get_head_sha_HT)"
 printf 'x2*\n' >.git/info/exclude
 #shellcheck disable=SC2086
 assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS
-assert_outputs__apply__conflict "$APPLY_OPERATION" '
+assert_outputs__apply__conflict "$APPLY_OPERATION" 0 '
 AA i2i
 AA i2i_
 AA i2id
@@ -186,7 +186,7 @@ printf 'bbb44_\n' >id2id_
 git add id2i id2i_ id2id id2id_
 #shellcheck disable=SC2086
 assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG"
-assert_outputs__apply__conflict "$APPLY_OPERATION" '
+assert_outputs__apply__conflict "$APPLY_OPERATION" 1 '
 AA t2i
 AA t2i_
 AA t2id
@@ -242,7 +242,7 @@ printf 'aaa44\n' >id2id
 git add id2i id2id
 #shellcheck disable=SC2086
 assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG"
-assert_outputs__apply__conflict "$APPLY_OPERATION" '
+assert_outputs__apply__conflict "$APPLY_OPERATION" 2 '
 AA t2t
 AA t2t_
 '
@@ -296,7 +296,7 @@ git add t2t t2t_
 git rm --force t2id i2id i2id_ id2id
 #shellcheck disable=SC2086
 assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG"
-assert_outputs__apply__conflict "$APPLY_OPERATION" '
+assert_outputs__apply__conflict "$APPLY_OPERATION" 3 '
 AA u2t
 AA u2i
 '
@@ -341,7 +341,7 @@ printf 'aaa13\n' >u2i
 git add u2t u2i
 #shellcheck disable=SC2086
 assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG"
-assert_outputs__apply__conflict "$APPLY_OPERATION" '
+assert_outputs__apply__conflict "$APPLY_OPERATION" 4 '
 AA u2x
 AA u2u
 AA u2u_

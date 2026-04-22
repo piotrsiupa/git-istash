@@ -28,7 +28,7 @@ SWITCH_HEAD_TYPE
 __test_section__ 'Pop stash'
 #shellcheck disable=SC2086
 assert_exit_code 2 git istash pop $COLOR_FLAGS
-assert_outputs__apply__conflict_HT 'pop' '
+assert_outputs__apply__conflict_HT 'pop' 2 '
 UU aaa
 ' '
 DU aaa
