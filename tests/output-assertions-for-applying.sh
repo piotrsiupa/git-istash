@@ -171,11 +171,12 @@ assert_outputs__apply__non_stash_on_pop() {
 	'
 }
 
+create_no_such_commit_regex() { # commit
+	printf '%s' '\[<color>31merror: no commit '\'"$(sanitize_for_sed "$1")"\''\[<color>0?m'
+}
+
 assert_outputs__apply__no_such_commit() { # commit
-	assert_outputs_with_color '
-	' '
-		\[<color>31merror: no commit '\'"$(sanitize_for_sed "$1")"\''\[<color>0?m
-	'
+	assert_outputs_with_color '' "$(create_no_such_commit_regex "$1")"
 }
 
 assert_outputs__apply__no_operation_in_progress() { # operation

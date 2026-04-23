@@ -58,7 +58,6 @@ set_color_for_all() { # value
 	done
 }
 
-in_is_color_enabled_error_handling=n
 is_color_enabled() { # config_variable...
 	if [ $# -eq 0 ]
 	then
@@ -66,31 +65,25 @@ is_color_enabled() { # config_variable...
 		printf 'fatal: not enough arguments for is_color_enabled\n' 1>&2
 		return 128
 	fi
-	if [ "$in_is_color_enabled_error_handling" != y ]
-	then
-		while [ $# -ge 1 ]
-		do
-			if git config --get "$1" 1>/dev/null
+	while [ $# -ge 1 ]
+	do
+		if git config --get "$1" 1>/dev/null
+		then
+			if git config --get-colorbool "$1" 2>/dev/null
 			then
-				if git config --get-colorbool "$1" 2>/dev/null
-				then
-					return 0
-				elif [ $? -eq 1 ]
-				then
-					return 1
-				else
-					in_is_color_enabled_error_handling=y
-					printf_warning 'bad boolean config value '\''%s'\'' for '\''%s'\''\n' "$(git config --get "$1")" "$1"
-					in_is_color_enabled_error_handling=n
-				fi
+				return 0
+			elif [ $? -eq 1 ]
+			then
+				return 1
+			else
+				printf_warning 'bad boolean config value '\''%s'\'' for '\''%s'\''\n' "$(git config --get "$1")" "$1"
 			fi
-			shift
-		done
-	fi
+		fi
+		shift
+	done
 	git config --get-colorbool ''
 }
 
-in_get_color_error_handling=n
 get_color() { # [config_variable...] default_value
 	if [ $# -eq 0 ]
 	then
@@ -98,26 +91,19 @@ get_color() { # [config_variable...] default_value
 		printf 'fatal: not enough arguments for get_color\n' 1>&2
 		return 128
 	fi
-	if [ "$in_get_color_error_handling" != y ]
-	then
-		while [ $# -ge 2 ]
-		do
-			if git config --get "$1" 1>/dev/null
+	while [ $# -ge 2 ]
+	do
+		if git config --get "$1" 1>/dev/null
+		then
+			if git config --get-color "$1" 2>/dev/null
 			then
-				if git config --get-color "$1" 2>/dev/null
-				then
-					return 0
-				else
-					in_get_color_error_handling=y
-					printf_warning 'bad color config value '\''%s'\'' for '\''%s'\''\n' "$(git config --get "$1")" "$1"
-					in_get_color_error_handling=n
-				fi
+				return 0
+			else
+				printf_warning 'bad color config value '\''%s'\'' for '\''%s'\''\n' "$(git config --get "$1")" "$1"
 			fi
-			shift
-		done
-	else
-		shift $(($# - 1))
-	fi
+		fi
+		shift
+	done
 	git config --get-color '' "$1"
 }
 
@@ -130,14 +116,42 @@ color_lines() { # [config_variable...] default_value
 	sed -E "/[[:graph:]]/s/^([[:blank:]]*)(.*)\$/\\1$color_escape_code\\2${color_escape_code:+$reset_escape_code}/"
 }
 
+# This prevents an infinite loop when "color.istash.error" (or similar) is bad.
+is_checking_if_color_is_enabled_for_warnings_right_now=n
 is_color_enabled_for_errors() {
-	is_color_enabled 'color.istash.error' 'color.istash'
+	if [ "$is_checking_if_color_is_enabled_for_warnings_right_now" = n ]
+	then
+		is_checking_if_color_is_enabled_for_warnings_right_now=y
+		if is_color_enabled 'color.istash.error' 'color.istash'
+		then
+			is_checking_if_color_is_enabled_for_warnings_right_now=n
+			return 0
+		else
+			is_checking_if_color_is_enabled_for_warnings_right_now=n
+			return 1
+		fi
+	else
+		git config --get-colorbool ''
+	fi
+}
+
+# This prevents an infinite loop when "color.istash.error.warning" (or similar) is bad.
+is_coloring_lines_for_warnings_right_now=n
+color_lines_for_warnings() {
+	if [ "$is_coloring_lines_for_warnings_right_now" = n ]
+	then
+		is_coloring_lines_for_warnings_right_now=y
+		color_lines 'color.istash.error.warning' 'yellow'
+		is_coloring_lines_for_warnings_right_now=n
+	else
+		color_lines 'yellow'
+	fi
 }
 
 color_warning() {
 	if is_color_enabled_for_errors
 	then
-		color_lines 'color.istash.error.warning' 'yellow'
+		color_lines_for_warnings
 	else
 		cat
 	fi

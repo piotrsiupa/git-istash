@@ -54,6 +54,7 @@ MM aaa
 ' 0 "$stash_sha" "
 	$(create_bad_color_config_value_regex 'silvery transparent sepia' 'color.istash.error.warning')\\n
 	$(create_bad_summary_mode_regex 'print literally everything')\\n
+	$(create_bad_color_config_value_regex 'silvery transparent sepia' 'color.istash.error.warning')\\n
 	$(create_bad_color_config_value_regex 'a little goldish but better' 'color.istash.summary.updated')
 "
 assert_files_HT '
