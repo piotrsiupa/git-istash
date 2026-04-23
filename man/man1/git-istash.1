@@ -611,7 +611,7 @@ If unset, then the value of \fBcolor.advice.hint\fR is used (\fByellow\fR by def
 
 color.istash.error
 .RS 4
-A boolean to enable/disable color in errors printed by \fBistash\fR. \
+A boolean to enable/disable color in warnings and errors printed by \fBistash\fR. \
 May be set to \fBalways\fR, \fBfalse\fR (or \fBnever\fR) or \fBauto\fR (or \fBtrue\fR), in which case colors are used only when the error output goes to a terminal. \
 If unset, then the value of \fBcolor.istash\fR is used.
 .RE
@@ -631,6 +631,12 @@ color.istash.error.normal
 .RS 4
 Use customized color for normal (user) errors printed by \fBistash\fR. \
 If unset, then the value of \fBcolor.istash.error.default\fR is used (\fBred\fR by default).
+.RE
+
+color.istash.error.warning
+.RS 4
+Use customized color for warning printed by \fBistash\fR. \
+If unset, then it defaults to \fByellow\fR.
 .RE
 
 color.istash.summary

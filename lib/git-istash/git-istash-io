@@ -80,7 +80,7 @@ is_color_enabled() { # config_variable...
 					return 1
 				else
 					in_is_color_enabled_error_handling=y
-					printf_error 'bad boolean config value '\''%s'\'' for '\''%s'\''\n' "$(git config --get "$1")" "$1"
+					printf_warning 'bad boolean config value '\''%s'\'' for '\''%s'\''\n' "$(git config --get "$1")" "$1"
 					in_is_color_enabled_error_handling=n
 				fi
 			fi
@@ -109,7 +109,7 @@ get_color() { # [config_variable...] default_value
 					return 0
 				else
 					in_get_color_error_handling=y
-					printf_error 'bad color config value '\''%s'\'' for '\''%s'\''\n' "$(git config --get "$1")" "$1"
+					printf_warning 'bad color config value '\''%s'\'' for '\''%s'\''\n' "$(git config --get "$1")" "$1"
 					in_get_color_error_handling=n
 				fi
 			fi
@@ -130,8 +130,28 @@ color_lines() { # [config_variable...] default_value
 	sed -E "/[[:graph:]]/s/^([[:blank:]]*)(.*)\$/\\1$color_escape_code\\2${color_escape_code:+$reset_escape_code}/"
 }
 
+is_color_enabled_for_errors() {
+	is_color_enabled 'color.istash.error' 'color.istash'
+}
+
+color_warning() {
+	if is_color_enabled_for_errors
+	then
+		color_lines 'color.istash.error.warning' 'yellow'
+	else
+		cat
+	fi
+}
+
+printf_warning() { # arg...
+	#shellcheck disable=SC2059
+	printf "$@" \
+	| sed -E '/[[:graph:]]/s/^/warning: /' \
+	| color_warning
+} 1>&2
+
 color_error() {
-	if is_color_enabled 'color.istash.error' 'color.istash'
+	if is_color_enabled_for_errors
 	then
 		color_lines 'color.istash.error.normal' 'color.istash.error.default' 'red'
 	else
@@ -142,7 +162,7 @@ color_error() {
 printf_error() { # arg...
 	#shellcheck disable=SC2059
 	printf "$@" \
-	| sed -E '/./s/^/error: /' \
+	| sed -E '/[[:graph:]]/s/^/error: /' \
 	| color_error
 } 1>&2
 
@@ -155,7 +175,7 @@ error() { # arg...
 }
 
 color_fatal() {
-	if is_color_enabled 'color.istash.error' 'color.istash'
+	if is_color_enabled_for_errors
 	then
 		color_lines 'color.istash.error.fatal' 'color.istash.error.default' 'bold red'
 	else
@@ -166,7 +186,7 @@ color_fatal() {
 printf_fatal() { # arg...
 	#shellcheck disable=SC2059
 	printf "$@" \
-	| sed -E '/./s/^/fatal: /' \
+	| sed -E '/[[:graph:]]/s/^/fatal: /' \
 	| color_fatal
 } 1>&2
 
@@ -190,7 +210,7 @@ color_hint() {
 printf_hint() { # arg...
 	#shellcheck disable=SC2059
 	printf "$@" \
-	| sed -E '/./s/^/hint: /' \
+	| sed -E '/[[:graph:]]/s/^/hint: /' \
 	| color_hint
 } 1>&2
 
@@ -245,7 +265,7 @@ get_summary_mode() {
 	summary_mode="$(git config --get 'istash.summary' || true)"
 	if ! normalize_summary_mode "$summary_mode"
 	then
-		printf_error 'bad summary mode config value '\''%s'\'' for '\''%s'\''\n' "$summary_mode" 'istash.summary'
+		printf_warning 'bad summary mode config value '\''%s'\'' for '\''%s'\''\n' "$summary_mode" 'istash.summary'
 		printf 'complete'
 	fi
 }

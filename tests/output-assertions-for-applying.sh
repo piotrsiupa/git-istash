@@ -318,7 +318,7 @@ assert_outputs__apply__wrong_stash_commit_messages() { # stash_name
 }
 
 create_bad_summary_mode_regex() { # mode
-	printf '%s' '\[<color>31merror: bad summary mode config value '\'"$(sanitize_for_sed "$1")"\'' for '\''istash\.summary'\''\[<color>0?m'
+	printf '%s' '\[<color>33mwarning: bad summary mode config value '\'"$(sanitize_for_sed "$1")"\'' for '\''istash\.summary'\''\[<color>0?m'
 }
 
 assert_outputs__apply__bad_summary_mode_in_flag() { # mode

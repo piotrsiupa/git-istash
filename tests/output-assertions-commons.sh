@@ -60,9 +60,9 @@ assert_outputs__missing_data_file() { # broken_op data_file [second_data_file]
 }
 
 create_bad_boolean_config_value_regex() { # value key
-	printf '%s' '\[<color>31merror: bad boolean config value '\'"$(sanitize_for_sed "$1")"\'' for '\'"$(sanitize_for_sed "$2")"\''\[<color>0?m'
+	printf '%s' '\[<color>33mwarning: bad boolean config value '\'"$(sanitize_for_sed "$1")"\'' for '\'"$(sanitize_for_sed "$2")"\''\[<color>0?m'
 }
 
 create_bad_color_config_value_regex() { # value key
-	printf '%s' '\[<color>31merror: bad color config value '\'"$(sanitize_for_sed "$1")"\'' for '\'"$(sanitize_for_sed "$2")"\''\[<color>0?m'
+	printf '%s' '\[<color>33mwarning: bad color config value '\'"$(sanitize_for_sed "$1")"\'' for '\'"$(sanitize_for_sed "$2")"\''\[<color>0?m'
 }

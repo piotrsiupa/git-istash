@@ -13,7 +13,7 @@ prepare_repository
 test "$GIT_CONFIG_COUNT" = 1 \
 	|| fail 'Error in test: expected GIT_CONFIG_COUNT to be 1!\n'
 GIT_CONFIG_COUNT=4
-GIT_CONFIG_KEY_1='color.istash.error.normal'
+GIT_CONFIG_KEY_1='color.istash.error.warning'
 GIT_CONFIG_VALUE_1='silvery transparent sepia'
 GIT_CONFIG_KEY_2='color.istash.summary.updated'
 GIT_CONFIG_VALUE_2='a little goldish but better'
@@ -52,7 +52,7 @@ assert_outputs__apply__success "$APPLY_OPERATION" '
 MM aaa
 ?A ddd
 ' 0 "$stash_sha" "
-	$(create_bad_color_config_value_regex 'silvery transparent sepia' 'color.istash.error.normal')\\n
+	$(create_bad_color_config_value_regex 'silvery transparent sepia' 'color.istash.error.warning')\\n
 	$(create_bad_summary_mode_regex 'print literally everything')\\n
 	$(create_bad_color_config_value_regex 'a little goldish but better' 'color.istash.summary.updated')
 "
