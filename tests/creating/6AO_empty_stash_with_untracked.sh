@@ -10,6 +10,7 @@ PARAMETRIZE_KEEP_INDEX 'DEFAULT'
 PARAMETRIZE_STAGED
 PARAMETRIZE_UNSTAGED
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 
 __end_of_initialization__
 
@@ -21,7 +22,7 @@ SWITCH_HEAD_TYPE
 __test_section__ "$CAP_CREATE_OPERATION stash"
 printf 'aaa\n' >aaa
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $COLOR_FLAGS -m 'empty stash' $ALL_FLAGS $UNTRACKED_FLAGS
+assert_exit_code 1 git istash $QUIET_FLAGS "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $COLOR_FLAGS -m 'empty stash' $ALL_FLAGS $UNTRACKED_FLAGS
 assert_outputs__create__no_changes_to_stash
 assert_files_HT '
 ?? aaa		aaa

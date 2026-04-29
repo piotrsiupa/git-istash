@@ -8,6 +8,7 @@ PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 PARAMETRIZE_SUMMARY
 
 __end_of_initialization__
@@ -55,7 +56,7 @@ rm 'b/0/k'
 printf 'zzz\n' >'b/0/l'
 cd 'b'
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $COLOR_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
+assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $COLOR_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS $QUIET_FLAGS $UNTRACKED_FLAGS
 cd -
 assert_outputs__create__success '*' 0 ''
 new_stash_sha_CO="$stdout"
@@ -159,7 +160,7 @@ RESTORE_HEAD_TYPE
 __test_section__ 'Pop stash'
 stash_sha="$(git rev-parse stash)"
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash pop $COLOR_FLAGS $SUMMARY_FLAGS
+assert_exit_code 0 git istash pop $COLOR_FLAGS $SUMMARY_FLAGS $QUIET_FLAGS
 assert_outputs__apply__success 'pop' '
 M  a/0/i
 D  a/0/k

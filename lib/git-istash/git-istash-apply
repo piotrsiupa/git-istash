@@ -21,6 +21,7 @@ print_help() {
 	printf '\t--no-color\t- Same as --color=never.\n'
 	printf '    -c, --continue\t- Resume the previous operation.\n\t\t\t  (Conflicts need to be resolved before that.)\n'
 	printf '    -h\t\t\t- Print this help text and exit.\n'
+	printf '    -q, --quiet\t\t- Suppress human-readable summaries and information.\n'
 	printf '\t--quit\t\t- Abort the operation but don'\''t restore the repository\n\t\t\t  state nor move the HEAD.\n'
 	printf '\t--summary=<mode> - Set summary to "complete" / "non-ignored" / "off".\n'
 }
@@ -105,7 +106,12 @@ put_files_into_working_copy() { # untracked_changes_sha non_staged_changes_sha s
 	| xargs -r0 -- git --literal-pathspecs add --intent-to-add --
 }
 
-print_changes_summary() { # mode
+print_changes_summary() {
+	summary_mode="$(get_summary_mode)"
+	if [ "$summary_mode" = 'off' ]
+	then
+		return
+	fi
 	if is_color_enabled_for_summary
 	then
 		header_color_escape_code="$(get_color_for_summary 'header')"
@@ -127,7 +133,7 @@ print_changes_summary() { # mode
 			git diff --no-renames --name-only -z "$working_dir_changes_sha~2" "$staged_changes_sha"
 			git diff --no-renames --name-only -z "$working_dir_changes_sha~1" "$non_staged_changes_sha"
 			git diff --no-renames --name-only -z "$working_dir_changes_sha~0" "$untracked_changes_sha"
-			if [ "$1" = 'complete' ]
+			if [ "$summary_mode" = 'complete' ]
 			then
 				git ls-files --no-cached --no-deleted --no-modified --others --no-ignored --no-stage --no-killed --exclude-standard -z
 				git ls-files --no-cached --no-deleted --no-modified --others --ignored --no-stage --no-killed --exclude-standard -z
@@ -266,7 +272,7 @@ print_changes_summary() { # mode
 						printf 'u M\t%s\n' "$file"
 					fi
 				fi
-			elif [ "$1" = 'complete' ]
+			elif [ "$summary_mode" = 'complete' ]
 			then
 				if [ "$ou" = '1' ]
 				then
@@ -337,7 +343,7 @@ print_changes_summary() { # mode
 	fi
 }
 
-end_with_rebase_problem() {
+print_rebase_problem() {
 	if ! current_rebase_step="$(cat "$(git rev-parse --git-path 'rebase-merge')/msgnum")" \
 		|| ! [ "$current_rebase_step" -eq "$current_rebase_step" ] 2>/dev/null \
 		|| [ "$current_rebase_step" -lt 2 ] || [ "$current_rebase_step" -gt 6 ]
@@ -380,6 +386,13 @@ end_with_rebase_problem() {
 		printf '.\n'
 	fi 1>&2
 	printf_hint 'use '\''git istash --continue'\'' after fixing the conflicts\nor, to undo everything '\''git istash %s'\'' did, run '\''git istash --abort'\''\n' "$(get_sub_command_name)"
+}
+
+end_with_rebase_problem() {
+	if [ "$is_quiet" = n ]
+	then
+		print_rebase_problem
+	fi
 	return 2
 }
 end_with_success() {
@@ -410,15 +423,14 @@ end_with_success() {
 	esac
 	put_files_into_working_copy "$untracked_changes_sha" "$non_staged_changes_sha" "$staged_changes_sha"
 	delete_data
-	printf 'Stash of the old working dir: %s\n' "$(prepare_stash_of_working_dir)"
-	summary_mode="$(get_summary_mode)"
-	if [ "$summary_mode" != 'off' ]
+	if [ "$is_quiet" != y ]
 	then
-		print_changes_summary "$summary_mode"
-	fi
-	if [ "$is_pop" = n ]
-	then
-		printf '\nSuccessfully applied the stash\n'
+		printf 'Stash of the old working dir: %s\n' "$(prepare_stash_of_working_dir)"
+		print_changes_summary
+		if [ "$is_pop" = n ]
+		then
+			printf '\nSuccessfully applied the stash\n'
+		fi
 	fi
 }
 
@@ -492,12 +504,22 @@ prepare_stash_of_working_dir() {
 	fi
 }
 
-start_rebase() { # untangled_stash_sha
+run_first_time_rebase() { # untangled_stash_sha
 	todo_list_editor="sed -i -E \
 			-e '1 i pick $working_dir_changes_sha~2 Staged working directory' \
 			-e '2 i pick $working_dir_changes_sha~1 Unstaged working directory' \
 			-e '3 i pick $working_dir_changes_sha~0 Untracked working directory'"
-	if GIT_EDITOR="$todo_list_editor" git rebase --onto "$current_branch" "$1~3" "$1" --empty=keep --keep-empty --reapply-cherry-picks --interactive 2>/dev/null
+	set -- --onto "$current_branch" "$1~3" "$1" --empty=keep --keep-empty --reapply-cherry-picks --interactive
+	if [ "$is_quiet" = n ]
+	then
+		GIT_EDITOR="$todo_list_editor" git rebase "$@" 2>/dev/null
+	else
+		GIT_EDITOR="$todo_list_editor" git rebase "$@" 1>/dev/null 2>&1
+	fi
+}
+
+start_rebase() { # untangled_stash_sha
+	if run_first_time_rebase "$1"
 	then
 		end_with_success
 	elif are_there_conflicts
@@ -523,6 +545,15 @@ do_start() { # args...
 	start_rebase "$untangled_stash_sha"
 }
 
+run_continued_rebase() {
+	if [ "$is_quiet" = n ]
+	then
+		git -c 'core.editor=true' rebase --continue
+	else
+		git -c 'core.editor=true' rebase --continue 1>/dev/null
+	fi
+}
+
 do_continue() { # args...
 	check_args_for_apply 0 "$@"
 	check_data_files y n
@@ -530,11 +561,13 @@ do_continue() { # args...
 	
 	git commit --quiet --allow-empty --no-edit 1>/dev/null 2>&1 || true
 	exec 3>&1
-	if stderr="$(git -c 'core.editor=true' rebase --continue 2>&1 1>&3)"
+	if stderr="$(run_continued_rebase 2>&1 1>&3)"
 	then
+		exec 3>&-
 		end_with_success
 	elif are_there_conflicts
 	then
+		exec 3>&-
 		end_with_rebase_problem
 	else
 		exec 3>&-
@@ -542,7 +575,6 @@ do_continue() { # args...
 		printf '%s' "$stderr" | color_fatal 1>&2
 		fatal
 	fi
-	exec 3>&-
 }
 
 do_abort() { # args...
@@ -580,17 +612,23 @@ do_abort() { # args...
 			;;
 	esac
 	exec 3>&-
+	
 	if [ "$succeeded_switch" = y ]
 	then
 		put_files_into_working_copy "$(git rev-parse "$working_dir_changes_sha~0")" "$(git rev-parse "$working_dir_changes_sha~1")" "$(git rev-parse "$working_dir_changes_sha~2")"
 		is_really_pop="$(if [ -f "$(make_stash_data_file_path)" ] ; then printf 'y' ; else printf 'n' ; fi)"
+		
 		delete_data
-		if [ "$is_really_pop" = n ]
+		
+		if [ "$is_quiet" = n ]
 		then
-			printf 'Successfully aborted '\''git istash apply'\''\n'
-		else
-			printf 'Successfully aborted '\''git istash pop'\''\n'
-		fi 1>&2
+			if [ "$is_really_pop" = n ]
+			then
+				printf 'Successfully aborted '\''git istash apply'\''\n'
+			else
+				printf 'Successfully aborted '\''git istash pop'\''\n'
+			fi 1>&2
+		fi
 	else
 		printf_fatal 'failed to restore HEAD to initial position\n'
 		printf '%s\n' "$error_message" | color_fatal 1>&2
@@ -605,19 +643,27 @@ do_quit() { # args...
 	
 	if [ "$is_pop" = n ]
 	then
-		exec sh "$lib_dir/git-istash-pop" --quit "$@"
+		set -- --quit "$@"
+		if [ "$is_quiet" = y ]
+		then
+			set -- --quiet "$@"
+		fi
+		exec sh "$lib_dir/git-istash-pop" "$@"
 	fi
 	
 	git rebase --quit 2>/dev/null || true  # Errors are ignored because if rebase is not in progress or broken, we still want to remove the data files.
 	is_really_pop="$(if [ -f "$(make_stash_data_file_path)" ] ; then printf 'y' ; else printf 'n' ; fi)"
 	delete_data
 	
-	if [ "$is_really_pop" = n ]
+	if [ "$is_quiet" = n ]
 	then
-		printf 'Successfully quit '\''git istash apply'\''\n'
-	else
-		printf 'Successfully quit '\''git istash pop'\''\n'
-	fi 1>&2
+		if [ "$is_really_pop" = n ]
+		then
+			printf 'Successfully quit '\''git istash apply'\''\n'
+		else
+			printf 'Successfully quit '\''git istash pop'\''\n'
+		fi 1>&2
+	fi
 }
 
 do_apply() { # args...
@@ -636,12 +682,13 @@ do_apply() { # args...
 }
 
 getopt_short_options='chq'
-getopt_long_options='abort,_called-from-pop,_called-from-pop_,color::,no-color,continue,quit,summary:'
+getopt_long_options='abort,_called-from-pop,_called-from-pop_,color::,no-color,continue,quiet,quit,summary:'
 normalized_options="$(get_options_color "$getopt_short_options" "$getopt_long_options" "$@")"
 eval set -- "$normalized_options"
 abort_set=n
 is_pop=n
 continue_set=n
+is_quiet=n
 quit_set=n
 while true
 do
@@ -666,7 +713,10 @@ do
 		print_help
 		exit 0
 		;;
-	-q|--quit)
+	-q|--quiet)
+		is_quiet=y
+		;;
+	--quit)
 		quit_set=y
 		;;
 	--summary)

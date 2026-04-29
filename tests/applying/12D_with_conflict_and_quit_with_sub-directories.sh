@@ -6,6 +6,7 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_QUIT
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 
 __end_of_initialization__
 
@@ -48,7 +49,7 @@ __test_section__ "$CAP_APPLY_OPERATION stash"
 mkdir -p xxx
 cd xxx
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS
+assert_exit_code 2 git istash "$APPLY_OPERATION" $QUIET_FLAGS $COLOR_FLAGS
 cd -
 assert_outputs__apply__conflict_HT "$APPLY_OPERATION" 0 '
 UU aaa
@@ -89,7 +90,7 @@ printf 'eee2\n' >yyy/aaa
 git add aaa xxx/aaa yyy/aaa
 cd xxx
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$APPLY_OPERATION" "$QUIT_FLAG" $COLOR_FLAGS
+assert_exit_code 0 git istash "$APPLY_OPERATION" "$QUIT_FLAG" $QUIET_FLAGS $COLOR_FLAGS
 cd -
 assert_outputs__apply__quit "$APPLY_OPERATION"
 assert_files_HT '

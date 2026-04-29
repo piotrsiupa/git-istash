@@ -356,6 +356,18 @@ You can call \fBgit istash apply \-\-abort\fR on an active pop operation and it 
 .RE
 
 .PP
+\fB\-\-quiet\fR
+.RS 4
+Suppress human-readable summaries and informative text. \
+This is most messages (even warnings), except for errors, machine-readable data (stash SHAs) and output related to the \fB\-\-patch\fR option.
+.br
+(Exit codes remain the same, unlike in some other git commands.)
+.sp
+This option is primarily intended for scripts. \
+It speeds up the execution by skipping some operations intended only for display purposes, such as creating a stash of the previous working directory changes or generating a change summary.
+.RE
+
+.PP
 \fB\-\-color[=<when>]\fR
 .RS 4
 Use color in output. \

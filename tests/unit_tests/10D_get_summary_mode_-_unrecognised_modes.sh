@@ -9,6 +9,7 @@ cat >'get_summary_mode.sh' <<EOF
 #!/usr/bin/env sh
 set -eu
 . '$(cd - 1>/dev/null ; pwd)/../lib/git-istash/git-istash-io'
+is_quiet=n
 get_summary_mode
 EOF
 chmod +x 'get_summary_mode.sh'

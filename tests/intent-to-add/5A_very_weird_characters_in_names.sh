@@ -19,6 +19,7 @@ PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 PARAMETRIZE_SUMMARY
 
 __end_of_initialization__
@@ -41,7 +42,7 @@ printf 'x\n' >'tra	=ÿþ€{}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©cked-dir1/tra
 printf 'x\n' >'tra	=ÿþ€{}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©cked-dir1/tracked-dir2/bo	=ÿþ€{}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'
 git add --intent-to-add .
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$CREATE_OPERATION" $COLOR_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
+assert_exit_code 0 git istash $QUIET_FLAGS "$CREATE_OPERATION" $COLOR_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
 assert_outputs__create__success '*' 0 ''
 new_stash_sha_CO="$stdout"
 assert_files_HTCO '
@@ -78,7 +79,7 @@ RESTORE_HEAD_TYPE
 __test_section__ 'Pop stash'
 stash_sha="$(git rev-parse stash)"
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash pop $COLOR_FLAGS $SUMMARY_FLAGS
+assert_exit_code 0 git istash pop $QUIET_FLAGS $COLOR_FLAGS $SUMMARY_FLAGS
 assert_outputs__apply__success 'pop' '
  A file
  A bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th

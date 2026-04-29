@@ -5,6 +5,7 @@ non_essential_test
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 
 __end_of_initialization__
 
@@ -37,7 +38,7 @@ printf '#!/usr/bin/env sh\nexit 1\n' >.git/hooks/pre-rebase
 chmod +x .git/hooks/pre-rebase
 correct_head_sha="$(get_head_sha_HT)"
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash "$APPLY_OPERATION" $COLOR_FLAGS
+assert_exit_code 1 git istash "$APPLY_OPERATION" $QUIET_FLAGS $COLOR_FLAGS
 assert_outputs__apply__no_rebase_in_progress_on_abort "$APPLY_OPERATION"
 assert_files_HT '
    aaa		ccc

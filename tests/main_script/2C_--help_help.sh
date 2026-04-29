@@ -11,6 +11,7 @@ fi
 
 PARAMETRIZE_SUBCOMMAND
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 PARAMETRIZE_OPTION true 'HELP_FLAG' '' 'help: && --help && --hel & --h'  # "-h" has a separate test because it behaves differently
 
 __end_of_initialization__
@@ -32,7 +33,7 @@ chmod +x './man'
 PATH="$(pwd):$PATH"
 export PATH
 #shellcheck disable=SC2086
-assert_exit_code 0 git -c help.format=man -c man.mock_man.cmd="$(pwd)/man" -c man.viewer=mock_man istash $COLOR_FLAGS $SUBCOMMAND "$HELP_FLAG"
+assert_exit_code 0 git -c help.format=man -c man.mock_man.cmd="$(pwd)/man" -c man.viewer=mock_man istash $COLOR_FLAGS $QUIET_FLAGS $SUBCOMMAND "$HELP_FLAG"
 ! test -f './error.txt' ||
 	fail '%s\n' "$(cat './error.txt')"
 test -f './call-to-man.txt' ||

@@ -6,6 +6,7 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_CONTINUE
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 PARAMETRIZE_SUMMARY
 
 __end_of_initialization__
@@ -38,7 +39,7 @@ printf 'iii\n' >ccc
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS $SUMMARY_FLAGS
+assert_exit_code 2 git istash "$APPLY_OPERATION" $QUIET_FLAGS $COLOR_FLAGS $SUMMARY_FLAGS
 assert_outputs__apply__conflict "$APPLY_OPERATION" 0 '
 UU aaa
 '
@@ -58,7 +59,7 @@ __test_section__ "Continue $APPLY_OPERATION stash (0)"
 printf 'jjj\n' >aaa
 git add aaa
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG" $SUMMARY_FLAGS
+assert_exit_code 2 git istash "$APPLY_OPERATION" $QUIET_FLAGS $COLOR_FLAGS "$CONTINUE_FLAG" $SUMMARY_FLAGS
 assert_outputs__apply__conflict "$APPLY_OPERATION" 1 '
 UU aaa
 '
@@ -78,7 +79,7 @@ __test_section__ "Continue $APPLY_OPERATION stash (1)"
 printf 'kkk\n' >aaa
 git add aaa
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG" $SUMMARY_FLAGS
+assert_exit_code 2 git istash "$APPLY_OPERATION" $QUIET_FLAGS $COLOR_FLAGS "$CONTINUE_FLAG" $SUMMARY_FLAGS
 assert_outputs__apply__conflict "$APPLY_OPERATION" 2 '
 UU aaa
 '
@@ -98,7 +99,7 @@ __test_section__ "Continue $APPLY_OPERATION stash (2)"
 printf 'lll\n' >aaa
 git add aaa
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG" $SUMMARY_FLAGS
+assert_exit_code 2 git istash "$APPLY_OPERATION" $QUIET_FLAGS $COLOR_FLAGS "$CONTINUE_FLAG" $SUMMARY_FLAGS
 assert_outputs__apply__conflict "$APPLY_OPERATION" 3 '
 AA ccc
 '
@@ -119,7 +120,7 @@ __test_section__ "Continue $APPLY_OPERATION stash (3)"
 printf 'mmm\n' >ccc
 git add ccc
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG" $SUMMARY_FLAGS
+assert_exit_code 2 git istash "$APPLY_OPERATION" $QUIET_FLAGS $COLOR_FLAGS "$CONTINUE_FLAG" $SUMMARY_FLAGS
 assert_outputs__apply__conflict "$APPLY_OPERATION" 4 '
 AA bbb
 '
@@ -141,7 +142,7 @@ printf 'nnn\n' >bbb
 git add bbb ccc
 stash_sha="$(git rev-parse stash)"
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG" $SUMMARY_FLAGS
+assert_exit_code 0 git istash "$APPLY_OPERATION" $QUIET_FLAGS $COLOR_FLAGS "$CONTINUE_FLAG" $SUMMARY_FLAGS
 assert_outputs__apply__success "$APPLY_OPERATION" '
 MM aaa
 ?M bbb

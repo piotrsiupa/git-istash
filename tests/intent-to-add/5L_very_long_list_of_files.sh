@@ -33,6 +33,7 @@ PARAMETRIZE_KEEP_INDEX 'NO'
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 PARAMETRIZE_SUMMARY
 
 __end_of_initialization__
@@ -77,7 +78,7 @@ do
 	printf 'ccc\n' >"$file_name"
 done
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $UNTRACKED_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS $COLOR_FLAGS --message 'the biggest stash'
+assert_exit_code 0 git istash "$CREATE_OPERATION" $QUIET_FLAGS $KEEP_INDEX_FLAGS $UNTRACKED_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS $COLOR_FLAGS --message 'the biggest stash'
 assert_outputs__create__success '*' 0 'the biggest stash'
 new_stash_sha_CO="$stdout"
 assert_files_HT '
@@ -103,7 +104,7 @@ RESTORE_HEAD_TYPE
 __test_section__ 'Pop stash'
 stash_sha="$(git rev-parse stash)"
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash pop $SUMMARY_FLAGS $COLOR_FLAGS
+assert_exit_code 0 git istash pop $QUIET_FLAGS $SUMMARY_FLAGS $COLOR_FLAGS
 assert_outputs__apply__success 'pop' "$(
 	printf '%s\n' "$tracked_files" | sed -E -e 's/^/AM /'
 	printf '%s\n' "$untracked_files" | sed -E -e 's/^/?A /'

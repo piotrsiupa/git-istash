@@ -5,6 +5,7 @@ non_essential_test
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 
 __end_of_initialization__
 
@@ -21,7 +22,7 @@ SWITCH_HEAD_TYPE
 __test_section__ "$CAP_APPLY_OPERATION stash (without changes)"
 correct_head_sha="$(get_head_sha_HT)"
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash "$APPLY_OPERATION" $COLOR_FLAGS 0 0
+assert_exit_code 1 git istash "$APPLY_OPERATION" $COLOR_FLAGS 0 0 $QUIET_FLAGS
 assert_outputs__too_many_arguments "$APPLY_OPERATION"
 assert_files_HT '
 !! ignored0	ignored0
@@ -41,7 +42,7 @@ printf 'aaa\n' >aaa
 git add aaa
 printf 'bbb\n' >aaa
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash "$APPLY_OPERATION" $COLOR_FLAGS 0 0
+assert_exit_code 1 git istash "$APPLY_OPERATION" $COLOR_FLAGS 0 0 $QUIET_FLAGS
 assert_outputs__too_many_arguments "$APPLY_OPERATION"
 assert_files_HT '
 AM aaa		bbb	aaa

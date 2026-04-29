@@ -2,6 +2,7 @@
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 
 __end_of_initialization__
 
@@ -35,7 +36,7 @@ SWITCH_HEAD_TYPE
 __test_section__ 'Apply stash'
 correct_head_sha="$(get_head_sha_HT)"
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash apply "$stash_sha" $COLOR_FLAGS
+assert_exit_code 1 git istash apply "$stash_sha" $QUIET_FLAGS $COLOR_FLAGS
 assert_outputs__apply__wrong_number_of_untracked_stash_parents "$stash_sha"
 assert_files_HT '
    aaa		aaa

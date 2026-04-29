@@ -26,6 +26,7 @@ print_help() {
 	printf '\t--patch\t\t- Interactively select non-staged chunks to stash.\n'
 	printf '\t--pathspec-from-file=FILE - Read pathspec from the specified file.\n'
 	printf '\t--pathspec-file-nul - Treat the pathspec file as NUL-separated.\n\t\t\t  (Only valid with --pathspec-from-file.)\n'
+	printf '    -q, --quiet\t\t- Suppress human-readable summaries and information.\n'
 	printf '    -S, --staged\t- Left intact all changes NOT already added to the index\n\t\t\t  and don'\''t add them to stash.\n'
 	printf '    -u, --include-untracked - Stash and clean also untracked files.\n'
 	printf '\t--no-include-untracked - Do not touch untracked files even with --all.\n'
@@ -34,6 +35,8 @@ print_help() {
 check_pathspec_for_implicit_push() ( # args...
 	normalized_options="$(get_options_color -R "$getopt_short_options" "$getopt_long_options" "$@")"
 	eval set -- "$normalized_options"
+	is_quiet=n
+	problem_found=n
 	while [ $# -ne 0 ]
 	do
 		if [ "$1" = '--' ]
@@ -47,6 +50,9 @@ check_pathspec_for_implicit_push() ( # args...
 			then
 				set_color_for_all "$1"
 				shift
+			elif [ "$option_name" = 'quiet' ]
+			then
+				is_quiet=y
 			elif printf '%s' "$getopt_long_options" | grep -Eq "(^|,)$option_name:(,|\$)"
 			then
 				shift
@@ -55,16 +61,28 @@ check_pathspec_for_implicit_push() ( # args...
 		then
 			option_letter="$(printf '%s' "$1" | sed -E 's/^-//')"
 			shift
-			if printf '%s' "$getopt_short_options" | grep -Eq "$option_letter:"
+			if [ "$option_letter" = 'q' ]
+			then
+				is_quiet=y
+			elif printf '%s' "$getopt_short_options" | grep -Eq "$option_letter:"
 			then
 				shift
 			fi
 		else
-			printf_error 'subcommand wasn'\''t specified; '\''push'\'' can'\''t be assumed due to unexpected token '\''%s'\''\n' "$1"
-			printf_hint 'pathspecs for an implicit '\''push'\'' subcommand must be preceded by '\''--'\''\n'
-			error
+			if [ "$problem_found" = n ]
+			then
+				problem_found=y
+				problem_option_name="$1"
+			fi
+			shift
 		fi
 	done
+	if [ "$problem_found" = y ]
+	then
+		printf_error 'subcommand wasn'\''t specified; '\''push'\'' can'\''t be assumed due to unexpected token '\''%s'\''\n' "$problem_option_name"
+		printf_hint 'pathspecs for an implicit '\''push'\'' subcommand must be preceded by '\''--'\''\n'
+		error
+	fi
 )
 
 set_getopt_options_from_make_command

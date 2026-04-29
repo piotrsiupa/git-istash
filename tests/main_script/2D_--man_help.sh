@@ -11,6 +11,7 @@ fi
 
 PARAMETRIZE_SUBCOMMAND
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 PARAMETRIZE_OPTION true 'MAN_FLAG' '' 'man: && --man && --ma & --m'
 
 __end_of_initialization__
@@ -32,7 +33,7 @@ chmod +x './man'
 PATH="$(pwd):$PATH"
 export PATH
 #shellcheck disable=SC2086
-assert_exit_code 0 git -c help.format=man -c man.mock_man.cmd="$(pwd)/man" -c man.viewer=mock_man istash $SUBCOMMAND $COLOR_FLAGS "$MAN_FLAG"
+assert_exit_code 0 git -c help.format=man -c man.mock_man.cmd="$(pwd)/man" -c man.viewer=mock_man istash $SUBCOMMAND $COLOR_FLAGS $QUIET_FLAGS "$MAN_FLAG"
 ! test -f './error.txt' ||
 	fail '%s\n' "$(cat './error.txt')"
 test -f './call-to-man.txt' ||

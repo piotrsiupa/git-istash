@@ -19,6 +19,7 @@ PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 PARAMETRIZE_SUMMARY
 
 __end_of_initialization__
@@ -34,7 +35,7 @@ printf 'fff\n' >'bo	=ÿþ€{f}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'
 git add -N .
 printf 'y n ' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
-GIT_EDITOR="sed -Ei 's/^\+[a-z]{3}2/+xxx/'" assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS $COLOR_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS <.git/answers_for_patch
+GIT_EDITOR="sed -Ei 's/^\+[a-z]{3}2/+xxx/'" assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $QUIET_FLAGS --patch $KEEP_INDEX_FLAGS $COLOR_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS <.git/answers_for_patch
 assert_outputs__create__success '*' 0 '' 't,1,1' 'u'
 new_stash_sha_CO="$stdout"
 assert_files_HTCO '
@@ -68,7 +69,7 @@ RESTORE_HEAD_TYPE
 __test_section__ 'Pop stash'
 stash_sha="$(git rev-parse stash)"
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash pop $SUMMARY_FLAGS $COLOR_FLAGS
+assert_exit_code 0 git istash pop $SUMMARY_FLAGS $QUIET_FLAGS $COLOR_FLAGS
 assert_outputs__apply__success 'pop' '
  A bo\001\002\003\004\005\006\007\010\t=\377\376\177\200{e}\\*?#@!\033[1;35;4;5m|:<>()^&\033[0m\360\237\222\251th
 ' 0 "$stash_sha"

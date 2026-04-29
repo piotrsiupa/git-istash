@@ -6,6 +6,7 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_OPTION true 'QUIT_COMMAND' 'option' 'QUIT: q && qui && qu'
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 
 __end_of_initialization__
 
@@ -29,7 +30,7 @@ SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS
+assert_exit_code 2 git istash "$APPLY_OPERATION" $QUIET_FLAGS $COLOR_FLAGS
 assert_outputs__apply__conflict_HT "$APPLY_OPERATION" 0 '
 UU aaa
 ' '
@@ -52,7 +53,7 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 
 __test_section__ "Quit (implied) $APPLY_OPERATION stash"
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash "$QUIT_COMMAND" $COLOR_FLAGS
+assert_exit_code 1 git istash "$QUIT_COMMAND" $QUIET_FLAGS $COLOR_FLAGS
 assert_outputs__main_script__no_such_command "$QUIT_COMMAND"
 assert_files_HT '
 UU aaa		ddd|bbb

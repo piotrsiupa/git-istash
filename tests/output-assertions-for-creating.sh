@@ -29,18 +29,22 @@ create_patch_output_regex_for_single_file() { # nr_of_questions
 }
 
 create_patch_output_regex_for_single_call() { # (t|u) [nr_of_questions...]
-	printf '### Using the interactive patch for %s files\\.\\.\\.\\n\\n' "$(if [ "$1" = u ] ; then printf 'untracked' ; else printf 'tracked' ; fi)"
+	printf '### Using the interactive patch for %s files\\.\\.\\.' "$(if [ "$1" = u ] ; then printf 'untracked' ; else printf 'tracked' ; fi)"
 	shift
 	if [ $# -ne 0 ]
 	then
+		printf '%s' '\n\n'
 		while [ $# -ne 0 ]
 		do
 			create_patch_output_regex_for_single_file "$1"
-			printf '%s' '\n'
 			shift
+			if [ $# -ne 0 ]
+			then
+				printf '%s' '\n'
+			fi
 		done
 	else
-		printf '%s' '(No changes\.\n)?'
+		printf '%s' '(\n\nNo changes\.)?'
 	fi
 }
 
@@ -55,13 +59,17 @@ create_patch_output_regex() { # [call_description...]
 		shift
 		if [ $# -ne 0 ]
 		then
-			printf '%s' '\n'
+			printf '%s' '\n\n\n'
 		fi
 	done
 }
 
 # See "assert_outputs__create__success" for info on the summary code.
 create_success_message_regex() { # summary_code branch_name base_commit message
+	if IS_QUIET
+	then
+		return
+	fi
 	printf 'Saved '
 	printf '%s' "$1" \
 	| sed -E -e 's/^[^-]+-//' -e 's/./&\n/g' | tr 'WSUI' '1-4' | tr -d -c '1-4\n' | sort | tr '1-4' 'WSUI' | tr -d '\n' \
@@ -137,7 +145,7 @@ assert_outputs__create__success() { # ('*' stash_num message | summary_code bran
 		fi
 	)" '
 		'"$(shift 4 ; create_patch_output_regex "$@")"'
-		'"$(if [ $# -gt 4 ] ; then printf '%s' '\n' ; fi)"'
+		'"$(if [ $# -gt 4 ] && ! IS_QUIET ; then printf '%s' '\n\n\n' ; fi)"'
 		'"$(create_success_message_regex "$1" "$2" "$3" "$4")"'
 	'
 }
@@ -147,7 +155,7 @@ assert_outputs__create__no_changes_to_stash() { # [call_description...]
 	assert_outputs_with_color '
 	' '
 		'"$(create_patch_output_regex "$@")"'
-		'"$(if [ $# -ne 0 ] ; then printf '%s' '\n' ; fi)"'
+		'"$(if [ $# -ne 0 ] ; then printf '%s' '\n\n\n' ; fi)"'
 		\[<color>31merror: no suitable changes to stash\[<color>0?m
 	'
 }

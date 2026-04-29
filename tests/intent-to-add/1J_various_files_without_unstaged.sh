@@ -10,6 +10,7 @@ PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'NO'
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 PARAMETRIZE_SUMMARY
 
 __end_of_initialization__
@@ -27,7 +28,7 @@ git add -N bbb
 printf 'bbb\n' >aaa
 printf 'ddd\n' >ddd
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS $COLOR_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS --message 'name'
+assert_exit_code 0 git istash $QUIET_FLAGS "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS $COLOR_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS --message 'name'
 assert_outputs__create__success '*' 0 'name'
 new_stash_sha_CO="$stdout"
 if ! IS_KEEP_INDEX_ON
@@ -80,7 +81,7 @@ RESTORE_HEAD_TYPE
 __test_section__ 'Pop stash'
 stash_sha="$(git rev-parse stash)"
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash pop $SUMMARY_FLAGS $COLOR_FLAGS
+assert_exit_code 0 git istash $QUIET_FLAGS pop $SUMMARY_FLAGS $COLOR_FLAGS
 assert_outputs__apply__success 'pop' '
 A  aaa
 ' 0 "$stash_sha"

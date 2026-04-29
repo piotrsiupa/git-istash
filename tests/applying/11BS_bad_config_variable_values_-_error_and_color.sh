@@ -5,6 +5,7 @@ non_essential_test
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_COLOR 'YES'
+PARAMETRIZE_QUIET
 
 __end_of_initialization__
 
@@ -31,12 +32,17 @@ SWITCH_HEAD_TYPE
 __test_section__ "$CAP_APPLY_OPERATION stash (without changes)"
 correct_head_sha="$(get_head_sha_HT)"
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash "$APPLY_OPERATION" $COLOR_FLAGS
-assert_outputs_with_color '' "
-	$(create_bad_color_config_value_regex 'kinda reddish but more royal' 'color.istash.error.warning')\\n
-	$(create_bad_color_config_value_regex 'silvery transparent sepia' 'color.istash.error.normal')\\n
-	$(create_no_such_commit_regex 'stash@{0}')
-"
+assert_exit_code 1 git istash "$APPLY_OPERATION" $COLOR_FLAGS $QUIET_FLAGS
+assert_outputs_with_color '' "$(
+	if ! IS_QUIET
+	then
+		create_bad_color_config_value_regex 'kinda reddish but more royal' 'color.istash.error.warning'
+		printf '\\n'
+		create_bad_color_config_value_regex 'silvery transparent sepia' 'color.istash.error.normal'
+		printf '\\n'
+	fi
+	create_no_such_commit_regex 'stash@{0}'
+)"
 assert_files_HT '
 !! ignored0	ignored0
 !! ignored1	ignored1

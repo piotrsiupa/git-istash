@@ -12,6 +12,7 @@ PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_CONTINUE
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 PARAMETRIZE_SUMMARY
 
 __end_of_initialization__
@@ -36,7 +37,7 @@ SWITCH_HEAD_TYPE
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash "$APPLY_OPERATION" $SUMMARY_FLAGS $COLOR_FLAGS
+assert_exit_code 2 git istash "$APPLY_OPERATION" $SUMMARY_FLAGS $COLOR_FLAGS $QUIET_FLAGS
 assert_outputs__apply__conflict_HT "$APPLY_OPERATION" 2 '
 UU aaa
 ' '
@@ -63,7 +64,7 @@ printf 'ddd\n' >aaa
 git add aaa
 mv .git/ISTASH_WORKING-DIR .git/ISTASH_WORKING-DIR~
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash "$CREATE_OPERATION" $COLOR_FLAGS
+assert_exit_code 1 git istash "$CREATE_OPERATION" $COLOR_FLAGS $QUIET_FLAGS
 assert_outputs__missing_data_file "$APPLY_OPERATION" 'ISTASH_WORKING-DIR'
 assert_files_HT '
 M  aaa		ddd
@@ -89,7 +90,7 @@ __test_section__ "Continue $APPLY_OPERATION stash (1)"
 mv .git/ISTASH_WORKING-DIR~ .git/ISTASH_WORKING-DIR
 stash_sha="$(git rev-parse stash)"
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$APPLY_OPERATION" $SUMMARY_FLAGS "$CONTINUE_FLAG" $COLOR_FLAGS
+assert_exit_code 0 git istash "$APPLY_OPERATION" $SUMMARY_FLAGS "$CONTINUE_FLAG" $COLOR_FLAGS $QUIET_FLAGS
 assert_outputs__apply__success_HT "$APPLY_OPERATION" '
  M aaa
 ' '

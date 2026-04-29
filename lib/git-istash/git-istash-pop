@@ -20,6 +20,7 @@ print_help() {
 	printf '\t--no-color\t- Same as --color=never.\n'
 	printf '    -c, --continue\t- Resume the previous operation.\n\t\t\t  (Conflicts need to be resolved before that.)\n'
 	printf '    -h\t\t\t- Print this help text and exit.\n'
+	printf '    -q, --quiet\t\t- Suppress human-readable summaries and information.\n'
 	printf '\t--quit\t\t- Abort the operation but don'\''t restore the repository\n\t\t\t  state nor move the HEAD.\n'
 	printf '\t--summary=<mode> - Set summary to "complete" / "non-ignored" / "off".\n'
 }
@@ -65,8 +66,13 @@ check_args_for_pop() { # max_free_args args...
 end_with_success() {
 	delete_data
 	printf '\n'
-	git stash drop "$stash"
-	printf '\nSuccessfully popped the stash\n'
+	if [ "$is_quiet" = n ]
+	then
+		git stash drop "$stash"
+		printf '\nSuccessfully popped the stash\n'
+	else
+		git stash drop "$stash" 1>/dev/null
+	fi
 }
 
 check_stash_for_pop() {
@@ -104,9 +110,13 @@ check_data_files() { # resume abort quit
 }
 
 run_apply() { # args...
+	if [ "$is_quiet" = y ]
+	then
+		set -- --quiet "$@"
+	fi
 	if [ "$summary_set" = y ]
 	then
-		set -- "--summary=$summary_mode" "$@"
+		set -- --summary="$summary_mode" "$@"
 	fi
 	sh "$lib_dir/git-istash-apply" --_called-from-pop_ "$@"
 }
@@ -168,9 +178,10 @@ do_pop() { # args...
 }
 
 getopt_short_options='chq'
-getopt_long_options='abort,color::,no-color,continue,quit,summary:'
+getopt_long_options='abort,color::,no-color,continue,quiet,quit,summary:'
 normalized_options="$(get_options_color "$getopt_short_options" "$getopt_long_options" "$@")"
 eval set -- "$normalized_options"
+is_quiet=n
 abort_set=n
 continue_set=n
 quit_set=n
@@ -195,7 +206,10 @@ do
 		print_help
 		exit 0
 		;;
-	-q|--quit)
+	-q|--quiet)
+		is_quiet=y
+		;;
+	--quit)
 		quit_set=y
 		;;
 	--summary)

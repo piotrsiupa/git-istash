@@ -3,6 +3,7 @@
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 PARAMETRIZE_SUMMARY
 
 __end_of_initialization__
@@ -33,7 +34,7 @@ if IS_APPLY
 then
 	stash_sha="$(git rev-parse 'earlier')"
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash apply $SUMMARY_FLAGS 'earlier' $COLOR_FLAGS
+	assert_exit_code 0 git istash apply $SUMMARY_FLAGS $QUIET_FLAGS 'earlier' $COLOR_FLAGS
 	assert_outputs__apply__success "$APPLY_OPERATION" '
 	?A aaa
 	' 0 "$stash_sha"
@@ -44,7 +45,7 @@ then
 	'
 else
 	#shellcheck disable=SC2086
-	assert_exit_code 1 git istash pop $SUMMARY_FLAGS 'earlier' $COLOR_FLAGS
+	assert_exit_code 1 git istash pop $SUMMARY_FLAGS $QUIET_FLAGS 'earlier' $COLOR_FLAGS
 	assert_outputs__apply__non_stash_on_pop
 	assert_files_HT '
 	!! ignored0	ignored0

@@ -10,6 +10,7 @@ PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 PARAMETRIZE_SUMMARY
 
 __end_of_initialization__
@@ -28,7 +29,7 @@ __test_section__ "$CAP_CREATE_OPERATION stash"
 git rm aaa
 printf 'bbb\n' >aaa
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$CREATE_OPERATION" $COLOR_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS --message 'stash, not a trash'
+assert_exit_code 0 git istash "$CREATE_OPERATION" $COLOR_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS $KEEP_INDEX_FLAGS $QUIET_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS --message 'stash, not a trash'
 assert_outputs__create__success '*' 0 'stash, not a trash'
 new_stash_sha_CO="$stdout"
 if ! IS_KEEP_INDEX_ON
@@ -76,7 +77,7 @@ RESTORE_HEAD_TYPE
 __test_section__ 'Pop stash'
 stash_sha="$(git rev-parse stash)"
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash pop $SUMMARY_FLAGS $COLOR_FLAGS
+assert_exit_code 0 git istash pop $SUMMARY_FLAGS $COLOR_FLAGS $QUIET_FLAGS
 assert_outputs__apply__success 'pop' '
 D  aaa
 ?A aaa

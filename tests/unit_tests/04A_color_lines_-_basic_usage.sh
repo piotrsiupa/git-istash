@@ -9,6 +9,7 @@ cat >'color_lines.sh' <<EOF
 #!/usr/bin/env sh
 set -eu
 . '$(cd - 1>/dev/null ; pwd)/../lib/git-istash/git-istash-io'
+is_quiet=n
 color_lines "\$@"
 EOF
 chmod +x 'color_lines.sh'

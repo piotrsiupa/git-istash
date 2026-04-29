@@ -6,6 +6,7 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_ABORT
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 
 __end_of_initialization__
 
@@ -35,7 +36,7 @@ printf 'wdf1a\n' >wdf1
 __test_section__ "$CAP_OTHER_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash "$OTHER_APPLY_OPERATION" $COLOR_FLAGS
+assert_exit_code 2 git istash $QUIET_FLAGS "$OTHER_APPLY_OPERATION" $COLOR_FLAGS
 assert_outputs__apply__conflict_HT "$OTHER_APPLY_OPERATION" 2 '
 UU aaa
 ' '
@@ -62,7 +63,7 @@ __test_section__ "Abort $APPLY_OPERATION stash (0)"
 correct_head_sha2="$(get_head_sha_HT)"
 mv .git/ISTASH_WORKING-DIR .git/ISTASH_WORKING-DIR~
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash "$APPLY_OPERATION" "$ABORT_FLAG" $COLOR_FLAGS
+assert_exit_code 1 git istash $QUIET_FLAGS "$APPLY_OPERATION" "$ABORT_FLAG" $COLOR_FLAGS
 assert_outputs__missing_data_file "$OTHER_APPLY_OPERATION" 'ISTASH_WORKING-DIR'
 assert_files_HT '
 UU aaa		ccc|bbb
@@ -89,7 +90,7 @@ fi
 __test_section__ "Abort $OTHER_APPLY_OPERATION stash (1)"
 mv .git/ISTASH_WORKING-DIR~ .git/ISTASH_WORKING-DIR
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash $OTHER_APPLY_OPERATION "$ABORT_FLAG" $COLOR_FLAGS
+assert_exit_code 0 git istash $QUIET_FLAGS $OTHER_APPLY_OPERATION "$ABORT_FLAG" $COLOR_FLAGS
 assert_outputs__apply__abort "$OTHER_APPLY_OPERATION"
 assert_files_HT '
    aaa		ccc

@@ -26,6 +26,7 @@ print_help() {
 	printf '\t--patch\t\t- Interactively select non-staged chunks to stash.\n'
 	printf '\t--pathspec-from-file=FILE - Read pathspec from the specified file.\n'
 	printf '\t--pathspec-file-nul - Treat the pathspec file as NUL-separated.\n\t\t\t  (Only valid with --pathspec-from-file.)\n'
+	printf '    -q, --quiet\t\t- Suppress human-readable summaries and information.\n'
 	printf '\t--remove-stashed - Removes stashed changes unless there'\''s another option\n\t\t\t  to explicitely keep them.\n'
 	printf '    -S, --staged\t- Left intact all changes NOT already added to the index\n\t\t\t  and don'\''t add them to stash.\n'
 	printf '\t--no-store\t- Don'\''t store the created stash with "git stash store".\n\t\t\t  Instead write its sha to stdout.\n'
@@ -198,7 +199,7 @@ commit_changes() {
 	then
 		if [ -n "$patch_options" ]
 		then
-			printf '### Using the interactive patch for tracked files...\n\n' 1>&2
+			printf '### Using the interactive patch for tracked files...\n' 1>&2
 			there_was_patch_message=y
 		fi
 		if [ -z "$pathspec_file" ]
@@ -211,7 +212,7 @@ commit_changes() {
 			else
 				add_with_patch_and_pathspec
 			fi
-		fi
+		fi 2>&1 | sed -E '1s/^/\n/' 1>&2
 	fi
 	if [ -n "$message" ]
 	then
@@ -243,9 +244,9 @@ commit_changes() {
 		then
 			if [ "$there_was_patch_message" = y ]
 			then
-				printf '\n' 1>&2
+				printf '\n\n' 1>&2
 			fi
-			printf '### Using the interactive patch for untracked files...\n\n' 1>&2
+			printf '### Using the interactive patch for untracked files...\n' 1>&2
 			there_was_patch_message=y
 		fi
 		if [ -z "$pathspec_file" ]
@@ -258,7 +259,7 @@ commit_changes() {
 			else
 				add_with_patch_and_pathspec
 			fi
-		fi
+		fi 2>&1 | sed -E '1s/^/\n/' 1>&2
 		git commit --message="untracked files on $branch_name_for_msg: $default_message" --allow-empty 1>/dev/null
 		if [ "$there_are_enough_changes" = n ] && [ "$(git rev-parse 'HEAD^{tree}')" != "$(git rev-parse 'HEAD~^{tree}')" ]
 		then
@@ -312,7 +313,7 @@ commit_changes() {
 		undo_commit_changes
 		if [ "$there_was_patch_message" = y ]
 		then
-			printf '\n' 1>&2
+			printf '\n\n' 1>&2
 		fi
 		error 'no suitable changes to stash\n'
 	fi
@@ -448,9 +449,13 @@ remove_temporary_branch() {
 }
 
 print_summary() {
+	if [ "$is_quiet" = y ]
+	then
+		return
+	fi
 	if [ "$there_was_patch_message" = y ]
 	then
-		printf '\n' 1>&2
+		printf '\n\n' 1>&2
 	fi
 	printf 'Saved '
 	{
@@ -504,8 +509,8 @@ make_stash() { # pathspecs...
 	print_summary
 }
 
-getopt_short_options='ahklm:Su'
-getopt_long_options='all,allow-empty,color::,no-color,keep-index,no-keep-index,leave-staged,message:,patch,pathspec-file-null,pathspec-from-file:,remove-stashed,staged,no-store,include-untracked,no-include-untracked'
+getopt_short_options='ahklm:qSu'
+getopt_long_options='all,allow-empty,color::,no-color,keep-index,no-keep-index,leave-staged,message:,patch,pathspec-file-null,pathspec-from-file:,quiet,remove-stashed,staged,no-store,include-untracked,no-include-untracked'
 normalized_options="$(get_options_color "$getopt_short_options" "$getopt_long_options" "$@")"
 eval set -- "$normalized_options"
 include_ignored=n
@@ -516,6 +521,7 @@ message=''
 patch_options=''
 pathspec_from_file=''
 pathspec_file_nul=n
+is_quiet=n
 remove_stashed=n
 store_stash=y
 leave_unstaged=n
@@ -566,6 +572,9 @@ do
 		;;
 	--pathspec-file-null)
 		pathspec_file_nul=y
+		;;
+	-q|--quiet)
+		is_quiet=y
 		;;
 	--remove-stashed)
 		remove_stashed=y

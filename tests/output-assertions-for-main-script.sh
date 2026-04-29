@@ -9,10 +9,13 @@ fi
 
 assert_outputs__main_script__no_such_command() { # command
 	assert_outputs_with_color '
-	' '
-		\[<color>31merror: subcommand wasn'\''t specified; '\''push'\'' can'\''t be assumed due to unexpected token '\'"$(sanitize_for_sed "$1")"\''\[<color>0?m\n
-		\[<color>33mhint: pathspecs for an implicit '\''push'\'' subcommand must be preceded by '\''--'\''\[<color>0?m
-	'
+	' "$(
+		printf '%s' '\[<color>31merror: subcommand wasn'\''t specified; '\''push'\'' can'\''t be assumed due to unexpected token '\'"$(sanitize_for_sed "$1")"\''\[<color>0?m'
+		if ! IS_QUIET
+		then
+			printf '\\n' ; printf '%s' '\[<color>33mhint: pathspecs for an implicit '\''push'\'' subcommand must be preceded by '\''--'\''\[<color>0?m'
+		fi
+	)"
 }
 
 assert_outputs__main_script__unrecognised_short_option() { # option

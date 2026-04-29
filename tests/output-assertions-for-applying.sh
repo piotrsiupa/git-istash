@@ -8,6 +8,10 @@ fi
 
 
 create_continue_or_abort_hint_regex() { # operation stage
+	if IS_QUIET
+	then
+		return
+	fi
 	case "$2" in
 		0) printf '%s\n' 'Currently merging staged changes from stash into staged changes from working directory\.\n' ;;
 		1) printf '%s\n' 'Currently merging unstaged changes from working directory into already merged staged changes\.\n' ;;
@@ -23,6 +27,11 @@ create_continue_or_abort_hint_regex() { # operation stage
 
 # "conflicts" are one conflict per line in the format: CONFLICT_TYPE FILE_NAME
 assert_outputs__apply__conflict() { # operation stage conflicts
+	if IS_QUIET
+	then
+		assert_outputs '' ''
+		return
+	fi
 	# This assertion may be a little frafile because it asserts outputs originated from other Git commands.
 	# The goal is not as much to presisely check this output but rather if it is the intended thing in general and whether there is any additional unwanted text.
 	assert_outputs_with_color "$(
@@ -50,78 +59,85 @@ assert_outputs__apply__conflict_HT() { # operation stage normal_conflicts orphan
 }
 
 assert_outputs__apply__failed_resolution() { # operation stage unresolved_files
-	assert_outputs_with_color '
-		'"$(sanitize_for_sed "$3")"': needs merge\nYou must edit all merge conflicts and then\nmark them as resolved using git add
-	' "
+	assert_outputs_with_color "$(
+		if ! IS_QUIET
+		then
+			printf '%s: %s' "$(sanitize_for_sed "$3")" 'needs merge\nYou must edit all merge conflicts and then\nmark them as resolved using git add'
+		fi
+	)" "
 		$(create_continue_or_abort_hint_regex "$1" "$2")
 	"
 }
 
 # "apply" needs only 2 arguments, while "pop" requires all 4.
 assert_outputs__apply__success() { # operation changes [stash_id stash_sha] [error_message]
-	assert_outputs_with_color '
-		Stash of the old working dir: [0-9a-fA-F]{40}\n
-		'"$(
-			if IS_SUMMARY_ON
-			then
-				printf '\\n\[<color>34mChanges made to the working directory:\[<color>0?m\\n'
-				changes="$(
-					printf '%s\n' "$2" \
-					| if IS_SUMMARY_NON_IGNORED
-					then
-						grep -E -v '^!' || true
-					else
-						cat
-					fi \
-					| sed -E -e 's/^\t+//' -e '/^\s*$/ d' -e 's/^\\\?/?/' -e 's/^(..) (.+)$/\2 \1/' \
-					| LC_ALL=C sort \
-					| sed -E 's/^(.+) (..)$/\2 \1/'
-				)"
-				if printf '%s' "$changes" | grep -q '.'
+	assert_outputs_with_color "$(
+		if IS_QUIET
+		then
+			return
+		fi
+		printf '%s' 'Stash of the old working dir: [0-9a-fA-F]{40}'
+		if IS_SUMMARY_ON
+		then
+			printf '%s' '\n\n\[<color>34mChanges made to the working directory:\[<color>0?m\n'
+			changes="$(
+				printf '%s\n' "$2" \
+				| if IS_SUMMARY_NON_IGNORED
 				then
-					if printf '%s' "$changes" | grep -Eq '^[^ ?!]'
-					then
-						printf '    [<color>34mindex:[<color>0?m\\n\n'
-						printf '%s' "$changes" \
-						| grep -E '^[^ ?!]' \
-						| sed -E -e 's/^A. (.+)$/\\\\t\[<color>32madded:\\t\\t\1\[<color>0?m\\n/' \
-							-e 's/^M. (.+)$/\\\\t\[<color>32mmodified:\\t\1\[<color>0?m\\n/' \
-							-e 's/^D. (.+)$/\\\\t\[<color>32mdeleted:\\t\1\[<color>0?m\\n/'
-					fi
-					if printf '%s' "$changes" | grep -Eq '^[^?!][^ ]'
-					then
-						printf '    [<color>34mtracked files:[<color>0?m\\n\n'
-						printf '%s' "$changes" \
-						| grep -E '^[^?!][^ ]' \
-						| sed -E -e 's/^.A (.+)$/\\\\t\[<color>31madded:\\t\\t\1\[<color>0?m\\n/' \
-							-e 's/^.M (.+)$/\\\\t\[<color>31mmodified:\\t\1\[<color>0?m\\n/' \
-							-e 's/^.D (.+)$/\\\\t\[<color>31mdeleted:\\t\1\[<color>0?m\\n/'
-					fi
-					if printf '%s' "$changes" | grep -Eq '^[?!]'
-					then
-						printf '    [<color>34muntracked files:[<color>0?m\\n\n'
-						printf '%s' "$changes" \
-						| grep -E '^[?!]' \
-						| sed -E -e 's/^!! (.+)$/\\\\t\[<color>31mignored:\\t\1\[<color>0?m\\n/' \
-							-e 's/^!. (.+)$/\\\\t\[<color>31mtouched:\\t\1\[<color>0?m\\n/' \
-							-e 's/^.A (.+)$/\\\\t\[<color>31mcreated:\\t\1\[<color>0?m\\n/' \
-							-e 's/^.M (.+)$/\\\\t\[<color>31mmodified:\\t\1\[<color>0?m\\n/' \
-							-e 's/^.D (.+)$/\\\\t\[<color>31mdeleted:\\t\1\[<color>0?m\\n/'
-					fi
+					grep -E -v '^!' || true
 				else
-					printf '\\t[<color>34mno changes were made[<color>0?m\\n\n'
+					cat
 				fi \
-				| sanitize_for_ere \
-				| convert_escapes \
-				| sed -E -e 's/\\\\n/\\n/g' \
-					-e 's/\\\[<color>0\\\?m/\\[<color>0?m/g'
-			fi
-
-		)"'
-		'"$(if [ "$1" = 'pop' ] ; then printf '%s' '\nDropped refs\/stash@\{'"$3"'\} \('"$4"'\)\n' ; fi)"'
-		\n
-		Successfully '"$(if [ "$1" = 'pop' ] ; then printf 'popped' ; else printf 'applied' ; fi)"' the stash
-	' "$(
+				| sed -E -e 's/^\t+//' -e '/^\s*$/ d' -e 's/^\\\?/?/' -e 's/^(..) (.+)$/\2 \1/' \
+				| LC_ALL=C sort \
+				| sed -E 's/^(.+) (..)$/\2 \1/'
+			)"
+			if printf '%s' "$changes" | grep -q '.'
+			then
+				if printf '%s' "$changes" | grep -Eq '^[^ ?!]'
+				then
+					printf '    [<color>34mindex:[<color>0?m\\n\n'
+					printf '%s' "$changes" \
+					| grep -E '^[^ ?!]' \
+					| sed -E -e 's/^A. (.+)$/\\\\t\[<color>32madded:\\t\\t\1\[<color>0?m\\n/' \
+						-e 's/^M. (.+)$/\\\\t\[<color>32mmodified:\\t\1\[<color>0?m\\n/' \
+						-e 's/^D. (.+)$/\\\\t\[<color>32mdeleted:\\t\1\[<color>0?m\\n/'
+				fi
+				if printf '%s' "$changes" | grep -Eq '^[^?!][^ ]'
+				then
+					printf '    [<color>34mtracked files:[<color>0?m\\n\n'
+					printf '%s' "$changes" \
+					| grep -E '^[^?!][^ ]' \
+					| sed -E -e 's/^.A (.+)$/\\\\t\[<color>31madded:\\t\\t\1\[<color>0?m\\n/' \
+						-e 's/^.M (.+)$/\\\\t\[<color>31mmodified:\\t\1\[<color>0?m\\n/' \
+						-e 's/^.D (.+)$/\\\\t\[<color>31mdeleted:\\t\1\[<color>0?m\\n/'
+				fi
+				if printf '%s' "$changes" | grep -Eq '^[?!]'
+				then
+					printf '    [<color>34muntracked files:[<color>0?m\\n\n'
+					printf '%s' "$changes" \
+					| grep -E '^[?!]' \
+					| sed -E -e 's/^!! (.+)$/\\\\t\[<color>31mignored:\\t\1\[<color>0?m\\n/' \
+						-e 's/^!. (.+)$/\\\\t\[<color>31mtouched:\\t\1\[<color>0?m\\n/' \
+						-e 's/^.A (.+)$/\\\\t\[<color>31mcreated:\\t\1\[<color>0?m\\n/' \
+						-e 's/^.M (.+)$/\\\\t\[<color>31mmodified:\\t\1\[<color>0?m\\n/' \
+						-e 's/^.D (.+)$/\\\\t\[<color>31mdeleted:\\t\1\[<color>0?m\\n/'
+				fi
+			else
+				printf '\\t[<color>34mno changes were made[<color>0?m\\n\n'
+			fi \
+			| sanitize_for_ere \
+			| convert_escapes \
+			| sed -E -e 's/\\\\n/\\n/g' \
+				-e 's/\\\[<color>0\\\?m/\\[<color>0?m/g'
+		fi
+		if ! IS_SUMMARY_ON ; then printf '\\n' ; fi
+		if [ "$1" = 'pop' ]
+		then
+			printf '%s' '\nDropped refs\/stash@\{'"$3"'\} \('"$4"'\)\n' #XXX mention this in man
+		fi
+		printf '%s' '\nSuccessfully '"$(if [ "$1" = 'pop' ] ; then printf 'popped' ; else printf 'applied' ; fi)"' the stash'
+	)" "$(
 		if [ $# -ge 4 ]
 		then
 			printf '%s' "${5-}"
@@ -151,17 +167,27 @@ assert_outputs__apply__success_HT() { # operation changes_normal changes_orphan 
 }
 
 assert_outputs__apply__abort() { # operation
-	assert_outputs '
-	' '
-		Successfully aborted '\''git istash '"$(sanitize_for_sed "$1")"\''
-	'
+	if IS_QUIET
+	then
+		assert_outputs '' ''
+	else
+		assert_outputs '
+		' '
+			Successfully aborted '\''git istash '"$(sanitize_for_sed "$1")"\''
+		'
+	fi
 }
 
 assert_outputs__apply__quit() { # operation
-	assert_outputs '
-	' '
-		Successfully quit '\''git istash '"$(sanitize_for_sed "$1")"\''
-	'
+	if IS_QUIET
+	then
+		assert_outputs '' ''
+	else
+		assert_outputs '
+		' '
+			Successfully quit '\''git istash '"$(sanitize_for_sed "$1")"\''
+		'
+	fi
 }
 
 assert_outputs__apply__non_stash_on_pop() {
@@ -188,48 +214,68 @@ assert_outputs__apply__no_operation_in_progress() { # operation
 
 assert_outputs__apply__data_file_not_1_line() { # broken_op data_file
 	assert_outputs_with_color '
-	' '
-		'"$(create_broken_operation_header_regex "$1")"'\n
-		\[<color>1;31mfatal: '\''\.git\/'"$(sanitize_for_sed "$2")"\'' doesn'\''t have exactly 1 line\[<color>0?m\n
-		'"$(create_broken_operation_hint_regex)"'
-	'
+	' "$(
+		create_broken_operation_header_regex "$1" ; printf '\\n'
+		printf '%s' '\[<color>1;31mfatal: '\''\.git\/'"$(sanitize_for_sed "$2")"\'' doesn'\''t have exactly 1 line\[<color>0?m'
+		if ! IS_QUIET
+		then
+			printf '\\n'
+			create_broken_operation_hint_regex
+		fi
+	)"
 }
 
 assert_outputs__apply__data_file_invalid_commit() { # broken_op data_file
 	assert_outputs_with_color '
-	' '
-		'"$(create_broken_operation_header_regex "$1")"'\n
-		\[<color>1;31mfatal: '\''\.git\/'"$(sanitize_for_sed "$2")"\'' contains an invalid commit hash\[<color>0?m\n
-		'"$(create_broken_operation_hint_regex)"'
-	'
+	' "$(
+		create_broken_operation_header_regex "$1" ; printf '\\n'
+		printf '%s' '\[<color>1;31mfatal: '\''\.git\/'"$(sanitize_for_sed "$2")"\'' contains an invalid commit hash\[<color>0?m'
+		if ! IS_QUIET
+		then
+			printf '\\n'
+			create_broken_operation_hint_regex
+		fi
+	)"
 }
 
 assert_outputs__apply__data_file_invalid_integer() { # broken_op data_file
 	assert_outputs_with_color '
-	' '
-		'"$(create_broken_operation_header_regex "$1")"'\n
-		\[<color>1;31mfatal: '\''\.git\/'"$(sanitize_for_sed "$2")"\'' doesn'\''t contain a positive integer\[<color>0?m\n
-		'"$(create_broken_operation_hint_regex)"'
-	'
+	' "$(
+		create_broken_operation_header_regex "$1" ; printf '\\n'
+		printf '%s' '\[<color>1;31mfatal: '\''\.git\/'"$(sanitize_for_sed "$2")"\'' doesn'\''t contain a positive integer\[<color>0?m'
+		if ! IS_QUIET
+		then
+			printf '\\n'
+			create_broken_operation_hint_regex
+		fi
+	)"
 }
 
 assert_outputs__apply__data_file_invalid_stash_number() { # broken_op data_file stash_number
 	assert_outputs_with_color '
-	' '
-		'"$(create_broken_operation_header_regex "$1")"'\n
-		\[<color>1;31mfatal: '\''\.git\/'"$(sanitize_for_sed "$2")"\'' contains an invalid stash number\[<color>0?m\n
-		'"$(create_broken_operation_hint_regex)"'
-	'
+	' "$(
+		create_broken_operation_header_regex "$1" ; printf '\\n'
+		printf '%s' '\[<color>1;31mfatal: '\''\.git\/'"$(sanitize_for_sed "$2")"\'' contains an invalid stash number\[<color>0?m'
+		if ! IS_QUIET
+		then
+			printf '\\n'
+			create_broken_operation_hint_regex
+		fi
+	)"
 }
 
 assert_outputs__apply__branch_already_used() { # current_op branch
 	assert_outputs_with_color '
-	' '
-		\[<color>1;31mfatal: failed to restore HEAD to initial position\[<color>0?m\n
-		\[<color>1;31mfatal: '\'"$(sanitize_for_sed "$2")"\'' is already used by worktree at '\''.*'\''\[<color>0?m\n
-		\[<color>33mhint: fix the problems and rerun '\''git istash --abort'\''\[<color>0?m\n
-		\[<color>33mhint: or run '\''git istash --quit'\'' to forcefully cancel it\[<color>0?m
-	'
+	' "$(
+		printf '%s' '\[<color>1;31mfatal: failed to restore HEAD to initial position\[<color>0?m\n'
+		printf '%s' '\[<color>1;31mfatal: '\'"$(sanitize_for_sed "$2")"\'' is already used by worktree at '\''.*'\''\[<color>0?m'
+		if ! IS_QUIET
+		then
+			printf '\\n'
+			printf '%s' '\[<color>33mhint: fix the problems and rerun '\''git istash --abort'\''\[<color>0?m\n'
+			printf '%s' '\[<color>33mhint: or run '\''git istash --quit'\'' to forcefully cancel it\[<color>0?m'
+		fi
+	)"
 }
 
 assert_outputs__apply__wrong_head_position_after_rebase() {
@@ -248,10 +294,14 @@ assert_outputs__apply__no_rebase_in_progress() {
 
 assert_outputs__apply__no_rebase_in_progress_on_abort() { # operation
 	assert_outputs_with_color '
-	' '
-		\[<color>1;31mfatal: [Nn]o rebase in progress\??\[<color>0?m\n
-		Successfully aborted '\''git istash '"$(sanitize_for_sed "$1")"\''
-	'
+	' "$(
+		printf '%s' '\[<color>1;31mfatal: [Nn]o rebase in progress\??\[<color>0?m'
+		if ! IS_QUIET
+		then
+			printf '\\n'
+			printf '%s' 'Successfully aborted '\''git istash '"$(sanitize_for_sed "$1")"\'
+		fi
+	)"
 }
 
 assert_outputs__apply__continue_abort() {

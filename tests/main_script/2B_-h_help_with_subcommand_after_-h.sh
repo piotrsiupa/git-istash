@@ -5,6 +5,7 @@
 
 PARAMETRIZE_SUBCOMMAND
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 
 __end_of_initialization__
 
@@ -12,7 +13,7 @@ prepare_repository
 
 __test_section__ "Show short help for subcommand \"$SUBCOMMAND\""
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash -h $COLOR_FLAGS $SUBCOMMAND
+assert_exit_code 0 git istash -h $COLOR_FLAGS $QUIET_FLAGS $SUBCOMMAND
 if [ "$SUBCOMMAND" = 'c' ] || [ "$SUBCOMMAND" = 'continue' ] || [ "$SUBCOMMAND" = 'abort' ] || [ "$SUBCOMMAND" = 'quit' ]
 then
 	SUBCOMMAND=''

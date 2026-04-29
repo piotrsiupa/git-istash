@@ -265,3 +265,19 @@ PARAMETRIZE_COLOR() { # keys
 IS_COLOR_ON() {
 	printf '%s' "${COLOR-}" | grep -Eq '^COLOR-YES-|^COLOR-LONG$'
 }
+
+#shellcheck disable=SC2120
+PARAMETRIZE_QUIET() { # keys
+	PARAMETRIZE_OPTION true 'QUIET' '' 'NO: && QUIET-DEFAULT && | YES: QUIET-SHORT && QUIET-LONG && QUIET-LONGINSH0 & QUIET-LONGISH1' "$@"
+	#shellcheck disable=SC2034
+	case "$QUIET" in
+		QUIET-SHORT) QUIET_FLAGS='-q' ;;
+		QUIET-LONG) QUIET_FLAGS='--quiet' ;;
+		QUIET-LONGISH0) QUIET_FLAGS='--qui' ;;
+		QUIET-LONGISH1) QUIET_FLAGS='--q' ;;
+		QUIET-DEFAULT) QUIET_FLAGS='' ;;
+	esac
+}
+IS_QUIET() {
+	test "${QUIET-"QUIET-DEFAULT"}" != 'QUIET-DEFAULT'
+}

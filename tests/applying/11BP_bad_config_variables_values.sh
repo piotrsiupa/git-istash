@@ -3,6 +3,7 @@
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_COLOR 'NO'
+PARAMETRIZE_QUIET
 PARAMETRIZE_SUMMARY 'COMPL'
 
 __end_of_initialization__
@@ -49,14 +50,18 @@ __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 stash_sha="$(git rev-parse stash)"
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$APPLY_OPERATION"
+assert_exit_code 0 git istash "$APPLY_OPERATION" $QUIET_FLAGS
 assert_outputs__apply__success "$APPLY_OPERATION" '
 MM aaa
 ?A ddd
-' 0 "$stash_sha" "
-	$(create_bad_boolean_config_value_regex 'figure it out yourself' 'color.istash.error')\\n
-	$(create_bad_summary_mode_regex 'print literally everything')
-"
+' 0 "$stash_sha" "$(
+	if ! IS_QUIET
+	then
+		create_bad_boolean_config_value_regex 'figure it out yourself' 'color.istash.error'
+		printf '\\n'
+		create_bad_summary_mode_regex 'print literally everything'
+	fi
+)"
 assert_files_HT '
 MM aaa		ccc	bbb
 ?? ddd		ddd

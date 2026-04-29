@@ -8,6 +8,7 @@ PARAMETRIZE_KEEP_INDEX 'NO'
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 
 __end_of_initialization__
 
@@ -24,7 +25,7 @@ git add aaa
 touch bbb
 touch ccc
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS -m 'emptiest stash ever' $ALL_FLAGS $UNTRACKED_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $COLOR_FLAGS
+assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS -m 'emptiest stash ever' $ALL_FLAGS $QUIET_FLAGS $UNTRACKED_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $COLOR_FLAGS
 assert_outputs__create__success '*' 0 'emptiest stash ever'
 new_stash_sha_CO="$stdout"
 assert_files_HTCO '

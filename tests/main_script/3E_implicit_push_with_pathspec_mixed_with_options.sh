@@ -9,6 +9,7 @@ PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_PATHSPEC_STYLE 'ARGS'
 PARAMETRIZE_OPTIONS_INDICATOR true
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 
 __end_of_initialization__
 
@@ -46,7 +47,7 @@ git add aaa0 bbb2 ccc4 ddd6 eee8
 printf 'zzz\n' >bbb2
 printf 'zzz\n' >ccc4
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash $UNTRACKED_FLAGS $COLOR_FLAGS $ALL_FLAGS 'aaa0' $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS 'bbb?' -m 'new stash' $EOI '*5' './?dd*'
+assert_exit_code 1 git istash $UNTRACKED_FLAGS $COLOR_FLAGS $ALL_FLAGS 'aaa0' $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $QUIET_FLAGS $STAGED_FLAGS 'bbb?' -m 'new stash' $EOI '*5' './?dd*'
 assert_outputs__main_script__no_such_command 'aaa0'
 assert_files_HT '
 M  aaa0		yyy

@@ -10,6 +10,7 @@ PARAMETRIZE_KEEP_INDEX 'DEFAULT'
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 
 __end_of_initialization__
 
@@ -52,7 +53,7 @@ assert_dotgit_contents
 __test_section__ "$CAP_CREATE_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash "$CREATE_OPERATION" $COLOR_FLAGS
+assert_exit_code 1 git istash "$CREATE_OPERATION" $COLOR_FLAGS $QUIET_FLAGS
 assert_outputs__external_operation_in_progress 'bisect'
 assert_files_HT '
    aaa		ccc

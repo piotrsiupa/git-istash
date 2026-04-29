@@ -6,6 +6,7 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_CONTINUE
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 
 __end_of_initialization__
 
@@ -34,7 +35,7 @@ printf 'wdf1a\n' >wdf1
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS
+assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS $QUIET_FLAGS
 assert_outputs__apply__conflict "$APPLY_OPERATION" 2 '
 UU aaa
 '
@@ -56,7 +57,7 @@ git add aaa
 mv '.git/ISTASH_TARGET' '.git/ISTASH_TARGET~'
 { printf '~' ; cat '.git/ISTASH_TARGET~' ; } >'.git/ISTASH_TARGET'
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG"
+assert_exit_code 1 git istash "$APPLY_OPERATION" $COLOR_FLAGS $QUIET_FLAGS "$CONTINUE_FLAG"
 assert_outputs__apply__wrong_head_position_after_rebase
 assert_file_contents wdf0 'wdf0b'
 assert_file_contents wdf1 'wdf1a'

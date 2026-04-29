@@ -5,6 +5,7 @@ non_essential_test
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_QUIT
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 
 __end_of_initialization__
 
@@ -21,7 +22,7 @@ SWITCH_HEAD_TYPE
 __test_section__ "Quit stash (without changes)"
 correct_head_sha="$(get_head_sha_HT)"
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash $COLOR_FLAGS "$QUIT_FLAG"
+assert_exit_code 1 git istash $QUIET_FLAGS $COLOR_FLAGS "$QUIT_FLAG"
 assert_outputs__main_script__no_operation_in_progress
 assert_files_HT '
 !! ignored0	ignored0
@@ -41,7 +42,7 @@ printf 'ccc\n' >aaa
 git add aaa
 printf 'ddd\n' >aaa
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash "$QUIT_FLAG" $COLOR_FLAGS
+assert_exit_code 1 git istash $QUIET_FLAGS "$QUIT_FLAG" $COLOR_FLAGS
 assert_outputs__main_script__no_operation_in_progress
 assert_files_HT '
 AM aaa		ddd	ccc

@@ -158,10 +158,14 @@ color_warning() {
 }
 
 printf_warning() { # arg...
-	#shellcheck disable=SC2059
-	printf "$@" \
-	| sed -E '/[[:graph:]]/s/^/warning: /' \
-	| color_warning
+	#shellcheck disable=SC2154
+	if [ "$is_quiet" = n ]
+	then
+		#shellcheck disable=SC2059
+		printf "$@" \
+		| sed -E '/[[:graph:]]/s/^/warning: /' \
+		| color_warning
+	fi
 } 1>&2
 
 color_error() {
@@ -222,10 +226,14 @@ color_hint() {
 }
 
 printf_hint() { # arg...
-	#shellcheck disable=SC2059
-	printf "$@" \
-	| sed -E '/[[:graph:]]/s/^/hint: /' \
-	| color_hint
+	#shellcheck disable=SC2154
+	if [ "$is_quiet" = n ]
+	then
+		#shellcheck disable=SC2059
+		printf "$@" \
+		| sed -E '/[[:graph:]]/s/^/hint: /' \
+		| color_hint
+	fi
 } 1>&2
 
 print_broken_operation_hint() { # called_operation

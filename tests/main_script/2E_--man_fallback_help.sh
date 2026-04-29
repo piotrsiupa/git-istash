@@ -11,6 +11,7 @@ fi
 
 PARAMETRIZE_SUBCOMMAND
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 PARAMETRIZE_OPTION true 'MAN_FLAG' '' 'man: && --man && --ma & --m'
 
 __end_of_initialization__
@@ -26,7 +27,7 @@ chmod +x './man'
 PATH="$(pwd):$PATH"
 export PATH
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash $SUBCOMMAND $COLOR_FLAGS "$MAN_FLAG"
+assert_exit_code 0 git istash $SUBCOMMAND $QUIET_FLAGS $COLOR_FLAGS "$MAN_FLAG"
 # These assertions are copied from the test for "-h".
 if [ "$SUBCOMMAND" = 'c' ] || [ "$SUBCOMMAND" = 'continue' ] || [ "$SUBCOMMAND" = 'abort' ] || [ "$SUBCOMMAND" = 'quit' ]
 then
