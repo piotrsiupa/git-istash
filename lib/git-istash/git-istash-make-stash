@@ -199,7 +199,7 @@ commit_changes() {
 	then
 		if [ -n "$patch_options" ]
 		then
-			printf '### Using the interactive patch for tracked files...\n' 1>&2
+			printf '### Using the interactive patch for tracked files...\n\n' 1>&2
 			there_was_patch_message=y
 		fi
 		if [ -z "$pathspec_file" ]
@@ -212,7 +212,7 @@ commit_changes() {
 			else
 				add_with_patch_and_pathspec
 			fi
-		fi 2>&1 | sed -E '1s/^/\n/' 1>&2
+		fi
 	fi
 	if [ -n "$message" ]
 	then
@@ -246,7 +246,7 @@ commit_changes() {
 			then
 				printf '\n\n' 1>&2
 			fi
-			printf '### Using the interactive patch for untracked files...\n' 1>&2
+			printf '### Using the interactive patch for untracked files...\n\n' 1>&2
 			there_was_patch_message=y
 		fi
 		if [ -z "$pathspec_file" ]
@@ -259,7 +259,7 @@ commit_changes() {
 			else
 				add_with_patch_and_pathspec
 			fi
-		fi 2>&1 | sed -E '1s/^/\n/' 1>&2
+		fi
 		git commit --message="untracked files on $branch_name_for_msg: $default_message" --allow-empty 1>/dev/null
 		if [ "$there_are_enough_changes" = n ] && [ "$(git rev-parse 'HEAD^{tree}')" != "$(git rev-parse 'HEAD~^{tree}')" ]
 		then
