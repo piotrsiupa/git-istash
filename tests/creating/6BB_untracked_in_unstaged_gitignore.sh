@@ -10,6 +10,7 @@ PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_STAGED
 PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 
 __end_of_initialization__
 
@@ -28,7 +29,7 @@ printf 'aaa\n' >aaa
 printf 'bbb\n' >bbb
 printf 'aaa\n' >.gitignore
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS -mX $COLOR_FLAGS
+assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $QUIET_FLAGS $STAGED_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS -mX $COLOR_FLAGS
 assert_outputs__create__success '*' 0 'X'
 new_stash_sha_CO="$stdout"
 assert_files_HTCO '

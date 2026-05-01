@@ -12,6 +12,8 @@ PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_PATHSPEC_STYLE
 PARAMETRIZE_OPTIONS_INDICATOR IS_PATHSPEC_IN_ARGS
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
+PARAMETRIZE_SUMMARY
 
 __end_of_initialization__
 
@@ -41,14 +43,14 @@ printf 'aaa0 bbb? *7 ./?dd* ' | PREPARE_PATHSPEC_FILE
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash "$CREATE_OPERATION" 'aaa0' $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $COLOR_FLAGS 'bbb?' $EOI '*7' './?dd*'
+	assert_exit_code 0 git istash "$CREATE_OPERATION" 'aaa0' $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $QUIET_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $COLOR_FLAGS 'bbb?' $EOI '*7' './?dd*'
 elif IS_PATHSPEC_IN_STDIN
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $PATHSPEC_NULL_FLAGS "$PATHSPEC_FROM_FILE_FLAG"=- $COLOR_FLAGS <.git/pathspec_for_test
+	assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $QUIET_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $PATHSPEC_NULL_FLAGS "$PATHSPEC_FROM_FILE_FLAG"=- $COLOR_FLAGS <.git/pathspec_for_test
 else
 	#shellcheck disable=SC2086
-	assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $PATHSPEC_NULL_FLAGS "$PATHSPEC_FROM_FILE_FLAG" .git/pathspec_for_test $COLOR_FLAGS
+	assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $QUIET_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $PATHSPEC_NULL_FLAGS "$PATHSPEC_FROM_FILE_FLAG" .git/pathspec_for_test $COLOR_FLAGS
 fi
 assert_outputs__create__success '*' 0 ''
 new_stash_sha_CO="$stdout"
@@ -108,8 +110,17 @@ RESTORE_HEAD_TYPE
 __test_section__ 'Pop stash'
 stash_sha="$(git rev-parse stash)"
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash pop $COLOR_FLAGS
-assert_outputs__apply__success 'pop' 0 "$stash_sha"
+assert_exit_code 0 git istash pop $COLOR_FLAGS $SUMMARY_FLAGS $QUIET_FLAGS
+assert_outputs__apply__success 'pop' '
+ A aaa0
+ A bbb3
+ A bbb4
+ A bbb5
+ A ccc7
+ A ddd9
+ A ddd10
+ A ddd11
+' 0 "$stash_sha"
 assert_files '
  A aaa0		xxx
  A bbb3		xxx

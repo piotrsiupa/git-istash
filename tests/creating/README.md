@@ -11,5 +11,6 @@ The first character of the prefix (sub-category) can be:
 - `2` - Option `--patch`.
 - `3` - Validating pathspecs.
 - `4` - Pathspecs.
-- `5` - Tricky/corner cases and miscellaneous.
-- `6` - Sub-directories.
+- `5` - Running with repository in illegal state.
+- `6` - Tricky/corner cases and miscellaneous.
+- `7` - Sub-directories.

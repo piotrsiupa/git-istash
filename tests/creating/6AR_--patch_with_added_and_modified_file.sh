@@ -10,6 +10,7 @@ PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 
 __end_of_initialization__
 
@@ -24,7 +25,7 @@ git add aaa
 printf 'yyy\naaa\naaa\nyyy\n' >aaa
 printf 's y n ' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$CREATE_OPERATION" $COLOR_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS --patch <.git/answers_for_patch
+assert_exit_code 0 git istash "$CREATE_OPERATION" $COLOR_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $QUIET_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS --patch <.git/answers_for_patch
 assert_outputs__create__success '*' 0 '' 't,3'
 new_stash_sha_CO="$stdout"
 if ! IS_KEEP_INDEX_ON

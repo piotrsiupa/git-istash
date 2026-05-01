@@ -10,6 +10,7 @@ PARAMETRIZE_KEEP_INDEX 'NO'
 PARAMETRIZE_STAGED
 PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 
 __end_of_initialization__
 
@@ -31,7 +32,7 @@ printf 'yyy\n' >ccc
 printf 'yyy\n' >ddd
 printf 'q q y y y y ' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS $COLOR_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS --allow-empty <.git/answers_for_patch
+assert_exit_code 0 git istash $QUIET_FLAGS "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS $COLOR_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS --allow-empty <.git/answers_for_patch
 assert_outputs__create__success '*' 0 '' 't,1' 'u,1'
 new_stash_sha_CO="$stdout"
 assert_files_HTCO '

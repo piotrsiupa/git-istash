@@ -8,6 +8,8 @@ PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_STAGED 'NO'
 PARAMETRIZE_UNSTAGED 'NO'
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
+PARAMETRIZE_SUMMARY
 
 __end_of_initialization__
 
@@ -29,7 +31,7 @@ printf 'foo\nbar\n' >ccc
 git add --intent-to-add ccc
 printf '' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
-GIT_EDITOR="sed -Ei '/^\+bar$/ d'" assert_exit_code 0 git istash "$CREATE_OPERATION" $STAGED_FLAGS $UNSTAGED_FLAGS $UNTRACKED_FLAGS $COLOR_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS --patch --message 'some nice stash name' --allow-empty <.git/answers_for_patch
+GIT_EDITOR="sed -Ei '/^\+bar$/ d'" assert_exit_code 0 git istash "$CREATE_OPERATION" $STAGED_FLAGS $UNSTAGED_FLAGS $UNTRACKED_FLAGS $COLOR_FLAGS $QUIET_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS --patch --message 'some nice stash name' --allow-empty <.git/answers_for_patch
 assert_outputs__create__success '*' 0 'some nice stash name'
 new_stash_sha_CO="$stdout"
 assert_files '
@@ -60,8 +62,9 @@ RESTORE_HEAD_TYPE
 __test_section__ 'Pop stash'
 stash_sha="$(git rev-parse stash)"
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash pop $COLOR_FLAGS
-assert_outputs__apply__success 'pop' 0 "$stash_sha"
+assert_exit_code 0 git istash pop $SUMMARY_FLAGS $COLOR_FLAGS $QUIET_FLAGS
+assert_outputs__apply__success 'pop' '
+' 0 "$stash_sha"
 assert_files '
    aaa		<empty>
    bbb		<empty>

@@ -6,6 +6,8 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_CONTINUE
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
+PARAMETRIZE_SUMMARY
 
 __end_of_initialization__
 
@@ -61,9 +63,9 @@ correct_head_sha="$(get_head_sha_HT)"
 mkdir -p xxx
 cd xxx
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS
+assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS $QUIET_FLAGS
 cd -
-assert_outputs__apply__conflict "$APPLY_OPERATION" '
+assert_outputs__apply__conflict "$APPLY_OPERATION" 0 '
 UU aaa
 UU xxx/aaa
 UU yyy/aaa
@@ -91,9 +93,9 @@ printf 'fff2\n' >yyy/aaa
 git add aaa xxx/aaa yyy/aaa
 cd xxx
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG"
+assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG" $QUIET_FLAGS
 cd -
-assert_outputs__apply__conflict "$APPLY_OPERATION" '
+assert_outputs__apply__conflict "$APPLY_OPERATION" 2 '
 UU aaa
 UU xxx/aaa
 UU yyy/aaa
@@ -127,9 +129,9 @@ printf 'hhh5\n' >yyy/bbb
 git add aaa xxx/aaa yyy/aaa bbb xxx/bbb yyy/bbb
 cd xxx
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG"
+assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG" $QUIET_FLAGS
 cd -
-assert_outputs__apply__conflict "$APPLY_OPERATION" '
+assert_outputs__apply__conflict "$APPLY_OPERATION" 4 '
 AA zzz
 AA xxx/zzz
 AA yyy/zzz
@@ -161,9 +163,19 @@ git add zzz xxx/zzz yyy/zzz
 stash_sha="$(git rev-parse stash)"
 cd xxx
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG"
+assert_exit_code 0 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG" $SUMMARY_FLAGS $QUIET_FLAGS
 cd -
-assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
+assert_outputs__apply__success "$APPLY_OPERATION" '
+MM aaa
+MM xxx/aaa
+MM yyy/aaa
+ M bbb
+ M xxx/bbb
+ M yyy/bbb
+?M zzz
+?M xxx/zzz
+?M yyy/zzz
+' 0 "$stash_sha"
 assert_files_HT '
 MM aaa		ggg0	fff0
 MM xxx/aaa	ggg1	fff1

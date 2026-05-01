@@ -6,6 +6,7 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_QUIT
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 
 __end_of_initialization__
 
@@ -28,8 +29,8 @@ git add aaa
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS
-assert_outputs__apply__conflict "$APPLY_OPERATION" '
+assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS $QUIET_FLAGS
+assert_outputs__apply__conflict "$APPLY_OPERATION" 2 '
 UU aaa
 '
 assert_files_HT '
@@ -46,7 +47,7 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 __test_section__ "Quit $APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$QUIT_FLAG"
+assert_exit_code 0 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$QUIT_FLAG" $QUIET_FLAGS
 assert_outputs__apply__quit "$APPLY_OPERATION"
 assert_files_HT '
 UU aaa		ddd|bbb

@@ -2,6 +2,8 @@
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
+PARAMETRIZE_SUMMARY
 
 __end_of_initialization__
 
@@ -35,8 +37,11 @@ SWITCH_HEAD_TYPE
 __test_section__ 'Apply stash'
 correct_head_sha="$(get_head_sha_HT)"
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash apply $COLOR_FLAGS "$stash_sha"
-assert_outputs__apply__success 'apply' 0 "$stash_sha"
+assert_exit_code 0 git istash apply $COLOR_FLAGS $SUMMARY_FLAGS $QUIET_FLAGS "$stash_sha"
+assert_outputs__apply__success 'apply' '
+MM aaa
+?A ddd
+' 0 "$stash_sha"
 assert_files_HT '
 MM aaa		ccc	bbb
 ?? ddd		ddd

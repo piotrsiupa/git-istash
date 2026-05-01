@@ -4,7 +4,10 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 PARAMETRIZE_CONTINUE
+PARAMETRIZE_SUMMARY
 
 __end_of_initialization__
 
@@ -47,9 +50,10 @@ __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 mkdir -p xxx
 cd xxx
-assert_exit_code 2 "$(get_relative_istash_path)" "$APPLY_OPERATION"
+#shellcheck disable=SC2086
+assert_exit_code 2 "$(get_relative_istash_path)" "$APPLY_OPERATION" $QUIET_FLAGS $COLOR_FLAGS
 cd -
-assert_outputs__apply__conflict_HT "$APPLY_OPERATION" '
+assert_outputs__apply__conflict_HT "$APPLY_OPERATION" 0 '
 UU aaa
 UU xxx/aaa
 UU yyy/aaa
@@ -86,9 +90,10 @@ printf 'eee1\n' >xxx/aaa
 printf 'eee2\n' >yyy/aaa
 git add aaa xxx/aaa yyy/aaa
 cd xxx
-assert_exit_code 2 "$(get_relative_istash_path)" "$APPLY_OPERATION" "$CONTINUE_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 2 "$(get_relative_istash_path)" "$APPLY_OPERATION" $QUIET_FLAGS $COLOR_FLAGS "$CONTINUE_FLAG"
 cd -
-assert_outputs__apply__conflict "$APPLY_OPERATION" '
+assert_outputs__apply__conflict "$APPLY_OPERATION" 2 '
 UU aaa
 UU xxx/aaa
 UU yyy/aaa
@@ -123,9 +128,10 @@ git add aaa xxx/aaa yyy/aaa
 if [ "$HEAD_TYPE" != 'ORPHAN' ]
 then
 	cd xxx
-	assert_exit_code 2 "$(get_relative_istash_path)" "$APPLY_OPERATION" "$CONTINUE_FLAG"
+	#shellcheck disable=SC2086
+	assert_exit_code 2 "$(get_relative_istash_path)" $COLOR_FLAGS "$APPLY_OPERATION" $QUIET_FLAGS $CONTINUE_FLAG
 	cd -
-	assert_outputs__apply__conflict "$APPLY_OPERATION" '
+	assert_outputs__apply__conflict "$APPLY_OPERATION" 4 '
 	AA zzz
 	AA xxx/zzz
 	AA yyy/zzz
@@ -154,9 +160,24 @@ then
 fi
 stash_sha="$(git rev-parse stash)"
 cd xxx
-assert_exit_code 0 "$(get_relative_istash_path)" "$APPLY_OPERATION" "$CONTINUE_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 0 "$(get_relative_istash_path)" "$APPLY_OPERATION" $QUIET_FLAGS $SUMMARY_FLAGS "$CONTINUE_FLAG" $COLOR_FLAGS
 cd -
-assert_outputs__apply__success "$APPLY_OPERATION" 0 "$stash_sha"
+assert_outputs__apply__success_HT "$APPLY_OPERATION" '
+MM aaa
+MM xxx/aaa
+MM yyy/aaa
+ M zzz
+ M xxx/zzz
+ M yyy/zzz
+' '
+AM aaa
+AM xxx/aaa
+AM yyy/aaa
+?A zzz
+?A xxx/zzz
+?A yyy/zzz
+' 0 "$stash_sha"
 assert_files_HT '
 MM aaa		fff0	eee0
 MM xxx/aaa	fff1	eee1

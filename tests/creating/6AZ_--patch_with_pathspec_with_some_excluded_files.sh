@@ -13,6 +13,7 @@ PARAMETRIZE_PATHSPEC_STYLE 'ARGS' 'FILE' 'NULL-FILE'
 PARAMETRIZE_OPTIONS_INDICATOR IS_PATHSPEC_IN_ARGS
 PARAMETRIZE_EXCLUDE
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 
 __end_of_initialization__
 
@@ -68,10 +69,10 @@ new_stash_sha_CO="$(
 		if IS_PATHSPEC_IN_ARGS
 		then
 			#shellcheck disable=SC2086
-			assert_exit_code 0 git istash "$CREATE_OPERATION" ":${EXCLUDE_PATTERN}aaa1" 'aaa?' $UNTRACKED_FLAGS $COLOR_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS 'bbb?' --patch -m 'a very controlled stash' 'ccc?' $EOI './?dd*' 'fff1?' ":${EXCLUDE_PATTERN}*4"
+			assert_exit_code 0 git istash "$CREATE_OPERATION" ":${EXCLUDE_PATTERN}aaa1" 'aaa?' $UNTRACKED_FLAGS $COLOR_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $QUIET_FLAGS 'bbb?' --patch -m 'a very controlled stash' 'ccc?' $EOI './?dd*' 'fff1?' ":${EXCLUDE_PATTERN}*4"
 		else
 			#shellcheck disable=SC2086
-			assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $COLOR_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'a very controlled stash' --patch $PATHSPEC_NULL_FLAGS "$PATHSPEC_FROM_FILE_FLAG" .git/pathspec_for_test
+			assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $COLOR_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $QUIET_FLAGS -m 'a very controlled stash' --patch $PATHSPEC_NULL_FLAGS "$PATHSPEC_FROM_FILE_FLAG" .git/pathspec_for_test
 		fi
 		assert_outputs__create__success '*' 0 'a very controlled stash' 't,1,3,3,1' 'u,1,1'
 	}

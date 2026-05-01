@@ -37,6 +37,7 @@ prepare_repository() {
 
 	git commit --allow-empty -m 'Initial commit'
 
+	# Common ignored files for all tests (except for tests that explicitele remove them).
 	mkdir -p .git/info
 	printf 'ignored?\n' >>.git/info/exclude
 	printf 'ignored0\n' >ignored0
@@ -45,4 +46,12 @@ prepare_repository() {
 	git remote add 'my-origin' "file://$(dirname "$(dirname "$(dirname "$(pwd -L)")")")/remote-for-tests"
 	git fetch --quiet 'my-origin'
 	git branch --set-upstream-to='my-origin/my-branch'
+	
+	# Set a color that is "normal" by default, thus making testing it harder.
+	GIT_CONFIG_COUNT=1
+	GIT_CONFIG_KEY_0='color.istash.summary.header'
+	GIT_CONFIG_VALUE_0='blue'
+	export GIT_CONFIG_COUNT
+	export GIT_CONFIG_KEY_0
+	export GIT_CONFIG_VALUE_0
 }

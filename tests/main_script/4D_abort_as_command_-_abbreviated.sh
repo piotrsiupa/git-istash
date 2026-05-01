@@ -6,6 +6,7 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_OPTION true 'ABORT_COMMAND' 'option' 'ABORT: a && abo && ab & abor'
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 
 __end_of_initialization__
 
@@ -29,8 +30,8 @@ SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS
-assert_outputs__apply__conflict_HT "$APPLY_OPERATION" '
+assert_exit_code 2 git istash $QUIET_FLAGS "$APPLY_OPERATION" $COLOR_FLAGS
+assert_outputs__apply__conflict_HT "$APPLY_OPERATION" 0 '
 UU aaa
 ' '
 DU aaa
@@ -52,7 +53,7 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 
 __test_section__ "Abort (implied) $APPLY_OPERATION stash"
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash "$ABORT_COMMAND" $COLOR_FLAGS
+assert_exit_code 1 git istash $QUIET_FLAGS "$ABORT_COMMAND" $COLOR_FLAGS
 assert_outputs__main_script__no_such_command "$ABORT_COMMAND"
 assert_files_HT '
 UU aaa		ddd|bbb

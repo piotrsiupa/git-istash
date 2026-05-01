@@ -19,6 +19,7 @@ PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 
 __end_of_initialization__
 
@@ -82,7 +83,7 @@ printf 'uf0\n' >'tra	=ÿþ€{}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©cked-dir1/i
 printf 'uf1\n' >'tra	=ÿþ€{}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©cked-dir1/ignored-di	=ÿþ€{}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©r2/some-file1'
 printf '%s\n' '*ignored*' >.git/info/exclude
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$CREATE_OPERATION" $COLOR_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
+assert_exit_code 0 git istash "$CREATE_OPERATION" $COLOR_FLAGS $QUIET_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
 assert_outputs__create__success '*' 0 ''
 new_stash_sha_CO="$stdout"
 if ! IS_KEEP_INDEX_ON

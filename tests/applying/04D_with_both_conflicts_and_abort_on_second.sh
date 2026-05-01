@@ -7,6 +7,7 @@ PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_ABORT
 PARAMETRIZE_CONTINUE
 PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
 
 __end_of_initialization__
 
@@ -32,8 +33,8 @@ SWITCH_HEAD_TYPE
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS
-assert_outputs__apply__conflict_HT "$APPLY_OPERATION" '
+assert_exit_code 2 git istash "$APPLY_OPERATION" $QUIET_FLAGS $COLOR_FLAGS
+assert_outputs__apply__conflict_HT "$APPLY_OPERATION" 0 '
 UU aaa
 ' '
 DU aaa
@@ -57,8 +58,8 @@ __test_section__ "Continue $APPLY_OPERATION stash"
 printf 'eee\n' >aaa
 git add aaa
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG"
-assert_outputs__apply__conflict "$APPLY_OPERATION" '
+assert_exit_code 2 git istash "$APPLY_OPERATION" $QUIET_FLAGS $COLOR_FLAGS "$CONTINUE_FLAG"
+assert_outputs__apply__conflict "$APPLY_OPERATION" 2 '
 UU aaa
 '
 assert_files_HT '
@@ -74,7 +75,7 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 
 __test_section__ "Abort $APPLY_OPERATION stash"
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$ABORT_FLAG"
+assert_exit_code 0 git istash "$APPLY_OPERATION" $QUIET_FLAGS $COLOR_FLAGS "$ABORT_FLAG"
 assert_outputs__apply__abort "$APPLY_OPERATION"
 assert_files_HT '
    aaa		ddd

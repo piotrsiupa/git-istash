@@ -11,6 +11,10 @@ else
 		hexdump -ve'"\\" /1 "%03o"'
 	}
 fi
+convert_to_octal_lines() {
+	convert_to_octal \
+	| sed -E 's/\\000/\n/g'
+}
 
 make_data_file_path() { # name
 	git rev-parse --git-dir | tr -d '\n'

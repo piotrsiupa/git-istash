@@ -28,6 +28,7 @@ print_help() {
 	printf '    -h\t\t\t- Print this help text and exit.\n'
 	printf '\t--help\t\t- Show manual page if possible.\n\t\t\t  (If you run it through "git", it will handle this in\n\t\t\t  its own way, which fails on Windows. See --man.)\n'
 	printf '\t--man\t\t- Alias for --help that is not intercepted by "git".\n\t\t\t  (Which makes it work on Windows.)\n'
+	printf '    -q, --quiet\t\t- Suppress human-readable summaries and information.\n'
 	printf '\t--quit\t\t- Like --abort but don'\''t restore the repository state\n\t\t\t  nor move the HEAD.\n'
 	printf '    -V, --version\t- Show version information and exit.\n'
 	printf '\n'
@@ -88,11 +89,12 @@ show_manual() {
 	fatal '\n'
 }
 
-getopt_short_options='chV'
-getopt_long_options='_skip-version-check_,abort,color::,no-color,continue,help,man,quit,version'
+getopt_short_options='chqV'
+getopt_long_options='_skip-version-check_,abort,color::,no-color,continue,help,man,quiet,quit,version'
 normalized_options="$(get_options_color -U "$getopt_short_options" "$getopt_long_options" "$@")"
 eval set -- "$normalized_options"
 skip_version_check=n
+is_quiet=n
 options_to_put_back=''
 continuation_option=''
 subcommand=''
@@ -138,6 +140,10 @@ do
 			set -- '-h' "$@"
 			continue
 		fi
+		;;
+	-q|--quiet)
+		is_quiet=y
+		options_to_put_back="$options_to_put_back $(printf '%s' "$1" | escape_for_shell)"
 		;;
 	-V|--version)
 		print_version

@@ -48,6 +48,10 @@ raw_facets='
 	# (See also "short-options" and "partial-options".)
 	color = c(o(l(o(rs?)?)?)?)?
 	
+	# Test full / partial / no summary after an apply operation. (By default, full summary is tested.)
+	# (See also "short-options" and "partial-options".)
+	summary = sum(m(a(ry?)?)?)?
+	
 	# Test also the command run with "--" between options and arguments.
 	end-options-indicator = e?oi|(e(nd)?[-_])?o(p(t(i(o(ns?)?)?|s|))?)?[-_]i(n(d(i(c(a(t(or)?)?)?)?)?)?)?|eo|e(nd)?[-_]o(p(t(i(o(ns?)?)?|s|))?)?|ei|e(nd)?[-_]i(n(d(i(c(a(t(ors?)?)?)?)?)?)?)?
 	
@@ -68,7 +72,7 @@ raw_facet_categories='
 	all = a(ll)?: '"$(printf '%s' "$facets" | sed -E 's/^(.+)=.*$/\1/' | tr '\n' ',')"'
 	
 	# Test everything important and a little more, just to be sure.
-	full = fu?ll: standard, full-pathspec-style, color, long-running
+	full = fu?ll: standard, full-pathspec-style, color, summary, long-running
 	
 	# Test the important things.
 	# (It gives a pretty good idea of whether everything works.)

@@ -78,28 +78,52 @@ capture_outputs() { # command [arguments...]
 }
 
 dedent_regex() ( # text
-	printf '%s' "$1" | sed -E 's/^\t+//' | tr -d '\n'
+	printf '%s' "$1" | sed -E -e 's/^\t+//' -e 's/^\\\\\t/\t/' | tr -d '\n'
 )
 
 match_multiline_regex() { # text regex
 	test 'success' = "$(
-		#shellcheck disable=SC2016
-		printf '%s\n' "$1" \
-		| sed -n -E \
-			-e '1h' -e '1!H' -e '$g' \
-			-e '${s/^'"$2"'$//;ts;bf;}' \
-			-e 'd' -e ':s;isuccess' -e 'q' -e ':f;ifailure'
-		)"
+		if [ ${#2} -le 10000 ]
+		then
+			#shellcheck disable=SC2016
+			printf '%s\n' "$1" \
+			| sed -n -E \
+				-e '1h' -e '1!H' -e '$g' \
+				-e '${s/^'"$2"'$//;ts;bf;}' \
+				-e 'd' -e ':s;isuccess' -e 'q' -e ':f;ifailure'
+		else
+			heredoc="$(mktemp)"
+			{
+				#shellcheck disable=SC2016
+				printf '1h\n1!H\n$g\n'
+				#shellcheck disable=SC2016
+				printf '${s/^%s$//;ts;bf;}\n' "$2"
+				printf 'd\n:s;isuccess\nq\n:f;ifailure\n'
+			} >"$heredoc"
+			printf '%s\n' "$1" \
+			| sed -n -E -f "$heredoc"
+			rm "$heredoc" >/dev/null
+		fi
+	)"
 }
 
-sanitize_for_ere() { # string
-	printf '%s' "$1" | sed -E 's/[.[\()*+?{|^$\/]/\\&/g'
+sanitize_for_ere() { # [string]
+	if [ $# -eq 0 ]
+	then
+		cat
+	else
+		printf '%s' "$1"
+	fi \
+	| sed -E 's/[.[\()*+?{|^$\/]/\\&/g'
 }
 
 # Interpret certain escape sequences using "printf". (octal encoded characters, "\t" and "\\")
 # The stream must be already sanitized for ERE.
 convert_escapes() {
-	sed -E -e 's/\\/\\\\/g' -e 's/\\\\\\\\([0-9t])/\\\1/g' -e 's/\\\\\\\\\\\\\\\\/\\\\\\\\/g' | xargs -0 -- printf
+	#shellcheck disable=SC2016
+	sed -E -e 's/\\/\\\\/g' -e 's/\\\\\\\\([0-9t])/\\\1/g' -e 's/\\\\\\\\\\\\\\\\/\\\\\\\\/g' \
+	| tr '\n' '\0' \
+	| xargs -0 -n1 -- sh -c 'printf -- "$1\n"' --
 }
 
 sanitize_for_sed() { # string
