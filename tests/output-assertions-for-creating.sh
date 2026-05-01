@@ -174,7 +174,7 @@ assert_outputs__create__pfn_without_pff() {
 	'
 }
 
-assert_outputs_create__patch_with_patchspec() {
+assert_outputs__create__patch_with_patchspec() {
 	assert_outputs_with_color '
 	' '
 		\[<color>31merror: stdin cannot be assigned to both '\''--patch'\'' and the pathspec\[<color>0?m
