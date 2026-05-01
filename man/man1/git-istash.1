@@ -704,13 +704,18 @@ Changes are not removed from working directory when \fB\-\-patch\fR with \fBe\fR
 (It will be fixed if I can figure out a way to do it in a consistent way.)
 .PP
 Not all subcommands present in the vanilla command are avaible here (e.g. \fBgit stash show\fR, \fBgit stash list\fR...).
+.br
 (However, most of the vanilla subcommands are fully or at least mostly compatible with stashes created by this commands.)
 .PP
-Because this command is written entirely in the shell script, it's slow.
+Because this command is written entirely in the shell script, it's slow. \
 The advantage of this is that it can run on every system with very little additional development cost.
+.br
 (A few seconds to make a stash isn't that a big deal, so the command probably won't be rewritten to a faster language anytime soon.)
 .PP
 There's no support for running the command while there are other unfinished operations in the repository (like rebase or merge).
+.PP
+Option \fB\-\-patch\fR eats more stdin than it needs to. \
+(This is the fault of underlying \fBgit\~add\~\-\-patch\fR.)
 
 
 .SH AUTHOR
