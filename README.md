@@ -171,12 +171,16 @@ git help istash
 # or
 git istash --help
 # or
+git istash --man
+# or
 man git-istash
 ```
 
 It is also possible to display the manual without installation, by running:
 ```sh
 bin/git-istash.sh --help
+# or
+man man/man1/git-istash.1
 ```
 
 ### Brief help text
