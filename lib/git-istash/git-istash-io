@@ -108,7 +108,10 @@ get_color() { # [config_variable...] default_value
 		fi
 		shift
 	done
-	git config --get-color '' "$1"
+	if ! git config --get-color '' "$1"
+	then
+		return 128
+	fi
 }
 
 # Applies color to each line from stdin.
