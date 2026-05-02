@@ -39,13 +39,13 @@ set_tmp_config_entry() { # key value
 
 set_color_for_all() { # value
 	set -- "$1" "$(printf '%s' "$1" | tr 'A-Z\n' 'a-zX')"
-	if printf '%s\n' "$2" | grep -Exq '|a(lways)?|y(es)?|t(rue)?|affirmative|1'
+	if printf '%s\n' "$2" | grep -Exq '|a(lways)?|y(es)?|on|t(rue)?|affirmative|1'
 	then
 		set -- 'always'
-	elif printf '%s' "$2" | grep -Exq 'n(ever)?|no|f(alse)?|negative|0'
+	elif printf '%s' "$2" | grep -Exq 'n(ever)?|no|off|f(alse)?|negative|0'
 	then
 		set -- 'never'
-	elif printf '%s' "$2" | grep -Exq 'auto|d(efault)?|(terminal|tty)(-only)?|magic' # yeah, this is overdoing it, whatever, it's fun
+	elif printf '%s' "$2" | grep -Exq 'auto|d(ef(ault)?)?|(term(inal)?|tty)(-only)?|magic' # yeah, this is overdoing it, whatever, it's fun
 	then
 		set -- 'auto'
 	else
