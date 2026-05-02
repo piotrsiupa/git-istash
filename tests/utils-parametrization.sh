@@ -146,7 +146,7 @@ PARAMETRIZE_OPTION() { # condition name override_facet map values...
 	MAP="$(printf '%s' "$4" | sed -E 's/\s+//g' | tr '|' '\n' | sed -E 's/^(.+:)(.*&&)(.*&&)(.*)$/\1\3\2\4/')"
 	shift 4
 	PREVIOUS_VALUE="$(awk -v key="$NAME" '$1 == key { print $2 }' "$PARAMETERS_FILE")"
-	ALTERNATIVE_SPELLINGS="$(printf '%s\n' "$MAP" | sed -E 's/^.+:.*&&(.*&&)(.*)$/\1\2/' | tr '&' '\n' | grep -Ev '^$')"
+	ALTERNATIVE_SPELLINGS="$(printf '%s\n' "$MAP" | sed -E 's/^.+:.*&&(.*&&)(.*)$/\1\2/' | tr '&' '\n' | grep -Ev '^$' || true)"
 	DONE_ALTERNATIVE_SPELLINGS="$(awk -v key="$NAME" '$1 == key { for (i = 5; i <= NF; ++i) printf "%s ", $i }' "$PARAMETERS_FILE")"
 	if ! is_facet_active 'short-options'
 	then
@@ -268,13 +268,12 @@ IS_COLOR_ON() {
 
 #shellcheck disable=SC2120
 PARAMETRIZE_QUIET() { # keys
-	PARAMETRIZE_OPTION true 'QUIET' '' 'NO: && QUIET-DEFAULT && | YES: QUIET-SHORT && QUIET-LONG && QUIET-LONGINSH0 & QUIET-LONGISH1' "$@"
+	PARAMETRIZE_OPTION true 'QUIET' '' 'NO: && QUIET-DEFAULT && | YES: QUIET-SHORT && QUIET-LONG && QUIET-LONGISH0' "$@"
 	#shellcheck disable=SC2034
 	case "$QUIET" in
 		QUIET-SHORT) QUIET_FLAGS='-q' ;;
 		QUIET-LONG) QUIET_FLAGS='--quiet' ;;
-		QUIET-LONGISH0) QUIET_FLAGS='--qui' ;;
-		QUIET-LONGISH1) QUIET_FLAGS='--q' ;;
+		QUIET-LONGISH0) QUIET_FLAGS='--quie' ;;
 		QUIET-DEFAULT) QUIET_FLAGS='' ;;
 	esac
 }

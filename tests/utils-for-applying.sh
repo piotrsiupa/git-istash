@@ -62,12 +62,10 @@ PARAMETRIZE_ABORT() { # keys
 
 #shellcheck disable=SC2120
 PARAMETRIZE_QUIT() { # keys
-	PARAMETRIZE_OPTION true 'QUIT' '' 'QUIT: && QUIT-LONG && QUIT-LONGISH0 & QUIT-LONGISH1' "$@"
+	PARAMETRIZE_OPTION true 'QUIT' '' 'QUIT: && QUIT-LONG &&' "$@"
 	#shellcheck disable=SC2034
 	case "$QUIT" in
 		QUIT-LONG) QUIT_FLAG='--quit' ;;
-		QUIT-LONGISH0) QUIT_FLAG='--qui' ;;
-		QUIT-LONGISH1) QUIT_FLAG='--qu' ;;
 	esac
 }
 
