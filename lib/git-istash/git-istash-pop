@@ -226,19 +226,27 @@ do
 done
 if [ $continue_set = y ] && [ $abort_set = y ] && [ $quit_set = y ]
 then
-	error 'you can choose continue, abort or quit at your discretion but the rule is that you can only have one\n'
+	printf_error 'you can choose continue, abort or quit at your discretion but the rule is that you can only have one\n'
+	print_help_hint 'istash pop'
+	error
 fi
 if [ $abort_set = y ] && [ $quit_set = y ]
 then
-	error 'either abort or quit; there is no middle road\n'
+	printf_error 'either abort or quit; there is no middle road\n'
+	print_help_hint 'istash pop'
+	error
 fi
 if [ $continue_set = y ] && [ $abort_set = y ]
 then
-	error 'unclear whether to continue aborting or to abort continuing\n'
+	printf_error 'unclear whether to continue aborting or to abort continuing\n'
+	print_help_hint 'istash pop'
+	error
 fi
 if [ $continue_set = y ] && [ $quit_set = y ]
 then
-	error 'unclear whether to continue quitting or to quit continuing\n'
+	printf_error 'unclear whether to continue quitting or to quit continuing\n'
+	print_help_hint 'istash pop'
+	error
 fi
 
 lib_dir="$(cd "$(dirname "$0")" ; pwd)"

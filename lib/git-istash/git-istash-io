@@ -58,6 +58,10 @@ set_color_for_all() { # value
 	done
 }
 
+print_bad_boolean_warning() { # config_variable
+	printf_warning 'bad boolean config value '\''%s'\'' for '\''%s'\''\n' "$(git config --get "$1")" "$1"
+}
+
 is_color_enabled() { # config_variable...
 	if [ $# -eq 0 ]
 	then
@@ -76,7 +80,7 @@ is_color_enabled() { # config_variable...
 			then
 				return 1
 			else
-				printf_warning 'bad boolean config value '\''%s'\'' for '\''%s'\''\n' "$(git config --get "$1")" "$1"
+				print_bad_boolean_warning "$1"
 			fi
 		fi
 		shift
@@ -225,10 +229,30 @@ color_hint() {
 	fi
 }
 
-printf_hint() { # arg...
-	#shellcheck disable=SC2154
-	if [ "$is_quiet" = n ]
+is_hint_enabled() { # advice_name
+	if [ "${GIT_ADVICE-}" = '0' ]
 	then
+		return 1
+	fi
+	hint_boolean_name="advice.istash$1"
+	if git config --get "$hint_boolean_name" 1>/dev/null 2>&1
+	then
+		if ! hint_boolean_value="$(git config --get --type=bool "$hint_boolean_name" 2>/dev/null)"
+		then
+			print_bad_boolean_warning "$hint_boolean_name"
+			return 0
+		fi
+		test "$hint_boolean_value" != 'false'
+	else
+		return 0
+	fi
+}
+
+printf_hint() { # advice_name arg...
+	#shellcheck disable=SC2154
+	if [ "$is_quiet" = n ] && is_hint_enabled "$1"
+	then
+		shift
 		#shellcheck disable=SC2059
 		printf "$@" \
 		| sed -E '/[[:graph:]]/s/^/hint: /' \
@@ -236,14 +260,18 @@ printf_hint() { # arg...
 	fi
 } 1>&2
 
+print_help_hint() { # called_operation
+	printf_hint 'Help' 'type '\''git %s --help'\'' for detailed information\nor '\''git %s -h'\'' for a short help text\n' "$1" "$1"
+}
+
 print_broken_operation_hint() { # called_operation
 	if printf '%s' "$1" | grep -E -q '^-'
 	then
-		printf_hint 'fix the problems and rerun '\''git istash %s'\''\n' "$1"
+		printf_hint 'FixOrQuit' 'fix the problems and rerun '\''git istash %s'\''\n' "$1"
 	else
-		printf_hint 'fix the problem and finalize that operation before starting a new one\n'
+		printf_hint 'FixOrQuit' 'fix the problem and finalize that operation before starting a new one\n'
 	fi
-	printf_hint 'or run '\''git istash --quit'\'' to forcefully cancel it\n'
+	printf_hint 'FixOrQuit' 'or run '\''git istash --quit'\'' to forcefully cancel it\n'
 }
 
 print_error_for_data_files_check() { # current_operation called_operation
@@ -264,7 +292,7 @@ print_error_for_data_files_check() { # current_operation called_operation
 	elif [ "$1" != 'nothing' ]
 	then
 		printf_error 'there is currently '\''git istash %s'\'' in progress\n' "$1"
-		printf_hint 'use '\''git istash --continue'\'' or '\''git istash --abort'\''\n'
+		printf_hint 'ContinueOrAbort' 'use '\''git istash --continue'\'' or '\''git istash --abort'\''\n'
 	fi
 }
 

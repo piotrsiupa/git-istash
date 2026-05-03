@@ -589,6 +589,46 @@ The content is the same as what was found there at the time of writing / updatin
 .sp
 Variables with \fBistash\fR in their names are described only here.
 
+advice.*
+.RS 4
+These variables control various optional help messages designed to aid new users. \
+When left unconfigured, Git will give the message alongside instructions on how to squelch it. \
+You can tell Git that you have understood the issue and no longer need a specific help message by setting the corresponding variable to \fBfalse\fR.
+.sp
+As they are intended to help human users, these messages are output to the standard error. \
+When tools that run Git as a subprocess find them disruptive, they can set \fBGIT_ADVICE=0\fR in the environment to squelch all advice messages.
+.sp
+istashConflicts
+.RS 4
+Shown when \fBapply\fR/\fBpop\fR has stopped to resolve conflicts.
+.RE
+.sp
+istashContinueOrAbort
+.RS 4
+Shown when trying to run a new \fBistash\fR operation while \fBapply\fR/\fBpop\fR is already running (stopped for conflicts).
+.RE
+.sp
+istashFinalizeOther
+.RS 4
+Shown when trying to run \fBistash\fR while another operation (like \fBmerge\fR or \fBrebase\fR) is in progress.
+.RE
+.sp
+istashFixOrQuit
+.RS 4
+Shown when \fBapply\fR/\fBpop\fR cannot resume because of problems with saved data or an illegal state of the repository.
+.RE
+.sp
+istashHelp
+.RS 4
+Shown when the command was called with wrong arguments.
+.RE
+.sp
+istashImplPushPathspec
+.RS 4
+Shown when trying to run \fBpush\fR implicitely without separating pathspecs from other arguments with \fB\-\-\fR.
+.RE
+.RE
+
 color.advice
 .RS 4
 A boolean to enable/disable color in hints (e.g. when a push failed, see \fBadvice.*\fR  for a list). \

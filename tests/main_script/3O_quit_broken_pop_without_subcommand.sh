@@ -6,6 +6,7 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_QUIT
 PARAMETRIZE_COLOR
 PARAMETRIZE_QUIET
+PARAMETRIZE_HINT 'istashConflicts'
 
 __end_of_initialization__
 
@@ -28,7 +29,7 @@ SWITCH_HEAD_TYPE
 
 __test_section__ 'Pop stash'
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash pop $COLOR_FLAGS $QUIET_FLAGS
+assert_exit_code 2 git $ADVICE_FLAGS istash pop $COLOR_FLAGS $QUIET_FLAGS
 assert_outputs__apply__conflict_HT 'pop' 2 '
 UU aaa
 ' '
@@ -53,7 +54,7 @@ __test_section__ 'Quit popping stash'
 rm .git/ISTASH_TARGET
 correct_head_sha="$(get_head_sha_HT)"
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash $COLOR_FLAGS "$QUIT_FLAG" $QUIET_FLAGS
+assert_exit_code 0 git $ADVICE_FLAGS istash $COLOR_FLAGS "$QUIT_FLAG" $QUIET_FLAGS
 assert_outputs__apply__quit 'pop'
 assert_files_HT '
 UU aaa		ccc|bbb

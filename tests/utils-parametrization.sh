@@ -138,7 +138,7 @@ IS_LAST_PARAMETRIZE_CALL() { # name
 # This is good to create wrapper funcitons to e.g. cover both spellings of option "-k" and "--keep-index" and have to specify only one parameter in the function call.
 # (If no key is passed, all values are used.)
 # Level of meticulousness affects which variants are used or skipped.
-PARAMETRIZE_OPTION() { # condition name override_facet map values...
+PARAMETRIZE_OPTION() { # condition name override_facet map [values...]
 	CONDITION="$1"
 	NAME="$2"
 	FACET="${3:-options}"
@@ -279,4 +279,33 @@ PARAMETRIZE_QUIET() { # keys
 }
 IS_QUIET() {
 	test "${QUIET-"QUIET-DEFAULT"}" != 'QUIET-DEFAULT'
+}
+
+PARAMETRIZE_HINT() { # advice_name...
+	# No advice is supported since git 2.46, but it's not actually needed for istash to work, so we silently skip testing it if it's not supported.
+	#shellcheck disable=SC2154
+	if [ "$git_supports_no_advice" = y ]
+	then
+		PARAMETRIZE_OPTION true 'HINT' 'hint' 'YES: ENBL-HINT-SHORT && ALL-HINTS & ENBL-HINT && ENBL-HINT-ALT | NO: DSBL-HINT-SHORT && DSBL-HINT & NO-HINTS & NO-ADVICE && DSBL-HINT-ALT'
+	else
+		PARAMETRIZE_OPTION true 'HINT' 'hint' 'YES: ENBL-HINT-SHORT && ALL-HINTS & ENBL-HINT && ENBL-HINT-ALT | NO: DSBL-HINT-SHORT && DSBL-HINT & NO-HINTS && DSBL-HINT-ALT'
+	fi
+	#shellcheck disable=SC2034
+	ADVICE_NAMES="$(printf '%s\n' "$@")"
+	ADVICE_FLAGS=''
+	#shellcheck disable=SC2034
+	case "$HINT" in
+		ALL-HINTS) ;;
+		ENBL-HINT) ;;  # Postponed to when "prepare_repository" is called.
+		ENBL-HINTS-SHORT) ;;  # Postponed to when "prepare_repository" is called.
+		ENBL-HINTS-ALT) ;;  # Postponed to when "prepare_repository" is called.
+		NO-HINTS) GIT_ADVICE=0 ; export GIT_ADVICE ;;
+		NO-ADVICE) ADVICE_FLAGS='--no-advice' ;;
+		DSBL-HINT) ;;  # Postponed to when "prepare_repository" is called.
+		DSBL-HINTS-SHORT) ;;  # Postponed to when "prepare_repository" is called.
+		DSBL-HINTS-ALT) ;;  # Postponed to when "prepare_repository" is called.
+	esac
+}
+HINT_ENABLED() { # advice_name
+	printf '%s\n' "$HINT" | grep -E -q '^ALL-HINTS$|^ENBL-HINT(-|$)'
 }

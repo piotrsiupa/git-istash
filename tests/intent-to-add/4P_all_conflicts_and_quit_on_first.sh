@@ -7,6 +7,7 @@ PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_QUIT
 PARAMETRIZE_COLOR
 PARAMETRIZE_QUIET
+PARAMETRIZE_HINT 'istashConflicts'
 
 __end_of_initialization__
 
@@ -37,7 +38,7 @@ printf 'iii\n' >ccc
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash $QUIET_FLAGS "$APPLY_OPERATION" $COLOR_FLAGS
+assert_exit_code 2 git $ADVICE_FLAGS istash $QUIET_FLAGS "$APPLY_OPERATION" $COLOR_FLAGS
 assert_outputs__apply__conflict "$APPLY_OPERATION" 0 '
 UU aaa
 '

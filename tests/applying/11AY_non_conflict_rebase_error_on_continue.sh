@@ -7,6 +7,7 @@ PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_CONTINUE
 PARAMETRIZE_COLOR
 PARAMETRIZE_QUIET
+PARAMETRIZE_HINT 'istashConflicts'
 
 __end_of_initialization__
 
@@ -35,7 +36,7 @@ printf 'wdf1a\n' >wdf1
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash $QUIET_FLAGS "$APPLY_OPERATION" $COLOR_FLAGS
+assert_exit_code 2 git $ADVICE_FLAGS istash $QUIET_FLAGS "$APPLY_OPERATION" $COLOR_FLAGS
 assert_outputs__apply__conflict_HT "$APPLY_OPERATION" 2 '
 UU aaa
 ' '
@@ -62,7 +63,7 @@ printf 'ddd\n' >aaa
 git add aaa
 rm -rf '.git/rebase-apply' '.git/rebase-merge'
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash $QUIET_FLAGS "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG"
+assert_exit_code 1 git $ADVICE_FLAGS istash $QUIET_FLAGS "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG"
 assert_outputs__apply__no_rebase_in_progress
 assert_files_HT '
 M  aaa		ddd

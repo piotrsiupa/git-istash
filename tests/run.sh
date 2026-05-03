@@ -126,6 +126,15 @@ check_system() {
 		limited_file_system=y
 	fi 2>/dev/null
 	export limited_file_system
+	
+	# Supported since Git 2.46 so some tests need to be modified for older versions.
+	if git --no-advice --version 1>/dev/null 2>&1
+	then
+		git_supports_no_advice=y
+	else
+		git_supports_no_advice=n
+	fi
+	export git_supports_no_advice
 }
 
 delete_test_remote() {
@@ -851,13 +860,14 @@ complete='
 	non-essential,head-type,subcommand,options,color,summary,miscellaneous
 	non-essential,pathspec-style,end-options-indicator,long-running
 	options,short-options,partial-options,pathspec-style
-	color,summary,short-options,partial-options
+	color,hint,summary,short-options,partial-options
 '
 quickie='
 	non-essential,subcommand
 	non-essential,head-type
 	non-essential,options,miscellaneous
 	non-essential,color
+	non-essential,hint
 	non-essential,summary
 	options,short-options
 	pathspec-style

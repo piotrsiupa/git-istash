@@ -8,6 +8,7 @@ PARAMETRIZE_CONTINUE
 PARAMETRIZE_QUIT
 PARAMETRIZE_COLOR
 PARAMETRIZE_QUIET
+PARAMETRIZE_HINT 'istashConflicts'
 
 __end_of_initialization__
 
@@ -54,7 +55,7 @@ __test_section__ "$CAP_APPLY_OPERATION stash"
 mkdir -p xxx
 cd xxx
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS $QUIET_FLAGS
+assert_exit_code 2 git $ADVICE_FLAGS istash "$APPLY_OPERATION" $COLOR_FLAGS $QUIET_FLAGS
 cd -
 assert_outputs__apply__conflict "$APPLY_OPERATION" 0 '
 AA aaa
@@ -81,7 +82,7 @@ printf 'fff2\n' >yyy/aaa
 git add aaa xxx/aaa yyy/aaa
 cd xxx
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG" $QUIET_FLAGS
+assert_exit_code 2 git $ADVICE_FLAGS istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG" $QUIET_FLAGS
 cd -
 assert_outputs__apply__conflict "$APPLY_OPERATION" 1 '
 UU aaa
@@ -111,7 +112,7 @@ printf 'ggg2\n' >yyy/aaa
 git add aaa xxx/aaa yyy/aaa
 cd xxx
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG" $QUIET_FLAGS
+assert_exit_code 2 git $ADVICE_FLAGS istash "$APPLY_OPERATION" $COLOR_FLAGS "$CONTINUE_FLAG" $QUIET_FLAGS
 cd -
 assert_outputs__apply__conflict "$APPLY_OPERATION" 2 '
 UU aaa

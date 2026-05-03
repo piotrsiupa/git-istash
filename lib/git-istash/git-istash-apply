@@ -385,7 +385,7 @@ print_rebase_problem() {
 		esac
 		printf '.\n'
 	fi 1>&2
-	printf_hint 'use '\''git istash --continue'\'' after fixing the conflicts\nor, to undo everything '\''git istash %s'\'' did, run '\''git istash --abort'\''\n' "$(get_sub_command_name)"
+	printf_hint 'Conflicts' 'use '\''git istash --continue'\'' after fixing the conflicts\nor, to undo everything '\''git istash %s'\'' did, run '\''git istash --abort'\''\n' "$(get_sub_command_name)"
 }
 
 end_with_rebase_problem() {
@@ -732,19 +732,27 @@ do
 done
 if [ $continue_set = y ] && [ $abort_set = y ] && [ $quit_set = y ]
 then
-	error 'you can choose continue, abort or quit at your discretion but the rule is that you can only have one\n'
+	printf_error 'you can choose continue, abort or quit at your discretion but the rule is that you can only have one\n'
+	print_help_hint 'istash apply'
+	error
 fi
 if [ $abort_set = y ] && [ $quit_set = y ]
 then
-	error 'either abort or quit; there is no middle road\n'
+	printf_error 'either abort or quit; there is no middle road\n'
+	print_help_hint 'istash apply'
+	error
 fi
 if [ $continue_set = y ] && [ $abort_set = y ]
 then
-	error 'unclear whether to continue aborting or to abort continuing\n'
+	printf_error 'unclear whether to continue aborting or to abort continuing\n'
+	print_help_hint 'istash apply'
+	error
 fi
 if [ $continue_set = y ] && [ $quit_set = y ]
 then
-	error 'unclear whether to continue quitting or to quit continuing\n'
+	printf_error 'unclear whether to continue quitting or to quit continuing\n'
+	print_help_hint 'istash apply'
+	error
 fi
 
 lib_dir="$(cd "$(dirname "$0")" ; pwd)"

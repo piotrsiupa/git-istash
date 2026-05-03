@@ -33,20 +33,24 @@ raw_facets='
 	
 	# Test various options applicable for given test. (E.g. try to run the same test with and without "--keep-index".)
 	# (See also "short-options" and "partial-options".)
-	# This focuses on the options that tends to inteact with each other. See also "color".
+	# This focuses on the options that tends to inteact with each other. See also "color", "hint" and "summary".
 	options = o(p(t(i(o(ns?)?)?|s|))?)?
 	
-	# Test both short and long variants of the same option.
+	# Test both short and long variants of the same option (and sometimes other things like config variables).
 	# (E.g. "--continue" and "-c".)
 	short-options = so|s(h(o?rt)?)?[-_]o(p(t(i(o(ns?)?)?|s|))?)?
 	
-	# Test also shortened spelling for options.
+	# Test also shortened spelling for options (and sometimes other things like config variables).
 	# (E.g. "--conti" instead of "--continue".)
 	partial-options = po|p(a(r(t(ial)?)?)?)?[-_]o(p(t(i(o(ns?)?)?|s|))?)?
 	
 	# Test both with colors tuner on and off. (They are on by default in tests.)
 	# (See also "short-options" and "partial-options".)
 	color = c(o(l(o(rs?)?)?)?)?
+	
+	# Test both enabled and disabled hints. (By default test only enabled.)
+	# (See also "short-options" and "partial-options".)
+	hint = h(i?nts?)?
 	
 	# Test full / partial / no summary after an apply operation. (By default, full summary is tested.)
 	# (See also "short-options" and "partial-options".)
@@ -72,7 +76,7 @@ raw_facet_categories='
 	all = a(ll)?: '"$(printf '%s' "$facets" | sed -E 's/^(.+)=.*$/\1/' | tr '\n' ',')"'
 	
 	# Test everything important and a little more, just to be sure.
-	full = fu?ll: standard, full-pathspec-style, color, summary, long-running
+	full = fu?ll: standard, full-pathspec-style, color, hint, summary, long-running
 	
 	# Test the important things.
 	# (It gives a pretty good idea of whether everything works.)

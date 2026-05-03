@@ -8,6 +8,7 @@ PARAMETRIZE_CONTINUE
 PARAMETRIZE_COLOR
 PARAMETRIZE_QUIET
 PARAMETRIZE_SUMMARY
+PARAMETRIZE_HINT 'istashConflicts'
 
 __end_of_initialization__
 
@@ -51,7 +52,7 @@ correct_head_sha="$(get_head_sha_HT)"
 mkdir -p xxx
 cd xxx
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash $QUIET_FLAGS "$APPLY_OPERATION" $COLOR_FLAGS
+assert_exit_code 2 git $ADVICE_FLAGS istash $QUIET_FLAGS "$APPLY_OPERATION" $COLOR_FLAGS
 cd -
 assert_outputs__apply__conflict_HT "$APPLY_OPERATION" 0 '
 UU aaa
@@ -91,7 +92,7 @@ printf 'eee2\n' >yyy/aaa
 git add aaa xxx/aaa yyy/aaa
 cd xxx
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash $QUIET_FLAGS "$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS
+assert_exit_code 2 git $ADVICE_FLAGS istash $QUIET_FLAGS "$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS
 cd -
 assert_outputs__apply__conflict "$APPLY_OPERATION" 2 '
 UU aaa
@@ -129,7 +130,7 @@ if [ "$HEAD_TYPE" != 'ORPHAN' ]
 then
 	cd xxx
 	#shellcheck disable=SC2086
-	assert_exit_code 2 git istash $QUIET_FLAGS "$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS
+	assert_exit_code 2 git $ADVICE_FLAGS istash $QUIET_FLAGS "$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS
 	cd -
 	assert_outputs__apply__conflict "$APPLY_OPERATION" 4 '
 	AA zzz

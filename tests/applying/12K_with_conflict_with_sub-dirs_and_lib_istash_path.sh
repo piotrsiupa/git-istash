@@ -8,6 +8,11 @@ PARAMETRIZE_CONTINUE
 PARAMETRIZE_COLOR
 PARAMETRIZE_QUIET
 PARAMETRIZE_SUMMARY
+PARAMETRIZE_HINT 'istashConflicts'
+if [ "$HINT" = 'NO-ADVICE' ]
+then
+	skip_silently
+fi
 
 __end_of_initialization__
 

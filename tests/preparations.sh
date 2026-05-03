@@ -54,4 +54,27 @@ prepare_repository() {
 	export GIT_CONFIG_COUNT
 	export GIT_CONFIG_KEY_0
 	export GIT_CONFIG_VALUE_0
+	
+	case "${HINT-}" in
+		'') ;;
+		'ALL-HINTS') ;;
+		'ENBL-HINT') ADVICE_VALUE='true' ;;
+		'ENBL-HINT-SHORT') ADVICE_VALUE='1' ;;
+		'ENBL-HINT-ALT') ADVICE_VALUE='on' ;;
+		'NO-HINTS') ;;
+		'NO-ADVICE') ;;
+		'DSBL-HINT') ADVICE_VALUE='false' ;;
+		'DSBL-HINT-SHORT') ADVICE_VALUE='0' ;;
+		'DSBL-HINT-ALT') ADVICE_VALUE='off' ;;
+		*) fail 'Unknown hint setting "%s"!\n' "$HINT"
+	esac
+	if [ -n "${ADVICE_VALUE-}" ]
+	then
+		#shellcheck disable=SC2153
+		printf '%s\n' "$ADVICE_NAMES" \
+		| while read -r ADVICE_NAME
+		do
+			git config --local "advice.$ADVICE_NAME" "$ADVICE_VALUE"
+		done
+	fi
 }

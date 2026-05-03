@@ -7,6 +7,7 @@ PARAMETRIZE_CONTINUE
 PARAMETRIZE_ABORT
 PARAMETRIZE_COLOR
 PARAMETRIZE_QUIET
+PARAMETRIZE_HINT 'istashConflicts' 'istashFixOrQuit'
 
 __end_of_initialization__
 
@@ -30,7 +31,7 @@ SWITCH_HEAD_TYPE
 __test_section__ 'Pop stash'
 correct_head_sha="$(get_head_sha_HT)"
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash pop $QUIET_FLAGS $COLOR_FLAGS
+assert_exit_code 2 git $ADVICE_FLAGS istash pop $QUIET_FLAGS $COLOR_FLAGS
 assert_outputs__apply__conflict_HT 'pop' 2 '
 UU aaa
 ' '
@@ -57,7 +58,7 @@ correct_head_sha2="$(get_head_sha_HT)"
 printf 'ddd\n' >aaa
 git add aaa
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash $QUIET_FLAGS "$CONTINUE_FLAG" $COLOR_FLAGS
+assert_exit_code 1 git $ADVICE_FLAGS istash $QUIET_FLAGS "$CONTINUE_FLAG" $COLOR_FLAGS
 assert_outputs__missing_data_file 'pop' 'ISTASH_TARGET'
 assert_files_HT '
 M  aaa		ddd
@@ -77,7 +78,7 @@ assert_dotgit_contents 'ISTASH_STASH' 'ISTASH_TARGET~' 'ISTASH_WORKING-DIR'
 __test_section__ 'Abort popping stash'
 mv .git/ISTASH_TARGET~ .git/ISTASH_TARGET
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash pop $QUIET_FLAGS "$ABORT_FLAG" $COLOR_FLAGS
+assert_exit_code 0 git $ADVICE_FLAGS istash pop $QUIET_FLAGS "$ABORT_FLAG" $COLOR_FLAGS
 assert_outputs__apply__abort 'pop'
 assert_files_HT '
    aaa		ccc
