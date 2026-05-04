@@ -273,7 +273,7 @@ hint() { # advice_name [arg...]
 	fi
 	printf_hint \
 		"$advice_name" \
-		"${first_printf_arg}Disable this message with \"git config advice.istash%s false\"\\n" \
+		"${first_printf_arg}Disable this message with \"git config set advice.istash%s false\"\\n" \
 		"$@" "$advice_name"
 }
 

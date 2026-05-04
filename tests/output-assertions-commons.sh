@@ -13,7 +13,7 @@ create_help_hint_regex() { # operation
 		printf '%s' '\n'
 		printf '%s' '\[<color>33mhint: type '\''git istash '"$1"' --help'\'' for detailed information\[<color>0?m\n'
 		printf '%s' '\[<color>33mhint: or '\''git istash '"$1"' -h'\'' for a short help text\[<color>0?m\n'
-		printf '%s' '\[<color>33mhint: Disable this message with "git config advice.istashHelp false"\[<color>0?m'
+		printf '%s' '\[<color>33mhint: Disable this message with "git config set advice.istashHelp false"\[<color>0?m'
 	fi
 }
 
@@ -33,7 +33,7 @@ assert_outputs__operation_in_progress() { # operation
 		then
 			printf '%s' '\n'
 			printf '%s' '\[<color>33mhint: use '\''git istash --continue'\'' or '\''git istash --abort'\''\[<color>0?m\n'
-			printf '%s' '\[<color>33mhint: Disable this message with "git config advice.istashContinueOrAbort false"\[<color>0?m'
+			printf '%s' '\[<color>33mhint: Disable this message with "git config set advice.istashContinueOrAbort false"\[<color>0?m'
 		fi
 	)"
 }
@@ -46,7 +46,7 @@ assert_outputs__external_operation_in_progress() { # operation
 		then
 			printf '%s' '\n'
 			printf '%s' '\[<color>33mhint: finalize it before running '\''git istash'\''\[<color>0?m\n'
-			printf '%s' '\[<color>33mhint: Disable this message with "git config advice.istashFinalizeOther false"\[<color>0?m'
+			printf '%s' '\[<color>33mhint: Disable this message with "git config set advice.istashFinalizeOther false"\[<color>0?m'
 		fi
 	)"
 }
@@ -63,7 +63,7 @@ create_broken_operation_hint_regex() {
 		printf '\\n%s' '
 			\[<color>33mhint: fix the problem and finalize that operation before starting a new one\[<color>0?m\n
 			\[<color>33mhint: or run '\''git istash --quit'\'' to forcefully cancel it\[<color>0?m\n
-			\[<color>33mhint: Disable this message with "git config advice.istashFixOrQuit false"\[<color>0?m
+			\[<color>33mhint: Disable this message with "git config set advice.istashFixOrQuit false"\[<color>0?m
 		'
 	fi
 }

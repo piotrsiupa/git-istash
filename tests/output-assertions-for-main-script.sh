@@ -15,7 +15,7 @@ assert_outputs__main_script__no_such_command() { # command
 		then
 			printf '\\n'
 			printf '%s' '\[<color>33mhint: pathspecs for an implicit '\''push'\'' subcommand must be preceded by '\''--'\''\[<color>0?m\n'
-			printf '%s' '\[<color>33mhint: Disable this message with "git config advice.istashImplPushPathspec false"\[<color>0?m'
+			printf '%s' '\[<color>33mhint: Disable this message with "git config set advice.istashImplPushPathspec false"\[<color>0?m'
 		fi
 	)"
 }
