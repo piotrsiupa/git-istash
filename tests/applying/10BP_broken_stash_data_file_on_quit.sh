@@ -7,6 +7,7 @@ PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_QUIT
 PARAMETRIZE_COLOR
 PARAMETRIZE_QUIET
+PARAMETRIZE_HINT 'istashConflicts'
 
 __end_of_initialization__
 
@@ -35,7 +36,7 @@ printf 'wdf1a\n' >wdf1
 
 __test_section__ 'Pop stash'
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash 'pop' $COLOR_FLAGS $QUIET_FLAGS
+assert_exit_code 2 git $ADVICE_FLAGS istash 'pop' $COLOR_FLAGS $QUIET_FLAGS
 assert_outputs__apply__conflict_HT 'pop' 2 '
 UU aaa
 ' '
@@ -60,7 +61,7 @@ assert_dotgit_contents_for 'pop'
 __test_section__ "Quit $APPLY_OPERATION stash"
 printf '5\n' >.git/ISTASH_STASH
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$QUIT_FLAG" $QUIET_FLAGS
+assert_exit_code 0 git $ADVICE_FLAGS istash "$APPLY_OPERATION" $COLOR_FLAGS "$QUIT_FLAG" $QUIET_FLAGS
 assert_outputs__apply__quit 'pop'
 assert_files_HT '
 UU aaa		ddd|bbb

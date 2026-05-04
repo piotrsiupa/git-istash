@@ -6,6 +6,7 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_QUIT
 PARAMETRIZE_COLOR
 PARAMETRIZE_QUIET
+PARAMETRIZE_HINT 'istashConflicts'
 
 __end_of_initialization__
 
@@ -34,7 +35,7 @@ printf 'wdf1a\n' >wdf1
 
 __test_section__ 'Pop stash'
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash pop $QUIET_FLAGS $COLOR_FLAGS
+assert_exit_code 2 git $ADVICE_FLAGS istash pop $QUIET_FLAGS $COLOR_FLAGS
 assert_outputs__apply__conflict_HT 'pop' 2 '
 UU aaa
 ' '
@@ -60,7 +61,7 @@ assert_dotgit_contents_for 'pop'
 __test_section__ 'Quit apply stash'
 rm .git/ISTASH_TARGET
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash apply $QUIET_FLAGS "$QUIT_FLAG" $COLOR_FLAGS
+assert_exit_code 0 git $ADVICE_FLAGS istash apply $QUIET_FLAGS "$QUIT_FLAG" $COLOR_FLAGS
 assert_outputs__apply__quit 'pop'
 assert_files_HT '
 UU aaa		ccc|bbb

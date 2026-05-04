@@ -157,6 +157,7 @@ Most of the changes here, however, are bugs that were found during tests to be p
 - There's no support for running the command while there are other unfinished operations in the repository (like rebase or merge).
 - Compatibility with submodules wasn't tested yet.
 - Compatibility with worktrees wasn't tested yet.
+- Option `--patch` eats more stdin than it needs to. (This is the fault of underlying `git add --patch`.)
 
 
 
@@ -170,12 +171,16 @@ git help istash
 # or
 git istash --help
 # or
+git istash --man
+# or
 man git-istash
 ```
 
 It is also possible to display the manual without installation, by running:
 ```sh
 bin/git-istash.sh --help
+# or
+man man/man1/git-istash.1
 ```
 
 ### Brief help text

@@ -13,16 +13,20 @@ create_continue_or_abort_hint_regex() { # operation stage
 		return
 	fi
 	case "$2" in
-		0) printf '%s\n' 'Currently merging staged changes from stash into staged changes from working directory\.\n' ;;
-		1) printf '%s\n' 'Currently merging unstaged changes from working directory into already merged staged changes\.\n' ;;
-		2) printf '%s\n' 'Currently merging unstaged changes from stash into staged changes already merged with unstaged changes from working directory\.\n' ;;
-		3) printf '%s\n' 'Currently merging untracked changes from working directory into already merged tracked changes\.\n' ;;
-		4) printf '%s\n' 'Currently merging untracked changes from stash into tracked changes already merged with untracked changes from working directory\.\n' ;;
+		0) printf '%s\n' 'Currently merging staged changes from stash into staged changes from working directory\.' ;;
+		1) printf '%s\n' 'Currently merging unstaged changes from working directory into already merged staged changes\.' ;;
+		2) printf '%s\n' 'Currently merging unstaged changes from stash into staged changes already merged with unstaged changes from working directory\.' ;;
+		3) printf '%s\n' 'Currently merging untracked changes from working directory into already merged tracked changes\.' ;;
+		4) printf '%s\n' 'Currently merging untracked changes from stash into tracked changes already merged with untracked changes from working directory\.' ;;
 	esac
-	printf '%s' '
-		\[<color>33mhint: use '\''git istash --continue'\'' after fixing the conflicts\[<color>0?m\n
-		\[<color>33mhint: or, to undo everything '\''git istash '"$1"\'' did, run '\''git istash --abort'\''\[<color>0?m
-	'
+	if HINT_ENABLED 'istashConflicts'
+	then
+		printf '\\n%s' '
+			\[<color>33mhint: use '\''git istash --continue'\'' after fixing the conflicts\[<color>0?m\n
+			\[<color>33mhint: or, to undo everything '\''git istash '"$1"\'' did, run '\''git istash --abort'\''\[<color>0?m\n
+			\[<color>33mhint: Disable this message with "git config advice.istashConflicts false"\[<color>0?m
+		'
+	fi
 }
 
 # "conflicts" are one conflict per line in the format: CONFLICT_TYPE FILE_NAME
@@ -217,11 +221,7 @@ assert_outputs__apply__data_file_not_1_line() { # broken_op data_file
 	' "$(
 		create_broken_operation_header_regex "$1" ; printf '\\n'
 		printf '%s' '\[<color>1;31mfatal: '\''\.git\/'"$(sanitize_for_sed "$2")"\'' doesn'\''t have exactly 1 line\[<color>0?m'
-		if ! IS_QUIET
-		then
-			printf '\\n'
-			create_broken_operation_hint_regex
-		fi
+		create_broken_operation_hint_regex
 	)"
 }
 
@@ -230,11 +230,7 @@ assert_outputs__apply__data_file_invalid_commit() { # broken_op data_file
 	' "$(
 		create_broken_operation_header_regex "$1" ; printf '\\n'
 		printf '%s' '\[<color>1;31mfatal: '\''\.git\/'"$(sanitize_for_sed "$2")"\'' contains an invalid commit hash\[<color>0?m'
-		if ! IS_QUIET
-		then
-			printf '\\n'
-			create_broken_operation_hint_regex
-		fi
+		create_broken_operation_hint_regex
 	)"
 }
 
@@ -243,11 +239,7 @@ assert_outputs__apply__data_file_invalid_integer() { # broken_op data_file
 	' "$(
 		create_broken_operation_header_regex "$1" ; printf '\\n'
 		printf '%s' '\[<color>1;31mfatal: '\''\.git\/'"$(sanitize_for_sed "$2")"\'' doesn'\''t contain a positive integer\[<color>0?m'
-		if ! IS_QUIET
-		then
-			printf '\\n'
-			create_broken_operation_hint_regex
-		fi
+		create_broken_operation_hint_regex
 	)"
 }
 
@@ -256,11 +248,7 @@ assert_outputs__apply__data_file_invalid_stash_number() { # broken_op data_file 
 	' "$(
 		create_broken_operation_header_regex "$1" ; printf '\\n'
 		printf '%s' '\[<color>1;31mfatal: '\''\.git\/'"$(sanitize_for_sed "$2")"\'' contains an invalid stash number\[<color>0?m'
-		if ! IS_QUIET
-		then
-			printf '\\n'
-			create_broken_operation_hint_regex
-		fi
+		create_broken_operation_hint_regex
 	)"
 }
 
@@ -269,11 +257,12 @@ assert_outputs__apply__branch_already_used() { # current_op branch
 	' "$(
 		printf '%s' '\[<color>1;31mfatal: failed to restore HEAD to initial position\[<color>0?m\n'
 		printf '%s' '\[<color>1;31mfatal: '\'"$(sanitize_for_sed "$2")"\'' is already used by worktree at '\''.*'\''\[<color>0?m'
-		if ! IS_QUIET
+		if ! IS_QUIET && HINT_ENABLED 'istashFixOrQuit'
 		then
 			printf '\\n'
 			printf '%s' '\[<color>33mhint: fix the problems and rerun '\''git istash --abort'\''\[<color>0?m\n'
-			printf '%s' '\[<color>33mhint: or run '\''git istash --quit'\'' to forcefully cancel it\[<color>0?m'
+			printf '%s' '\[<color>33mhint: or run '\''git istash --quit'\'' to forcefully cancel it\[<color>0?m\n'
+			printf '%s' '\[<color>33mhint: Disable this message with "git config advice.istashFixOrQuit false"\[<color>0?m'
 		fi
 	)"
 }
@@ -304,31 +293,35 @@ assert_outputs__apply__no_rebase_in_progress_on_abort() { # operation
 	)"
 }
 
-assert_outputs__apply__continue_abort() {
+assert_outputs__apply__continue_abort() { # operation
 	assert_outputs_with_color '
 	' '
 		\[<color>31merror: unclear whether to continue aborting or to abort continuing\[<color>0?m
+		'"$(create_help_hint_regex "$1")"'
 	'
 }
 
-assert_outputs__apply__continue_quit() {
+assert_outputs__apply__continue_quit() { # operation
 	assert_outputs_with_color '
 	' '
 		\[<color>31merror: unclear whether to continue quitting or to quit continuing\[<color>0?m
+		'"$(create_help_hint_regex "$1")"'
 	'
 }
 
-assert_outputs__apply__abort_quit() {
+assert_outputs__apply__abort_quit() { # operation
 	assert_outputs_with_color '
 	' '
 		\[<color>31merror: either abort or quit\; there is no middle road\[<color>0?m
+		'"$(create_help_hint_regex "$1")"'
 	'
 }
 
-assert_outputs__apply__continue_abort_quit() {
+assert_outputs__apply__continue_abort_quit() { # operation
 	assert_outputs_with_color '
 	' '
 		\[<color>31merror: you can choose continue, abort or quit at your discretion but the rule is that you can only have one\[<color>0?m
+		'"$(create_help_hint_regex "$1")"'
 	'
 }
 

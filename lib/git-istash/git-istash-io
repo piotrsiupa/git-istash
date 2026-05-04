@@ -39,13 +39,13 @@ set_tmp_config_entry() { # key value
 
 set_color_for_all() { # value
 	set -- "$1" "$(printf '%s' "$1" | tr 'A-Z\n' 'a-zX')"
-	if printf '%s\n' "$2" | grep -Exq '|a(lways)?|y(es)?|t(rue)?|affirmative|1'
+	if printf '%s\n' "$2" | grep -Exq '|a(lways)?|y(es)?|on|t(rue)?|affirmative|1'
 	then
 		set -- 'always'
-	elif printf '%s' "$2" | grep -Exq 'n(ever)?|no|f(alse)?|negative|0'
+	elif printf '%s' "$2" | grep -Exq 'n(ever)?|no|off|f(alse)?|negative|0'
 	then
 		set -- 'never'
-	elif printf '%s' "$2" | grep -Exq 'auto|d(efault)?|(terminal|tty)(-only)?|magic' # yeah, this is overdoing it, whatever, it's fun
+	elif printf '%s' "$2" | grep -Exq 'auto|d(ef(ault)?)?|(term(inal)?|tty)(-only)?|magic' # yeah, this is overdoing it, whatever, it's fun
 	then
 		set -- 'auto'
 	else
@@ -56,6 +56,10 @@ set_color_for_all() { # value
 	do
 		set_tmp_config_entry "$key" "$1"
 	done
+}
+
+print_bad_boolean_warning() { # config_variable
+	printf_warning 'bad boolean config value '\''%s'\'' for '\''%s'\''\n' "$(git config get "$1")" "$1"
 }
 
 is_color_enabled() { # config_variable...
@@ -76,7 +80,7 @@ is_color_enabled() { # config_variable...
 			then
 				return 1
 			else
-				printf_warning 'bad boolean config value '\''%s'\'' for '\''%s'\''\n' "$(git config get "$1")" "$1"
+				print_bad_boolean_warning "$1"
 			fi
 		fi
 		shift
@@ -228,10 +232,30 @@ color_hint() {
 	fi
 }
 
-printf_hint() { # arg...
-	#shellcheck disable=SC2154
-	if [ "$is_quiet" = n ]
+is_hint_enabled() { # advice_name
+	if [ "${GIT_ADVICE-}" = '0' ]
 	then
+		return 1
+	fi
+	hint_boolean_name="advice.istash$1"
+	if git config get "$hint_boolean_name" 1>/dev/null 2>&1
+	then
+		if ! hint_boolean_value="$(git config get --type=bool "$hint_boolean_name" 2>/dev/null)"
+		then
+			print_bad_boolean_warning "$hint_boolean_name"
+			return 0
+		fi
+		test "$hint_boolean_value" != 'false'
+	else
+		return 0
+	fi
+}
+
+printf_hint() { # advice_name arg...
+	#shellcheck disable=SC2154
+	if [ "$is_quiet" = n ] && is_hint_enabled "$1"
+	then
+		shift
 		#shellcheck disable=SC2059
 		printf "$@" \
 		| sed -E '/[[:graph:]]/s/^/hint: /' \
@@ -239,14 +263,32 @@ printf_hint() { # arg...
 	fi
 } 1>&2
 
-print_broken_operation_hint() { # called_operation
+hint() { # advice_name [arg...]
+	advice_name="$1"
+	shift
+	first_printf_arg="${1-}"
+	if [ $# -ne 0 ]
+	then
+		shift
+	fi
+	printf_hint \
+		"$advice_name" \
+		"${first_printf_arg}Disable this message with \"git config advice.istash%s false\"\\n" \
+		"$@" "$advice_name"
+}
+
+help_hint() { # called_operation
+	hint 'Help' 'type '\''git %s --help'\'' for detailed information\nor '\''git %s -h'\'' for a short help text\n' "$1" "$1"
+}
+
+broken_operation_hint() { # called_operation
 	if printf '%s' "$1" | grep -E -q '^-'
 	then
-		printf_hint 'fix the problems and rerun '\''git istash %s'\''\n' "$1"
+		printf_hint 'FixOrQuit' 'fix the problems and rerun '\''git istash %s'\''\n' "$1"
 	else
-		printf_hint 'fix the problem and finalize that operation before starting a new one\n'
+		printf_hint 'FixOrQuit' 'fix the problem and finalize that operation before starting a new one\n'
 	fi
-	printf_hint 'or run '\''git istash --quit'\'' to forcefully cancel it\n'
+	hint 'FixOrQuit' 'or run '\''git istash --quit'\'' to forcefully cancel it\n'
 }
 
 print_error_for_data_files_check() { # current_operation called_operation
@@ -263,11 +305,11 @@ print_error_for_data_files_check() { # current_operation called_operation
 		else
 			printf_fatal \''%s'\'' and '\''%s'\'' are missing\n' "$(make_target_data_file_path)" "$(make_working_dir_sha_file_path)"
 		fi
-		print_broken_operation_hint "$2"
+		broken_operation_hint "$2"
 	elif [ "$1" != 'nothing' ]
 	then
 		printf_error 'there is currently '\''git istash %s'\'' in progress\n' "$1"
-		printf_hint 'use '\''git istash --continue'\'' or '\''git istash --abort'\''\n'
+		hint 'ContinueOrAbort' 'use '\''git istash --continue'\'' or '\''git istash --abort'\''\n'
 	fi
 }
 

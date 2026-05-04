@@ -64,8 +64,7 @@ check_args() { # max_free_args args...
 	if [ $# -gt "$_max_free_args" ]
 	then
 		printf_error 'too many arguments\n'
-		printf_hint 'type '\''git %s --help'\'' for detailed information\n' "$_script_name"
-		printf_hint 'or '\''git %s -h'\'' for a short help text\n' "$_script_name"
+		help_hint "$_script_name"
 		error
 	fi
 }
@@ -92,7 +91,7 @@ check_other_git_commands_state() {
 	if [ -n "$other_git_command" ]
 	then
 		printf_error 'there is currently '\''git %s'\'' in progress\n' "$other_git_command"
-		printf_hint 'finalize it before running '\''git istash'\'
+		hint 'FinalizeOther' 'finalize it before running '\''git istash'\''\n'
 		error
 	fi
 }

@@ -8,6 +8,7 @@ PARAMETRIZE_CONTINUE
 PARAMETRIZE_ABORT
 PARAMETRIZE_COLOR
 PARAMETRIZE_QUIET
+PARAMETRIZE_HINT 'istashConflicts'
 
 __end_of_initialization__
 
@@ -39,7 +40,7 @@ printf 'iii\n' >ccc
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS $QUIET_FLAGS
+assert_exit_code 2 git $ADVICE_FLAGS istash "$APPLY_OPERATION" $COLOR_FLAGS $QUIET_FLAGS
 assert_outputs__apply__conflict "$APPLY_OPERATION" 0 '
 UU aaa
 '
@@ -59,7 +60,7 @@ __test_section__ "Continue $APPLY_OPERATION stash (0)"
 printf 'jjj\n' >aaa
 git add aaa
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS $QUIET_FLAGS "$CONTINUE_FLAG"
+assert_exit_code 2 git $ADVICE_FLAGS istash "$APPLY_OPERATION" $COLOR_FLAGS $QUIET_FLAGS "$CONTINUE_FLAG"
 assert_outputs__apply__conflict "$APPLY_OPERATION" 1 '
 UU aaa
 '
@@ -79,7 +80,7 @@ __test_section__ "Continue $APPLY_OPERATION stash (1)"
 printf 'kkk\n' >aaa
 git add aaa
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS $QUIET_FLAGS "$CONTINUE_FLAG"
+assert_exit_code 2 git $ADVICE_FLAGS istash "$APPLY_OPERATION" $COLOR_FLAGS $QUIET_FLAGS "$CONTINUE_FLAG"
 assert_outputs__apply__conflict "$APPLY_OPERATION" 2 '
 UU aaa
 '
@@ -99,7 +100,7 @@ __test_section__ "Continue $APPLY_OPERATION stash (2)"
 printf 'lll\n' >aaa
 git add aaa
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS $QUIET_FLAGS "$CONTINUE_FLAG"
+assert_exit_code 2 git $ADVICE_FLAGS istash "$APPLY_OPERATION" $COLOR_FLAGS $QUIET_FLAGS "$CONTINUE_FLAG"
 assert_outputs__apply__conflict "$APPLY_OPERATION" 3 '
 AA ccc
 '
@@ -120,7 +121,7 @@ __test_section__ "Continue $APPLY_OPERATION stash (3)"
 printf 'mmm\n' >ccc
 git add ccc
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash "$APPLY_OPERATION" $COLOR_FLAGS $QUIET_FLAGS "$CONTINUE_FLAG"
+assert_exit_code 2 git $ADVICE_FLAGS istash "$APPLY_OPERATION" $COLOR_FLAGS $QUIET_FLAGS "$CONTINUE_FLAG"
 assert_outputs__apply__conflict "$APPLY_OPERATION" 4 '
 AA bbb
 '

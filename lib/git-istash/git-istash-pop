@@ -33,7 +33,7 @@ load_stash_data() { # subcommand
 	then
 		printf_fatal \''git istash pop'\'' seems to be in progress but the data files are broken\n'
 		printf_fatal \''%s'\'' doesn'\''t have exactly 1 line\n' "$stash_data_file"
-		print_broken_operation_hint 'pop' "$1"
+		broken_operation_hint 'pop' "$1"
 		fatal
 	fi
 	stash="$(cat "$stash_data_file")"
@@ -41,14 +41,14 @@ load_stash_data() { # subcommand
 	then
 		printf_fatal \''git istash pop'\'' seems to be in progress but the data files are broken\n'
 		printf_fatal \''%s'\'' doesn'\''t contain a positive integer\n' "$stash_data_file"
-		print_broken_operation_hint 'pop' "$1"
+		broken_operation_hint 'pop' "$1"
 		fatal
 	fi
 	if [ "$stash" -ge "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" ]
 	then
 		printf_fatal \''git istash pop'\'' seems to be in progress but the data files are broken\n'
 		printf_fatal \''%s'\'' contains an invalid stash number\n' "$stash_data_file"
-		print_broken_operation_hint 'pop' "$1"
+		broken_operation_hint 'pop' "$1"
 		fatal
 	fi
 }
@@ -226,19 +226,27 @@ do
 done
 if [ $continue_set = y ] && [ $abort_set = y ] && [ $quit_set = y ]
 then
-	error 'you can choose continue, abort or quit at your discretion but the rule is that you can only have one\n'
+	printf_error 'you can choose continue, abort or quit at your discretion but the rule is that you can only have one\n'
+	help_hint 'istash pop'
+	error
 fi
 if [ $abort_set = y ] && [ $quit_set = y ]
 then
-	error 'either abort or quit; there is no middle road\n'
+	printf_error 'either abort or quit; there is no middle road\n'
+	help_hint 'istash pop'
+	error
 fi
 if [ $continue_set = y ] && [ $abort_set = y ]
 then
-	error 'unclear whether to continue aborting or to abort continuing\n'
+	printf_error 'unclear whether to continue aborting or to abort continuing\n'
+	help_hint 'istash pop'
+	error
 fi
 if [ $continue_set = y ] && [ $quit_set = y ]
 then
-	error 'unclear whether to continue quitting or to quit continuing\n'
+	printf_error 'unclear whether to continue quitting or to quit continuing\n'
+	help_hint 'istash pop'
+	error
 fi
 
 lib_dir="$(cd "$(dirname "$0")" ; pwd)"

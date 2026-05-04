@@ -6,6 +6,7 @@ PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_COLOR
 PARAMETRIZE_QUIET
+PARAMETRIZE_HINT 'istashFinalizeOther'
 
 __end_of_initialization__
 
@@ -52,7 +53,7 @@ assert_dotgit_contents
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash $QUIET_FLAGS "$APPLY_OPERATION" $COLOR_FLAGS
+assert_exit_code 1 git $ADVICE_FLAGS istash $QUIET_FLAGS "$APPLY_OPERATION" $COLOR_FLAGS
 assert_outputs__external_operation_in_progress 'cherry-pick'
 assert_files_HT '
 UU aaa		ddd|ccc

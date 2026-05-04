@@ -46,7 +46,7 @@ load_target_data() { # subcommand
 	then
 		printf_fatal \''git istash %s'\'' seems to be in progress but the data files are broken\n' "$(get_sub_command_name)"
 		printf_fatal \''%s'\'' doesn'\''t have exactly 1 line\n' "$target_data_file"
-		print_broken_operation_hint "$1"
+		broken_operation_hint "$1"
 		fatal
 	fi
 	current_branch="$(cat "$target_data_file")"
@@ -61,7 +61,7 @@ load_target_data() { # subcommand
 	then
 		printf_fatal \''git istash %s'\'' seems to be in progress but the data files are broken\n' "$(get_sub_command_name)"
 		printf_fatal \''%s'\'' contains an invalid commit hash\n' "$target_data_file"
-		print_broken_operation_hint "$1"
+		broken_operation_hint "$1"
 		fatal
 	fi
 	if [ "$curr_branch_type" != 'orphan' ] && [ "$(git rev-parse "$current_branch")" = "$current_branch" ]
@@ -74,7 +74,7 @@ load_working_dir_data() { # subcommand
 	then
 		printf_fatal \''git istash %s'\'' seems to be in progress but the data files are broken\n' "$(get_sub_command_name)"
 		printf_fatal \''%s'\'' doesn'\''t have exactly 1 line\n' "$working_dir_sha_file"
-		print_broken_operation_hint "$1"
+		broken_operation_hint "$1"
 		fatal
 	fi
 	working_dir_changes_sha="$(cat "$working_dir_sha_file")"
@@ -82,7 +82,7 @@ load_working_dir_data() { # subcommand
 	then
 		printf_fatal \''git istash %s'\'' seems to be in progress but the data files are broken\n' "$(get_sub_command_name)"
 		printf_fatal \''%s'\'' contains an invalid commit hash\n' "$working_dir_sha_file"
-		print_broken_operation_hint "$1"
+		broken_operation_hint "$1"
 		fatal
 	fi
 }
@@ -385,7 +385,7 @@ print_rebase_problem() {
 		esac
 		printf '.\n'
 	fi 1>&2
-	printf_hint 'use '\''git istash --continue'\'' after fixing the conflicts\nor, to undo everything '\''git istash %s'\'' did, run '\''git istash --abort'\''\n' "$(get_sub_command_name)"
+	hint 'Conflicts' 'use '\''git istash --continue'\'' after fixing the conflicts\nor, to undo everything '\''git istash %s'\'' did, run '\''git istash --abort'\''\n' "$(get_sub_command_name)"
 }
 
 end_with_rebase_problem() {
@@ -632,7 +632,7 @@ do_abort() { # args...
 	else
 		printf_fatal 'failed to restore HEAD to initial position\n'
 		printf '%s\n' "$error_message" | color_fatal 1>&2
-		print_broken_operation_hint '--abort'
+		broken_operation_hint '--abort'
 		fatal
 	fi
 }
@@ -732,19 +732,27 @@ do
 done
 if [ $continue_set = y ] && [ $abort_set = y ] && [ $quit_set = y ]
 then
-	error 'you can choose continue, abort or quit at your discretion but the rule is that you can only have one\n'
+	printf_error 'you can choose continue, abort or quit at your discretion but the rule is that you can only have one\n'
+	help_hint 'istash apply'
+	error
 fi
 if [ $abort_set = y ] && [ $quit_set = y ]
 then
-	error 'either abort or quit; there is no middle road\n'
+	printf_error 'either abort or quit; there is no middle road\n'
+	help_hint 'istash apply'
+	error
 fi
 if [ $continue_set = y ] && [ $abort_set = y ]
 then
-	error 'unclear whether to continue aborting or to abort continuing\n'
+	printf_error 'unclear whether to continue aborting or to abort continuing\n'
+	help_hint 'istash apply'
+	error
 fi
 if [ $continue_set = y ] && [ $quit_set = y ]
 then
-	error 'unclear whether to continue quitting or to quit continuing\n'
+	printf_error 'unclear whether to continue quitting or to quit continuing\n'
+	help_hint 'istash apply'
+	error
 fi
 
 lib_dir="$(cd "$(dirname "$0")" ; pwd)"

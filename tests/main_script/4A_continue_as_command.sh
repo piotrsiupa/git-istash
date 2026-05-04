@@ -5,6 +5,7 @@ PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_COLOR
 PARAMETRIZE_QUIET
 PARAMETRIZE_SUMMARY
+PARAMETRIZE_HINT 'istashConflicts'
 
 __end_of_initialization__
 
@@ -33,7 +34,7 @@ SWITCH_HEAD_TYPE
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash "$APPLY_OPERATION" $QUIET_FLAGS $COLOR_FLAGS
+assert_exit_code 2 git $ADVICE_FLAGS istash "$APPLY_OPERATION" $QUIET_FLAGS $COLOR_FLAGS
 assert_outputs__apply__conflict "$APPLY_OPERATION" 0 '
 UU aaa
 '
@@ -53,7 +54,7 @@ __test_section__ "Continue (implied) $APPLY_OPERATION stash (0)"
 printf 'eee\n' >aaa
 git add aaa
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash $QUIET_FLAGS continue $COLOR_FLAGS
+assert_exit_code 2 git $ADVICE_FLAGS istash $QUIET_FLAGS continue $COLOR_FLAGS
 assert_outputs__apply__conflict "$APPLY_OPERATION" 2 '
 UU aaa
 '
@@ -73,7 +74,7 @@ __test_section__ "Continue (implied) $APPLY_OPERATION stash (1)"
 printf 'fff\n' >aaa
 git add aaa zzz
 #shellcheck disable=SC2086
-assert_exit_code 2 git istash $QUIET_FLAGS continue $COLOR_FLAGS
+assert_exit_code 2 git $ADVICE_FLAGS istash $QUIET_FLAGS continue $COLOR_FLAGS
 assert_outputs__apply__conflict "$APPLY_OPERATION" 4 '
 AA zzz
 '
@@ -94,7 +95,7 @@ printf 'xxx\n' >zzz
 git add aaa zzz
 stash_sha="$(git rev-parse stash)"
 #shellcheck disable=SC2086
-assert_exit_code 0 git istash $QUIET_FLAGS continue $SUMMARY_FLAGS $COLOR_FLAGS
+assert_exit_code 0 git $ADVICE_FLAGS istash $QUIET_FLAGS continue $SUMMARY_FLAGS $COLOR_FLAGS
 assert_outputs__apply__success "$APPLY_OPERATION" '
 MM aaa
  M zzz
