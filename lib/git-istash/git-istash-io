@@ -260,18 +260,32 @@ printf_hint() { # advice_name arg...
 	fi
 } 1>&2
 
-print_help_hint() { # called_operation
-	printf_hint 'Help' 'type '\''git %s --help'\'' for detailed information\nor '\''git %s -h'\'' for a short help text\n' "$1" "$1"
+hint() { # advice_name [arg...]
+	advice_name="$1"
+	shift
+	first_printf_arg="${1-}"
+	if [ $# -ne 0 ]
+	then
+		shift
+	fi
+	printf_hint \
+		"$advice_name" \
+		"${first_printf_arg}Disable this message with \"git config advice.istash%s false\"\\n" \
+		"$@" "$advice_name"
 }
 
-print_broken_operation_hint() { # called_operation
+help_hint() { # called_operation
+	hint 'Help' 'type '\''git %s --help'\'' for detailed information\nor '\''git %s -h'\'' for a short help text\n' "$1" "$1"
+}
+
+broken_operation_hint() { # called_operation
 	if printf '%s' "$1" | grep -E -q '^-'
 	then
 		printf_hint 'FixOrQuit' 'fix the problems and rerun '\''git istash %s'\''\n' "$1"
 	else
 		printf_hint 'FixOrQuit' 'fix the problem and finalize that operation before starting a new one\n'
 	fi
-	printf_hint 'FixOrQuit' 'or run '\''git istash --quit'\'' to forcefully cancel it\n'
+	hint 'FixOrQuit' 'or run '\''git istash --quit'\'' to forcefully cancel it\n'
 }
 
 print_error_for_data_files_check() { # current_operation called_operation
@@ -288,11 +302,11 @@ print_error_for_data_files_check() { # current_operation called_operation
 		else
 			printf_fatal \''%s'\'' and '\''%s'\'' are missing\n' "$(make_target_data_file_path)" "$(make_working_dir_sha_file_path)"
 		fi
-		print_broken_operation_hint "$2"
+		broken_operation_hint "$2"
 	elif [ "$1" != 'nothing' ]
 	then
 		printf_error 'there is currently '\''git istash %s'\'' in progress\n' "$1"
-		printf_hint 'ContinueOrAbort' 'use '\''git istash --continue'\'' or '\''git istash --abort'\''\n'
+		hint 'ContinueOrAbort' 'use '\''git istash --continue'\'' or '\''git istash --abort'\''\n'
 	fi
 }
 
