@@ -23,7 +23,8 @@ create_continue_or_abort_hint_regex() { # operation stage
 	then
 		printf '\\n%s' '
 			\[<color>33mhint: use '\''git istash --continue'\'' after fixing the conflicts\[<color>0?m\n
-			\[<color>33mhint: or, to undo everything '\''git istash '"$1"\'' did, run '\''git istash --abort'\''\[<color>0?m
+			\[<color>33mhint: or, to undo everything '\''git istash '"$1"\'' did, run '\''git istash --abort'\''\[<color>0?m\n
+			\[<color>33mhint: Disable this message with "git config advice.istashConflicts false"\[<color>0?m
 		'
 	fi
 }
@@ -260,7 +261,8 @@ assert_outputs__apply__branch_already_used() { # current_op branch
 		then
 			printf '\\n'
 			printf '%s' '\[<color>33mhint: fix the problems and rerun '\''git istash --abort'\''\[<color>0?m\n'
-			printf '%s' '\[<color>33mhint: or run '\''git istash --quit'\'' to forcefully cancel it\[<color>0?m'
+			printf '%s' '\[<color>33mhint: or run '\''git istash --quit'\'' to forcefully cancel it\[<color>0?m\n'
+			printf '%s' '\[<color>33mhint: Disable this message with "git config advice.istashFixOrQuit false"\[<color>0?m'
 		fi
 	)"
 }

@@ -80,7 +80,7 @@ check_pathspec_for_implicit_push() ( # args...
 	if [ "$problem_found" = y ]
 	then
 		printf_error 'subcommand wasn'\''t specified; '\''push'\'' can'\''t be assumed due to unexpected token '\''%s'\''\n' "$problem_option_name"
-		printf_hint 'ImplPushPathspec' 'pathspecs for an implicit '\''push'\'' subcommand must be preceded by '\''--'\''\n'
+		hint 'ImplPushPathspec' 'pathspecs for an implicit '\''push'\'' subcommand must be preceded by '\''--'\''\n'
 		error
 	fi
 )
