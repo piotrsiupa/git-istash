@@ -83,6 +83,10 @@ load_data() {
 }
 delete_data() {
 	rm -f "$target_data_file" "$working_dir_sha_file"
+	if [ "$sub_command_name" = 'pop' ]
+	then
+		rm -f "$stash_data_file"
+	fi
 }
 
 check_args_for_apply() { # max_free_args args...
@@ -418,9 +422,24 @@ end_with_success() {
 	then
 		printf 'Stash of the old working dir: %s\n' "$(prepare_stash_of_working_dir)"
 		print_changes_summary
+	fi
+	if [ "$sub_command_name" = 'pop' ]
+	then
+		if [ "$is_quiet" != y ]
+		then
+			printf '\n'
+			git stash drop "$stash"
+		else
+			git stash drop --quiet "$stash"
+		fi
+	fi
+	if [ "$is_quiet" != y ]
+	then
 		if [ "$sub_command_name" = 'apply' ]
 		then
 			printf '\nSuccessfully applied the stash\n'
+		else
+			printf '\nSuccessfully popped the stash\n'
 		fi
 	fi
 }
@@ -712,7 +731,15 @@ do
 		;;
 	--summary)
 		shift
-		set_summary_mode "$1"
+		if ! set_summary_mode "$1"
+		then
+			#TODO Temporary, until apply and pop are entirely merged.
+			target_data_file="$(make_target_data_file_path)"
+			working_dir_sha_file="$(make_working_dir_sha_file_path)"
+			stash_data_file="$(make_stash_data_file_path)"
+			delete_data
+			return 1
+		fi
 		;;
 	--)
 		shift
@@ -750,4 +777,5 @@ lib_dir="$(cd "$(dirname "$0")" ; pwd)"
 cd "$(git rev-parse --show-toplevel)"
 target_data_file="$(make_target_data_file_path)"
 working_dir_sha_file="$(make_working_dir_sha_file_path)"
+stash_data_file="$(make_stash_data_file_path)"
 do_apply "$@"

@@ -51,28 +51,14 @@ load_stash_data() { # subcommand
 		broken_operation_hint 'pop' "$1"
 		fatal
 	fi
+	export stash
 }
 load_data() { # subcommand
 	load_stash_data "$1"
 }
-delete_data() {
-	rm -f "$stash_data_file"
-}
 
 check_args_for_pop() { # max_free_args args...
 	check_args 'istash pop' "$@"
-}
-
-end_with_success() {
-	delete_data
-	printf '\n'
-	if [ "$is_quiet" = n ]
-	then
-		git stash drop "$stash"
-		printf '\nSuccessfully popped the stash\n'
-	else
-		git stash drop "$stash" 1>/dev/null
-	fi
 }
 
 check_stash_for_pop() {
@@ -109,7 +95,7 @@ check_data_files() { # resume abort quit
 	esac
 }
 
-run_apply() { # args...
+exec_apply() { # args...
 	if [ "$is_quiet" = y ]
 	then
 		set -- --quiet "$@"
@@ -118,7 +104,7 @@ run_apply() { # args...
 	then
 		set -- --summary="$summary_mode" "$@"
 	fi
-	sh "$lib_dir/git-istash-apply" --_called-from-pop_ "$@"
+	exec sh "$lib_dir/git-istash-apply" --_called-from-pop_ "$@"
 }
 
 do_start() { # args...
@@ -126,40 +112,29 @@ do_start() { # args...
 	check_data_files n n n
 	check_other_git_commands_state
 	find_stash "$@"
+	export stash
 	check_stash_for_pop
 	save_data
-	if run_apply -- "$@"
-	then
-		end_with_success
-	elif [ $? -eq 2 ]
-	then
-		return 2
-	else
-		delete_data
-		return 1
-	fi
+	exec_apply -- "$@"
 }
 
 do_continue() { # args...
 	check_args_for_pop 0 "$@"
 	check_data_files y n n
 	load_data 'pop'
-	run_apply --continue
-	end_with_success
+	exec_apply --continue
 }
 
 do_abort() { # args...
 	check_args_for_pop 0 "$@"
 	check_data_files n y n
-	run_apply --abort
-	delete_data
+	exec_apply --abort
 }
 
 do_quit() { # args...
 	check_args_for_pop 0 "$@"
 	check_data_files n n y
-	run_apply --quit
-	delete_data
+	exec_apply --quit
 }
 
 do_pop() { # args...
