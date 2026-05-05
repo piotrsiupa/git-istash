@@ -57,9 +57,10 @@ Subcommand	Keeps the changes in WD	Stores the created stash
 \fBgit istash apply\fR and \fBgit istash pop\fR:
 .RS 4
 Both of these subcommands restore stashed changes to the working directory. \
-Additionally, \fBgit istash pop\fR removes the stash entry on success.
+Additionally, \fBgit istash pop\fR removes the stash entry on success. \
+(For this reason \fBpop\fR cannot be used for a stash that is not in the stash ref, while \fBapply\fR can be.)
 .br
-When there are no conflicts, these work the same as \fBgit stash apply \-\-index\fR and \fBgit stash pop \-\-index\fR. \
+When there are no conflicts, these work the same as \fBgit stash apply \-\-index\fR and \fBgit stash pop \-\-index\fR.
 .TS
 box;
 c | c
@@ -152,6 +153,8 @@ And finally, the options \fB\-\-patch\fR and \fB\-\-pathspec\-from\-file\fR are 
 .RS 4
 Like \fBgit stash apply \-\-index\fR, but it handles staged and unstaged conflicts separately, preventing those scopes from mixing. \
 \fB<stash>\fR may be any commit that looks like a commit created by \fBgit stash push\fR or \fBgit stash create\fR.
+.sp
+This is the inverse operation of \fBgit istash snatch\fR.
 .RE
 
 .PP
@@ -161,9 +164,10 @@ Like \fBgit stash pop \-\-index\fR, but it handles staged and unstaged conflicts
 Unlike \fBgit stash pop\fR, it can handle stashes referenced by name (\fBstash^{/<name>}\fR).
 .sp
 The only differences from \fBgit istash apply\fR are that \fBpop\fR cannot use an arbitrary commit as \fB<stash>\fR and it removes the stash entry on success. \
+(Thus, the given stash has to be in stash ref or the command will refuse to run.) \
 In case of conflicts, the stash is dropped only after all conflicts are successfully resolved.
 .sp
-This is the inverse operation of \fBgit stash push\fR.
+This is the inverse operation of \fBgit istash push\fR.
 .RE
 
 .PP
@@ -214,6 +218,7 @@ The exit code becomes 0 in such cases.
 .RS 4
 This option is only valid for \fBsnatch\fR and \fBpush\fR subcommands, and also allowed for \fBcreate\fR and \fBsave\fR.
 .sp
+It behaves identically to the same option in the vanilla command. \
 All changes already added to the index are left intact (but still stashed). \
 See also \fB\-\-leave\-staged\fR.
 .br
@@ -227,7 +232,8 @@ See also \fB\-\-leave\-staged\fR.
 .RS 4
 This option is only valid for \fBcreate\fR, \fBsnatch\fR, \fBsave\fR and \fBpush\fR subcommands.
 .sp
-All changes already added to the index are not staged and left intact. \
+All changes already added to the index are not stashed and left intact. \
+(Unlike \fB\-\-keep\-index\fR which also adds the index to the stash.) \
 See also \fB\-\-keep\-index\fR and \fB\-\-staged\fR.
 .RE
 
@@ -293,6 +299,7 @@ Still, prefer using \fBsnatch\fR and \fBpush\fR for a shorter syntax and a bette
 This option is only valid for \fBcreate\fR, \fBsnatch\fR, \fBsave\fR and \fBpush\fR subcommands.
 .sp
 All changes that are tracked but not yet added to the index are not staged and left intact. \
+(It's the same as \fB\-\-leave\-staged\fR, except it targets unstaged files instead of staged ones.) \
 See also \fB\-\-leave\-staged\fR.
 .RE
 
@@ -389,7 +396,8 @@ It is the same as \fB\-\-color=never\fR.
 .RS 4
 This option is only valid for \fBapply\fR and \fBpop\fR subcommands.
 .sp
-Set how much of the post-apply summary is shown.
+Set how much of the post-apply summary is shown. \
+(The summary looks very much like \fBgit status\fR but it shows the changes made by applying the stash instead of the current state of the working directory.)
 .br
 There are 3 modes:
 .PD 0
@@ -397,12 +405,12 @@ There are 3 modes:
 \fBcomplete\fR - shows all changed files in the working copy.
 .IP \(em 2
 \fBnon-ignored\fR - skips ignored files, including the ones that were ignored but aren't anymore after the operation. \
-(Ignored files are the most time-consuming to list.)
+(Ignored files are the most time-consuming thing to list.)
 .IP \(em 2
 \fBoff\fR - doesn't display the summary at all.
 .PD
 .sp
-Summary mode can also be changed by config variable but this option has a higher priority.
+Summary mode can also be changed by the config variable \fBistash.summary\fR but this option has a higher priority.
 .RE
 
 .PP
