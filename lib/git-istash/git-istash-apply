@@ -31,6 +31,10 @@ save_data() {
 	printf '%s\n' "$target_data" >"$target_data_file"
 	
 	printf '%s\n' "$working_dir_changes_sha" >"$working_dir_sha_file"
+	if [ "$sub_command_name" = 'pop' ]
+	then
+		printf '%s\n' "$stash" >"$stash_data_file"
+	fi
 }
 load_target_data() {
 	if [ "$(wc -l <"$target_data_file")" -ne 1 ]
@@ -77,12 +81,41 @@ load_working_dir_data() {
 		fatal
 	fi
 }
-load_data() {
+load_stash_data() {
+	if [ "$(wc -l <"$stash_data_file")" -ne 1 ]
+	then
+		printf_fatal \''git istash pop'\'' seems to be in progress but the data files are broken\n'
+		printf_fatal \''%s'\'' doesn'\''t have exactly 1 line\n' "$stash_data_file"
+		broken_operation_hint "$sub_command_name"
+		fatal
+	fi
+	stash="$(cat "$stash_data_file")"
+	if ! [ "$stash" -eq "$stash" ] 2>/dev/null || [ "$stash" -lt 0 ]
+	then
+		printf_fatal \''git istash pop'\'' seems to be in progress but the data files are broken\n'
+		printf_fatal \''%s'\'' doesn'\''t contain a positive integer\n' "$stash_data_file"
+		broken_operation_hint "$sub_command_name"
+		fatal
+	fi
+	if [ "$stash" -ge "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" ]
+	then
+		printf_fatal \''git istash pop'\'' seems to be in progress but the data files are broken\n'
+		printf_fatal \''%s'\'' contains an invalid stash number\n' "$stash_data_file"
+		broken_operation_hint "$sub_command_name"
+		fatal
+	fi
+}
+load_data() { # is_continue
 	load_target_data
 	load_working_dir_data
+	if [ "$sub_command_name" = 'pop' ] && [ "$1" = y ]
+	then
+		load_stash_data
+	fi
 }
 delete_data() {
-	rm -f "$target_data_file" "$working_dir_sha_file"
+	rm -f "$target_data_file"
+	rm -f "$working_dir_sha_file"
 	if [ "$sub_command_name" = 'pop' ]
 	then
 		rm -f "$stash_data_file"
@@ -91,6 +124,15 @@ delete_data() {
 
 check_args_for_apply() { # max_free_args args...
 	check_args 'istash apply' "$@"
+}
+
+check_stash_for_pop() {
+	if [ "$stash" -eq "$stash" ] 2>/dev/null
+	then
+		:
+	else
+		error 'can only pop '\''refs/stash'\'' or entries of its reflog\n'
+	fi
 }
 
 put_files_into_working_copy() { # untracked_changes_sha non_staged_changes_sha staged_changes_sha
@@ -546,6 +588,10 @@ do_start() { # args...
 	check_data_files n n
 	check_other_git_commands_state
 	find_stash "$@"
+	if [ "$sub_command_name" = 'pop' ]
+	then
+		check_stash_for_pop
+	fi
 	find_current_branch
 	prepare_current_branch
 	commit_working_directory
@@ -567,7 +613,7 @@ run_continued_rebase() {
 do_continue() { # args...
 	check_args_for_apply 0 "$@"
 	check_data_files y n
-	load_data
+	load_data y
 	
 	git commit --quiet --allow-empty --no-edit 1>/dev/null 2>&1 || true
 	exec 3>&1
@@ -590,7 +636,7 @@ do_continue() { # args...
 do_abort() { # args...
 	check_args_for_apply 0 "$@"
 	check_data_files y n
-	load_data
+	load_data n
 	
 	error_message="$(git rebase --abort 2>&1 || true)"  # Errors are ignored because if rebase is not in progress, we still want to try to restore HEAD.
 	if [ -n "$error_message" ]
