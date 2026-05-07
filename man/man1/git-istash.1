@@ -471,10 +471,41 @@ For more details, see the \fIpathspec\fR entry in \fBgitglossary\fR(7).
 .RS 4
 This option is only valid for \fBapply\fR and \fBpop\fR subcommands.
 .sp
-A reference of the form \fBstash@{<revision>}\fR or \fBstash^{/<name>}\fR. \
-In case of \fBapply\fR an arbitrary commit is allowed, as long as it looks like a stash entry.
+It selects a specific stash to be applied and/or dropped.
+.sp
+The stash can be expressed in multiple ways:
+.PD 0
+.IP \(em 2
+An integer \(em the number of the stash in the stash ref. \
+E.g. \fB0\fR is the latest stash, \fB1\fR is the one before it, etc.
 .br
-When no \fB<stash>\fR is given, the latest stash is assumed (that is, \fBstash@{0}\fR).
+Negative numbers are also allowed and they are interpreted as going back from the end of the list. \
+E.g. \fB-1\fR is the last (oldest) stash, \fB-2\fR is second to last, etc. \
+(When the script encounters a negative number, it adds to it the total number of stashes in the stash log.)
+.br
+You can display the current stash log with the numbers by calling \fBgit stash list\fR.
+.br
+This format can be used with \fBapply\fR and \fBpop\fR.
+.IP \(em 2
+Full name of the stash ref entry \(em mostly equivalent to giving just the integer value. \
+E.g. \fBstash@{0}\fR (or just \fBstash\fR) is the latest stash, \fBstash@{1}\fR is the one before it, etc.
+.br
+This notation doesn't accept negative numbers.
+.br
+This format can be used with \fBapply\fR and \fBpop\fR.
+.IP \(em 2
+Stash ref entry by message \(em finds stash entry with the given text in its message. \
+E.g. \fBstash^{/aaa}\fR is the first stash from the list that has "aaa" in its description.
+.br
+This format can be used with \fBapply\fR and \fBpop\fR.
+.IP \(em 2
+Any commit with a valid stash \(em SHA, branch name or any other way to point to a specific commit in Git. \
+It doesn't have to be added to the stash ref; it can be just a dangling commit, as long as it is a valid stash.
+.br
+This format can be used only with \fBapply\fR.
+.PD
+.PP
+When no \fB<stash>\fR is given, the latest stash is assumed (same as \fB0\fR, \fBstash\fR or \fBstash@{0}\fR).
 .RE
 
 
@@ -488,7 +519,6 @@ When no \fB<stash>\fR is given, the latest stash is assumed (that is, \fBstash@{
 
 .SH ERRORS
 Errors printed by \fBistash\fR are divided into two general categories:
-.br
 .PD 0
 .IP \(em 2
 Normal errors (prefixed with "error:") are most likely a result of a user error (such as providing an incorrect stash number).
