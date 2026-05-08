@@ -123,7 +123,7 @@ delete_data() {
 }
 
 check_args_for_apply() { # max_free_args args...
-	check_args 'istash apply' "$@"
+	check_args "istash $sub_command_name" "$@"
 }
 
 check_stash_for_pop() {
@@ -486,28 +486,30 @@ end_with_success() {
 	fi
 }
 
-check_data_files() { # resume quit
-	if [ "$sub_command_name" = 'pop' ] ; then return 0 ; fi
+check_data_files() { # continue abort quit
 	operation_in_progress="$(find_data_files)"
 	case "$operation_in_progress" in
-		pop)
-			if [ "$2" = y ] ; then return 0 ; fi
-			print_error_for_data_files_check "$operation_in_progress" 'apply'
-			error
-			;;
-		apply)
-			if [ "$1" = y ] || [ "$2" = y ] ; then return 0 ; fi
-			print_error_for_data_files_check "$operation_in_progress" 'apply'
+		apply|pop)
+			if [ "$operation_in_progress" = "$sub_command_name" ]
+			then
+				if [ "$1$2$3" != 'nnn' ] ; then return 0 ; fi
+			elif [ "$sub_command_name" = 'apply' ]
+			then
+				if [ "$3" != 'n' ] ; then return 0 ; fi
+			else
+				if [ "$2$3" != 'nn' ] ; then return 0 ; fi
+			fi
+			print_error_for_data_files_check "$operation_in_progress" "$sub_command_name"
 			error
 			;;
 		error-*)
-			if [ "$2" = y ] ; then return 0 ; fi
-			print_error_for_data_files_check "$operation_in_progress" 'apply'
+			if [ "$3" != 'n' ] ; then return 0 ; fi
+			print_error_for_data_files_check "$operation_in_progress" "$sub_command_name"
 			error
 			;;
 		nothing)
-			if [ "$1" = n ] && [ "$2" = n ] ; then return 0 ; fi
-			error 'no istash apply in progress\n'
+			if [ "$1$2$3" = 'nnn' ] ; then return 0 ; fi
+			error 'no istash %s in progress\n' "$sub_command_name"
 			;;
 	esac
 }
@@ -585,7 +587,7 @@ start_rebase() { # untangled_stash_sha
 
 do_start() { # args...
 	check_args_for_apply 1 "$@"
-	check_data_files n n
+	check_data_files n n n
 	check_other_git_commands_state
 	find_stash "$@"
 	if [ "$sub_command_name" = 'pop' ]
@@ -612,7 +614,7 @@ run_continued_rebase() {
 
 do_continue() { # args...
 	check_args_for_apply 0 "$@"
-	check_data_files y n
+	check_data_files y n n
 	load_data y
 	
 	git commit --quiet --allow-empty --no-edit 1>/dev/null 2>&1 || true
@@ -635,7 +637,7 @@ do_continue() { # args...
 
 do_abort() { # args...
 	check_args_for_apply 0 "$@"
-	check_data_files y n
+	check_data_files n y n
 	load_data n
 	
 	error_message="$(git rebase --abort 2>&1 || true)"  # Errors are ignored because if rebase is not in progress, we still want to try to restore HEAD.
@@ -695,7 +697,7 @@ do_abort() { # args...
 
 do_quit() { # args...
 	check_args_for_apply 0 "$@"
-	check_data_files n y
+	check_data_files n n y
 	
 	if [ "$sub_command_name" = 'apply' ]
 	then
@@ -777,15 +779,7 @@ do
 		;;
 	--summary)
 		shift
-		if ! set_summary_mode "$1"
-		then
-			#TODO Temporary, until apply and pop are entirely merged.
-			target_data_file="$(make_target_data_file_path)"
-			working_dir_sha_file="$(make_working_dir_sha_file_path)"
-			stash_data_file="$(make_stash_data_file_path)"
-			delete_data
-			return 1
-		fi
+		set_summary_mode "$1"
 		;;
 	--)
 		shift

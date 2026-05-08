@@ -25,35 +25,6 @@ print_help() {
 	printf '\t--summary=<mode> - Set summary to "complete" / "non-ignored" / "off".\n'
 }
 
-check_args_for_pop() { # max_free_args args...
-	check_args 'istash pop' "$@"
-}
-
-check_data_files() { # resume abort quit
-	operation_in_progress="$(find_data_files)"
-	case "$operation_in_progress" in
-		pop)
-			if [ "$1" = y ] || [ "$2" = y ] || [ "$3" = y ] ; then return 0 ; fi
-			print_error_for_data_files_check "$operation_in_progress" 'pop'
-			error
-			;;
-		apply)
-			if [ "$2" = y ] || [ "$3" = y ] ; then return 0 ; fi
-			print_error_for_data_files_check "$operation_in_progress" 'pop'
-			error
-			;;
-		error-*)
-			if [ "$3" = y ] ; then return 0 ; fi
-			print_error_for_data_files_check "$operation_in_progress" 'pop'
-			error
-			;;
-		nothing)
-			if [ "$1" = n ] && [ "$2" = n ] && [ "$3" = n ] ; then return 0 ; fi
-			error 'no istash pop in progress\n'
-			;;
-	esac
-}
-
 exec_apply() { # args...
 	if [ "$is_quiet" = y ]
 	then
@@ -66,42 +37,18 @@ exec_apply() { # args...
 	exec sh "$lib_dir/git-istash-apply" --_called-from-pop_ "$@"
 }
 
-do_start() { # args...
-	check_args_for_pop 1 "$@"
-	check_data_files n n n
-	exec_apply -- "$@"
-}
-
-do_continue() { # args...
-	check_args_for_pop 0 "$@"
-	check_data_files y n n
-	exec_apply --continue
-}
-
-do_abort() { # args...
-	check_args_for_pop 0 "$@"
-	check_data_files n y n
-	exec_apply --abort
-}
-
-do_quit() { # args...
-	check_args_for_pop 0 "$@"
-	check_data_files n n y
-	exec_apply --quit
-}
-
 do_pop() { # args...
 	if [ "$continue_set" = y ]
 	then
-		do_continue "$@"
+		exec_apply --continue "$@"
 	elif [ "$abort_set" = y ]
 	then
-		do_abort "$@"
+		exec_apply --abort "$@"
 	elif [ "$quit_set" = y ]
 	then
-		do_quit "$@"
+		exec_apply --quit "$@"
 	else
-		do_start "$@"
+		exec_apply -- "$@"
 	fi
 }
 
@@ -179,5 +126,4 @@ fi
 
 lib_dir="$(cd "$(dirname "$0")" ; pwd)"
 cd "$(git rev-parse --show-toplevel)"
-stash_data_file="$(make_stash_data_file_path)"
 do_pop "$@"
