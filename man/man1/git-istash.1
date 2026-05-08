@@ -207,15 +207,6 @@ All ignored and untracked files are also stashed and then removed.
 .RE
 
 .PP
-\fB\-\-allow\-empty\fR
-.RS 4
-This option is only valid for \fBcreate\fR, \fBsnatch\fR, \fBsave\fR and \fBpush\fR subcommands.
-.sp
-Stash is created even if there is no changes or options / pathspec exclude all of them. \
-The exit code becomes 0 in such cases.
-.RE
-
-.PP
 \fB\-k\fR, \fB\-\-keep\-index\fR, \fB\-\-no\-keep\-index\fR
 .RS 4
 This option is only valid for \fBsnatch\fR and \fBpush\fR subcommands, and also allowed for \fBcreate\fR and \fBsave\fR.
@@ -240,11 +231,23 @@ See also \fB\-\-keep\-index\fR and \fB\-\-staged\fR.
 .RE
 
 .PP
-\fB\-m\fR <\fImessage\fR>, \fB\-\-message\fR <\fImessage\fR>
+\fB\-S\fR, \fB\-\-staged\fR
 .RS 4
 This option is only valid for \fBcreate\fR, \fBsnatch\fR, \fBsave\fR and \fBpush\fR subcommands.
 .sp
-Custom message (name) for stash is used instead of the one generated using the last commit message.
+All changes that are tracked but not yet added to the index are not staged and left intact. \
+(It's the same as \fB\-\-leave\-staged\fR, except it targets unstaged files instead of staged ones.) \
+See also \fB\-\-leave\-staged\fR.
+.RE
+
+.PP
+\fB\-u\fR, \fB\-\-include\-untracked\fR, \fB\-\-no\-include\-untracked\fR
+.RS 4
+This option is only valid for \fBcreate\fR, \fBsnatch\fR, \fBsave\fR and \fBpush\fR subcommands.
+.sp
+All untracked files are also stashed and then removed.
+.br
+\fB\-\-no\-include\-untracked\fR also affects \fB\-\-all\fR, resulting in stashing and removing only ignored files.
 .RE
 
 .PP
@@ -282,6 +285,23 @@ Pathspec elements are separated with NUL character and all other characters are 
 .RE
 
 .PP
+\fB\-\-allow\-empty\fR
+.RS 4
+This option is only valid for \fBcreate\fR, \fBsnatch\fR, \fBsave\fR and \fBpush\fR subcommands.
+.sp
+Stash is created even if there is no changes or options / pathspec exclude all of them. \
+The exit code becomes 0 in such cases.
+.RE
+
+.PP
+\fB\-m\fR <\fImessage\fR>, \fB\-\-message\fR <\fImessage\fR>
+.RS 4
+This option is only valid for \fBcreate\fR, \fBsnatch\fR, \fBsave\fR and \fBpush\fR subcommands.
+.sp
+Custom message (name) for stash is used instead of the one generated using the last commit message.
+.RE
+
+.PP
 \fB\-\-remove\-stashed\fR
 .RS 4
 This option is only valid for \fBcreate\fR and \fBsave\fR subcommands and also allowed for \fBsnatch\fR and \fBpush\fR.
@@ -293,16 +313,6 @@ If used with \fBsnatch\fR or \fBpush\fR, this option has no effect.
 .br
 (This option is part of the internal mechanisms of \fBgit\~istash\fR but it's allowed to be utilised by users. \
 Still, prefer using \fBsnatch\fR and \fBpush\fR for a shorter syntax and a better readability.)
-.RE
-
-.PP
-\fB\-S\fR, \fB\-\-staged\fR
-.RS 4
-This option is only valid for \fBcreate\fR, \fBsnatch\fR, \fBsave\fR and \fBpush\fR subcommands.
-.sp
-All changes that are tracked but not yet added to the index are not staged and left intact. \
-(It's the same as \fB\-\-leave\-staged\fR, except it targets unstaged files instead of staged ones.) \
-See also \fB\-\-leave\-staged\fR.
 .RE
 
 .PP
@@ -318,16 +328,6 @@ If used with \fBcreate\fR or \fBsnatch\fR, this option has no effect.
 .br
 (This option is part of the internal mechanisms of \fBgit\~istash\fR but it's allowed to be utilised by users. \
 Still, prefer using \fBcreate\fR and \fBsnatch\fR for a shorter syntax and a better readability.)
-.RE
-
-.PP
-\fB\-u\fR, \fB\-\-include\-untracked\fR, \fB\-\-no\-include\-untracked\fR
-.RS 4
-This option is only valid for \fBcreate\fR, \fBsnatch\fR, \fBsave\fR and \fBpush\fR subcommands.
-.sp
-All untracked files are also stashed and then removed.
-.br
-\fB\-\-no\-include\-untracked\fR also affects \fB\-\-all\fR, resulting in stashing and removing only ignored files.
 .RE
 
 .PP
