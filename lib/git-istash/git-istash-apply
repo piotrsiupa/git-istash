@@ -84,7 +84,7 @@ load_working_dir_data() {
 load_stash_data() {
 	if [ "$(wc -l <"$stash_data_file")" -ne 1 ]
 	then
-		printf_fatal \''git istash pop'\'' seems to be in progress but the data files are broken\n'
+		printf_fatal \''git istash %s'\'' seems to be in progress but the data files are broken\n' "$sub_command_name"
 		printf_fatal \''%s'\'' doesn'\''t have exactly 1 line\n' "$stash_data_file"
 		broken_operation_hint "$sub_command_name"
 		fatal
@@ -92,14 +92,14 @@ load_stash_data() {
 	stash="$(cat "$stash_data_file")"
 	if ! [ "$stash" -eq "$stash" ] 2>/dev/null || [ "$stash" -lt 0 ]
 	then
-		printf_fatal \''git istash pop'\'' seems to be in progress but the data files are broken\n'
+		printf_fatal \''git istash %s'\'' seems to be in progress but the data files are broken\n' "$sub_command_name"
 		printf_fatal \''%s'\'' doesn'\''t contain a positive integer\n' "$stash_data_file"
 		broken_operation_hint "$sub_command_name"
 		fatal
 	fi
 	if [ "$stash" -ge "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" ]
 	then
-		printf_fatal \''git istash pop'\'' seems to be in progress but the data files are broken\n'
+		printf_fatal \''git istash %s'\'' seems to be in progress but the data files are broken\n' "$sub_command_name"
 		printf_fatal \''%s'\'' contains an invalid stash number\n' "$stash_data_file"
 		broken_operation_hint "$sub_command_name"
 		fatal
@@ -477,12 +477,7 @@ end_with_success() {
 	fi
 	if [ "$is_quiet" != y ]
 	then
-		if [ "$sub_command_name" = 'apply' ]
-		then
-			printf '\nSuccessfully applied the stash\n'
-		else
-			printf '\nSuccessfully popped the stash\n'
-		fi
+		printf '\nSuccessfully %sed the stash\n' "$(printf '%s' "$sub_command_name" | sed -E 's/y$/i/;s/p$/&p/')"
 	fi
 }
 
@@ -492,23 +487,41 @@ check_data_files() { # continue abort quit
 		apply|pop)
 			if [ "$operation_in_progress" = "$sub_command_name" ]
 			then
-				if [ "$1$2$3" != 'nnn' ] ; then return 0 ; fi
+				if [ "$1$2$3" != 'nnn' ]
+				then
+					return 0
+				fi
 			elif [ "$sub_command_name" = 'apply' ]
 			then
-				if [ "$3" != 'n' ] ; then return 0 ; fi
+				if [ "$3" != 'n' ]
+				then
+					sub_command_name="$operation_in_progress"
+					return 0
+				fi
 			else
-				if [ "$2$3" != 'nn' ] ; then return 0 ; fi
+				if [ "$2$3" != 'nn' ]
+				then
+					sub_command_name="$operation_in_progress"
+					return 0
+				fi
 			fi
 			print_error_for_data_files_check "$operation_in_progress" "$sub_command_name"
 			error
 			;;
 		error-*)
-			if [ "$3" != 'n' ] ; then return 0 ; fi
+			if [ "$3" != 'n' ]
+			then
+				sub_command_name="${operation_in_progress#error-}"
+				return 0
+			fi
 			print_error_for_data_files_check "$operation_in_progress" "$sub_command_name"
 			error
 			;;
 		nothing)
-			if [ "$1$2$3" = 'nnn' ] ; then return 0 ; fi
+			if [ "$1$2$3" = 'nnn' ]
+			then
+				return 0
+			fi
 			error 'no istash %s in progress\n' "$sub_command_name"
 			;;
 	esac
@@ -673,19 +686,16 @@ do_abort() { # args...
 	
 	if [ "$succeeded_switch" = y ]
 	then
-		put_files_into_working_copy "$(git rev-parse "$working_dir_changes_sha~0")" "$(git rev-parse "$working_dir_changes_sha~1")" "$(git rev-parse "$working_dir_changes_sha~2")"
-		is_really_pop="$(if [ -f "$(make_stash_data_file_path)" ] ; then printf 'y' ; else printf 'n' ; fi)"
+		put_files_into_working_copy \
+			"$(git rev-parse "$working_dir_changes_sha~0")" \
+			"$(git rev-parse "$working_dir_changes_sha~1")" \
+			"$(git rev-parse "$working_dir_changes_sha~2")"
 		
 		delete_data
 		
 		if [ "$is_quiet" = n ]
 		then
-			if [ "$is_really_pop" = n ]
-			then
-				printf 'Successfully aborted '\''git istash apply'\''\n'
-			else
-				printf 'Successfully aborted '\''git istash pop'\''\n'
-			fi 1>&2
+			printf 'Successfully aborted '\''git istash %s'\''\n' "$sub_command_name" 1>&2
 		fi
 	else
 		printf_fatal 'failed to restore HEAD to initial position\n'
@@ -699,28 +709,12 @@ do_quit() { # args...
 	check_args_for_apply 0 "$@"
 	check_data_files n n y
 	
-	if [ "$sub_command_name" = 'apply' ]
-	then
-		set -- --quit "$@"
-		if [ "$is_quiet" = y ]
-		then
-			set -- --quiet "$@"
-		fi
-		exec sh "$lib_dir/git-istash-pop" "$@"
-	fi
-	
 	git rebase --quit 2>/dev/null || true  # Errors are ignored because if rebase is not in progress or broken, we still want to remove the data files.
-	is_really_pop="$(if [ -f "$(make_stash_data_file_path)" ] ; then printf 'y' ; else printf 'n' ; fi)"
 	delete_data
 	
 	if [ "$is_quiet" = n ]
 	then
-		if [ "$is_really_pop" = n ]
-		then
-			printf 'Successfully quit '\''git istash apply'\''\n'
-		else
-			printf 'Successfully quit '\''git istash pop'\''\n'
-		fi 1>&2
+		printf 'Successfully quit '\''git istash %s'\''\n' "$sub_command_name" 1>&2
 	fi
 }
 
@@ -813,7 +807,6 @@ then
 	error
 fi
 
-lib_dir="$(cd "$(dirname "$0")" ; pwd)"
 cd "$(git rev-parse --show-toplevel)"
 target_data_file="$(make_target_data_file_path)"
 working_dir_sha_file="$(make_working_dir_sha_file_path)"
