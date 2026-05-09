@@ -138,7 +138,7 @@ assert_outputs__apply__success() { # operation changes [stash_id stash_sha] [err
 		if ! IS_SUMMARY_ON ; then printf '\\n' ; fi
 		if [ "$1" = 'pop' ]
 		then
-			printf '%s' '\nDropped refs\/stash@\{'"$3"'\} \('"$4"'\)\n' #XXX mention this in man
+			printf '%s' '\nDropped refs\/stash@\{'"$3"'\} \('"$4"'\)\n'
 		fi
 		printf '%s' '\nSuccessfully '"$(if [ "$1" = 'pop' ] ; then printf 'popped' ; else printf 'applied' ; fi)"' the stash'
 	)" "$(

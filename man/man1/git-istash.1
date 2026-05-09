@@ -170,7 +170,8 @@ Unlike \fBgit stash pop\fR, it can handle stashes referenced by name (\fBstash\(
 .sp
 The only differences from \fBgit istash apply\fR are that \fBpop\fR cannot use an arbitrary commit as \fB<stash>\fR and it removes the stash entry on success. \
 (Thus, the given stash has to be in stash ref or the command will refuse to run.) \
-In case of conflicts, the stash is dropped only after all conflicts are successfully resolved.
+In case of conflicts, the stash is dropped only after all conflicts are successfully resolved. \
+(The name and the SHA of the dropped stash is printed to \fIstdout\fR, just in case.)
 .sp
 This is the inverse operation of \fBgit istash push\fR.
 .RE
@@ -324,7 +325,7 @@ Still, prefer using \fBsnatch\fR and \fBpush\fR for a shorter syntax and a bette
 This option is only valid for \fBsave\fR and \fBpush\fR subcommands and also allowed for \fBcreate\fR and \fBsnatch\fR.
 .sp
 The stash won\(cqt be stored in the stash ref. \
-Instead, its SHA will be outputted to stdout.
+Instead, its SHA will be outputted to \fIstdout\fR.
 .br
 Basically, this changes \fBsave\fR\~->\~\fBcreate\fR and \fBpush\fR\~->\~\fBsnatch\fR. \
 If used with \fBcreate\fR or \fBsnatch\fR, this option has no effect.
@@ -443,7 +444,7 @@ Summary mode can also be changed by the config variable \fBistash.summary\fR but
 .PP
 \-h
 .RS 4
-Print a rudimentary help text to stdout. \
+Print a rudimentary help text to \fIstdout\fR. \
 (Each subcommand has its own text.)
 .sp
 This is a fallback option that is to be used when the man page is not available. \
@@ -874,7 +875,7 @@ The advantage of this is that it can run on every system with very little additi
 .PP
 There\(cqs no support for running the command while there are other unfinished operations in the repository (like rebase or merge).
 .PP
-Option \fB\-\-patch\fR eats more stdin than it needs to. \
+Option \fB\-\-patch\fR eats more \fIstdin\fR than it needs to. \
 (This is the fault of underlying \fBgit\~add\~\-\-patch\fR.)
 
 
