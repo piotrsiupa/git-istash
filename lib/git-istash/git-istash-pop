@@ -25,105 +25,14 @@ print_help() {
 	printf '\t--summary=<mode> - Set summary to "complete" / "non-ignored" / "off".\n'
 }
 
-exec_apply() { # args...
-	if [ "$is_quiet" = y ]
-	then
-		set -- --quiet "$@"
-	fi
-	if [ "$summary_set" = y ]
-	then
-		set -- --summary="$summary_mode" "$@"
-	fi
-	exec sh "$lib_dir/git-istash-apply" --_called-from-pop_ "$@"
-}
-
-do_pop() { # args...
-	if [ "$continue_set" = y ]
-	then
-		exec_apply --continue "$@"
-	elif [ "$abort_set" = y ]
-	then
-		exec_apply --abort "$@"
-	elif [ "$quit_set" = y ]
-	then
-		exec_apply --quit "$@"
-	else
-		exec_apply -- "$@"
-	fi
-}
-
-getopt_short_options='chq'
-getopt_long_options='abort,color::,no-color,continue,quiet,quit,summary:'
-normalized_options="$(get_options_color "$getopt_short_options" "$getopt_long_options" "$@")"
-eval set -- "$normalized_options"
-is_quiet=n
-abort_set=n
-continue_set=n
-quit_set=n
-summary_set=n
-while true
-do
-	case "$1" in
-	--abort)
-		abort_set=y
-		;;
-	--color)
-		shift
-		set_color_for_all "$1"
-		;;
-	--no-color)
-		set_color_for_all 'never'
-		;;
-	-c|--continue)
-		continue_set=y
-		;;
-	-h)
-		print_help
-		exit 0
-		;;
-	-q|--quiet)
-		is_quiet=y
-		;;
-	--quit)
-		quit_set=y
-		;;
-	--summary)
-		shift
-		summary_set=y
-		summary_mode="$1"
-		;;
-	--)
-		shift
-		break
-		;;
-	esac
-	shift
-done
-if [ $continue_set = y ] && [ $abort_set = y ] && [ $quit_set = y ]
+set +e
+check_for_option_h_in_command 'git-istash-apply' "$@"
+result=$?
+set -e
+if [ $result -eq 0 ]
 then
-	printf_error 'you can choose continue, abort or quit at your discretion but the rule is that you can only have one\n'
-	help_hint 'istash pop'
-	error
-fi
-if [ $abort_set = y ] && [ $quit_set = y ]
-then
-	printf_error 'either abort or quit; there is no middle road\n'
-	help_hint 'istash pop'
-	error
-fi
-if [ $continue_set = y ] && [ $abort_set = y ]
-then
-	printf_error 'unclear whether to continue aborting or to abort continuing\n'
-	help_hint 'istash pop'
-	error
-fi
-if [ $continue_set = y ] && [ $quit_set = y ]
-then
-	printf_error 'unclear whether to continue quitting or to quit continuing\n'
-	help_hint 'istash pop'
-	error
+	print_help
+	exit 0
 fi
 
-lib_dir="$(cd "$(dirname "$0")" ; pwd)"
-cd "$(git rev-parse --show-toplevel)"
-do_pop "$@"
+exec sh "$(dirname "$0")/git-istash-apply" --_called-from-pop_ "$@"

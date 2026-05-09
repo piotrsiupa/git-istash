@@ -32,7 +32,7 @@ print_help() {
 }
 
 set +e
-check_for_option_h_in_make_command "$@"
+check_for_option_h_in_command 'git-istash-make-stash' "$@"
 result=$?
 set -e
 if [ $result -eq 0 ]
