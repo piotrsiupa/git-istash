@@ -14,6 +14,7 @@ print_help() {
 	printf 'Usage: %s [-h | --help | -Q | --quick | -V | --version]\n' "$(basename "$0")"
 	printf 'Options:\n'
 	printf '    -h, --help\t\t- Print this help text end exit.\n'
+	printf '    -l, --list\t\t- List all available Git versions and do nothing else.\n'
 	printf '    -Q, --quick\t\t- Use binary search to try to find the oldest supported\n\t\t\t  version of Git without thoroughly testing all of them.\n'
 	printf '    -s, --single=<ver>\t- Check only the given version and use "monitor.sh"\n\t\t\t  instead of "run.sh".\n'
 	printf '    -V, --version\t- Print version information and exit.\n'
@@ -141,6 +142,11 @@ monitor_single_version() {
 }
 check_versions() {
 	abs_actual_git_repo_path="$(cd "$actual_git_repo_path" ; pwd)"
+	if [ "$list_versions" = y ]
+	then
+		get_all_versions ''
+		exit 0
+	fi
 	new_PATH="$abs_actual_git_repo_path:$PATH"
 	if [ "$quickie" = y ]
 	then
@@ -153,10 +159,11 @@ check_versions() {
 	fi
 }
 
-getopt_short_options='hQs:V'
-getopt_long_options='help,quickie,single-version:,version'
+getopt_short_options='hlQs:V'
+getopt_long_options='help,list-versions,quickie,single-version:,version'
 normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$normalized_options"
+list_versions=n
 quickie=n
 single_version=''
 while true
@@ -165,6 +172,9 @@ do
 	-h|--help)
 		print_help
 		exit 0
+		;;
+	-l|--list-versions)
+		list_versions=y
 		;;
 	-Q|--quickie)
 		quickie=y
@@ -197,6 +207,11 @@ fi
 if [ "$quickie" = y ] && [ -n "$single_version" ]
 then
 	printf '"--quickie" and "--single" are not compatible!\n' 1>&2
+	exit 1
+fi
+if [ "$list_versions" = y ] && [ -n "$single_version" ]
+then
+	printf '"--list" and "--single" are not compatible!\n' 1>&2
 	exit 1
 fi
 
