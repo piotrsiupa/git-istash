@@ -18,7 +18,7 @@ print_help() {
 	printf '    -m, --meticulous=X\t- Set how many tests / test variants will be run.\n\t\t\t  (For more info, run "run.sh --help".)\n'
 	printf '    -s, --skip-init\t- Skip the initial run that checks which tests fail.\n\t\t\t  (Assume that the relevant tests has failed already.)\n'
 	printf '    -S, --stop-at-fail\t- Don'\''t find all failing tests first. Go to the fixing\n\t\t\t  mode after encountering the first one.\n\t\t\t  (Good when expecting a lot of errors.)\n'
-	printf '\t--version\t- Print version information and exit.\n'
+	printf '    -V, --version\t- Print version information and exit.\n'
 	printf '\n'
 	printf 'For info about filters, run "run.sh --help".\n'
 }
@@ -132,7 +132,7 @@ monitor_tests() { # [filter]...
 	done
 }
 
-getopt_short_options='aA:c:hm:sS'
+getopt_short_options='aA:c:hm:sSV'
 getopt_long_options='altered,since:,color:,help,meticulousness:,skip-init,stop-at-fail,stop-on-fail,stop-at-error,stop-on-error,version'
 normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$normalized_options"
@@ -190,7 +190,7 @@ do
 	-S|--stop-at-fail|--stop-on-fail|--stop-at-error|--stop-on-error)
 		stop_at_fail=y
 		;;
-	--version)
+	-V|--version)
 		print_version
 		exit 0
 		;;

@@ -11,11 +11,11 @@ print_help() {
 	printf 'If %i mayor version didn'\''t work\nthe script stops.\n' "$subsequent_failed_version_limit"
 	printf 'The goal is to determine which versions of Git are supported by istash.\n'
 	printf '\n'
-	printf 'Usage: %s [-h | --help | -Q | --quick | --version]\n' "$(basename "$0")"
+	printf 'Usage: %s [-h | --help | -Q | --quick | -V | --version]\n' "$(basename "$0")"
 	printf 'Options:\n'
 	printf '    -h, --help\t\t- Print this help text end exit.\n'
 	printf '    -Q, --quick\t\t- Use binary search to try to find the oldest supported\n\t\t\t  version of Git without thoroughly testing all of them.\n'
-	printf '\t--version\t- Print version information and exit.\n'
+	printf '    -V, --version\t- Print version information and exit.\n'
 }
 
 print_version() {
@@ -132,7 +132,7 @@ check_versions() {
 	fi
 }
 
-getopt_short_options='hQ'
+getopt_short_options='hQV'
 getopt_long_options='help,quickie,version'
 normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$normalized_options"
@@ -147,7 +147,7 @@ do
 	-Q|--quickie)
 		quickie=y
 		;;
-	--version)
+	-V|--version)
 		print_version
 		exit 0
 		;;

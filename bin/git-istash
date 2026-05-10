@@ -16,7 +16,7 @@ print_help() {
 	printf '\n'
 	printf 'Usage: git istash [<sub-command>] [<sub-command argument>...]\n'
 	printf '   or: git istash (-h | --help | --man)\n'
-	printf '   or: git istash --version\n'
+	printf '   or: git istash (-V | --version)\n'
 	printf '   or: git istash (-c | --continue | --abort | --quit)\n'
 	printf '   or: git istash (c | continue | abort | quit)\n'
 	printf '\n'

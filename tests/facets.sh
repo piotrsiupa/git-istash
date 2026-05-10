@@ -238,13 +238,13 @@ then
 		printf 'Meticulousness is just a name for a list of facets / facet categories.)\n'
 		printf 'It reads arguments or stdin if the first argument is "-".\n'
 		printf '\n'
-		printf 'Usage: %s (-h | --help | --version)\n' "$(basename "$0")"
+		printf 'Usage: %s (-h | --help | -V | --version)\n' "$(basename "$0")"
 		printf '   or: %s [<meticulousness>...]\n' "$(basename "$0")"
 		printf '   or: %s -\n' "$(basename "$0")"
 		printf '\n'
 		printf 'Options:\n'
 		printf '    -h, --help\t\t- Print this help text.\n'
-		printf '    -v, --version\t- Print version information and exit.\n'
+		printf '    -V, --version\t- Print version information and exit.\n'
 		printf '\n'
 		printf 'Facets:\n'
 		pretty_print "$raw_facets"
@@ -262,7 +262,7 @@ then
 		printf 'test facets parsing script version 1.0.0\n'
 	}
 	
-	getopt_short_options='hv'
+	getopt_short_options='hV'
 	getopt_long_options='help,version'
 	normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 	eval set -- "$normalized_options"
@@ -273,7 +273,7 @@ then
 			print_help
 			exit 0
 			;;
-		-v|--version)
+		-V|--version)
 			print_version
 			exit 0
 			;;

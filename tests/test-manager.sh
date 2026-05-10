@@ -13,7 +13,7 @@ print_help() {
 	printf '\n'
 	printf 'Options:\n'
 	printf '    -h, --help\t\t- Print this help text and exit.\n'
-	printf '\t--version\t- Print version information and exit.\n'
+	printf '    -V, --version\t- Print version information and exit.\n'
 	printf '\n'
 	printf 'Commands:\n'
 	printf '\tcreate\t- Add new and empty test files with given names and rename other\n\t\t  tests to keep the prefixes ordered. '
@@ -276,7 +276,7 @@ delete_test() { # test_name...
 	done
 }
 
-getopt_short_options='hs'
+getopt_short_options='hV'
 getopt_long_options='help,version'
 normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$normalized_options"
@@ -287,7 +287,7 @@ do
 		print_help
 		exit 0
 		;;
-	--version)
+	-V|--version)
 		print_version
 		exit 0
 		;;

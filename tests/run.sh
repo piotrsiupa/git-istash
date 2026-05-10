@@ -66,8 +66,8 @@ print_help() {
 	printf '    -s, --skip-at-fail\t- Don'\''t test other sets of parameters for a test when\n\t\t\t  one already failed. (Other tests still run.)\n'
 	printf '    -S, --stop-at-fail\t- Don'\''t start other tests after one has failed; exit as\n\t\t\t  soon as all currently running ones has finished.\n'
 	printf '    -v, --verbose\t- Show each set of parameters even of if passes.\n'
-	printf '    -V, --skip-version\t- Set "git istash" to not check Git version.\n\t\t\t  (For reevaluating the minimum required Git version.)\n'
-	printf '\t--version\t- Print version information and exit.\n'
+	printf '\t--skip-version\t- Set "git istash" to not check Git version.\n\t\t\t  (For reevaluating the minimum required Git version.)\n'
+	printf '    -V, --version\t- Print version information and exit.\n'
 	printf '\n'
 	printf 'Filters:\n'
 	printf 'You can specify one or more filters in the command call. '
@@ -1021,11 +1021,11 @@ do
 	-v|--verbose)
 		verbose_mode=y
 		;;
-	--version)
+	-V|--version)
 		print_version
 		exit 0
 		;;
-	-V|--skip-version)
+	--skip-version)
 		skip_version=y
 		;;
 	--)
