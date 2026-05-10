@@ -15,7 +15,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'tests cleanup script version 1.0.1\n'
+	printf 'tests cleanup script version 1.0.2\n'
 }
 
 clear_results() {

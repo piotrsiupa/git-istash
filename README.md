@@ -142,6 +142,7 @@ Most of the changes here, however, are bugs that were found during tests to be p
 - There is an option `--allow-empty` now, that allows creation of stash when there are no changes.
 - `git istash create` supports all the options that `git istash push` does.
 - There are two additional subcommands (`snatch` and `save`) that aren't present in the vanilla stash.
+- After applying a stash, only files that was changed in the process are displayed, instead of the entire `git status`.
 
 
 

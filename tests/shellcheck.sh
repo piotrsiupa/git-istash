@@ -16,7 +16,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'shellcheck wrapper script version 1.2.0\n'
+	printf 'shellcheck wrapper script version 1.2.1\n'
 }
 
 list_files() {

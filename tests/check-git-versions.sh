@@ -19,7 +19,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'Git version checking script version 1.1.0\n'
+	printf 'Git version checking script version 1.2.0\n'
 }
 
 prepare_git_repo() {

@@ -23,7 +23,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'test listing script version 1.1.0\n'
+	printf 'test listing script version 1.1.1\n'
 }
 
 find_master() {

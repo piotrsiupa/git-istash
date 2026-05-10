@@ -85,14 +85,14 @@ check_pathspec_for_implicit_push() ( # args...
 	fi
 )
 
-set_getopt_options_from_make_command
+set_getopt_options_from_command 'git-istash-make-stash'
 if [ "${1+"$1"}" = '--_implicit-push_' ]
 then
 	shift
 	check_pathspec_for_implicit_push "$@"
 fi
 set +e
-check_for_option_h_in_make_command "$@"
+check_for_option_h_in_command 'git-istash-make-stash' "$@"
 result=$?
 set -e
 if [ $result -eq 0 ]
