@@ -11,6 +11,12 @@ PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_PATHSPEC_STYLE
 PARAMETRIZE_EXCLUDE
+PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
+
+__end_of_initialization__
+
+prepare_repository
 
 __test_section__ 'Prepare repository'
 printf 'xxx\n' >aaa0
@@ -53,15 +59,16 @@ printf '%s' ":$EXCLUDE_PATTERN" | PREPARE_PATHSPEC_FILE
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'ms. stash' ":$EXCLUDE_PATTERN"
+	assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $COLOR_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'ms. stash' ":$EXCLUDE_PATTERN" $QUIET_FLAGS
 elif IS_PATHSPEC_IN_STDIN
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'ms. stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test
+	assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $COLOR_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'ms. stash' $PATHSPEC_NULL_FLAGS $QUIET_FLAGS "$PATHSPEC_FROM_FILE_FLAG"=- <.git/pathspec_for_test
 else
 	#shellcheck disable=SC2086
-	assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'ms. stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
+	assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $COLOR_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'ms. stash' $PATHSPEC_NULL_FLAGS $QUIET_FLAGS "$PATHSPEC_FROM_FILE_FLAG" .git/pathspec_for_test
 fi
+assert_outputs__create__no_changes_to_stash
 assert_files_HT '
 MM aaa0		zzz	yyy
  M aaa1		yyy	xxx

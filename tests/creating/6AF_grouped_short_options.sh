@@ -5,13 +5,22 @@ non_essential_test
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_CREATE_OPERATION
 
+__end_of_initialization__
+
+prepare_repository
+
 correct_head_sha="$(get_head_sha)"
 SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_CREATE_OPERATION stash"
 printf 'bbb\n' >aaa
 git add aaa
-new_stash_sha_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" -kSmabc)"
+assert_exit_code 0 git istash "$CREATE_OPERATION" -kSmabc
+assert_outputs__create__success 'S' \
+			"$(case "$HEAD_TYPE" in 'BRANCH') printf 'master' ;; 'DETACH') printf '(no branch)' ;; 'ORPHAN') printf 'ooo' ;; esac)" \
+			"$(if CO_STORES_STASH ; then printf '%s' "stash@{0}" ; else printf '%s' "$stdout" ; fi)~" \
+			'abc'
+new_stash_sha_CO="$stdout"
 assert_files_HTCO '
 A  aaa		bbb
 !! ignored0	ignored0

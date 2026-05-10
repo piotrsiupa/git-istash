@@ -3,9 +3,9 @@
 Alternative Git command for reliably handling stashes, without the arbitrary limitations and corner cases of `git stash`.
 ([full-list-of-the-changes](#differences-from-the-official-git-stash))
 
-It is written (almost[^1]) entirely in POSIX (Portable Operating System Interface) shell script, making it compatible with basically every operating system (except Windows, but fortunately, Git for Windows can handle POSIX scripts on its own).
+It is written entirely[^1] in POSIX (Portable Operating System Interface) shell script, making it compatible with basically every operating system (except Windows, but fortunately, Git for Windows can handle POSIX scripts on its own).
 
-[^1]: The scripts use the program `getopt` for parsing options and the `-r` flag for `xargs`, both of which are not part of the standard but are widely supported.
+[^1]: Tests are slightly more liberal with non POSIX commands but they still should run on an average system.
 
 
 ## Overview
@@ -142,6 +142,7 @@ Most of the changes here, however, are bugs that were found during tests to be p
 - There is an option `--allow-empty` now, that allows creation of stash when there are no changes.
 - `git istash create` supports all the options that `git istash push` does.
 - There are two additional subcommands (`snatch` and `save`) that aren't present in the vanilla stash.
+- After applying a stash, only files that was changed in the process are displayed, instead of the entire `git status`.
 
 
 
@@ -157,6 +158,7 @@ Most of the changes here, however, are bugs that were found during tests to be p
 - There's no support for running the command while there are other unfinished operations in the repository (like rebase or merge).
 - Compatibility with submodules wasn't tested yet.
 - Compatibility with worktrees wasn't tested yet.
+- Option `--patch` eats more stdin than it needs to. (This is the fault of underlying `git add --patch`.)
 
 
 
@@ -170,12 +172,16 @@ git help istash
 # or
 git istash --help
 # or
+git istash --man
+# or
 man git-istash
 ```
 
 It is also possible to display the manual without installation, by running:
 ```sh
 bin/git-istash.sh --help
+# or
+man man/man1/git-istash.1
 ```
 
 ### Brief help text
@@ -253,7 +259,7 @@ git istash --continue
 After the whole operation is finished, the stashed index is restored and intact.
 
 
-## Stashing away untracked files
+### Stashing away untracked files
 
 You've created a few new files yet to be added to the repository but you've realized that you will need them a little later and they are getting in the way of what you're doing right now.
 

@@ -4,8 +4,15 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_APPLY_OPERATION
-#PARAMETRIZE 'CONTINUE_COMMAND' 'conti' 'cont' 'c'
-PARAMETRIZE_OPTION true 'CONTINUE_COMMAND' 'CONTINUE: cont & c && conti & continu & co'
+PARAMETRIZE_OPTION true 'CONTINUE_COMMAND' '' 'CONTINUE: c && cont && conti & continu & co'
+PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
+PARAMETRIZE_SUMMARY
+PARAMETRIZE_HINT 'istashConflicts'
+
+__end_of_initialization__
+
+prepare_repository
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
@@ -29,8 +36,11 @@ SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
-assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION"
-assert_conflict_message "$APPLY_OPERATION"
+#shellcheck disable=SC2086
+assert_exit_code 2 git $ADVICE_FLAGS istash "$APPLY_OPERATION" $COLOR_FLAGS $QUIET_FLAGS
+assert_outputs__apply__conflict "$APPLY_OPERATION" 0 '
+UU aaa
+'
 assert_files_HT '
 UU aaa		ddd|bbb
    zzz		yyy
@@ -46,8 +56,11 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 __test_section__ "Continue (implied) $APPLY_OPERATION stash (0)"
 printf 'eee\n' >aaa
 git add aaa
-assert_exit_code 2 capture_outputs git istash "$CONTINUE_COMMAND"
-assert_conflict_message "$APPLY_OPERATION"
+#shellcheck disable=SC2086
+assert_exit_code 2 git $ADVICE_FLAGS istash "$CONTINUE_COMMAND" $COLOR_FLAGS $QUIET_FLAGS
+assert_outputs__apply__conflict "$APPLY_OPERATION" 2 '
+UU aaa
+'
 assert_files_HT '
 UU aaa		eee|ccc
    zzz		yyy
@@ -63,8 +76,11 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 __test_section__ "Continue (implied) $APPLY_OPERATION stash (1)"
 printf 'fff\n' >aaa
 git add aaa zzz
-assert_exit_code 2 git istash "$CONTINUE_COMMAND"
-assert_conflict_message "$APPLY_OPERATION"
+#shellcheck disable=SC2086
+assert_exit_code 2 git $ADVICE_FLAGS istash "$CONTINUE_COMMAND" $COLOR_FLAGS $QUIET_FLAGS
+assert_outputs__apply__conflict "$APPLY_OPERATION" 4 '
+AA zzz
+'
 assert_files_HT '
    aaa		fff
 AA zzz		yyy|zzz
@@ -80,7 +96,13 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 __test_section__ "Continue (implied) $APPLY_OPERATION stash (2)"
 printf 'xxx\n' >zzz
 git add aaa zzz
-assert_exit_code 0 git istash "$CONTINUE_COMMAND"
+stash_sha="$(git rev-parse stash)"
+#shellcheck disable=SC2086
+assert_exit_code 0 git $ADVICE_FLAGS istash "$CONTINUE_COMMAND" $COLOR_FLAGS $QUIET_FLAGS $SUMMARY_FLAGS
+assert_outputs__apply__success "$APPLY_OPERATION" '
+MM aaa
+ M zzz
+' 0 "$stash_sha"
 assert_files_HT '
 MM aaa		fff	eee
  M zzz		xxx	yyy

@@ -10,12 +10,12 @@ print_help() {
 	printf 'Usage: %s [<options...>]\n' "$(basename "$0")"
 	printf '\n'
 	printf 'Options:\n'
-	printf '    -h, --help\t\t- Print this help message and exit.\n'
+	printf '    -h, --help\t\t- Print this help text and exit.\n'
 	printf '\t--version\t- Print version information and exit.\n'
 }
 
 print_version() {
-	printf 'shellcheck wrapper script version 1.0.1\n'
+	printf 'tests cleanup script version 1.0.2\n'
 }
 
 clear_results() {
@@ -24,8 +24,8 @@ clear_results() {
 
 getopt_short_options='hs'
 getopt_long_options='help,version'
-getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
-eval set -- "$getopt_result"
+normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
+eval set -- "$normalized_options"
 while true
 do
 	case "$1" in

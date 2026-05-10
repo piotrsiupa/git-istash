@@ -4,20 +4,18 @@
 . "$(dirname "$0")/../commons.sh" 1>/dev/null
 
 PARAMETRIZE_SUBCOMMAND
+PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
+
+__end_of_initialization__
+
+prepare_repository
 
 __test_section__ "Show short help for subcommand \"$SUBCOMMAND\""
 #shellcheck disable=SC2086
-output="$(assert_exit_code 0 git istash $SUBCOMMAND -h)"
-mentions_of_this_subcommand="$(printf '%s\n' "$output" | grep -Fc "git istash $SUBCOMMAND")"
-mentions_of_any_subcommand="$(printf '%s\n' "$output" | grep -Ec 'git istash \w+' || true)"
-test "$mentions_of_this_subcommand" -ge 1 ||
-	fail 'The "-h" help is not for the subcommand "%s"!\n' "$SUBCOMMAND"
-test "$mentions_of_this_subcommand" -ge "$mentions_of_any_subcommand" ||
-	fail 'Other subcommands are mentioned in the "-h" help. (Did you copy it form other file?)\n'  # Not a real bug but currently the condition is fulfilled for all commands and this check will help to catch developer errors.
-usage_line_regex="^Usage: git istash $SUBCOMMAND"
-printf '%s\n' "$output" | grep -Eq "$usage_line_regex" ||
-	fail 'The "-h" help doesn'\''t have a "usage" line!\n'
-printf '%s\n' "$output" | tail -n +3 | grep -Eq "$usage_line_regex" ||
-	fail 'The "-h" help starts with the "usage" line!\n(There should be a short description.)\n'
-printf '%s\n' "$output" | grep -Fxq 'Options:' ||
-	fail 'The "-h" help doesn'\''t have an "options" section!\n'
+assert_exit_code 0 git istash $QUIET_FLAGS $SUBCOMMAND $COLOR_FLAGS -h
+if [ "$SUBCOMMAND" = 'c' ] || [ "$SUBCOMMAND" = 'continue' ] || [ "$SUBCOMMAND" = 'abort' ] || [ "$SUBCOMMAND" = 'quit' ]
+then
+	SUBCOMMAND=''
+fi
+assert_outputs__main_script__help n

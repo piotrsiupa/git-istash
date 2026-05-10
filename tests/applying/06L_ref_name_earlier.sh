@@ -2,6 +2,13 @@
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
+PARAMETRIZE_SUMMARY
+
+__end_of_initialization__
+
+prepare_repository
 
 __test_section__ 'Create earlier stash'
 printf 'aaa\n' >aaa
@@ -25,14 +32,21 @@ __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
 if IS_APPLY
 then
-	assert_exit_code 0 git istash apply 'earlier'
+	stash_sha="$(git rev-parse 'earlier')"
+	#shellcheck disable=SC2086
+	assert_exit_code 0 git istash apply $SUMMARY_FLAGS $QUIET_FLAGS 'earlier' $COLOR_FLAGS
+	assert_outputs__apply__success "$APPLY_OPERATION" '
+	?A aaa
+	' 0 "$stash_sha"
 	assert_files_HT '
 	?? aaa		aaa
 	!! ignored0	ignored0
 	!! ignored1	ignored1
 	'
 else
-	assert_exit_code 1 git istash pop 'earlier'
+	#shellcheck disable=SC2086
+	assert_exit_code 1 git istash pop $SUMMARY_FLAGS $QUIET_FLAGS 'earlier' $COLOR_FLAGS
+	assert_outputs__apply__non_stash_on_pop
 	assert_files_HT '
 	!! ignored0	ignored0
 	!! ignored1	ignored1

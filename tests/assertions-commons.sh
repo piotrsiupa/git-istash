@@ -7,14 +7,74 @@ then
 fi
 
 
+# It doesn't capture outputs (and thus it doesn't tinker with I/O streams).
+assert_exit_code__light() { # expected_code command [arguments...]
+	expected_exit_code_for_assert="$1"
+	shift
+	set +e
+	(set -e ; "$@")
+	exit_code_for_assert=$?
+	set -e
+	#shellcheck disable=SC2154
+	test "$exit_code_for_assert" -eq "$expected_exit_code_for_assert" ||
+		fail 'Command "%s" returned exit code %i but %i was expected!\n' "$*" "$exit_code_for_assert" "$expected_exit_code_for_assert"
+	last_command="$*"
+	unset expected_exit_code_for_assert
+	unset exit_code_for_assert
+}
+
+# It also captures the command stdout and stderr for "assert_outputs" (just because it would be too much boiler plate to call "capture_outputs" every time).
 assert_exit_code() { # expected_code command [arguments...]
 	expected_exit_code_for_assert="$1"
 	shift
-	"$@" && exit_code_for_assert=0 || exit_code_for_assert=$?
+	set +e
+	capture_outputs "$@"
+	exit_code_for_assert=$?
+	set -e
+	#shellcheck disable=SC2154
 	test "$exit_code_for_assert" -eq "$expected_exit_code_for_assert" ||
-		fail 'Command %s returned exit code %i but %i was expected!\n' "$(command_to_string "$@")" "$exit_code_for_assert" "$expected_exit_code_for_assert"
+		fail 'Command "%s" returned exit code %i but %i was expected!\n' "$*" "$exit_code_for_assert" "$expected_exit_code_for_assert"
 	unset expected_exit_code_for_assert
 	unset exit_code_for_assert
+}
+
+# It's for the sake of seing them clearly in the error message.
+# This function may produce ambiguous strings and cannot be used in the actual logic.
+# E.g. escape character will produce string '\033' but the actual string '\033' will remain unchanged.
+escape_escape_characters() {
+	sed -E "s/$(printf '\033')/\\\\033/g"
+}
+
+# Requires outputs to be saved via "capture_outputs". ("assert_exit_code" does run this function intenally.)
+assert_outputs() { # stdout_regex stderr_regex
+	#shellcheck disable=SC2154
+	match_multiline_regex "$stdout" "$(dedent_regex "$1")" ||
+		fail 'Expected stdout of "%s" to match:\n"%s"\nbut it is:\n"%s"!\n' \
+			"$last_command" \
+			"$(dedent_regex "$1" | sed -e 's/\\n/\n/g' -e 's/\\t/\t/g' | escape_escape_characters)" \
+			"$(printf '%s' "$stdout" | escape_escape_characters)"
+	#shellcheck disable=SC2154
+	match_multiline_regex "$stderr" "$(dedent_regex "$2")" ||
+		fail 'Expected stderr of "%s" to match:\n"%s"\nbut it is:\n"%s"!\n' \
+			"$last_command" \
+			"$(dedent_regex "$2" | sed -e 's/\\n/\n/g' -e 's/\\t/\t/g' | escape_escape_characters)" \
+			"$(printf '%s' "$stderr" | escape_escape_characters)"
+}
+
+_remove_color_from_output_pattern() { # output_pattern
+	printf '%s' "$1" \
+	| if IS_COLOR_ON
+	then
+		sed -E 's/(\\\[)<color>([0-9;]+|0\?)m/\1\2m/g'
+	else
+		sed -E 's/\\\[<color>([0-9;]+|0\?)m//g'
+	fi
+}
+
+# Like "assert_outputs" but is removes ANSI color codes if color parametrization is set to off.
+assert_outputs_with_color() { # stdout_regex stderr_regex
+	set -- "$(_remove_color_from_output_pattern "$1")" "$(_remove_color_from_output_pattern "$2")"
+	assert_outputs "$@"
 }
 
 _convert_zero_separated_path_list() {
@@ -34,7 +94,8 @@ _convert_zero_separated_path_list() {
 }
 
 _prepare_path_list_for_assertion() { # [has_prefix]
-	if [ "${1-n}" = y ]
+	sed '/^$/d' \
+	| if [ "${1-n}" = y ]
 	then
 		sed -E -e 's/^\\040/ /g' -e 's/^(.)\\040/\1 /g' -e 's/^(..)\\040/\1 /g' \
 			-e 's/^(...)(.*)$/\2 \1/' \
@@ -48,6 +109,7 @@ _prepare_path_list_for_assertion() { # [has_prefix]
 }
 
 assert_all_files() { # expected
+	set -- "$(printf '%s\n' "$1" | _prepare_path_list_for_assertion)"
 	value_for_assert="$(find . -type f ! -path './.git/*' -print0 | _convert_zero_separated_path_list | cut -c3- | _prepare_path_list_for_assertion)"
 	test "$value_for_assert" = "$1" ||
 		fail 'Expected all files in the working directory to be:\n"%s"\nbut they are:\n"%s"!\n' "$1" "$value_for_assert"
@@ -55,6 +117,7 @@ assert_all_files() { # expected
 }
 
 assert_tracked_files() { # expected
+	set -- "$(printf '%s\n' "$1" | _prepare_path_list_for_assertion)"
 	value_for_assert="$(git ls-tree -r --name-only -z HEAD | _convert_zero_separated_path_list | _prepare_path_list_for_assertion)"
 	test "$value_for_assert" = "$1" ||
 		fail 'Expected tracked files to be:\n"%s"\nbut they are:\n"%s"!\n' "$1" "$value_for_assert"
@@ -62,6 +125,7 @@ assert_tracked_files() { # expected
 }
 
 assert_status() { # expected
+	set -- "$(printf '%s\n' "$1" | _prepare_path_list_for_assertion y)"
 	value_for_assert="$(git status --porcelain -z --untracked-files=all --ignored --no-renames | _convert_zero_separated_path_list | _prepare_path_list_for_assertion y)"
 	test "$value_for_assert" = "$1" ||
 		fail 'Expected repository status to be:\n"%s"\nbut it is:\n"%s"!\n' "$1" "$value_for_assert"
@@ -78,8 +142,8 @@ assert_file_contents() { # file expected_current [expected_staged]
 	fi
 	if printf '%s' "$2" | grep -qE '\|'
 	then
-		ours_expected_contents="$(printf '%s' "$2" | cut -d'|' -f1)"
-		theirs_expected_contents="$(printf '%s' "$2" | cut -d'|' -f2)"
+		ours_expected_contents="$(printf '%s' "$2" | cut -d'|' -f1 | sed -E 's/^""$//')"
+		theirs_expected_contents="$(printf '%s' "$2" | cut -d'|' -f2 | sed -E 's/^""$//')"
 		test "$(printf '%s\n' "$value_for_assert" | grep -cE '^={7}')" -eq 1 ||
 			fail 'Expected file "'"$1"'" contain exactly 1 conflict!\n'
 		#shellcheck disable=SC2015
@@ -97,7 +161,7 @@ assert_file_contents() { # file expected_current [expected_staged]
 		unset theirs_expected_contents
 	else
 		#shellcheck disable=SC2059
-		expected_contents="$(printf -- "$2")"
+		expected_contents="$(printf -- "$2" | sed -E 's/^""$//')"
 		test "$value_for_assert" = "$expected_contents" ||
 			fail 'Expected content of file "'"$1"'" to be:\n"%s"\nbut it is:\n"%s"!\n' "$expected_contents" "$value_for_assert"
 		if [ $# -eq 3 ]
@@ -105,7 +169,7 @@ assert_file_contents() { # file expected_current [expected_staged]
 			#shellcheck disable=SC2059
 			value_for_assert="$(printf -- ":$1" | xargs -0 -- git show)"
 			#shellcheck disable=SC2059
-			expected_contents="$(printf -- "$3")"
+			expected_contents="$(printf -- "$3" | sed -E 's/^""$//')"
 			test "$value_for_assert" = "$expected_contents" ||
 				fail 'Expected staged content of file "'"$1"'" to be:\n"%s"\nbut it is:\n"%s"!\n' "$expected_contents" "$value_for_assert"
 		fi
@@ -116,9 +180,9 @@ assert_file_contents() { # file expected_current [expected_staged]
 
 assert_files() { # expected_files (see one of the tests as an example)
 	expected_files="$(printf '%s\n' "$1" | sed -E -e 's/^\t+//' -e '/^\s*$/ d')"
-	assert_all_files "$(printf '%s\n' "$expected_files" | grep -vE '^(D |[^U]D) ' | sed -E 's/^...(\S+)(\s.*)?$/\1/' | _prepare_path_list_for_assertion)"
-	assert_tracked_files "$(printf '%s\n' "$expected_files" | grep -vE '^(!!|\?\?|A[^A]| A|DU) ' | sed -E 's/^...(\S+)(\s.*)?$/\1/' | _prepare_path_list_for_assertion)"
-	assert_status "$(printf '%s\n' "$expected_files" | grep -vE '^(  ) ' | sed -E 's/^(...\S+)(\s.*)?$/\1/' | _prepare_path_list_for_assertion y)"
+	assert_all_files "$(printf '%s\n' "$expected_files" | grep -vE '^(D |[^U]D) ' | sed -E 's/^...(\S+)(\s.*)?$/\1/')"
+	assert_tracked_files "$(printf '%s\n' "$expected_files" | grep -vE '^(!!|\?\?|A[^A]| A|DU) ' | sed -E 's/^...(\S+)(\s.*)?$/\1/')"
+	assert_status "$(printf '%s\n' "$expected_files" | grep -vE '^(  ) ' | sed -E 's/^(...\S+)(\s.*)?$/\1/')"
 	printf '%s\n' "$expected_files" \
 	| while IFS= read -r line
 	do

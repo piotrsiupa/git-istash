@@ -5,6 +5,13 @@ non_essential_test
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_QUIT
+PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
+PARAMETRIZE_HINT 'istashConflicts'
+
+__end_of_initialization__
+
+prepare_repository
 
 __test_section__ 'Create stash'
 mkdir xxx yyy
@@ -27,9 +34,14 @@ SWITCH_HEAD_TYPE
 __test_section__ "$CAP_APPLY_OPERATION stash"
 mkdir -p xxx
 cd xxx
-assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION"
+#shellcheck disable=SC2086
+assert_exit_code 2 git $ADVICE_FLAGS istash "$APPLY_OPERATION" $COLOR_FLAGS $QUIET_FLAGS
 cd -
-assert_conflict_message "$APPLY_OPERATION"
+assert_outputs__apply__conflict "$APPLY_OPERATION" 2 '
+AA aaa
+AA xxx/aaa
+AA yyy/aaa
+'
 assert_files_HT '
 AA aaa		bbb0|aaa0
 AA xxx/aaa	bbb1|aaa1
@@ -50,8 +62,10 @@ printf 'ccc2\n' >yyy/aaa
 git add aaa xxx/aaa yyy/aaa
 correct_head_sha="$(get_head_sha_HT)"
 cd xxx
-assert_exit_code 0 git istash "$APPLY_OPERATION" "$QUIT_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 0 git istash "$APPLY_OPERATION" $COLOR_FLAGS "$QUIT_FLAG" $QUIET_FLAGS
 cd -
+assert_outputs__apply__quit "$APPLY_OPERATION"
 assert_files_HT '
 M  aaa		ccc0
 M  xxx/aaa	ccc1

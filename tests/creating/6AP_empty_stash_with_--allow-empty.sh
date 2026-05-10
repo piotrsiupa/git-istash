@@ -9,13 +9,21 @@ PARAMETRIZE_UNTRACKED 'DEFAULT'
 PARAMETRIZE_KEEP_INDEX 'DEFAULT'
 PARAMETRIZE_STAGED
 PARAMETRIZE_UNSTAGED
+PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
+
+__end_of_initialization__
+
+prepare_repository
 
 correct_head_sha="$(get_head_sha)"
 SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_CREATE_OPERATION stash"
 #shellcheck disable=SC2086
-new_stash_sha_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'empty stash' --allow-empty $ALL_FLAGS $UNTRACKED_FLAGS)"
+assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $COLOR_FLAGS $UNSTAGED_FLAGS -m 'empty stash' --allow-empty $ALL_FLAGS $UNTRACKED_FLAGS $QUIET_FLAGS
+assert_outputs__create__success '*' 0 'empty stash'
+new_stash_sha_CO="$stdout"
 assert_files_HTCO '
 !! ignored0	ignored0
 !! ignored1	ignored1

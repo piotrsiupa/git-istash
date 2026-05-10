@@ -4,6 +4,13 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH'
 PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
+PARAMETRIZE_SUMMARY
+
+__end_of_initialization__
+
+prepare_repository
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
@@ -24,7 +31,12 @@ SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
-assert_exit_code 0 git istash "$APPLY_OPERATION"
+stash_sha="$(git rev-parse stash)"
+#shellcheck disable=SC2086
+assert_exit_code 0 git istash "$APPLY_OPERATION" $SUMMARY_FLAGS $QUIET_FLAGS $COLOR_FLAGS
+assert_outputs__apply__success "$APPLY_OPERATION" '
+ M aaa
+' 0 "$stash_sha"
 assert_files_HT '
  M aaa		ccc	bbb
 !! ignored0	ignored0

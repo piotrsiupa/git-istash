@@ -9,6 +9,12 @@ PARAMETRIZE_UNTRACKED 'DEFAULT'
 PARAMETRIZE_KEEP_INDEX 'DEFAULT'
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
+PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
+
+__end_of_initialization__
+
+prepare_repository
 
 correct_head_sha="$(get_head_sha)"
 SWITCH_HEAD_TYPE
@@ -20,7 +26,8 @@ git add aaa bbb
 printf 'ccc\n' >ccc
 printf 'ddd\n' >ddd
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS --pathspec-file-nul $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS
+assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS --pathspec-file-nul $KEEP_INDEX_FLAGS $QUIET_FLAGS $STAGED_FLAGS $COLOR_FLAGS $UNSTAGED_FLAGS
+assert_outputs__create__pfn_without_pff
 assert_files_HT '
 A  aaa		aaa
 A  bbb		bbb

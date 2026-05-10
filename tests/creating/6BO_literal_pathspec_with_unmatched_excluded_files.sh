@@ -17,6 +17,12 @@ PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_PATHSPEC_STYLE
 PARAMETRIZE_OPTIONS_INDICATOR IS_PATHSPEC_IN_ARGS
+PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
+
+__end_of_initialization__
+
+prepare_repository
 
 correct_head_sha="$(get_head_sha)"
 SWITCH_HEAD_TYPE
@@ -31,15 +37,16 @@ printf ':(exclude)*1 b? ' | PREPARE_PATHSPEC_FILE
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086
-	assert_exit_code 1 git --literal-pathspecs istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $UNTRACKED_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS ":(exclude)*1" $ALL_FLAGS $EOI 'b?'
+	assert_exit_code 1 git --literal-pathspecs istash "$CREATE_OPERATION" $QUIET_FLAGS $KEEP_INDEX_FLAGS $UNTRACKED_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS ":(exclude)*1" $ALL_FLAGS $COLOR_FLAGS $EOI 'b?'
 elif IS_PATHSPEC_IN_STDIN
 then
 	#shellcheck disable=SC2086
-	GIT_LITERAL_PATHSPECS=1 assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test
+	GIT_LITERAL_PATHSPECS=1 assert_exit_code 1 git istash "$CREATE_OPERATION" $QUIET_FLAGS $UNTRACKED_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $PATHSPEC_NULL_FLAGS "$PATHSPEC_FROM_FILE_FLAG"=- $COLOR_FLAGS <.git/pathspec_for_test
 else
 	#shellcheck disable=SC2086
-	GIT_LITERAL_PATHSPECS=yes assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test
+	GIT_LITERAL_PATHSPECS=yes assert_exit_code 1 git istash "$CREATE_OPERATION" $QUIET_FLAGS $UNTRACKED_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $PATHSPEC_NULL_FLAGS "$PATHSPEC_FROM_FILE_FLAG" .git/pathspec_for_test $COLOR_FLAGS
 fi
+assert_outputs__create__unmatching_pathspec ':(exclude)*1'
 assert_files_HT '
 ?? a1		xxx
 ?? a2		xxx

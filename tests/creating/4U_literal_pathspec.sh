@@ -17,6 +17,12 @@ PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_PATHSPEC_STYLE
 PARAMETRIZE_OPTIONS_INDICATOR IS_PATHSPEC_IN_ARGS
+PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
+
+__end_of_initialization__
+
+prepare_repository
 
 correct_head_sha="$(get_head_sha)"
 SWITCH_HEAD_TYPE
@@ -30,15 +36,17 @@ printf ':(literal)a???e :(literal)a*e ' | PREPARE_PATHSPEC_FILE
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086
-	new_stash_sha_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $UNTRACKED_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS ':(literal)a???e' $ALL_FLAGS $EOI ':(literal)a*e')"
+	assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $UNTRACKED_FLAGS $QUIET_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS ':(literal)a???e' $ALL_FLAGS $COLOR_FLAGS $EOI ':(literal)a*e'
 elif IS_PATHSPEC_IN_STDIN
 then
 	#shellcheck disable=SC2086
-	new_stash_sha_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test)"
+	assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $QUIET_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $PATHSPEC_NULL_FLAGS "$PATHSPEC_FROM_FILE_FLAG"=- $COLOR_FLAGS <.git/pathspec_for_test
 else
 	#shellcheck disable=SC2086
-	new_stash_sha_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test)"
+	assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $QUIET_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $PATHSPEC_NULL_FLAGS "$PATHSPEC_FROM_FILE_FLAG" .git/pathspec_for_test $COLOR_FLAGS
 fi
+assert_outputs__create__success '*' 0 ''
+new_stash_sha_CO="$stdout"
 assert_files_HTCO '
 ?? abcde	xxx
 ?? a???e	xxx
@@ -71,6 +79,7 @@ remove_all_changes
 RESTORE_HEAD_TYPE
 
 __test_section__ 'Pop stash'
+#shellcheck disable=SC2086
 assert_exit_code 0 git stash pop --index
 assert_files '
 ?? a???e	xxx

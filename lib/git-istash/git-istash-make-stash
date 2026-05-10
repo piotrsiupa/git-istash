@@ -3,6 +3,7 @@
 set -eu
 
 . "$(dirname "$0")/git-istash-commons"
+. "$(dirname "$0")/git-istash-io"
 . "$(dirname "$0")/git-istash-vanilla-format"
 
 print_help() {
@@ -15,19 +16,22 @@ print_help() {
 	printf 'Options:\n'
 	printf '    -a, --all\t\t- Stash and clean also untracked and ignored files.\n'
 	printf '\t--allow-empty\t- Create a stash even if there are no suitable changes.\n'
-	printf '    -h\t\t\t- Show this help text and exit.\n'
+	printf '\t--color[=<when>] - Allow use of ANSI color codes.\n\t\t\t  <when> can be one of always, never, or auto.\n\t\t\t  Omitting the argument is equivalent to always.\n'
+	printf '\t--no-color\t- Same as --color=never.\n'
+	printf '    -h\t\t\t- Print this help text and exit.\n'
 	printf '    -k, --keep-index\t- Left intact all changes already added to the index.\n'
-	printf '\t--no-keep-index\t- Cancel "--keep-index".\n'
+	printf '\t--no-keep-index\t- Cancel --keep-index.\n'
 	printf '    -l, --leave-staged\t- Left intact all changes already added to the index\n\t\t\t  and don'\''t add them to stash.\n'
 	printf '    -m, --message=MSG\t- Set stash description.\n'
 	printf '\t--patch\t\t- Interactively select non-staged chunks to stash.\n'
 	printf '\t--pathspec-from-file=FILE - Read pathspec from the specified file.\n'
-	printf '\t--pathspec-file-nul - Treat the pathspec file as NUL-separated.\n\t\t\t  (Only valid with "--pathspec-from-file".)\n'
+	printf '\t--pathspec-file-nul - Treat the pathspec file as NUL-separated.\n\t\t\t  (Only valid with --pathspec-from-file.)\n'
+	printf '    -q, --quiet\t\t- Suppress human-readable summaries and information.\n'
 	printf '\t--remove-stashed - Removes stashed changes unless there'\''s another option\n\t\t\t  to explicitely keep them.\n'
 	printf '    -S, --staged\t- Left intact all changes NOT already added to the index\n\t\t\t  and don'\''t add them to stash.\n'
 	printf '\t--no-store\t- Don'\''t store the created stash with "git stash store".\n\t\t\t  Instead write its sha to stdout.\n'
 	printf '    -u, --include-untracked - Stash and clean also untracked files.\n'
-	printf '\t--no-include-untracked - Do not touch untracked files even with "--all".\n'
+	printf '\t--no-include-untracked - Do not touch untracked files even with --all.\n'
 }
 
 convert_pathspec_file() {
@@ -113,8 +117,7 @@ is_pathspec_exclude() { # pathspec
 check_pathspec() {
 	if [ -n "$pathspec_file" ]
 	then
-		convert_to_octal <"$pathspec_file" \
-		| sed 's/\\000/\n/g' \
+		convert_to_octal_lines <"$pathspec_file" \
 		| while read -r ps || [ -n "$ps" ]
 		do
 			good=n
@@ -140,16 +143,14 @@ check_pathspec() {
 			if [ "$good" = n ]
 			then
 				#shellcheck disable=SC2059
-				printf 'fatal: pathspec '\'"$ps"\'' did not match any files\n' 1>&2
-				return 1
+				error 'pathspec '\'"$ps"\'' did not match any file(s)\n'
 			fi
 		done
 	fi
 }
 
 add_with_pathspec() {
-	convert_to_octal <"$pathspec_file" \
-	| sed 's/\\000/\n/g' \
+	convert_to_octal_lines <"$pathspec_file" \
 	| while read -r ps || [ -n "$ps" ]
 	do
 		#shellcheck disable=SC2059
@@ -164,8 +165,7 @@ add_with_pathspec() {
 
 add_with_patch_and_pathspec() {
 	exec 3<&0
-	convert_to_octal <"$pathspec_file" \
-	| sed 's/\\000/\n/g' \
+	convert_to_octal_lines <"$pathspec_file" \
 	| while read -r ps || [ -n "$ps" ]
 	do
 		#shellcheck disable=SC2059
@@ -189,17 +189,19 @@ commit_changes() {
 		branch_name_for_msg='(no branch)'
 	fi
 	there_are_enough_changes="$allow_empty"
+	there_was_patch_message=n
 	
 	# staged (initial)
 	git commit --message="index on $branch_name_for_msg: $default_message (unfinished)" --allow-empty 1>/dev/null
 	
 	# unstaged
-	if [ -n "$patch_options" ]
-	then
-		printf '### Using the interactive patch for tracked files...' 1>&2
-	fi
 	if [ "$leave_unstaged" = n ]
 	then
+		if [ -n "$patch_options" ]
+		then
+			printf '### Using the interactive patch for tracked files...\n' 1>&2
+			there_was_patch_message=y
+		fi
 		if [ -z "$pathspec_file" ]
 		then
 			git --no-literal-pathspecs add --update $patch_options :/ 1>&2 2>/dev/null || true
@@ -210,7 +212,7 @@ commit_changes() {
 			else
 				add_with_patch_and_pathspec
 			fi
-		fi
+		fi 2>&1 | sed -E '1s/^/\n/' 1>&2
 	fi
 	if [ -n "$message" ]
 	then
@@ -240,7 +242,12 @@ commit_changes() {
 		fi
 		if [ -n "$patch_options" ]
 		then
-			printf '### Using the interactive patch for untracked files...' 1>&2
+			if [ "$there_was_patch_message" = y ]
+			then
+				printf '\n\n' 1>&2
+			fi
+			printf '### Using the interactive patch for untracked files...\n' 1>&2
+			there_was_patch_message=y
 		fi
 		if [ -z "$pathspec_file" ]
 		then
@@ -252,7 +259,7 @@ commit_changes() {
 			else
 				add_with_patch_and_pathspec
 			fi
-		fi
+		fi 2>&1 | sed -E '1s/^/\n/' 1>&2
 		git commit --message="untracked files on $branch_name_for_msg: $default_message" --allow-empty 1>/dev/null
 		if [ "$there_are_enough_changes" = n ] && [ "$(git rev-parse 'HEAD^{tree}')" != "$(git rev-parse 'HEAD~^{tree}')" ]
 		then
@@ -266,9 +273,9 @@ commit_changes() {
 	index_editor='sed -i -E "1 s/^(\s*)\w+(\s)/\1edit\2/"'
 	if [ "$has_3_commits" = n ]
 	then
-		GIT_EDITOR="$index_editor" git rebase --interactive --keep-empty --empty=keep --reapply-cherry-picks -- 'HEAD~4' 1>/dev/null
+		GIT_EDITOR="$index_editor" git rebase --quiet --interactive --keep-empty --empty=keep --reapply-cherry-picks -- 'HEAD~4' 1>/dev/null 2>&1
 	else
-		GIT_EDITOR="$index_editor" git rebase --interactive --keep-empty --empty=keep --reapply-cherry-picks -- 'HEAD~5' 1>/dev/null
+		GIT_EDITOR="$index_editor" git rebase --quiet --interactive --keep-empty --empty=keep --reapply-cherry-picks -- 'HEAD~5' 1>/dev/null 2>&1
 	fi
 	git reset --soft 'HEAD^' 1>/dev/null
 	if [ "$leave_staged" = n ]
@@ -304,8 +311,11 @@ commit_changes() {
 	if [ "$there_are_enough_changes" = n ]
 	then
 		undo_commit_changes
-		printf 'fatal: There are no suitable changes to stash.\n' 1>&2
-		return 1
+		if [ "$there_was_patch_message" = y ]
+		then
+			printf '\n\n' 1>&2
+		fi
+		error 'no suitable changes to stash\n'
 	fi
 }
 undo_commit_changes() {
@@ -331,11 +341,11 @@ handle_rebase_conflict_using_theirs() {
 	do
 		if [ -z "$(git --no-literal-pathspecs ls-files --unmerged :/)" ]
 		then
-			return 1
+			fatal
 		fi
 		git --no-literal-pathspecs ls-files --unmerged --format='%(path)' -z :/ | xargs -0 -- git --literal-pathspecs restore --theirs --
 		git --no-literal-pathspecs add :/ 2>/dev/null || true
-		if GIT_EDITOR='true' git rebase --continue 1>/dev/null
+		if GIT_EDITOR='true' git rebase --continue 1>/dev/null 2>&1
 		then
 			break
 		fi
@@ -368,7 +378,7 @@ sort_commits() {
 	unstashed_commits_editor="$unstashed_commits_editor --"
 	
 	last_commit_sha="$(git rev-parse HEAD)"
-	if ! GIT_EDITOR="$unstashed_commits_editor" git -c merge.renames=false rebase --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_sha" 1>/dev/null
+	if ! GIT_EDITOR="$unstashed_commits_editor" git -c merge.renames=false rebase --quiet --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_sha" 1>/dev/null 2>&1
 	then
 		handle_rebase_conflict_using_theirs
 	fi
@@ -380,15 +390,15 @@ sort_commits() {
 		else
 			keep_index_editor='sed -i -E -e "2 s/^pick\\>/fixup/" --'
 		fi
-		if ! GIT_EDITOR="$keep_index_editor" git -c merge.renames=false rebase --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_sha" 1>/dev/null
+		if ! GIT_EDITOR="$keep_index_editor" git -c merge.renames=false rebase --quiet --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_sha" 1>/dev/null 2>&1
 		then
 			handle_rebase_conflict_using_theirs
 		fi
 	fi
 	unstashed_changes_sha="$(git rev-parse HEAD)"
 	
-	git switch --detach "$last_commit_sha" 1>/dev/null
-	if ! GIT_EDITOR="$stashed_commits_editor" git -c merge.renames=false rebase --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_sha" 1>/dev/null
+	git switch --quiet --detach "$last_commit_sha"
+	if ! GIT_EDITOR="$stashed_commits_editor" git -c merge.renames=false rebase --quiet --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_sha" 1>/dev/null 2>&1
 	then
 		handle_rebase_conflict_using_theirs
 	fi
@@ -404,7 +414,7 @@ handle_stash_sha() { # stash_sha
 }
 
 restore_working_tree() {
-	git switch --detach "$unstashed_changes_sha" 1>/dev/null
+	git switch --quiet --detach "$unstashed_changes_sha"
 	unstaged_commit_sha="$(git rev-parse 'HEAD~')"
 	git reset --mixed HEAD~2 1>/dev/null
 	(
@@ -429,17 +439,56 @@ create_temporary_branch() {
 }
 
 restore_branch() {
-	git switch --force-create "$current_branch" HEAD 1>/dev/null
+	git switch --quiet --force-create "$current_branch" HEAD
 }
 
 remove_temporary_branch() {
-	git switch --detach HEAD 1>/dev/null
+	git switch --quiet --detach HEAD
 	git branch --delete --force "$current_branch" 1>/dev/null
-	git switch --orphan "$current_branch" 1>/dev/null
+	git switch --quiet --orphan "$current_branch"
 }
 
+print_summary() {
+	if [ "$is_quiet" = y ]
+	then
+		return
+	fi
+	if [ "$there_was_patch_message" = y ]
+	then
+		printf '\n\n' 1>&2
+	fi
+	printf 'Saved '
+	{
+		if [ "$leave_unstaged" = n ]
+		then
+			printf 'working directory, '
+		fi
+		if [ "$leave_staged" = n ]
+		then
+			printf 'index state, '
+		fi
+		if [ "$include_untracked" = y ]
+		then
+			printf 'untracked files'
+			if [ "$include_ignored" = y ]
+			then
+				printf ' (including ignored)'
+			fi
+			printf ', '
+		elif [ "$include_ignored" = y ]
+		then
+			printf 'ignored files, '
+		fi
+		if [ "$leave_unstaged" = y ] && [ "$leave_staged" = y ] && [ "$include_untracked" = n ] && [ "$include_ignored" = n ]
+		then
+			printf 'nothing, '
+		fi
+	} | sed -E -e 's/, $/ /' -e 's/,([^,]+)$/ and\1/'
+	git rev-list --no-commit-header --format='%s' --max-count=1 "$stash_sha"
+} 1>&2
+
 make_stash() { # pathspecs...
-	check_data_files
+	check_data_files "$command_name"
 	check_other_git_commands_state
 	
 	initialize "$@"
@@ -457,12 +506,13 @@ make_stash() { # pathspecs...
 	else
 		create_stash
 	fi
+	print_summary
 }
 
-getopt_short_options='ahklm:Su'
-getopt_long_options='all,allow-empty,keep-index,no-keep-index,leave-staged,message:,patch,pathspec-file-null,pathspec-from-file:,remove-stashed,staged,no-store,include-untracked,no-include-untracked'
-getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
-eval set -- "$getopt_result"
+getopt_short_options='ahklm:qSu'
+getopt_long_options='all,allow-empty,color::,no-color,keep-index,no-keep-index,leave-staged,message:,patch,pathspec-file-null,pathspec-from-file:,quiet,remove-stashed,staged,no-store,include-untracked,no-include-untracked'
+normalized_options="$(get_options_color "$getopt_short_options" "$getopt_long_options" "$@")"
+eval set -- "$normalized_options"
 include_ignored=n
 allow_empty=n
 keep_index=n
@@ -471,6 +521,7 @@ message=''
 patch_options=''
 pathspec_from_file=''
 pathspec_file_nul=n
+is_quiet=n
 remove_stashed=n
 store_stash=y
 leave_unstaged=n
@@ -487,6 +538,13 @@ do
 		;;
 	--allow-empty)
 		allow_empty=y
+		;;
+	--color)
+		shift
+		set_color_for_all "$1"
+		;;
+	--no-color)
+		set_color_for_all 'never'
 		;;
 	-h)
 		print_help
@@ -514,6 +572,9 @@ do
 		;;
 	--pathspec-file-null)
 		pathspec_file_nul=y
+		;;
+	-q|--quiet)
+		is_quiet=y
 		;;
 	--remove-stashed)
 		remove_stashed=y
@@ -543,15 +604,14 @@ then
 fi
 if [ -n "$patch_options" ] && [ "$pathspec_from_file" = '-' ]
 then
-	#shellcheck disable=SC2016
-	printf 'Stdin cannot be assigned to both `--patch` and the pathspec.\n' 1>&2
-	exit 1
+	error 'stdin cannot be assigned to both '\''--patch'\'' and the pathspec\n'
 fi
 if [ -z "$pathspec_from_file" ] && [ "$pathspec_file_nul" = y ]
 then
-	printf 'Option "--pathspec-file-nul" is not valid without "--pathspec-from-file".\n' 1>&2
-	exit 1
+	error 'option '\''--pathspec-file-nul'\'' is not valid without '\''--pathspec-from-file'\''\n'
 fi
+command_name="$1"
+shift
 
 set +e
 (

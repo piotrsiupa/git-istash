@@ -2,6 +2,8 @@
 
 set -eu
 
+. "$(dirname "$0")/lib/git-istash/get_options"
+
 print_help() {
 	printf '%s - An installation script for "git istash".\n' "$(basename "$0")"
 	printf '    It copies files to the appropriate places and sets up the PATH variable if\n    needed. '
@@ -24,7 +26,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'installer version 1.0.7\n'
+	printf 'installer version 1.1.0\n'
 }
 
 is_windows() {
@@ -248,7 +250,7 @@ print_remove_files_task() { # source_path
 	printf 'The file "%s" will be deleted.\n' "$(make_target_path "$1")"
 }
 execute_remove_files_task() { # source_path
-	rm -f '"%s"\n' "$(make_target_path "$1")"
+	rm -f "$(make_target_path "$1")"
 }
 
 make_add_to_profile_task() { # source_path
@@ -442,8 +444,8 @@ do_the_install_thing() {
 
 getopt_short_options='hgc:C:u'
 getopt_long_options='help,version,global,custom-dir:,create-dir:,uninstall,debug'
-getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
-eval set -- "$getopt_result"
+normalized_options="$(get_options "$getopt_short_options" "$getopt_long_options" "$@")"
+eval set -- "$normalized_options"
 global=n
 uninstall=n
 debug=n

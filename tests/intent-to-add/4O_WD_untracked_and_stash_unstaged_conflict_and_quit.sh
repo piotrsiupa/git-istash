@@ -5,6 +5,13 @@ non_essential_test
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_QUIT
+PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
+PARAMETRIZE_HINT 'istashConflicts'
+
+__end_of_initialization__
+
+prepare_repository
 
 __test_section__ 'Create stash'
 printf 'bbb\n' >aaa
@@ -17,8 +24,11 @@ __test_section__ 'Dirty the working directory & create conflict'
 printf 'ddd\n' >aaa
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
-assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION"
-assert_conflict_message "$APPLY_OPERATION"
+#shellcheck disable=SC2086
+assert_exit_code 2 git $ADVICE_FLAGS istash "$APPLY_OPERATION" $QUIET_FLAGS $COLOR_FLAGS
+assert_outputs__apply__conflict "$APPLY_OPERATION" 3 '
+AA aaa
+'
 assert_files_HT '
 AA aaa		bbb|ddd
 !! ignored0	ignored0
@@ -32,7 +42,9 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 
 __test_section__ "Quit $APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
-assert_exit_code 0 git istash "$APPLY_OPERATION" "$QUIT_FLAG"
+#shellcheck disable=SC2086
+assert_exit_code 0 git istash "$APPLY_OPERATION" $QUIET_FLAGS "$QUIT_FLAG" $COLOR_FLAGS
+assert_outputs__apply__quit "$APPLY_OPERATION"
 assert_files_HT '
 AA aaa		bbb|ddd
 !! ignored0	ignored0

@@ -5,6 +5,14 @@ non_essential_test
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
 PARAMETRIZE_CONTINUE
+PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
+PARAMETRIZE_SUMMARY
+PARAMETRIZE_HINT 'istashConflicts'
+
+__end_of_initialization__
+
+prepare_repository
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
@@ -25,8 +33,13 @@ SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_APPLY_OPERATION stash"
 correct_head_sha="$(get_head_sha_HT)"
-assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION"
-assert_conflict_message "$APPLY_OPERATION"
+#shellcheck disable=SC2086
+assert_exit_code 2 git $ADVICE_FLAGS istash $QUIET_FLAGS "$APPLY_OPERATION" $COLOR_FLAGS $SUMMARY_FLAGS
+assert_outputs__apply__conflict_HT "$APPLY_OPERATION" 0 '
+UU aaa
+' '
+DU aaa
+'
 assert_files_HT '
 UU aaa		ddd|bbb
 !! ignored0	ignored0
@@ -45,8 +58,11 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 __test_section__ "Continue $APPLY_OPERATION stash (0)"
 printf 'eee\n' >aaa
 git add aaa
-assert_exit_code 2 capture_outputs git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
-assert_conflict_message "$APPLY_OPERATION"
+#shellcheck disable=SC2086
+assert_exit_code 2 git $ADVICE_FLAGS istash $QUIET_FLAGS "$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS $SUMMARY_FLAGS
+assert_outputs__apply__conflict "$APPLY_OPERATION" 2 '
+UU aaa
+'
 assert_files_HT '
 UU aaa		eee|ccc
 !! ignored0	ignored0
@@ -61,7 +77,14 @@ assert_dotgit_contents_for "$APPLY_OPERATION"
 __test_section__ "Continue $APPLY_OPERATION stash (1)"
 printf 'fff\n' >aaa
 git add aaa
-assert_exit_code 0 git istash "$APPLY_OPERATION" "$CONTINUE_FLAG"
+stash_sha="$(git rev-parse stash)"
+#shellcheck disable=SC2086
+assert_exit_code 0 git istash $QUIET_FLAGS "$APPLY_OPERATION" "$CONTINUE_FLAG" $COLOR_FLAGS $SUMMARY_FLAGS
+assert_outputs__apply__success_HT "$APPLY_OPERATION" '
+MM aaa
+' '
+AM aaa
+' 0 "$stash_sha"
 assert_files_HT '
 MM aaa		fff	eee
 !! ignored0	ignored0

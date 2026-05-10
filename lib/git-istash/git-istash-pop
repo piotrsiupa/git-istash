@@ -3,6 +3,7 @@
 set -eu
 
 . "$(dirname "$0")/git-istash-commons"
+. "$(dirname "$0")/git-istash-io"
 
 print_help() {
 	printf 'git istash pop - Improved version of "git stash pop" that can handle conflicts\n    without loosing information about the files in index.\n'
@@ -15,226 +16,23 @@ print_help() {
 	printf '\n'
 	printf 'Options:\n'
 	printf '\t--abort\t\t- Abort the previous operation and return the repository\n\t\t\t  to the state before it started.\n'
+	printf '\t--color[=<when>] - Allow use of ANSI color codes.\n\t\t\t  <when> can be one of always, never, or auto.\n\t\t\t  Omitting the argument is equivalent to always.\n'
+	printf '\t--no-color\t- Same as --color=never.\n'
 	printf '    -c, --continue\t- Resume the previous operation.\n\t\t\t  (Conflicts need to be resolved before that.)\n'
-	printf '    -h\t\t\t- Show this help text and exit.\n'
+	printf '    -h\t\t\t- Print this help text and exit.\n'
+	printf '    -q, --quiet\t\t- Suppress human-readable summaries and information.\n'
 	printf '\t--quit\t\t- Abort the operation but don'\''t restore the repository\n\t\t\t  state nor move the HEAD.\n'
+	printf '\t--summary=<mode> - Set summary to "complete" / "non-ignored" / "off".\n'
 }
 
-save_data() {
-	printf '%s\n' "$stash" >"$stash_data_file"
-}
-load_stash_data() {
-	if [ "$(wc -l <"$stash_data_file")" -ne 1 ]
-	then
-		printf 'fatal: "%s" is should contain exactly 1 line.\n' "$stash_data_file" 1>&2
-		return 1
-	fi
-	stash="$(cat "$stash_data_file")"
-	if ! [ "$stash" -eq "$stash" ] 2>/dev/null || [ "$stash" -lt 0 ]
-	then
-		printf 'fatal: "%s" doesn'\''t contain a positive integer.\n' "$stash_data_file" 1>&2
-		return 1
-	fi
-	if [ "$stash" -ge "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" ]
-	then
-		printf 'fatal: "%s" says "%i" but there is no such stash.\n' "$stash_data_file" "$stash" 1>&2
-		return 1
-	fi
-}
-load_data() {
-	load_stash_data
-}
-delete_data() {
-	rm -f "$stash_data_file"
-}
-
-check_args_for_pop() { # max_free_args args...
-	check_args 'istash pop' "$@"
-}
-
-end_with_success() {
-	delete_data
-	git stash drop "$stash"
-	printf '\nSuccessfully popped the stash\n'
-}
-
-check_stash_for_pop() {
-	if [ "$stash" -eq "$stash" ] 2>/dev/null
-	then
-		:
-	else
-		printf 'error: Only stash entries can be popped.\n' 1>&2
-		return 1
-	fi
-}
-
-check_data_files() { # resume abort quit
-	case "$(find_data_files)" in
-		pop)
-			if [ "$1" = y ] || [ "$2" = y ] || [ "$3" = y ] ; then return 0 ; fi
-			printf '\n' 1>&2
-			if is_color_allowed 2
-			then
-				printf '\033[33m'
-			fi
-			printf 'fatal: "git istash pop" is already in progress?\n' 1>&2
-			printf 'hint: Use "git istash pop --continue" or "git istash pop --abort".\n' 1>&2
-			if is_color_allowed 2
-			then
-				printf '\033[39m'
-			fi
-			return 1
-			;;
-		apply)
-			if [ "$2" = y ] || [ "$3" = y ] ; then return 0 ; fi
-			printf '\n' 1>&2
-			if is_color_allowed 2
-			then
-				printf '\033[33m'
-			fi
-			printf 'fatal: "git istash apply" is already in progress?\n' 1>&2
-			printf 'hint: Finish that operation before starting "git istash pop".\n' 1>&2
-			if is_color_allowed 2
-			then
-				printf '\033[39m'
-			fi
-			return 1
-			;;
-		error)
-			if [ "$3" = y ] ; then return 0 ; fi
-			printf '\n' 1>&2
-			if is_color_allowed 2
-			then
-				printf '\033[31m'
-			fi
-			printf 'fatal: "git istash pop" seems to be in progress but "%s" is missing!\n' "$(make_target_data_file)" 1>&2
-			if is_color_allowed 2
-			then
-				printf '\033[33m'
-			fi
-			printf 'hint: Fix the problem and finish that operation before starting a new one\n' 1>&2
-			printf 'hint: or run "git istash pop --quit" to forcefully cancel it.\n' 1>&2
-			if is_color_allowed 2
-			then
-				printf '\033[39m'
-			fi
-			return 1
-			;;
-		nothing)
-			if [ "$1" = n ] && [ "$2" = n ] && [ "$3" = n ] ; then return 0 ; fi
-			printf 'fatal: No istash pop in progress?\n' 1>&2
-			return 1
-			;;
-	esac
-}
-
-run_apply() { # args...
-	sh "$lib_dir/git-istash-apply" --_called-from-pop_ "$@"
-}
-
-do_start() { # args...
-	check_args_for_pop 1 "$@"
-	check_data_files n n n
-	check_other_git_commands_state
-	find_stash "$@"
-	check_stash_for_pop
-	save_data
-	if run_apply -- "$@"
-	then
-		end_with_success
-	elif [ $? -eq 2 ]
-	then
-		return 2
-	else
-		delete_data
-		return 1
-	fi
-}
-
-do_continue() { # args...
-	check_args_for_pop 0 "$@"
-	check_data_files y n n
-	load_data
-	run_apply --continue
-	end_with_success
-}
-
-do_abort() { # args...
-	check_args_for_pop 0 "$@"
-	check_data_files n y n
-	run_apply --abort
-	delete_data
-}
-
-do_quit() { # args...
-	check_args_for_pop 0 "$@"
-	check_data_files n n y
-	run_apply --quit
-	delete_data
-}
-
-do_pop() { # args...
-	if [ "$continue_set" = y ]
-	then
-		do_continue "$@"
-	elif [ "$abort_set" = y ]
-	then
-		do_abort "$@"
-	elif [ "$quit_set" = y ]
-	then
-		do_quit "$@"
-	else
-		do_start "$@"
-	fi
-}
-
-getopt_short_options='chq'
-getopt_long_options='abort,continue,quit'
-getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
-eval set -- "$getopt_result"
-abort_set=n
-continue_set=n
-quit_set=n
-while true
-do
-	case "$1" in
-	--abort)
-		abort_set=y
-		;;
-	-c|--continue)
-		continue_set=y
-		;;
-	-h)
-		print_help
-		exit 0
-		;;
-	-q|--quit)
-		quit_set=y
-		;;
-	--)
-		shift
-		break
-		;;
-	esac
-	shift
-done
-if [ $abort_set = y ] && [ $quit_set = y ]
+set +e
+check_for_option_h_in_command 'git-istash-apply' "$@"
+result=$?
+set -e
+if [ $result -eq 0 ]
 then
-	printf 'error: Either abort or quit; there is no middle road.\n' 1>&2
-	exit 1
-fi
-if [ $continue_set = y ] && [ $abort_set = y ]
-then
-	printf 'error: Unclear whether to continue aborting or to abort continuing.\n' 1>&2
-	exit 1
-fi
-if [ $continue_set = y ] && [ $quit_set = y ]
-then
-	printf 'error: Unclear whether to continue quitting or to quit continuing.\n' 1>&2
-	exit 1
+	print_help
+	exit 0
 fi
 
-lib_dir="$(cd "$(dirname "$0")" ; pwd)"
-cd "$(git rev-parse --show-toplevel)"
-stash_data_file="$(make_stash_data_file_path)"
-do_pop "$@"
+exec sh "$(dirname "$0")/git-istash-apply" --_called-from-pop_ "$@"

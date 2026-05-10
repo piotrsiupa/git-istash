@@ -17,6 +17,13 @@ PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
 PARAMETRIZE_PATHSPEC_STYLE
 PARAMETRIZE_OPTIONS_INDICATOR IS_PATHSPEC_IN_ARGS
+PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
+PARAMETRIZE_SUMMARY
+
+__end_of_initialization__
+
+prepare_repository
 
 correct_head_sha="$(get_head_sha)"
 SWITCH_HEAD_TYPE
@@ -34,15 +41,17 @@ printf 'f* x* y* ' | PREPARE_PATHSPEC_FILE
 if IS_PATHSPEC_IN_ARGS
 then
 	#shellcheck disable=SC2086
-	new_stash_sha_CO="$(assert_exit_code 0 git --literal-pathspecs istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'new stash' $EOI 'f*' 'x*' 'y*')"
+	assert_exit_code 0 git --literal-pathspecs istash $QUIET_FLAGS "$CREATE_OPERATION" $UNTRACKED_FLAGS $COLOR_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'new stash' $EOI 'f*' 'x*' 'y*'
 elif IS_PATHSPEC_IN_STDIN
 then
 	#shellcheck disable=SC2086
-	new_stash_sha_CO="$(assert_exit_code 0 git --literal-pathspecs istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'new stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file=- <.git/pathspec_for_test)"
+	assert_exit_code 0 git --literal-pathspecs istash $QUIET_FLAGS "$CREATE_OPERATION" $UNTRACKED_FLAGS $COLOR_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'new stash' $PATHSPEC_NULL_FLAGS "$PATHSPEC_FROM_FILE_FLAG"=- <.git/pathspec_for_test
 else
 	#shellcheck disable=SC2086
-	new_stash_sha_CO="$(assert_exit_code 0 git --literal-pathspecs istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'new stash' $PATHSPEC_NULL_FLAGS --pathspec-from-file .git/pathspec_for_test)"
+	assert_exit_code 0 git --literal-pathspecs istash $QUIET_FLAGS "$CREATE_OPERATION" $UNTRACKED_FLAGS $COLOR_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS -m 'new stash' $PATHSPEC_NULL_FLAGS "$PATHSPEC_FROM_FILE_FLAG" .git/pathspec_for_test
 fi
+assert_outputs__create__success '*' 0 'new stash'
+new_stash_sha_CO="$stdout"
 assert_files_HTCO '
  A f*		xxx
  A foo		xxx
@@ -81,7 +90,14 @@ remove_all_changes
 RESTORE_HEAD_TYPE
 
 __test_section__ 'Pop stash'
-assert_exit_code 0 git istash pop
+stash_sha="$(git rev-parse stash)"
+#shellcheck disable=SC2086
+assert_exit_code 0 git istash $QUIET_FLAGS pop $SUMMARY_FLAGS $COLOR_FLAGS
+assert_outputs__apply__success 'pop' '
+ A f*
+ A x*
+ A y*
+' 0 "$stash_sha"
 assert_files '
  A f*		xxx
  A x*		xxx

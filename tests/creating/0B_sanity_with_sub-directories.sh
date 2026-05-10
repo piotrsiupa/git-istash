@@ -5,6 +5,10 @@ non_essential_test
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_CREATE_OPERATION 'push'
 
+__end_of_initialization__
+
+prepare_repository
+
 __test_section__ 'Prepare repository'
 mkdir xxx yyy
 printf 'aaa0\n' >aaa

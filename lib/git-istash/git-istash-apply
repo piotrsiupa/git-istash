@@ -3,6 +3,7 @@
 set -eu
 
 . "$(dirname "$0")/git-istash-commons"
+. "$(dirname "$0")/git-istash-io"
 . "$(dirname "$0")/git-istash-vanilla-format"
 
 print_help() {
@@ -16,18 +17,13 @@ print_help() {
 	printf '\n'
 	printf 'Options:\n'
 	printf '\t--abort\t\t- Abort the previous operation and return the repository\n\t\t\t  to the state before it started.\n'
+	printf '\t--color[=<when>] - Allow use of ANSI color codes.\n\t\t\t  <when> can be one of always, never, or auto.\n\t\t\t  Omitting the argument is equivalent to always.\n'
+	printf '\t--no-color\t- Same as --color=never.\n'
 	printf '    -c, --continue\t- Resume the previous operation.\n\t\t\t  (Conflicts need to be resolved before that.)\n'
-	printf '    -h\t\t\t- Show this help text and exit.\n'
+	printf '    -h\t\t\t- Print this help text and exit.\n'
+	printf '    -q, --quiet\t\t- Suppress human-readable summaries and information.\n'
 	printf '\t--quit\t\t- Abort the operation but don'\''t restore the repository\n\t\t\t  state nor move the HEAD.\n'
-}
-
-get_sub_command_name() {
-	if [ "$is_pop" = n ]
-	then
-		printf 'apply'
-	else
-		printf 'pop'
-	fi
+	printf '\t--summary=<mode> - Set summary to "complete" / "non-ignored" / "off".\n'
 }
 
 save_data() {
@@ -35,12 +31,18 @@ save_data() {
 	printf '%s\n' "$target_data" >"$target_data_file"
 	
 	printf '%s\n' "$working_dir_changes_sha" >"$working_dir_sha_file"
+	if [ "$sub_command_name" = 'pop' ]
+	then
+		printf '%s\n' "$stash" >"$stash_data_file"
+	fi
 }
 load_target_data() {
 	if [ "$(wc -l <"$target_data_file")" -ne 1 ]
 	then
-		printf 'fatal: "%s" is should contain exactly 1 line.\n' "$target_data_file" 1>&2
-		return 1
+		printf_fatal \''git istash %s'\'' seems to be in progress but the data files are broken\n' "$sub_command_name"
+		printf_fatal \''%s'\'' doesn'\''t have exactly 1 line\n' "$target_data_file"
+		broken_operation_hint "$sub_command_name"
+		fatal
 	fi
 	current_branch="$(cat "$target_data_file")"
 	if printf '%s' "$current_branch" | grep -qE '^~'
@@ -52,8 +54,10 @@ load_target_data() {
 	fi
 	if ! git rev-parse --quiet --verify "$current_branch^{commit}" 1>/dev/null
 	then
-		printf 'fatal: "%s" says "%s" but there is no such commit.\n' "$target_data_file" "$current_branch" 1>&2
-		return 1
+		printf_fatal \''git istash %s'\'' seems to be in progress but the data files are broken\n' "$sub_command_name"
+		printf_fatal \''%s'\'' contains an invalid commit hash\n' "$target_data_file"
+		broken_operation_hint "$sub_command_name"
+		fatal
 	fi
 	if [ "$curr_branch_type" != 'orphan' ] && [ "$(git rev-parse "$current_branch")" = "$current_branch" ]
 	then
@@ -63,49 +67,368 @@ load_target_data() {
 load_working_dir_data() {
 	if [ "$(wc -l <"$working_dir_sha_file")" -ne 1 ]
 	then
-		printf 'fatal: "%s" is should contain exactly 1 line.\n' "$working_dir_sha_file" 1>&2
-		return 1
+		printf_fatal \''git istash %s'\'' seems to be in progress but the data files are broken\n' "$sub_command_name"
+		printf_fatal \''%s'\'' doesn'\''t have exactly 1 line\n' "$working_dir_sha_file"
+		broken_operation_hint "$sub_command_name"
+		fatal
 	fi
 	working_dir_changes_sha="$(cat "$working_dir_sha_file")"
 	if ! git rev-parse --quiet --verify "$working_dir_changes_sha^{commit}" 1>/dev/null
 	then
-		printf 'fatal: "%s" says "%s" but there is no such commit.\n' "$working_dir_sha_file" "$working_dir_changes_sha" 1>&2
-		return 1
+		printf_fatal \''git istash %s'\'' seems to be in progress but the data files are broken\n' "$sub_command_name"
+		printf_fatal \''%s'\'' contains an invalid commit hash\n' "$working_dir_sha_file"
+		broken_operation_hint "$sub_command_name"
+		fatal
 	fi
 }
-load_data() {
+load_stash_data() {
+	if [ "$(wc -l <"$stash_data_file")" -ne 1 ]
+	then
+		printf_fatal \''git istash %s'\'' seems to be in progress but the data files are broken\n' "$sub_command_name"
+		printf_fatal \''%s'\'' doesn'\''t have exactly 1 line\n' "$stash_data_file"
+		broken_operation_hint "$sub_command_name"
+		fatal
+	fi
+	stash="$(cat "$stash_data_file")"
+	if ! [ "$stash" -eq "$stash" ] 2>/dev/null || [ "$stash" -lt 0 ]
+	then
+		printf_fatal \''git istash %s'\'' seems to be in progress but the data files are broken\n' "$sub_command_name"
+		printf_fatal \''%s'\'' doesn'\''t contain a positive integer\n' "$stash_data_file"
+		broken_operation_hint "$sub_command_name"
+		fatal
+	fi
+	if [ "$stash" -ge "$(git rev-list --walk-reflogs --count --ignore-missing refs/stash)" ]
+	then
+		printf_fatal \''git istash %s'\'' seems to be in progress but the data files are broken\n' "$sub_command_name"
+		printf_fatal \''%s'\'' contains an invalid stash number\n' "$stash_data_file"
+		broken_operation_hint "$sub_command_name"
+		fatal
+	fi
+}
+load_data() { # is_continue
 	load_target_data
 	load_working_dir_data
+	if [ "$sub_command_name" = 'pop' ] && [ "$1" = y ]
+	then
+		load_stash_data
+	fi
 }
 delete_data() {
-	rm -f "$target_data_file" "$working_dir_sha_file"
+	rm -f "$target_data_file"
+	rm -f "$working_dir_sha_file"
+	if [ "$sub_command_name" = 'pop' ]
+	then
+		rm -f "$stash_data_file"
+	fi
 }
 
 check_args_for_apply() { # max_free_args args...
-	check_args 'istash apply' "$@"
+	check_args "istash $sub_command_name" "$@"
+}
+
+check_stash_for_pop() {
+	if [ "$stash" -eq "$stash" ] 2>/dev/null
+	then
+		:
+	else
+		error 'can only pop '\''refs/stash'\'' or entries of its reflog\n'
+	fi
 }
 
 put_files_into_working_copy() { # untracked_changes_sha non_staged_changes_sha staged_changes_sha
-	git restore --source="$3" -- . || true
+	git restore --quiet --source="$3" -- . 2>/dev/null || true
 	git add -- .
-	git restore --source="$1" -- . || true
+	git restore --quiet --source="$1" -- . 2>/dev/null || true
 	git --no-literal-pathspecs ls-tree -r --name-only "$2" -z :/ \
 	| xargs -r0 -- git --literal-pathspecs add --intent-to-add --
 }
 
-end_with_rebase_problem() {
-	printf '\n' 1>&2
-	if is_color_allowed 2
+print_changes_summary() {
+	summary_mode="$(get_summary_mode)"
+	if [ "$summary_mode" = 'off' ]
 	then
-		printf '\033[33m'
+		return
 	fi
-	sub_command_name="$(get_sub_command_name)"
-	printf 'hint: Disregard all hints above about using "git rebase".\n' 1>&2
-	printf 'hint: Use "git istash %s --continue" after fixing conflicts.\n' "$sub_command_name" 1>&2
-	printf 'hint: To abort and get back to the state before "git istash %s", run "git istash %s --abort".\n' "$sub_command_name" "$sub_command_name" 1>&2
-	if is_color_allowed 2
+	if is_color_enabled_for_summary
 	then
-		printf '\033[39m'
+		header_color_escape_code="$(get_color_for_summary 'header')"
+		updated_color_escape_code="$(get_color_for_summary 'updated')"
+		changed_color_escape_code="$(get_color_for_summary 'changed')"
+		untracked_color_escape_code="$(get_color_for_summary 'untracked')"
+		reset_escape_code="$(get_color 'reset')"
+	else
+		header_color_escape_code=''
+		updated_color_escape_code=''
+		changed_color_escape_code=''
+		untracked_color_escape_code=''
+		reset_escape_code=''
+	fi
+	printf '\n%sChanges made to the working directory:%s\n' "$header_color_escape_code" "${header_color_escape_code:+$reset_escape_code}"
+	all_changes="$(
+		set -eu
+		{
+			git diff --no-renames --name-only -z "$working_dir_changes_sha~2" "$staged_changes_sha"
+			git diff --no-renames --name-only -z "$working_dir_changes_sha~1" "$non_staged_changes_sha"
+			git diff --no-renames --name-only -z "$working_dir_changes_sha~0" "$untracked_changes_sha"
+			if [ "$summary_mode" = 'complete' ]
+			then
+				git ls-files --no-cached --no-deleted --no-modified --others --no-ignored --no-stage --no-killed --exclude-standard -z
+				git ls-files --no-cached --no-deleted --no-modified --others --ignored --no-stage --no-killed --exclude-standard -z
+			fi
+		} \
+		| convert_to_octal_lines \
+		| sort -u \
+		| while read -r file
+		do
+			# The abbreviations used here:
+			# the 1st letter is "old" / "new"
+			# the 2nd letter is "index" / "tracked" / "untracked".
+			oi_sha="$(
+				printf -- "%s:$file" "$working_dir_changes_sha~2" \
+				| xargs -0 -- git --literal-pathspecs rev-parse 2>/dev/null \
+				| tr -d -c '0-9A-Za-z:' \
+				| sed -E 's/^.*:.*$/0000000000000000000000000000000000000000/'
+			)"
+			ot_sha="$(
+				printf -- "%s:$file" "$working_dir_changes_sha~1" \
+				| xargs -0 -- git --literal-pathspecs rev-parse 2>/dev/null \
+				| tr -d -c '0-9A-Za-z:' \
+				| sed -E 's/^.*:.*$/0000000000000000000000000000000000000000/'
+			)"
+			ou_sha="$(
+				printf -- "%s:$file" "$working_dir_changes_sha~0" \
+				| xargs -0 -- git --literal-pathspecs rev-parse 2>/dev/null \
+				| tr -d -c '0-9A-Za-z:' \
+				| sed -E 's/^.*:.*$/0000000000000000000000000000000000000000/'
+			)"
+			ni_sha="$(
+				#shellcheck disable=SC2059
+				if ! printf -- "$file" \
+					| xargs -0 -- git --literal-pathspecs status --porcelain -- \
+					| grep -E -q '^.A'
+				then
+					#shellcheck disable=SC2059
+					printf -- "$file" \
+					| xargs -0 -- git --literal-pathspecs ls-files -s -- \
+					| cut -d' ' -f2
+				else
+					#shellcheck disable=SC2059
+					printf -- "$file" \
+					| xargs -0 -- git --literal-pathspecs status --porcelain=2 -- \
+					| head -n1 \
+					| cut -d' ' -f8
+				fi \
+				| grep -E '.' \
+				|| printf '0000000000000000000000000000000000000000'
+			)"
+			nt_sha="$(
+				#shellcheck disable=SC2059
+				printf -- "$file" \
+				| xargs -0 -- git --literal-pathspecs ls-files --error-unmatch -- 1>/dev/null 2>&1 \
+				&& printf -- "$file" \
+				| xargs -0 -- git --literal-pathspecs hash-object -- 2>/dev/null \
+				|| printf '0000000000000000000000000000000000000000'
+			)"
+			nu_sha="$(
+				#shellcheck disable=SC2059
+				printf -- "$file" \
+				| xargs -0 -- git --literal-pathspecs hash-object -- 2>/dev/null \
+				|| printf '0000000000000000000000000000000000000000'
+			)"
+			oi="$(test "$oi_sha" = '0000000000000000000000000000000000000000' && printf '0' || printf '1')"
+			ot="$(test "$ot_sha" = '0000000000000000000000000000000000000000' && printf '0' || printf '1')"
+			ou="$(test "$ou_sha" = '0000000000000000000000000000000000000000' && printf '0' || printf '1')"
+			ni="$(test "$ni_sha" = '0000000000000000000000000000000000000000' && printf '0' || printf '1')"
+			nt="$(test "$nt_sha" = '0000000000000000000000000000000000000000' && printf '0' || printf '1')"
+			nu="$(test "$nu_sha" = '0000000000000000000000000000000000000000' && printf '0' || printf '1')"
+			# The ifs can be interpreted by their direct meaning but it's complicated.
+			# Conditions are in a large part generated by a Karnaugh map solver. You can find the input data and the result in the commit message of 50abf565859942c5e19dc2dbea8dd583ddd4bf76.
+			# index
+			if [ "$ni$oi" = '10' ]
+			then
+				printf 'i A\t%s\n' "$file"
+			elif [ "$ni$oi" = '01' ]
+			then
+				printf 'i D\t%s\n' "$file"
+			elif [ "$ni_sha" != "$oi_sha" ]
+			then
+				printf 'i M\t%s\n' "$file"
+			fi
+			# tracked
+			if [ "$ni$nt$oi" = '011' ] \
+				|| [ "$ni$nt$ot" = '010' ] \
+				|| [ "$nt$oi$ot" = '110' ]
+			then
+				printf 't A\t%s\n' "$file"
+			elif [ "$ni$nt$oi" = '100' ] \
+				|| [ "$ni$nt$ot" = '101' ] \
+				|| [ "$nt$oi$ot" = '001' ]
+			then
+				printf 't D\t%s\n' "$file"
+			elif [ "$ni$nt$oi" = '110' ] \
+				|| [ "$ni$nt$ot" = '111' ] \
+				|| [ "$nt$oi$ot" = '101' ]
+			then
+				if [ "$ni_sha" = "$oi_sha" ] || [ "$nt_sha" != "$ni_sha" ]
+				then
+					old_changes="$(
+						#shellcheck disable=SC2059
+						printf -- "$file" \
+						| xargs -0 -- git --literal-pathspecs diff-files -p -- \
+						| sed -E -e 's/^@@.*$/@@/'
+					)"
+					new_changes="$(
+						#shellcheck disable=SC2059
+						printf -- "$file" \
+						| xargs -0 -- git --literal-pathspecs diff-tree -p "$working_dir_changes_sha~2" "$working_dir_changes_sha~1" -- \
+						| sed -E -e 's/^@@.*$/@@/'
+					)"
+					if [ "$old_changes" != "$new_changes" ]
+					then
+						printf 't M\t%s\n' "$file"
+					fi
+				fi
+			fi
+			# untracked
+			#shellcheck disable=SC2059
+			if ! printf -- "$file" \
+				| xargs -0 -- git check-ignore --quiet --
+			then
+				if [ "$nt$nu$ot" = '011' ] \
+					|| [ "$nt$nu$ou" = '010' ]
+				then
+					printf 'u C\t%s\n' "$file"
+				elif [ "$ni$nu$ot$ou" = '0001' ]
+				then
+					printf 'u D\t%s\n' "$file"
+				elif [ "$nt$nu$oi$ot" = '0111' ] \
+					|| [ "$nt$nu$ot$ou" = '0101' ]
+				then
+					if [ "$nu_sha" != "$ou_sha" ]
+					then
+						printf 'u M\t%s\n' "$file"
+					fi
+				fi
+			elif [ "$summary_mode" = 'complete' ]
+			then
+				if [ "$ou" = '1' ]
+				then
+					printf 'u I\t%s\n' "$file"
+				elif [ "$nu" = 1 ]
+				then
+					if printf -- "%s:$file" "$untracked_changes_sha" \
+						| xargs -0 -- git --literal-pathspecs rev-parse --verify --quiet 1>/dev/null 2>&1
+					then
+						printf 'u T\t%s\n' "$file"
+					fi
+				fi
+			fi
+		done
+	)"
+	index_changes="$(
+		printf '%s' "$all_changes" \
+		| grep -E '^i ' \
+		| cut -c3-
+	)"
+	tracked_changes="$(
+		printf '%s' "$all_changes" \
+		| grep -E '^t ' \
+		| cut -c3-
+	)"
+	untracked_changes="$(
+		printf '%s' "$all_changes" \
+		| grep -E '^u ' \
+		| cut -c3-
+	)"
+	if [ -n "$all_changes" ]
+	then
+		{
+			if [ -n "$index_changes" ]
+			then
+				printf '    %sindex:%s\\n' "$header_color_escape_code" "${header_color_escape_code:+$reset_escape_code}"
+				printf '%s\n' "$index_changes" \
+				| sed -E -e 's/^A\t(.+)$/added:\t\t\1/' \
+					-e 's/^M\t(.+)$/modified:\t\1/' \
+					-e 's/^D\t(.+)$/deleted:\t\1/' \
+					-e 's/^.+$/\t'"$updated_color_escape_code"'&'"${updated_color_escape_code:+$reset_escape_code}"'\\n/'
+			fi
+			if [ -n "$tracked_changes" ]
+			then
+				printf '    %stracked files:%s\\n' "$header_color_escape_code" "${header_color_escape_code:+$reset_escape_code}"
+				printf '%s\n' "$tracked_changes" \
+				| sed -E -e 's/^A\t(.+)$/added:\t\t\1/' \
+					-e 's/^M\t(.+)$/modified:\t\1/' \
+					-e 's/^D\t(.+)$/deleted:\t\1/' \
+					-e 's/^.+$/\t'"$changed_color_escape_code"'&'"${changed_color_escape_code:+$reset_escape_code}"'\\n/'
+			fi
+			if [ -n "$untracked_changes" ]
+			then
+				printf '    %suntracked files:%s\\n' "$header_color_escape_code" "${header_color_escape_code:+$reset_escape_code}"
+				printf '%s\n' "$untracked_changes" \
+				| sed -E -e 's/^C\t(.+)$/created:\t\1/' \
+					-e 's/^M\t(.+)$/modified:\t\1/' \
+					-e 's/^D\t(.+)$/deleted:\t\1/' \
+					-e 's/^T\t(.+)$/touched:\t\1/' \
+					-e 's/^I\t(.+)$/ignored:\t\1/' \
+					-e 's/^.+$/\t'"$untracked_color_escape_code"'&'"${untracked_color_escape_code:+$reset_escape_code}"'\\n/'
+			fi
+		} \
+		| tr '\n' '\0' \
+		| xargs -0 -n1 -- printf --
+	else
+		printf '\t%sno changes were made%s\n' "$header_color_escape_code" "${header_color_escape_code:+$reset_escape_code}"
+	fi
+}
+
+print_rebase_problem() {
+	if ! current_rebase_step="$(cat "$(git rev-parse --git-path 'rebase-merge')/msgnum")" \
+		|| ! [ "$current_rebase_step" -eq "$current_rebase_step" ] 2>/dev/null \
+		|| [ "$current_rebase_step" -lt 2 ] || [ "$current_rebase_step" -gt 6 ]
+	then
+		printf 'Cannot determine the current stage of merging the stash into the working directory!\n'
+	else
+		printf 'Currently merging '
+		case "$current_rebase_step" in
+			2) printf 'staged changes' ;;
+			3|4) printf 'unstaged changes' ;;
+			5|6) printf 'untracked changes' ;;
+		esac
+		printf ' from '
+		case "$current_rebase_step" in
+			2|4|6) printf 'stash' ;;
+			3|5) printf 'working directory' ;;
+		esac
+		printf ' into '
+		case "$current_rebase_step" in
+			2|4|6) ;;
+			3|5) printf 'already merged ' ;;
+		esac
+		case "$current_rebase_step" in
+			2|3|4) printf 'staged changes' ;;
+			5|6) printf 'tracked changes' ;;
+		esac
+		case "$current_rebase_step" in
+			2|3|5) ;;
+			4|6) printf ' already merged with ' ;;
+		esac
+		case "$current_rebase_step" in
+			2|3|5) ;;
+			4) printf 'unstaged changes' ;;
+			6) printf 'untracked changes' ;;
+		esac
+		case "$current_rebase_step" in
+			2|4|6) printf ' from working directory' ;;
+			3|5) ;;
+		esac
+		printf '.\n'
+	fi 1>&2
+	hint 'Conflicts' 'use '\''git istash --continue'\'' after fixing the conflicts\nor, to undo everything '\''git istash %s'\'' did, run '\''git istash --abort'\''\n' "$sub_command_name"
+}
+
+end_with_rebase_problem() {
+	if [ "$is_quiet" = n ]
+	then
+		print_rebase_problem
 	fi
 	return 2
 }
@@ -113,8 +436,7 @@ end_with_success() {
 	if { [ "$curr_branch_type" != 'orphan' ] && [ "$(git rev-parse HEAD~6)" != "$(git rev-parse "$current_branch")" ] ; } \
 		|| { [ "$curr_branch_type" = 'orphan' ] && [ "$(git rev-list --no-walk --count HEAD~6^@)" != '0' ] ; }
 	then
-		printf 'fatal: HEAD is not in correct position after rebasing.\n' 1>&2
-		return 1
+		fatal 'HEAD is not in the correct position after rebasing\n'
 	fi
 	untracked_changes_sha="$(git rev-parse HEAD~0)"
 	non_staged_changes_sha="$(git rev-parse HEAD~2)"
@@ -123,81 +445,84 @@ end_with_success() {
 		orphan)
 			if [ -n "$(git ls-tree -r --name-only HEAD~6)" ]
 			then
-				printf 'fatal: The empty commit created for the command is not empty.\n' 1>&2
-				return 1
+				# This error is untested because it's hard to come up with a scenario so contrived that it would occur.
+				fatal 'the empty commit created for the command is not empty\n'
 			fi
-			git branch --delete --force "$current_branch"
-			git switch --orphan "$current_branch"
+			git branch --quiet --delete --force "$current_branch"
+			git switch --quiet --orphan "$current_branch"
 			;;
 		normal)
-			git switch "$current_branch"
+			git switch --quiet "$current_branch"
 			;;
 		detached)
-			git switch -d HEAD~6
+			git switch --quiet --detach HEAD~6
 			;;
 	esac
 	put_files_into_working_copy "$untracked_changes_sha" "$non_staged_changes_sha" "$staged_changes_sha"
 	delete_data
-	printf '\nSuccessfully applied the stash\n'
-	printf 'Stash of the old working dir: %s\n' "$(prepare_stash_of_working_dir)"
+	if [ "$is_quiet" != y ]
+	then
+		printf 'Stash of the old working dir: %s\n' "$(prepare_stash_of_working_dir)"
+		print_changes_summary
+	fi
+	if [ "$sub_command_name" = 'pop' ]
+	then
+		if [ "$is_quiet" != y ]
+		then
+			printf '\n'
+			git stash drop "$stash"
+		else
+			git stash drop --quiet "$stash"
+		fi
+	fi
+	if [ "$is_quiet" != y ]
+	then
+		printf '\nSuccessfully %sed the stash\n' "$(printf '%s' "$sub_command_name" | sed -E 's/y$/i/;s/p$/&p/')"
+	fi
 }
 
-check_data_files() { # resume quit
-	if [ "$is_pop" = y ] ; then return 0 ; fi
-	case "$(find_data_files)" in
-		pop)
-			if [ "$2" = y ] ; then return 0 ; fi
-			printf '\n' 1>&2
-			if is_color_allowed 2
+check_data_files() { # continue abort quit
+	operation_in_progress="$(find_data_files)"
+	case "$operation_in_progress" in
+		apply|pop)
+			if [ "$operation_in_progress" = "$sub_command_name" ]
 			then
-				printf '\033[33m'
-			fi
-			printf 'fatal: "git istash pop" is already in progress?\n' 1>&2
-			printf 'hint: Finish that operation before starting "git istash apply".\n' 1>&2
-			if is_color_allowed 2
+				if [ "$1$2$3" != 'nnn' ]
+				then
+					return 0
+				fi
+			elif [ "$sub_command_name" = 'apply' ]
 			then
-				printf '\033[39m'
+				if [ "$3" != 'n' ]
+				then
+					sub_command_name="$operation_in_progress"
+					return 0
+				fi
+			else
+				if [ "$2$3" != 'nn' ]
+				then
+					sub_command_name="$operation_in_progress"
+					return 0
+				fi
 			fi
-			return 1
+			print_error_for_data_files_check "$operation_in_progress" "$sub_command_name"
+			error
 			;;
-		apply)
-			if [ "$1" = y ] || [ "$2" = y ] ; then return 0 ; fi
-			if is_color_allowed 2
+		error-*)
+			if [ "$3" != 'n' ]
 			then
-				printf '\033[33m'
+				sub_command_name="${operation_in_progress#error-}"
+				return 0
 			fi
-			printf 'fatal: "git istash apply" is already in progress?\n' 1>&2
-			printf 'hint: Use "git istash apply --continue" or "git istash apply --abort".\n' 1>&2
-			if is_color_allowed 2
-			then
-				printf '\033[39m'
-			fi
-			return 1
-			;;
-		error)
-			if [ "$2" = y ] ; then return 0 ; fi
-			printf '\n' 1>&2
-			if is_color_allowed 2
-			then
-				printf '\033[31m'
-			fi
-			printf 'fatal: "git istash pop" seems to be in progress but "%s" is missing!\n' "$target_data_file" 1>&2
-			if is_color_allowed 2
-			then
-				printf '\033[33m'
-			fi
-			printf 'hint: Fix the problem and finish that operation before starting "git istash apply"\n' 1>&2
-			printf 'hint: or run "git istash apply --quit" to forcefully cancel it.\n' 1>&2
-			if is_color_allowed 2
-			then
-				printf '\033[39m'
-			fi
-			return 1
+			print_error_for_data_files_check "$operation_in_progress" "$sub_command_name"
+			error
 			;;
 		nothing)
-			if [ "$1" = n ] && [ "$2" = n ] ; then return 0 ; fi
-			printf 'fatal: No istash apply in progress?\n' 1>&2
-			return 1
+			if [ "$1$2$3" = 'nnn' ]
+			then
+				return 0
+			fi
+			error 'no istash %s in progress\n' "$sub_command_name"
 			;;
 	esac
 }
@@ -205,7 +530,7 @@ check_data_files() { # resume quit
 prepare_current_branch() {
 	if [ "$curr_branch_type" = 'orphan' ]
 	then
-		git commit --only --allow-empty --message 'Temporary commit by "git-stash"'
+		git commit --quiet --only --allow-empty --message 'Temporary commit by "git-stash"'
 	fi
 }
 
@@ -219,19 +544,19 @@ commit_working_directory() {
 	else
 		branch_name_for_msg='(no branch)'
 	fi
-	git switch --detach HEAD
+	git switch --quiet --detach HEAD
 	
 	# staged
-	git commit --message="index on $branch_name_for_msg: $default_message" --allow-empty 1>/dev/null
+	git commit --quiet --message="index on $branch_name_for_msg: $default_message" --allow-empty
 	
 	# unstaged
 	git --no-literal-pathspecs add --update :/ 1>&2 2>/dev/null || true
-	git commit --message="On $branch_name_for_msg: $message" --allow-empty 1>/dev/null
+	git commit --quiet --message="On $branch_name_for_msg: $message" --allow-empty
 	
 	# untracked
 	git --no-literal-pathspecs add --all --intent-to-add :/ 2>/dev/null || true
 	git --no-literal-pathspecs add --update :/ 1>&2 2>/dev/null || true
-	git commit --message="untracked files on $branch_name_for_msg: $default_message" --allow-empty 1>/dev/null
+	git commit --quiet --message="untracked files on $branch_name_for_msg: $default_message" --allow-empty
 	
 	# save sha
 	working_dir_changes_sha="$(git rev-parse 'HEAD')"
@@ -246,12 +571,22 @@ prepare_stash_of_working_dir() {
 	fi
 }
 
-start_rebase() { # untangled_stash_sha
+run_first_time_rebase() { # untangled_stash_sha
 	todo_list_editor="sed -i -E \
 			-e '1 i pick $working_dir_changes_sha~2 Staged working directory' \
 			-e '2 i pick $working_dir_changes_sha~1 Unstaged working directory' \
 			-e '3 i pick $working_dir_changes_sha~0 Untracked working directory'"
-	if GIT_EDITOR="$todo_list_editor" git rebase --onto "$current_branch" "$1~3" "$1" --empty=keep --keep-empty --reapply-cherry-picks --interactive
+	set -- --onto "$current_branch" "$1~3" "$1" --empty=keep --keep-empty --reapply-cherry-picks --interactive
+	if [ "$is_quiet" = n ]
+	then
+		GIT_EDITOR="$todo_list_editor" git rebase "$@" 2>/dev/null
+	else
+		GIT_EDITOR="$todo_list_editor" git rebase "$@" 1>/dev/null 2>&1
+	fi
+}
+
+start_rebase() { # untangled_stash_sha
+	if run_first_time_rebase "$1"
 	then
 		end_with_success
 	elif are_there_conflicts
@@ -259,15 +594,19 @@ start_rebase() { # untangled_stash_sha
 		end_with_rebase_problem
 	else
 		do_abort
-		return 1
+		fatal
 	fi
 }
 
 do_start() { # args...
 	check_args_for_apply 1 "$@"
-	check_data_files n n
+	check_data_files n n n
 	check_other_git_commands_state
 	find_stash "$@"
+	if [ "$sub_command_name" = 'pop' ]
+	then
+		check_stash_for_pop
+	fi
 	find_current_branch
 	prepare_current_branch
 	commit_working_directory
@@ -277,91 +616,106 @@ do_start() { # args...
 	start_rebase "$untangled_stash_sha"
 }
 
+run_continued_rebase() {
+	if [ "$is_quiet" = n ]
+	then
+		git -c 'core.editor=true' rebase --continue
+	else
+		git -c 'core.editor=true' rebase --continue 1>/dev/null
+	fi
+}
+
 do_continue() { # args...
 	check_args_for_apply 0 "$@"
-	check_data_files y n
-	load_data
+	check_data_files y n n
+	load_data y
 	
-	git commit --allow-empty --no-edit 2>/dev/null || true
-	if git -c 'core.editor=true' rebase --continue
+	git commit --quiet --allow-empty --no-edit 1>/dev/null 2>&1 || true
+	exec 3>&1
+	if stderr="$(run_continued_rebase 2>&1 1>&3)"
 	then
+		exec 3>&-
 		end_with_success
 	elif are_there_conflicts
 	then
+		exec 3>&-
 		end_with_rebase_problem
 	else
-		git reset --soft HEAD~
-		return 1
+		exec 3>&-
+		git reset --quiet --soft HEAD~
+		printf '%s' "$stderr" | color_fatal 1>&2
+		fatal
 	fi
 }
 
 do_abort() { # args...
 	check_args_for_apply 0 "$@"
-	check_data_files y n
-	load_data
+	check_data_files n y n
+	load_data n
 	
-	git rebase --abort || true  # Errors are ignored because if rebase is not in progress, we still want to try to restore HEAD.
-	git reset --hard
+	error_message="$(git rebase --abort 2>&1 || true)"  # Errors are ignored because if rebase is not in progress, we still want to try to restore HEAD.
+	if [ -n "$error_message" ]
+	then
+		printf '%s\n' "$error_message" | color_fatal 1>&2
+	fi
+	git reset --quiet --hard
 	succeeded_switch=n
+	exec 3>&1
 	case "$curr_branch_type" in
 		orphan)
-			git branch --delete --force "$current_branch"
-			if git switch --orphan "$current_branch"
+			git branch --quiet --delete --force "$current_branch"
+			if error_message="$(git switch --quiet --orphan "$current_branch" 2>&1 1>&3)"
 			then
 				succeeded_switch=y
 			fi
 			;;
 		normal)
-			if git switch --quiet "$current_branch"
+			if error_message="$(git switch --quiet "$current_branch" 2>&1 1>&3)"
 			then
 				succeeded_switch=y
 			fi
 			;;
 		detached)
-			if git switch --detach --quiet "$current_branch"
+			if error_message="$(git switch --quiet --detach --quiet "$current_branch" 2>&1 1>&3)"
 			then
 				succeeded_switch=y
 			fi
 			;;
 	esac
+	exec 3>&-
+	
 	if [ "$succeeded_switch" = y ]
 	then
-		put_files_into_working_copy "$(git rev-parse "$working_dir_changes_sha~0")" "$(git rev-parse "$working_dir_changes_sha~1")" "$(git rev-parse "$working_dir_changes_sha~2")"
+		put_files_into_working_copy \
+			"$(git rev-parse "$working_dir_changes_sha~0")" \
+			"$(git rev-parse "$working_dir_changes_sha~1")" \
+			"$(git rev-parse "$working_dir_changes_sha~2")"
+		
 		delete_data
-		printf 'Aborted "git istash"\n' 1>&2
+		
+		if [ "$is_quiet" = n ]
+		then
+			printf 'Successfully aborted '\''git istash %s'\''\n' "$sub_command_name" 1>&2
+		fi
 	else
-		printf '\n' 1>&2
-		printf 'fatal: Failed to restore HEAD.\n' 1>&2
-		if is_color_allowed 2
-		then
-			printf '\033[33m'
-		fi
-		printf 'hint: Fix problems and rerun "git istash %s --abort"\n' "$(get_sub_command_name)" 1>&2
-		if [ "$is_pop" = n ]
-		then
-			printf 'hint: or delete the files "%s" and "%s" to cancel manually.\n' "$target_data_file" "$working_dir_sha_file" 1>&2
-		else
-			printf 'hint: or delete the files "%s", "%s" and "%s" to cancel manually.\n' "$(make_stash_data_file_path)" "$target_data_file" "$working_dir_sha_file" 1>&2
-		fi
-		if is_color_allowed 2
-		then
-			printf '\033[39m'
-		fi
-		return 1
+		printf_fatal 'failed to restore HEAD to initial position\n'
+		printf '%s\n' "$error_message" | color_fatal 1>&2
+		broken_operation_hint '--abort'
+		fatal
 	fi
 }
 
 do_quit() { # args...
-	if [ "$is_pop" = n ]
-	then
-		exec sh "$lib_dir/git-istash-pop" --quit "$@"
-	fi
-	
 	check_args_for_apply 0 "$@"
-	check_data_files n y
+	check_data_files n n y
 	
-	git rebase --quit || true  # Errors are ignored because if rebase is not in progress or broken, we still want to remove the data files.
+	git rebase --quit 2>/dev/null || true  # Errors are ignored because if rebase is not in progress or broken, we still want to remove the data files.
 	delete_data
+	
+	if [ "$is_quiet" = n ]
+	then
+		printf 'Successfully quit '\''git istash %s'\''\n' "$sub_command_name" 1>&2
+	fi
 }
 
 do_apply() { # args...
@@ -380,12 +734,13 @@ do_apply() { # args...
 }
 
 getopt_short_options='chq'
-getopt_long_options='abort,_called-from-pop,_called-from-pop_,continue,quit'
-getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
-eval set -- "$getopt_result"
+getopt_long_options='abort,_called-from-pop,_called-from-pop_,color::,no-color,continue,quiet,quit,summary:'
+normalized_options="$(get_options_color "$getopt_short_options" "$getopt_long_options" "$@")"
+eval set -- "$normalized_options"
 abort_set=n
-is_pop=n
+sub_command_name='apply'
 continue_set=n
+is_quiet=n
 quit_set=n
 while true
 do
@@ -394,7 +749,14 @@ do
 		abort_set=y
 		;;
 	--_called-from-pop*)
-		is_pop=y
+		sub_command_name='pop'
+		;;
+	--color)
+		shift
+		set_color_for_all "$1"
+		;;
+	--no-color)
+		set_color_for_all 'never'
 		;;
 	-c|--continue)
 		continue_set=y
@@ -403,8 +765,15 @@ do
 		print_help
 		exit 0
 		;;
-	-q|--quit)
+	-q|--quiet)
+		is_quiet=y
+		;;
+	--quit)
 		quit_set=y
+		;;
+	--summary)
+		shift
+		set_summary_mode "$1"
 		;;
 	--)
 		shift
@@ -413,24 +782,33 @@ do
 	esac
 	shift
 done
+if [ $continue_set = y ] && [ $abort_set = y ] && [ $quit_set = y ]
+then
+	printf_error 'you can choose continue, abort or quit at your discretion but the rule is that you can only have one\n'
+	help_hint "istash $sub_command_name"
+	error
+fi
 if [ $abort_set = y ] && [ $quit_set = y ]
 then
-	printf 'error: Either abort or quit; there is no middle road.\n' 1>&2
-	exit 1
+	printf_error 'either abort or quit; there is no middle road\n'
+	help_hint "istash $sub_command_name"
+	error
 fi
 if [ $continue_set = y ] && [ $abort_set = y ]
 then
-	printf 'error: Unclear whether to continue aborting or to abort continuing.\n' 1>&2
-	exit 1
+	printf_error 'unclear whether to continue aborting or to abort continuing\n'
+	help_hint "istash $sub_command_name"
+	error
 fi
 if [ $continue_set = y ] && [ $quit_set = y ]
 then
-	printf 'error: Unclear whether to continue quitting or to quit continuing.\n' 1>&2
-	exit 1
+	printf_error 'unclear whether to continue quitting or to quit continuing\n'
+	help_hint "istash $sub_command_name"
+	error
 fi
 
-lib_dir="$(cd "$(dirname "$0")" ; pwd)"
 cd "$(git rev-parse --show-toplevel)"
 target_data_file="$(make_target_data_file_path)"
 working_dir_sha_file="$(make_working_dir_sha_file_path)"
+stash_data_file="$(make_stash_data_file_path)"
 do_apply "$@"

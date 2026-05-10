@@ -10,13 +10,13 @@ print_help() {
 	printf 'Options:\n'
 	printf '    -a, --altered\t- Check only the tests changed since the last commit.\n\t\t\t  (Only changes in individual test files count, not in\n\t\t\t  the common test utilities that affect every test.)\n\t\t\t  Renamed tests with 100%% similarity are omitted.\n\t\t\t  (See also "--since".)\n'
 	printf '    -A, --since=X\t- Selects the commit used as reference by "--altered".\n\t\t\t  (It implies "--altered".)\n\t\t\t  Special cases:\n\t\t\t  * Empty / blank string means INDEX.\n\t\t\t  * Strings starting with "~" or "^" imply HEAD.\n\t\t\t    (So "~2" means the same as "HEAD~2".)\n\t\t\t  * "-" means all changes since branching from "master".\n'
-	printf '    -h, --help\t\t- Print this help message and exit.\n'
+	printf '    -h, --help\t\t- Print this help text and exit.\n'
 	printf '    -s, --skip-tests\t- Do not check test scripts from sub-directories of\n\t\t\t  the directory "tests". (a lot faster execution)\n'
 	printf '\t--version\t- Print version information and exit.\n'
 }
 
 print_version() {
-	printf 'shellcheck wrapper script version 1.2.0\n'
+	printf 'shellcheck wrapper script version 1.2.1\n'
 }
 
 list_files() {
@@ -43,8 +43,8 @@ run_shellcheck() {
 
 getopt_short_options='aA:hs'
 getopt_long_options='altered,since:,help,skip-tests,version'
-getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
-eval set -- "$getopt_result"
+normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
+eval set -- "$normalized_options"
 only_altered=n
 altered_reference=HEAD
 skip_tests=n
@@ -80,7 +80,12 @@ done
 if [ $# -ne 0 ]
 then
 	printf 'No argument is allowed.\n' 1>&2
-	exit 1
+	exit 2
+fi
+if [ "$only_altered" = y ] && [ "$skip_tests" = y ]
+then
+	printf 'Options "--altered" and "--skip-tests" are incompatible.\n' 1>&2
+	exit 2
 fi
 
 cd "$(dirname "$0")/.."

@@ -9,6 +9,12 @@ PARAMETRIZE_UNTRACKED 'YES'
 PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED
+PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
+
+__end_of_initialization__
+
+prepare_repository
 
 __test_section__ 'Prepare repository'
 printf 'aaa\n' >aaa
@@ -22,7 +28,9 @@ __test_section__ "$CAP_CREATE_OPERATION stash"
 git rm aaa
 printf 'bbb\n' >aaa
 #shellcheck disable=SC2086
-new_stash_sha_CO="$(assert_exit_code 0 git istash "$CREATE_OPERATION" $ALL_FLAGS $UNTRACKED_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS --message 'stash, not a trash')"
+assert_exit_code 0 git istash "$CREATE_OPERATION" $QUIET_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $STAGED_FLAGS --message 'stash, not a trash' $COLOR_FLAGS
+assert_outputs__create__success '*' 0 'stash, not a trash'
+new_stash_sha_CO="$stdout"
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_HTCO '

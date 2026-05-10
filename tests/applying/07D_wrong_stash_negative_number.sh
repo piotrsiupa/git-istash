@@ -4,6 +4,12 @@ non_essential_test
 
 PARAMETRIZE_HEAD_TYPE 'BRANCH' 'DETACH' 'ORPHAN'
 PARAMETRIZE_APPLY_OPERATION
+PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
+
+__end_of_initialization__
+
+prepare_repository
 
 __test_section__ 'Create stash'
 printf 'aaa\n' >aaa
@@ -15,7 +21,9 @@ SWITCH_HEAD_TYPE
 
 __test_section__ "$CAP_APPLY_OPERATION stash (without changes)"
 correct_head_sha="$(get_head_sha_HT)"
-assert_exit_code 1 git istash "$APPLY_OPERATION" -- "-2"
+#shellcheck disable=SC2086
+assert_exit_code 1 git istash "$APPLY_OPERATION" $QUIET_FLAGS $COLOR_FLAGS -- '-2'
+assert_outputs__apply__no_such_commit 'stash@{-1}'
 assert_files_HT '
 !! ignored0	ignored0
 !! ignored1	ignored1
@@ -33,7 +41,9 @@ __test_section__ "$CAP_APPLY_OPERATION stash (with changes)"
 printf 'ccc\n' >aaa
 git add aaa
 printf 'ddd\n' >aaa
-assert_exit_code 1 git istash "$APPLY_OPERATION" -- "-2"
+#shellcheck disable=SC2086
+assert_exit_code 1 git istash "$APPLY_OPERATION" $QUIET_FLAGS $COLOR_FLAGS -- '-2'
+assert_outputs__apply__no_such_commit 'stash@{-1}'
 assert_files_HT '
 AM aaa		ddd	ccc
 !! ignored0	ignored0

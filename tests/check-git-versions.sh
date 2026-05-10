@@ -4,23 +4,22 @@ set -eu
 
 actual_git_repo_path='./the-actual-git'
 subsequent_failed_version_limit=5
-meticulousness=2
 
 print_help() {
 	printf 'This tests downloads the Git repository, compiles all the versions, starting at\nthe newest one and tries to run tests of each one of them.\n'
-	printf 'It run tests at meticulousness %i. ' "$meticulousness"
-	printf 'If %i mayor version didn'\''t work the script\nstops.\n' "$subsequent_failed_version_limit"
+	printf 'It run tests at meticulousness up to "complete". '
+	printf 'If %i mayor version didn'\''t work\nthe script stops.\n' "$subsequent_failed_version_limit"
 	printf 'The goal is to determine which versions of Git are supported by istash.\n'
 	printf '\n'
 	printf 'Usage: %s [-h | --help | -Q | --quick | --version]\n' "$(basename "$0")"
 	printf 'Options:\n'
-	printf '    -h, --help\t\t- Print this help message end exit.\n'
+	printf '    -h, --help\t\t- Print this help text end exit.\n'
 	printf '    -Q, --quick\t\t- Use binary search to try to find the oldest supported\n\t\t\t  version of Git without thoroughly testing all of them.\n'
 	printf '\t--version\t- Print version information and exit.\n'
 }
 
 print_version() {
-	printf 'Git version checking script version 1.1.0\n'
+	printf 'Git version checking script version 1.2.0\n'
 }
 
 prepare_git_repo() {
@@ -37,12 +36,6 @@ get_all_versions() { # sort_prefix
 strip_tag_version() { # tag_version_number
 	printf '%s' "$1" | cut -c2-
 }
-print_success() {
-	printf '\b\b\b\033[32mPASSED\033[39m\n'
-}
-print_failure() {  # reason
-	printf '\b\b\b\033[31mFAILED\033[39m (%s)\n' "$1"
-}
 check_version() { # meticulousnesses...
 	printf 'Version %s\t...' "$(strip_tag_version "$version")"
 	if ! (
@@ -51,19 +44,19 @@ check_version() { # meticulousnesses...
 		make -j "$(nproc)" 1>/dev/null 2>&1
 	)
 	then
-		print_failure 'Cannot compile Git.'
+		printf '\b\b\b\033[41mFAILED\033[49m (Cannot compile Git.)\n'
 		return 1
 	else
-		for i in "$@"
+		for x in "$@"
 		do
-			if ! PATH="$abs_actual_git_repo_path:$PATH" ./run.sh --meticulousness="$i" --check --skip-version --jobs=0 1>/dev/null 2>&1
+			if ! PATH="$abs_actual_git_repo_path:$PATH" ./run.sh --meticulousness="$x" --check --skip-version --jobs=0 1>/dev/null 2>&1
 			then
-				print_failure "Failed at meticulousness $i"
+				printf '\b\b\b\033[31mFAILED\033[39m (Failed at meticulousness "%s")\n' "$x"
 				return 1
 			fi
 		done
 	fi
-	print_success
+	printf '\b\b\b\033[32mPASSED\033[39m\n'
 	return 0
 }
 check_versions_one_by_one() {
@@ -89,7 +82,7 @@ check_versions_one_by_one() {
 			last_mayor_version="$mayor_version"
 			any_minor_version_succeeded=n
 		fi
-		if check_version "$meticulousness"
+		if check_version 'minimal' 'complete'
 		then
 			any_minor_version_succeeded=y
 		fi
@@ -104,7 +97,7 @@ check_versions_binary_search() {
 		printf 'Remaining versions: %i (expected steps: %i)...\n' "$((versions_num - last_is_tested))" "$(printf '(l(%i) / l(2)) + 1\n' "$((versions_num - last_is_tested))" | bc -l | sed 's/\..*$//')"
 		middle=$(((versions_num - last_is_tested + 1) / 2))
 		version="$(printf '%s\n' "$versions" | tail -n "+$middle" | head -n 1)"
-		if check_version "$meticulousness"
+		if check_version 'complete'
 		then
 			versions="$(printf '%s\n' "$versions" | head -n "$middle")"
 			versions_num="$middle"
@@ -141,8 +134,8 @@ check_versions() {
 
 getopt_short_options='hQ'
 getopt_long_options='help,quickie,version'
-getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
-eval set -- "$getopt_result"
+normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
+eval set -- "$normalized_options"
 quickie=n
 while true
 do

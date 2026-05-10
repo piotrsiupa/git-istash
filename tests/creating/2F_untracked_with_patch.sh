@@ -9,6 +9,12 @@ PARAMETRIZE_UNTRACKED 'DEFAULT' 'NO'
 PARAMETRIZE_KEEP_INDEX 'DEFAULT'
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
+PARAMETRIZE_COLOR
+PARAMETRIZE_QUIET
+
+__end_of_initialization__
+
+prepare_repository
 
 correct_head_sha="$(get_head_sha)"
 SWITCH_HEAD_TYPE
@@ -18,7 +24,8 @@ printf 'aaa\n' >aaa
 printf 'bbb\n' >bbb
 printf 'y n ' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
-assert_exit_code 1 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS --patch $KEEP_INDEX_FLAGS <.git/answers_for_patch
+assert_exit_code 1 git istash "$CREATE_OPERATION" $QUIET_FLAGS $COLOR_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS --patch $KEEP_INDEX_FLAGS <.git/answers_for_patch
+assert_outputs__create__no_changes_to_stash 't'
 assert_files_HT '
 ?? aaa		aaa
 ?? bbb		bbb

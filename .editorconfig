@@ -1,0 +1,28 @@
+root = true
+
+[*]
+indent_style = tab
+charset = utf-8
+trim_trailing_whitespace = false
+insert_final_newline = true
+
+[*.sh]
+end_of_line = lf
+
+[*.bat]
+end_of_line = crlf
+charset = latin1
+
+[*.md]
+indent_style = space
+indent_size = 2
+
+[{bin,lib,man}/**]
+end_of_line = lf
+
+[man/**.1]
+indent_style = space
+
+# Exceptions for quirky tests (but you still need to be careful when editing those)
+[tests/*/*weird_characters*]
+charset = unset

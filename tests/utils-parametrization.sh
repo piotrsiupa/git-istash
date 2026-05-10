@@ -7,18 +7,36 @@ then
 fi
 
 
-# This makes the test be called multiple times with the variable from the 1st argument having each of the values from the remaining arguments.
+# It's called after all parameters are initialised to skip the run if one of the previous runs had the exact same parameters.
+_DEDUPLICATE_PAREMETRIZATION() {
+	CURRENT_PARAMETERS="$(awk '$2 { print $2 }' "$PARAMETERS_FILE" | tr '\n' ' ')"
+	if grep -Fxq -- "$CURRENT_PARAMETERS" "$PARAM_HISTORY_FILE"
+	then
+		skip_silently
+	else
+		printf '%s\n' "$CURRENT_PARAMETERS" >>"$PARAM_HISTORY_FILE"
+	fi
+}
+
+# This makes the test be called multiple times with the variable from the 1st argument having each of the values from the remaining arguments if the specified facet is active.
+# If the facet is not active, the variable is just set to the first value.
 # (Reading this code is not sufficient for understanding the function's inner working because it requires cooperation of the script `run.sh` but you don't need that; you just need to know how to use it.)
 # The name must be a valid variable name and the values must not contain whitespaces and must not be empty. If it begins with "_", it won't be displayed.
-PARAMETRIZE() { # name values...
+PARAMETRIZE() { # name facet values...
+	if ! is_facet_active "$2"
+	then
+		eval "$1='$3'"
+		return 0
+	fi
 	PARAM_NAME="$1"
-	shift
+	shift 2
 	CUR_VAL="$(awk -v key="$PARAM_NAME" '$1 == key { print $2 }' "$PARAMETERS_FILE")"
 	LAST_VAL="$(awk -v key="$PARAM_NAME" '$1 == key { print $3 }' "$PARAMETERS_FILE")"
 	sed -iE "/^$PARAM_NAME\\>/ d" "$PARAMETERS_FILE"
+	OTHER_IS_EXCLUSIVE="$(awk '$4 == "exclusive" { other_is_exclusive = 1 } END { print(other_is_exclusive ? "y" : "n") }' "$PARAMETERS_FILE")"
 	if [ "$CUR_VAL" = "$LAST_VAL" ]
 	then
-		if [ -z "$LAST_VAL" ] || [ "$ROTATE_PARAMETER" = y ]
+		if { [ -z "$LAST_VAL" ] || [ "$ROTATE_PARAMETER" = y ] ; } && [ "$OTHER_IS_EXCLUSIVE" = n ]
 		then
 			CUR_VAL="$1"
 		fi
@@ -27,12 +45,11 @@ PARAMETRIZE() { # name values...
 			ROTATE_PARAMETER=n
 		fi
 	else
-		if [ "$ROTATE_PARAMETER" = y ]
+		if [ "$ROTATE_PARAMETER" = y ] && [ "$OTHER_IS_EXCLUSIVE" = n ]
 		then
 			while [ "$CUR_VAL" != "$1" ] && [ $# -ne 0 ]
 			do
 				shift
-				continue
 			done
 			shift
 			CUR_VAL="$1"
@@ -46,6 +63,7 @@ PARAMETRIZE() { # name values...
 	unset PARAM_NAME
 	unset CUR_VAL
 	unset LAST_VAL
+	unset OTHER_IS_EXCLUSIVE
 }
 _SKIP_PARAMETER() { # name first_value
 	CUR_VAL="$(awk -v key="$1" '$1 == key { print $2 }' "$PARAMETERS_FILE")"
@@ -66,53 +84,15 @@ _SKIP_PARAMETER() { # name first_value
 # The condition is "eval"ed.
 # If it's true, the function behaves like "PARAMETRIZE".
 # If it's false, it's like there were never a parameter here.
-PARAMETRIZE_COND() { # condition name values...
+PARAMETRIZE_COND() { # condition name facet values...
 	CONDITION="$1"
 	shift
 	PARAMETRIZE "$@"
-	if eval ! "$CONDITION"
+	if is_facet_active "$2" && eval ! "$CONDITION"
 	then
-		_SKIP_PARAMETER "$1" "$2"
+		_SKIP_PARAMETER "$1" "$3"
 	fi
 	unset CONDITION
-}
-# This is kinda similar to `PARAMETRIZE` but not really.
-# Instead of list of arguments it takes a range of numbers and iterates over them in order.
-# Unlike `PARAMETRIZE`, it can be called multiple times in a single run without side effects. (It will return the same number every time.)
-# If it's called multiple times with different upper ends of the range, it will always choose the biggest one. (The lower ends must be the same in every call.)
-# The name must be a valid variable name and the values must not contain whitespaces and must not be empty. If it begins with "_", it won't be displayed.
-PARAMETRIZE_BIGGEST() { # name first_number last_number
-	CUR_VAL="$(awk -v key="$1" '$1 == key { print $2 }' "$PARAMETERS_FILE")"
-	LAST_VAL="$(awk -v key="$1" '$1 == key { print $3 }' "$PARAMETERS_FILE")"
-	if [ -z "$(sed -En '/^--------$/,$ p' "$PARAMETERS_FILE" | awk -v key="$1" '$1 == key { print $2 }')" ]
-	then
-		if [ "$CUR_VAL" = "$LAST_VAL" ]
-		then
-			if [ -z "$LAST_VAL" ] || [ "$ROTATE_PARAMETER" = y ]
-			then
-				CUR_VAL="$2"
-			fi
-			if [ -z "$LAST_VAL" ]
-			then
-				ROTATE_PARAMETER=n
-			fi
-		else
-			if [ "$ROTATE_PARAMETER" = y ]
-			then
-				CUR_VAL=$((CUR_VAL + 1))
-				ROTATE_PARAMETER=n
-			fi
-		fi
-	fi
-	eval "$1"=\"\$CUR_VAL\"
-	if [ -z "$LAST_VAL" ] || [ "$LAST_VAL" -lt "$3" ]
-	then
-		LAST_VAL="$3"
-	fi
-	sed -iE "/^$1\\>/ d" "$PARAMETERS_FILE"
-	printf '%s\t%i\t%i\n' "$1" "$CUR_VAL" "$LAST_VAL" >>"$PARAMETERS_FILE"
-	unset CUR_VAL
-	unset LAST_VAL
 }
 # This is a helper function to make other parameter-related functions.
 # It sets the variable to 1 on the first call each run and to 0 otherwise.
@@ -158,87 +138,84 @@ IS_LAST_PARAMETRIZE_CALL() { # name
 # This is good to create wrapper funcitons to e.g. cover both spellings of option "-k" and "--keep-index" and have to specify only one parameter in the function call.
 # (If no key is passed, all values are used.)
 # Level of meticulousness affects which variants are used or skipped.
-PARAMETRIZE_OPTION() { # condition name map values...
+PARAMETRIZE_OPTION() { # condition name override_facet map [values...]
 	CONDITION="$1"
 	NAME="$2"
+	FACET="${3:-options}"
 	#shellcheck disable=SC2020
-	MAP="$(printf '%s' "$3" | sed -E 's/\s+//g' | tr ':&|' '  \n')"
-	shift 3
-	#shellcheck disable=SC2154
-	if [ "$meticulousness" -le 2 ]
+	MAP="$(printf '%s' "$4" | sed -E 's/\s+//g' | tr '|' '\n' | sed -E 's/^(.+:)(.*&&)(.*&&)(.*)$/\1\3\2\4/')"
+	shift 4
+	PREVIOUS_VALUE="$(awk -v key="$NAME" '$1 == key { print $2 }' "$PARAMETERS_FILE")"
+	ALTERNATIVE_SPELLINGS="$(printf '%s\n' "$MAP" | sed -E 's/^.+:.*&&(.*&&)(.*)$/\1\2/' | tr '&' '\n' | grep -Ev '^$' || true)"
+	DONE_ALTERNATIVE_SPELLINGS="$(awk -v key="$NAME" '$1 == key { for (i = 5; i <= NF; ++i) printf "%s ", $i }' "$PARAMETERS_FILE")"
+	if ! is_facet_active 'short-options'
 	then
-		MAP="$(printf '%s' "$MAP" | awk '{print $1,$2}')"
-	elif [ "$meticulousness" -le 4 ]
+		MAP="$(printf '%s\n' "$MAP" | sed -E 's/^(.+:)(.*&&).*&&(.*)$/\1\2\3/')"
+	fi
+	if ! is_facet_active 'partial-options'
 	then
-		MAP="$(printf '%s' "$MAP" | sed -E 's/  .*$//')"
-	else
-		MAP="$(printf '%s' "$MAP" | sed -E 's/^(\S+ ).*  (.+)$/\1\2/')"
+		MAP="$(printf '%s\n' "$MAP" | sed -E 's/^(.+:)(.*)&&(&?[^&])*$/\1\2/')"
 	fi
 	if [ $# -eq 0 ]
 	then
-		VALUES="$(printf '%s\n' "$MAP" | awk '{$1=""} 1')"
+		VALUES="$(printf '%s\n' "$MAP" | cut -d: -f2-)"
 	else
 		VALUES=''
 		while [ $# -ne 0 ]
 		do
-			printf '%s\n' "$MAP" | grep -qE "^$1\\s" ||
+			printf '%s\n' "$MAP" | grep -qE "^$1:" ||
 				fail 'Key "%s" cannot be found by "PARAMETRIZE_OPTION"!\n' "$1"
-			VALUES="$VALUES$(printf '\n' ; printf '%s\n' "$MAP" | awk -v key="$1" '$1 == key {$1=""; print}')"
+			VALUES="$VALUES$(printf '\n' ; printf '%s\n' "$MAP" | grep -E "^$1:" | cut -d: -f2-)"
 			shift
 		done
 	fi
-	if [ "$meticulousness" -ne 3 ]
+	if ! is_facet_active "$FACET"
 	then
-		VALUES="$(printf '%s\n' "$VALUES" | tr ' ' '\n' | sed -E -e '/^\s*$/ d' -e "s/'/'\\\\''/g" -e "s/^/'/" -e "s/$/'/" | tr '\n' ' ')"
-		eval set -- "$VALUES"
-		PARAMETRIZE_COND "$CONDITION" "$NAME" "$@"
+		VALUES="$(printf '%s\n' "$VALUES" | grep -v '^$' | head -n1)"
+	fi
+	VALUES="$(printf '%s\n' "$VALUES" | tr '&' '\n' | grep -Exv -- "$(printf '%s' "$DONE_ALTERNATIVE_SPELLINGS" | tr ' ' '|')" | tr '\n' ' ')"
+	eval set -- "$VALUES"
+	PARAMETRIZE_COND "$CONDITION" "$NAME" 'always' "$@"
+	if awk -v key="$NAME" -v first_val="$1" '$1 == key && $2 == first_val && $3 != first_val { printf "y" }' "$PARAMETERS_FILE" | grep -Eq '.'
+	then
+		shift $(($# - 2))
+		sed -i -E "s/^($NAME)\\t(.+)\\t(.+)$/\\1\\t\\2\\t$1/" "$PARAMETERS_FILE"
+	fi
+	if awk -v key="$NAME" -v prev_val="$PREVIOUS_VALUE" '$1 == key && $2 != prev_val { printf "y" }' "$PARAMETERS_FILE" | grep -Eq '.'
+	then
+		CURRENT_ALTERNATIVE_SPELLING="$(printf '%s\n' "$ALTERNATIVE_SPELLINGS" | grep -Fx -- "$PREVIOUS_VALUE" || true)"
+		DONE_ALTERNATIVE_SPELLINGS="$DONE_ALTERNATIVE_SPELLINGS $CURRENT_ALTERNATIVE_SPELLING"
+	fi
+	CURRENT_VALUE="$(awk -v key="$NAME" '$1 == key { print $2 }' "$PARAMETERS_FILE")"
+	if printf '%s\n' "$ALTERNATIVE_SPELLINGS" | grep -Fxq -- "$CURRENT_VALUE"
+	then
+		sed -iE "s/^$NAME\\>.*\$/&\texclusive/" "$PARAMETERS_FILE"
 	else
-		VALUES="$(printf '%s\n' "$VALUES" | sed -E '/^\s*$/ d')"
-		PARAMETRIZE_BIGGEST '_OPTION_COL' 1 "$(printf '%s' "$VALUES" | awk '{if (NF > x) {x = NF}} END {print x}')"
-		PARAMETRIZE_BIGGEST "$NAME" 1 "$(printf '%s\n' "$VALUES" | wc -l)"
-		eval ROW=\$"$NAME"
-		VALUE="$(printf '%s\n' "$VALUES" | awk -v row="$ROW" -v col="$_OPTION_COL" 'NR == row {if (NF <= col) {print $NF} else {print $col}}')"
-		sed -Ei "/^$NAME\\>/ s/\$/ $VALUE/" "$PARAMETERS_FILE"
-		eval "$NAME"=\"\$VALUE\"
-		if ! eval "$CONDITION"
-		then
-			_SKIP_PARAMETER "$NAME" 1
-		fi
-		IS_FIRST_PARAMETRIZE_CALL '_OPTION_FIRST'
-		if [ "$_OPTION_FIRST" -eq 1 ]
-		then
-			_OPTION_MAX_COLS=1
-		fi
-		MAX_COLS="$(printf '%s\n' "$VALUES" | awk -v row="$ROW" 'NR == row {print NF}')"
-		if [ "$MAX_COLS" -gt "$_OPTION_MAX_COLS" ]
-		then
-			_OPTION_MAX_COLS="$MAX_COLS"
-		fi
-		IS_LAST_PARAMETRIZE_CALL '_OPTION_LAST'
-		if [ "$_OPTION_LAST" -eq 1 ] && [ "$_OPTION_COL" -gt "$_OPTION_MAX_COLS" ]
-		then
-			skip_silently
-		fi
-		unset ROW
-		unset VALUE
-		unset _OPTION_COL
-		unset _OPTION_FIRST
-		unset _OPTION_LAST
-		unset MAX_COLS
+		sed -iE "s/^$NAME\\>.*\$/&\tnormal/" "$PARAMETERS_FILE"
+	fi
+	if printf '%s\n' "$DONE_ALTERNATIVE_SPELLINGS" | grep -Eq '[^ ]'
+	then
+		sed -iE "s/^$NAME\\>.*\$/&\t$DONE_ALTERNATIVE_SPELLINGS/" "$PARAMETERS_FILE"
 	fi
 	unset CONDITION
 	unset NAME
+	unset FACET
 	unset MAP
 	unset VALUES
+	unset PREVIOUS_VALUE
+	unset ALTERNATIVE_SPELLINGS
+	unset DONE_ALTERNATIVE_SPELLINGS
+	unset CURRENT_ALTERNATIVE_SPELLING
+	unset CURRENT_VALUE
 }
 
-# It calls "PARAMETRIZE" with the name "HEAD_TYPE" and possible values "BRANCH", "DETACH" and "ORPHAN".
+# It calls "PARAMETRIZE" with the name "HEAD_TYPE", the facet "head-type" and possible values "BRANCH", "DETACH" and "ORPHAN".
 # There is a bunch of functions in this and other files that use the variable "HEAD_TYPE". (They always have suffix "_HT".)
 # (See also the function below this one.)
 PARAMETRIZE_HEAD_TYPE() { # values...
 	! printf '%s\n' "$@" | grep -vxqE "BRANCH|DETACH|ORPHAN" ||
 		fail '"HEAD_TYPE" can be only "BRANCH", "DETACH" or "ORPHAN"!\n'
-	PARAMETRIZE 'HEAD_TYPE' "$@"
+	PARAMETRIZE 'HEAD_TYPE' 'head-type' "$@"
 }
 IS_HEAD_BRANCH() {
 	test "$HEAD_TYPE" = 'BRANCH'
@@ -264,4 +241,71 @@ get_head_sha_HT() {
 	then
 		get_head_sha
 	fi
+}
+
+#shellcheck disable=SC2120
+PARAMETRIZE_COLOR() { # keys
+	# "auto" is not tested here, because it's not really viable to capture program output while doing that.
+	PARAMETRIZE_OPTION true 'COLOR' 'color' 'YES: COLOR-LONG && COLOR-YES-LONG && COLOR-YES-LONGISH0 & COLOR-YES-LONGISH1 | NO: COLOR-NO-LONG & NO-COLOR-LONG && COLOR-DEFAULT && COLOR-NO-LONGISH0 & COLOR-NO-LONGISH1 & NO-COLOR-LONGISH0 & NO-COLOR-LONGISH1' "$@"
+	#shellcheck disable=SC2034
+	case "$COLOR" in
+		COLOR-LONG) COLOR_FLAGS='--color' ;;
+		COLOR-YES-LONG) COLOR_FLAGS='--color=always' ;;
+		COLOR-YES-LONGISH0) COLOR_FLAGS='--colo=YES' ;;
+		COLOR-YES-LONGISH1) COLOR_FLAGS='--col=t' ;;
+		COLOR-DEFAULT) COLOR_FLAGS='' ;;
+		COLOR-NO-LONG) COLOR_FLAGS='--color=never' ;;
+		NO-COLOR-LONG) COLOR_FLAGS='--no-color' ;;
+		COLOR-NO-LONGISH0) COLOR_FLAGS='--colo=NO' ;;
+		COLOR-NO-LONGISH1) COLOR_FLAGS='--col=0' ;;
+		NO-COLOR-LONGISH0) COLOR_FLAGS='--no-col' ;;
+		NO-COLOR-LONGISH1) COLOR_FLAGS='--no-c' ;;
+	esac
+}
+IS_COLOR_ON() {
+	printf '%s' "${COLOR-}" | grep -Eq '^COLOR-YES-|^COLOR-LONG$'
+}
+
+#shellcheck disable=SC2120
+PARAMETRIZE_QUIET() { # keys
+	PARAMETRIZE_OPTION true 'QUIET' '' 'NO: && QUIET-DEFAULT && | YES: QUIET-SHORT && QUIET-LONG && QUIET-LONGISH0' "$@"
+	#shellcheck disable=SC2034
+	case "$QUIET" in
+		QUIET-SHORT) QUIET_FLAGS='-q' ;;
+		QUIET-LONG) QUIET_FLAGS='--quiet' ;;
+		QUIET-LONGISH0) QUIET_FLAGS='--quie' ;;
+		QUIET-DEFAULT) QUIET_FLAGS='' ;;
+	esac
+}
+IS_QUIET() {
+	test "${QUIET-"QUIET-DEFAULT"}" != 'QUIET-DEFAULT'
+}
+
+PARAMETRIZE_HINT() { # advice_name...
+	# No advice is supported since git 2.46, but it's not actually needed for istash to work, so we silently skip testing it if it's not supported.
+	#shellcheck disable=SC2154
+	if [ "$git_supports_no_advice" = y ]
+	then
+		PARAMETRIZE_OPTION true 'HINT' 'hint' 'YES: ENBL-HINT-SHORT && ALL-HINTS & ENBL-HINT && ENBL-HINT-ALT | NO: DSBL-HINT-SHORT && DSBL-HINT & NO-HINTS & NO-ADVICE && DSBL-HINT-ALT'
+	else
+		PARAMETRIZE_OPTION true 'HINT' 'hint' 'YES: ENBL-HINT-SHORT && ALL-HINTS & ENBL-HINT && ENBL-HINT-ALT | NO: DSBL-HINT-SHORT && DSBL-HINT & NO-HINTS && DSBL-HINT-ALT'
+	fi
+	#shellcheck disable=SC2034
+	ADVICE_NAMES="$(printf '%s\n' "$@")"
+	ADVICE_FLAGS=''
+	#shellcheck disable=SC2034
+	case "$HINT" in
+		ALL-HINTS) ;;
+		ENBL-HINT) ;;  # Postponed to when "prepare_repository" is called.
+		ENBL-HINTS-SHORT) ;;  # Postponed to when "prepare_repository" is called.
+		ENBL-HINTS-ALT) ;;  # Postponed to when "prepare_repository" is called.
+		NO-HINTS) GIT_ADVICE=0 ; export GIT_ADVICE ;;
+		NO-ADVICE) ADVICE_FLAGS='--no-advice' ;;
+		DSBL-HINT) ;;  # Postponed to when "prepare_repository" is called.
+		DSBL-HINTS-SHORT) ;;  # Postponed to when "prepare_repository" is called.
+		DSBL-HINTS-ALT) ;;  # Postponed to when "prepare_repository" is called.
+	esac
+}
+HINT_ENABLED() { # advice_name
+	printf '%s\n' "$HINT" | grep -E -q '^ALL-HINTS$|^ENBL-HINT(-|$)'
 }

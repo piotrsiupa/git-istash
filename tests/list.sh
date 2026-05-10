@@ -5,7 +5,9 @@ set -eu
 print_help() {
 	printf 'This is a simple script that just prints the list of all tests.\n'
 	printf '\n'
-	printf 'Usage: %s [-h | --help | -e | --essential | -E | --non_essential]\n\t[ -R | --relative] [-c | --changed] [-C X | --changed-since=X]\n\t[--] [<filter>...]\n' "$(basename "$0")"
+	printf 'Usage: %s ([-h | --help | --version)\n' "$(basename "$0")"
+	printf '   or: %s [ -e | --essential | -E | --non_essential] [ -R | --relative]\n\t[-c | --changed] [-C X | --changed-since=X] [--] [<filter>...]\n' "$(basename "$0")"
+	printf '\n'
 	printf 'Options:\n'
 	printf '    -a, --altered\t- Print only the tests changed since the last commit.\n\t\t\t  (Only changes in individual test files count, not in\n\t\t\t  the common test utilities that affect every test.)\n\t\t\t  Renamed tests with 100%% similarity are omitted.\n\t\t\t  (See also "--since".)\n'
 	printf '    -A, --since=X\t- Selects the commit used as reference by "--altered".\n\t\t\t  (It implies "--altered".)\n\t\t\t  Special cases:\n\t\t\t  * Empty / blank string means INDEX.\n\t\t\t  * Strings starting with "~" or "^" imply HEAD.\n\t\t\t    (So "~2" means the same as "HEAD~2".)\n\t\t\t  * "-" means all changes since branching from "master".\n'
@@ -21,7 +23,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'test listing script version 1.1.0\n'
+	printf 'test listing script version 1.1.1\n'
 }
 
 find_master() {
@@ -53,8 +55,8 @@ find_master() {
 
 getopt_short_options='aA:eEhRv'
 getopt_long_options='altered,since:,essential,non-essential,help,relative,version'
-getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
-eval set -- "$getopt_result"
+normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
+eval set -- "$normalized_options"
 only_changed=n
 changed_reference=HEAD
 essential=n

@@ -8,6 +8,9 @@ PARAMETRIZE_KEEP_INDEX
 PARAMETRIZE_STAGED 'YES'
 PARAMETRIZE_UNSTAGED 'YES'
 
+__end_of_initialization__
+
+prepare_repository
 # We don't need those in this test.
 rm ignored0 ignored1
 
@@ -48,8 +51,10 @@ rm 'b/0/k'
 printf 'zzz\n' >'b/0/l'
 cd 'a'
 #shellcheck disable=SC2086
-new_stash_sha_CO="$(assert_exit_code 0 "$(get_relative_istash_path)" "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS)"
+assert_exit_code 0 "$(get_relative_istash_path)" "$CREATE_OPERATION" $KEEP_INDEX_FLAGS $STAGED_FLAGS $UNSTAGED_FLAGS $ALL_FLAGS $UNTRACKED_FLAGS
 cd -
+assert_outputs__create__success '*' 0 ''
+new_stash_sha_CO="$stdout"
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_HTCO '

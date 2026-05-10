@@ -1,0 +1,324 @@
+#!/usr/bin/env sh
+
+# Fully POSIX option parser inspired by GNU getopt, although not strictly compatible with it.
+# The small deviations of the output (from what getopt with similar options would produce with similar settings) are there because of how get_options is used by the script for which it was written.
+# The user should still get exactly what their expect from a GNU-like program.
+# It can be either sourced or used as a standalone script.
+
+# Escapes stdin in a way that it will be "eval"ed as a single string in a POSIX shell.
+escape_for_shell() {
+	printf \'
+	sed -E s/\'/\'\\\\\'\'/g
+	printf \'
+}
+
+# See "print_help" for usage.
+get_options() ( # [-P | -R | -U] short_options_string long_options_string [argument...]
+	set -eu
+	
+	fatal() { # printf_arg...
+		printf 'fatal: '
+		#shellcheck disable=SC2059
+		printf "$@"
+		printf '\n'
+		return 2
+	} 1>&2
+	
+	posixly=n
+	reorder=y
+	partial=n
+	if [ "${1-}" = '-P' ]
+	then
+		posixly=y
+		shift
+	elif [ "${1-}" = '-R' ]
+	then
+		reorder=n
+		shift
+	elif [ "${1-}" = '-U' ]
+	then
+		partial=y
+		shift
+	fi
+	printf '%s' "${1-}" | grep -E -q '^-' &&
+		fatal 'unknown option %s for get_options' "$1"
+	
+	test $# -ge 2 ||
+		fatal 'not enough arguments for get_options'
+	printf '%s' "$1" | tr '\n' ' ' | grep -E -q '\s' &&
+		fatal 'white character in short options definition for get_options'
+	printf '%s' "$1" | grep -E -q '^:' &&
+		fatal 'empty entry in short options definition for get_options'
+	printf '%s' "$1" | grep -E -q ':::' &&
+		fatal 'triple : in short options definition for get_options'
+	short_options="$(
+		printf '%s' "$1" \
+		| sed -E 's/([^:]):*/\1\n/g'
+	)"
+	repeated_option="$(printf '%s' "$short_options" | sort | uniq -c | sed -E -n '/^\s*1\s/!s/^\s*[0-9]+\s+//p' | head -n 1)"
+	test -z "$repeated_option" ||
+		fatal 'option -%s repeats in options definition for get_options' "$repeated_option"
+	short_options_args="$(
+		printf '%s' "$1" \
+		| sed -E 's/[^:]:*/&\n/g' \
+		| sed -E -e 's/^.$/n/' -e 's/^.:$/y/' -e 's/^.::$/o/' \
+		| tr -d '\n'
+	)"
+	printf '%s' "$2" | tr '\n' ' ' | grep -E -q '\s' &&
+		fatal 'white character in long options definition for get_options'
+	printf '%s' "$2" | grep -E -q '(^|,):*,|,:*$' &&
+		fatal 'empty entry in long options definition for get_options'
+	printf '%s' "$2" | grep -E -q ':::' &&
+		fatal 'triple : in long options definition for get_options'
+	long_options="$(
+		printf '%s' "$2" \
+		| tr ',' '\n' \
+		| sed -E 's/:+$//'
+	)"
+	printf '%s' "$long_options" | grep -E -q ':' &&
+		fatal ': in a name of a long option in definition for get_options'
+	printf '%s' "$long_options" | grep -E -q '=' &&
+		fatal '= in a name of a long option in definition for get_options'
+	repeated_option="$(printf '%s' "$long_options" | sort | uniq -c | sed -E -n '/^\s*1\s/!s/^\s*[0-9]+\s+//p' | head -n 1)"
+	test -z "$repeated_option" ||
+		fatal 'option --%s repeats in options definition for get_options' "$repeated_option"
+	long_options_args="$(
+		printf '%s' "$2" \
+		| tr ',' '\n' \
+		| sed -E -e 's/^.*[^:]$/n/' -e 's/^.*[^:]:$/y/' -e 's/^.*[^:]::$/o/' \
+		| tr -d '\n'
+	)"
+	shift 2
+	
+	error() { # printf_arg...
+		printf 'error: '
+		#shellcheck disable=SC2059
+		printf "$@"
+		printf '\n'
+		return 1
+	} 1>&2
+	if [ "$reorder" = y ]
+	then
+		non_option_args=' --'
+	fi
+	while [ $# -ne 0 ]
+	do
+		case "$1" in
+			--)
+				if [ "$reorder" = n ]
+				then
+					printf \ \'--\'
+				fi
+				if [ "$partial" = n ]
+				then
+					shift
+				fi
+				break
+				;;
+			--*)
+				option_name="$(printf '%s' "$1" | head -n1 | cut -d= -f1 | cut -c3-)"
+				if ! long_option_nr="$(printf '%s\n' "$long_options" | grep -n -F -x -- "$option_name")"
+				then
+					long_option_nr="$(printf '%s\n' "$long_options" | cut -c-${#option_name} | grep -n -F -x -- "$option_name")" || {
+						if [ "$partial" = n ]
+						then
+							error 'unknown option `%s'\' "$option_name"
+						else
+							break
+						fi
+					}
+					test "$(printf '%s\n' "$long_option_nr" | wc -l)" -eq 1 ||
+						error 'ambiguous option abbreviation `%s'\' "$option_name"
+				fi
+				long_option_nr="$(printf '%s' "$long_option_nr" | cut -d: -f1)"
+				option_name="$(printf '%s' "$long_options" | sed -E -n "${long_option_nr}p")"
+				printf ' --%s' "$option_name"
+				has_parameter="$(printf '%s' "$long_options_args" | cut -c"$long_option_nr")"
+				if [ "$has_parameter" = y ]
+				then
+					printf ' '
+					if printf '%s' "$1" | grep -E -q '='
+					then
+						{
+							printf '%s' "$1" | head -n1 | cut -d= -f2- | tr -d '\n'
+							if [ "$(printf '%s\n' "$1" | wc -l)" -gt 1 ]
+							then
+								printf '\n'
+								printf '%s' "$1" | tail -n+2
+							fi
+						} | escape_for_shell
+					elif [ $# -ge 2 ]
+					then
+						printf '%s' "$2" | escape_for_shell
+						shift
+					else
+						error 'option `%s'\'' requires a value' "$option_name"
+					fi
+				elif [ "$has_parameter" = o ]
+				then
+					printf ' '
+					if printf '%s' "$1" | grep -E -q '='
+					then
+						{
+							printf '%s' "$1" | head -n1 | cut -d= -f2- | tr -d '\n'
+							if [ "$(printf '%s\n' "$1" | wc -l)" -gt 1 ]
+							then
+								printf '\n'
+								printf '%s' "$1" | tail -n+2
+							fi
+						} | escape_for_shell
+					else
+						printf \'\'
+					fi
+				elif printf '%s' "$1" | grep -E -q '='
+				then
+					error 'option `%s'\'' takes no value' "$option_name"
+				fi
+				;;
+			-*)
+				i=2
+				was_non_option=n
+				while [ ${#1} -ge $i ]
+				do
+					option_letter="$(printf '%s' "$1" | head -c$i | tail -c+$i)"
+					short_option_nr="$(printf '%s\n' "$short_options" | grep -n -F -x -- "$option_letter")" || {
+						if [ "$partial" = n ]
+						then
+							error 'unknown switch `%s'\' "$option_letter"
+						else
+							non_option_args="$non_option_args $({ printf -- '-' ; printf '%s' "$1" | tail -c+$i ; } | escape_for_shell)"
+							shift
+							was_non_option=y
+							break
+						fi
+					}
+					printf ' -%s' "$option_letter"
+					short_option_nr="$(printf '%s' "$short_option_nr" | cut -d: -f1)"
+					has_parameter="$(printf '%s' "$short_options_args" | cut -c"$short_option_nr")"
+					if [ "$has_parameter" = y ]
+					then
+						printf ' '
+						if [ ${#1} -gt $i ]
+						then
+							printf '%s' "$1" | tail -c+$((i+1)) | escape_for_shell
+						elif [ $# -ge 2 ]
+						then
+							printf '%s' "$2" | escape_for_shell
+							shift
+						else
+							error 'switch `%s'\'' requires a value' "$option_letter"
+						fi
+						break
+					elif [ "$has_parameter" = o ]
+					then
+						printf ' '
+						if [ ${#1} -gt $i ]
+						then
+							printf '%s' "$1" | tail -c+$((i+1)) | escape_for_shell
+						else
+							printf \'\'
+						fi
+						break
+					else
+						i=$((i+1))
+					fi
+				done
+				if [ "$was_non_option" = y ]
+				then
+					break
+				fi
+				;;
+			*)
+				if [ "$posixly" = y ]
+				then
+					break
+				elif [ "$reorder" = y ]
+				then
+					non_option_args="$non_option_args $(printf '%s' "$1" | escape_for_shell)"
+				else
+					printf ' '
+					printf '%s' "$1" | escape_for_shell
+				fi
+				;;
+		esac
+		shift
+	done
+	while [ $# -ne 0 ]
+	do
+		if [ "$reorder" = y ]
+		then
+			non_option_args="$non_option_args $(printf '%s' "$1" | escape_for_shell)"
+		else
+			printf ' '
+			printf '%s' "$1" | escape_for_shell
+		fi
+		shift
+	done
+	if [ "$reorder" = y ]
+	then
+		printf '%s' "$non_option_args"
+	fi
+)
+
+if [ "$(basename "$0")" = 'get_options' ]
+then
+	set -eu
+	
+	print_help() {
+		printf 'A fully POSIX script for parsing options in program arguments.\n'
+		printf 'It is meant to be a portable alternative when "getopt" may not be available,\nor in some rare parsing scenarios that are not supported by "getopt".\n'
+		#shellcheck disable=SC2016
+		printf 'The output should be generally the same as in "getopt" with analogous settings\nand it is meant to be used with "eval" to set positional parameters in shell,\nlike this: eval set -- "$output_of_get_options".\n'
+		printf '\n'
+		printf 'Usage:\tget_options [-P | -R | -U] <short_opts_descr> <long_opts_descr> [arg...]\n'
+		printf '   or:\tget_options [-h | --help | -V | --version]    (Only in standalone mode.)\n'
+		printf '(Ironically, the order of arguments has to be exactly as described.)\n'
+		printf 'Options:\n'
+		printf '    -P\t- Posixly correct mode - after the first encountered non-option, treat\n\t  everything else as non-options. Preserve the first "--" if it'\''s after\n\t  a non-option.\n'
+		printf '    -R\t- Don'\''t reorder entries by placing all non-option arguments after "--"\n\t  (normalize only) and don'\''t generate an additional "--" if not present.\n'
+		printf '    -U\t- When you encounter an unrecognized option don'\''t show error but instead\n\t  treat everything from this point onward as non-options.\n\t  Preserve all "--" as non-options.\n\t  (Good for pre-parsing when not all options are known yet.)\n\t  WARNING: it assumes that there is no ambiguous abbreviations between\n\t  known and unknown option names!\n'
+		printf 'Standalone mode options:\n'
+		printf '    -h, --help\t\t- Print this help text end exit.\n'
+		printf '    -V, --version\t- Print version information and exit.\n'
+		printf '\n'
+		printf '<short_opts_descr> - a string describing all allowed short options.\n'
+		printf 'Short option string contains a list of options names as individual characters,\nwithout separators. '
+		printf 'A special character ":" may follow another character to\nsymbolize that the option has an argument. '
+		printf 'Using double ":" instead of a single\none means that the argument is not mandatory. '
+		printf 'Characters "-" and ":" may not be\nused as short option names. '
+		printf '(Weird characters such as whitespaces aren'\''t tested\nand may not work.)\n'
+		printf 'E.g. "abc:d" defines options "-a", "-b", "-c" and "-d", where "-c" takes an\nargument and the other options don'\''t.\n'
+		printf '(An empty string means that short options are not allowed.)\n'
+		printf '\n'
+		printf '<long_opts_descr> - a string describing all known long options.\n'
+		printf 'Long options are a list of option names separated with ",". '
+		printf 'A special character\n":" may be placed at the end of an option name to symbolize that the option has\nan argument. '
+		printf 'Using double ":" instead of a single one means that the argument is\nnot mandatory. '
+		printf 'Characters ":" and "," may not be used in long option names.\n'
+		printf '(Weird characters such as whitespaces aren'\''t tested and may not work.)\n'
+		printf 'E.g. "foo,bar:,baz" defines options "--foo", "--bar" and "--baz", where "--bar"\ntakes an argument and the other options don'\''t.\n'
+		printf '(An empty string means that long options are not allowed.)\n'
+		printf '\n'
+		printf 'Exit values:\n'
+		printf ' - 0 - Success.\n'
+		printf ' - 1 - Parse error. (normal error)\n'
+		printf ' - 2 - Error with the usage of the get_options itself. (fatal error)\n'
+	}
+	
+	print_version() {
+		printf 'get_options version 1.0.0\n'
+		printf 'Author: Piotr Siupa'
+	}
+	
+	if [ "${1-}" = '-h' ] || [ "${1-}" = '--help' ]
+	then
+		print_help
+		exit 0
+	elif [ "${1-}" = '-V' ] || [ "${1-}" = '--version' ]
+	then
+		print_version
+		exit 0
+	fi
+	
+	get_options "$@"
+fi
