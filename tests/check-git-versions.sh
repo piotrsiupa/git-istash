@@ -13,7 +13,7 @@ print_help() {
 	printf 'If %i mayor version didn'\''t work\nthe script stops.\n' "$subsequent_failed_version_limit"
 	printf 'The goal is to determine which versions of Git are supported by istash.\n'
 	printf '\n'
-	printf 'Usage: %s [-h | --help | -Q | --quick | -V | --version]\n' "$(basename "$0")"
+	printf 'Usage: %s [-h | --help | -Q | --quick | -V | --version] [--] [<free_arg...>]\n' "$(basename "$0")"
 	printf 'Options:\n'
 	printf '    -h, --help\t\t- Print this help text end exit.\n'
 	printf '    -l, --list\t\t- List all available Git versions and do nothing else.\n'
@@ -21,6 +21,7 @@ print_help() {
 	printf '    -Q, --quick\t\t- Use binary search to try to find the oldest supported\n\t\t\t  version of Git without thoroughly testing all of them.\n'
 	printf '    -s, --single=<ver>\t- Check only the given version and use "monitor.sh"\n\t\t\t  instead of "run.sh".\n'
 	printf '    -V, --version\t- Print version information and exit.\n'
+	printf '\t<free_arg>\t- Any additional arguments are passed to the underlying\n\t\t\t  "run.sh" or "monitor.sh".\n'
 }
 
 print_version() {
@@ -38,6 +39,7 @@ prepare_git_repo() {
 get_all_versions() { # sort_prefix
 	git -C "$actual_git_repo_path" tag --sort="$1version:refname" | grep -E '^v[1-9][0-9.]+$'
 }
+
 compile_version() {
 	printf 'Version %s\t...' "${version#v}"
 	if ! (
@@ -50,20 +52,41 @@ compile_version() {
 		return 1
 	fi
 }
-check_version() { # meticulousnesses...
+
+_run_tests_with_args() { # [arg_to_ignore...] -- [free_arg...]
+	while [ "$1" != '--' ]
+	do
+		shift
+	done
+	shift
+	PATH="$new_PATH" ./run.sh --meticulousness="$meticulousness" --check --skip-version --jobs=0 "$@" 1>/dev/null 2>&1
+}
+check_version() { # meticulousnesses... -- [free_arg...]
 	if ! compile_version
 	then
 		return 1
 	else
 		if [ -n "$meticulousness" ]
 		then
-			eval set -- "$(printf '%s' "$meticulousness" | sed -E -e 's/^.+$/'\''&'\''/' -e 's/;/'\'' '\''/g')"
+			eval set -- "$(
+				printf '%s' "$meticulousness" \
+				| sed -E -e 's/^.+$/'\''&'\''/' -e 's/;/'\'' '\''/g'
+				while [ "$1" != '--' ]
+				do
+					shift
+				done
+				printf ' '\''%s'\' "$@"
+			)"
 		fi
-		for x in "$@"
+		for meticulousness in "$@"
 		do
-			if ! PATH="$new_PATH" ./run.sh --meticulousness="$x" --check --skip-version --jobs=0 1>/dev/null 2>&1
+			if [ "$meticulousness" = '--' ]
 			then
-				printf '\b\b\b\033[31mFAILED\033[39m (Failed at meticulousness "%s")\n' "$x"
+				break
+			fi
+			if ! _run_tests_with_args "$@"
+			then
+				printf '\b\b\b\033[31mFAILED\033[39m (Failed at meticulousness "%s")\n' "$meticulousness"
 				return 1
 			fi
 		done
@@ -71,7 +94,8 @@ check_version() { # meticulousnesses...
 	printf '\b\b\b\033[32mPASSED\033[39m\n'
 	return 0
 }
-check_versions_one_by_one() {
+
+check_versions_one_by_one() { # [free_arg...]
 	last_mayor_version=''
 	any_minor_version_succeeded=y
 	get_all_versions '-' \
@@ -94,13 +118,14 @@ check_versions_one_by_one() {
 			last_mayor_version="$mayor_version"
 			any_minor_version_succeeded=n
 		fi
-		if check_version 'minimal' 'complete'
+		if check_version 'minimal' 'complete' -- "$@"
 		then
 			any_minor_version_succeeded=y
 		fi
 	done
 }
-check_versions_binary_search() {
+
+check_versions_binary_search() { # [free_arg...]
 	versions="$(get_all_versions '')"
 	versions_num="$(printf '%s\n' "$versions" | wc -l)"
 	last_is_tested=0
@@ -109,7 +134,7 @@ check_versions_binary_search() {
 		printf 'Remaining versions: %i (expected steps: %i)...\n' "$((versions_num - last_is_tested))" "$(printf '(l(%i) / l(2)) + 1\n' "$((versions_num - last_is_tested))" | bc -l | sed 's/\..*$//')"
 		middle=$(((versions_num - last_is_tested + 1) / 2))
 		version="$(printf '%s\n' "$versions" | tail -n "+$middle" | head -n 1)"
-		if check_version 'complete'
+		if check_version 'complete' -- "$@"
 		then
 			versions="$(printf '%s\n' "$versions" | head -n "$middle")"
 			versions_num="$middle"
@@ -134,7 +159,8 @@ check_versions_binary_search() {
 		printf '\033[1mIt seems that there are \033[31mNO\033[39m compatible versions.\033[0m\n'
 	fi
 }
-monitor_single_version() {
+
+monitor_single_version() { # [free_arg...]
 	if ! get_all_versions '' | grep -Exq "$single_version"
 	then
 		printf 'There is no version %s!\n' "$single_version" 2>&1
@@ -146,12 +172,13 @@ monitor_single_version() {
 		printf '\n'
 		if [ -n "$meticulousness" ]
 		then
-			set -- -m "$meticulousness"
+			set -- -m "$meticulousness" "$@"
 		fi
 		PATH="$new_PATH" exec ./monitor.sh "$@"
 	fi
 }
-check_versions() {
+
+check_versions() { # [free_arg...]
 	abs_actual_git_repo_path="$(cd "$actual_git_repo_path" ; pwd)"
 	if [ "$list_versions" = y ]
 	then
@@ -161,12 +188,12 @@ check_versions() {
 	new_PATH="$abs_actual_git_repo_path:$PATH"
 	if [ "$quickie" = y ]
 	then
-		check_versions_binary_search
+		check_versions_binary_search "$@"
 	elif [ -n "$single_version" ]
 	then
-		monitor_single_version
+		monitor_single_version "$@"
 	else
-		check_versions_one_by_one
+		check_versions_one_by_one "$@"
 	fi
 }
 
@@ -222,11 +249,6 @@ do
 	esac
 	shift
 done
-if [ $# -ne 0 ]
-then
-	printf 'This script doesn'\''t take non-option arguments!\n' 1>&2
-	exit 1
-fi
 if [ "$quickie" = y ] && [ -n "$single_version" ]
 then
 	printf '"--quickie" and "--single" are not compatible!\n' 1>&2
@@ -245,4 +267,4 @@ fi
 
 cd "$(dirname "$0")"
 prepare_git_repo
-check_versions
+check_versions "$@"
