@@ -2,6 +2,8 @@
 
 set -eu
 
+. "$(dirname "$0")/facets.sh"
+
 actual_git_repo_path='./the-actual-git'
 subsequent_failed_version_limit=5
 
@@ -15,6 +17,7 @@ print_help() {
 	printf 'Options:\n'
 	printf '    -h, --help\t\t- Print this help text end exit.\n'
 	printf '    -l, --list\t\t- List all available Git versions and do nothing else.\n'
+	printf '    -m, --meticulous=X\t- Set how many tests / test variants will be run.\n\t\t\t  (For more info, run "run.sh --help".)\n\t\t\t  Use ";" to define a few rounds of tests.\n'
 	printf '    -Q, --quick\t\t- Use binary search to try to find the oldest supported\n\t\t\t  version of Git without thoroughly testing all of them.\n'
 	printf '    -s, --single=<ver>\t- Check only the given version and use "monitor.sh"\n\t\t\t  instead of "run.sh".\n'
 	printf '    -V, --version\t- Print version information and exit.\n'
@@ -52,6 +55,10 @@ check_version() { # meticulousnesses...
 	then
 		return 1
 	else
+		if [ -n "$meticulousness" ]
+		then
+			eval set -- "$(printf '%s' "$meticulousness" | sed -E -e 's/^.+$/'\''&'\''/' -e 's/;/'\'' '\''/g')"
+		fi
 		for x in "$@"
 		do
 			if ! PATH="$new_PATH" ./run.sh --meticulousness="$x" --check --skip-version --jobs=0 1>/dev/null 2>&1
@@ -137,7 +144,11 @@ monitor_single_version() {
 	if compile_version
 	then
 		printf '\n'
-		PATH="$new_PATH" exec ./monitor.sh
+		if [ -n "$meticulousness" ]
+		then
+			set -- -m "$meticulousness"
+		fi
+		PATH="$new_PATH" exec ./monitor.sh "$@"
 	fi
 }
 check_versions() {
@@ -159,11 +170,12 @@ check_versions() {
 	fi
 }
 
-getopt_short_options='hlQs:V'
-getopt_long_options='help,list-versions,quickie,single-version:,version'
+getopt_short_options='hlm:Qs:V'
+getopt_long_options='help,list-versions,meticulous:,quickie,single-version:,version'
 normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$normalized_options"
 list_versions=n
+meticulousness=''
 quickie=n
 single_version=''
 while true
@@ -175,6 +187,17 @@ do
 		;;
 	-l|--list-versions)
 		list_versions=y
+		;;
+	-m|--meticulous)
+		shift
+		printf '%s\n' "$1" \
+		| tr '|;' '\n\n' \
+		| sed -E '/^(quickie|complete)$/d' \
+		| while read -r x
+		do
+			parse_meticulousness "$x" 1>/dev/null
+		done
+		meticulousness="$1"
 		;;
 	-Q|--quickie)
 		quickie=y
@@ -212,6 +235,11 @@ fi
 if [ "$list_versions" = y ] && [ -n "$single_version" ]
 then
 	printf '"--list" and "--single" are not compatible!\n' 1>&2
+	exit 1
+fi
+if printf '%s' "$meticulousness" | grep -E -q ';' && [ -n "$single_version" ]
+then
+	printf 'Multiple rounds of meticulousness don'\''t apply to the single version mode!\n' 1>&2
 	exit 1
 fi
 
