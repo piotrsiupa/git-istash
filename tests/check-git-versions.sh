@@ -28,6 +28,42 @@ print_version() {
 	printf 'Git version checking script version 1.2.0\n'
 }
 
+if date '+%N' 1>/dev/null 2>&1 && [ "$(date '+%N')" -ge 0 ] 2>/dev/null && [ "$(date '+%N' | tr -d '\n' | wc -c)" -eq 9 ]
+then
+	milli_timestamp=y
+	get_timestamp() {
+		date '+%s%N' | sed -E 's/......$//'
+	}
+else
+	milli_timestamp=n
+	get_timestamp() {
+		date '+%s'
+	}
+fi
+format_time() { # seconds
+	seconds="$1"
+	if [ "$milli_timestamp" = y ]
+	then
+		milliseconds="$(printf '%s' "$seconds" | sed -E 's/^.*(...)$/\1/')"
+		seconds=$((seconds / 1000))
+	fi
+	if [ "$seconds" -ge 3600 ]
+	then
+		printf '%ih%02im%02i' $((seconds / 3600)) $((seconds % 3600 / 60)) $((seconds % 60))
+	elif [ "$seconds" -ge 60 ]
+	then
+		printf '%im%02i' $((seconds % 3600 / 60)) $((seconds % 60))
+	else
+		printf '%i' $((seconds % 60))
+	fi
+	if [ "$milli_timestamp" = y ] && [ "$seconds" -lt 600 ]
+	then
+		printf '.%s' "$milliseconds"
+	fi
+	printf 's'
+}
+
+
 prepare_git_repo() {
 	if [ ! -d "$actual_git_repo_path" ]
 	then
@@ -72,6 +108,16 @@ _run_tests_with_args() { # [arg_to_ignore...] -- [free_arg...]
 	clear_lines_up 1
 	return $exit_code
 }
+printf_version_check_summary() { # arg...
+	end_time="$(get_timestamp)"
+	clear_lines_up $run_counter
+	printf '\033[1A\033[16C'
+	#shellcheck disable=SC2059
+	printf "$@"
+	printf '\033[2m '
+	format_time $((end_time - start_time))
+	printf '\033[22m\n'
+}
 check_version() { # meticulousnesses... -- [free_arg...]
 	if ! compile_version
 	then
@@ -91,6 +137,7 @@ check_version() { # meticulousnesses... -- [free_arg...]
 		fi
 		printf '\n'
 		run_counter=0
+		start_time="$(get_timestamp)"
 		for current_meticulousness in "$@"
 		do
 			if [ "$current_meticulousness" = '--' ]
@@ -101,14 +148,12 @@ check_version() { # meticulousnesses... -- [free_arg...]
 			run_counter=$((run_counter + 1))
 			if ! _run_tests_with_args "$@"
 			then
-				clear_lines_up $run_counter
-				printf '\033[1A\033[16C\033[31mFAILED\033[39m (Failed at meticulousness "%s")\n' "$current_meticulousness"
+				printf_version_check_summary '\033[31mFAILED\033[39m (Failed at meticulousness "%s")' "$current_meticulousness"
 				return 1
 			fi
 		done
 	fi
-	clear_lines_up $run_counter
-	printf '\033[1A\033[16C\033[32mPASSED\033[39m\n'
+	printf_version_check_summary '\033[32mPASSED\033[39m'
 	return 0
 }
 
