@@ -25,7 +25,7 @@ A script that checks all the scripts in the projects (including the tests), usin
 
 ## `check-git-versions.sh`
 
-A script that runs the test suite with different versions of Git to determine which ones are supported by `istash`.
+A script that runs the test suite with different versions of Git to determine which ones are supported by `istash` and whether there are no regressions in the latest version.
 
 ## `list.sh`
 A helper script that just prints the list of tests, with some rudimentary filtering options.

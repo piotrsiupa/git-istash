@@ -59,7 +59,7 @@ _run_tests_with_args() { # [arg_to_ignore...] -- [free_arg...]
 		shift
 	done
 	shift
-	PATH="$new_PATH" ./run.sh --meticulousness="$meticulousness" --check --skip-version --jobs=0 "$@" 1>/dev/null 2>&1
+	PATH="$new_PATH" ./run.sh --meticulousness="$current_meticulousness" --check --skip-version --jobs=0 "$@" 1>/dev/null 2>&1
 }
 check_version() { # meticulousnesses... -- [free_arg...]
 	if ! compile_version
@@ -78,15 +78,15 @@ check_version() { # meticulousnesses... -- [free_arg...]
 				printf ' '\''%s'\' "$@"
 			)"
 		fi
-		for meticulousness in "$@"
+		for current_meticulousness in "$@"
 		do
-			if [ "$meticulousness" = '--' ]
+			if [ "$current_meticulousness" = '--' ]
 			then
 				break
 			fi
 			if ! _run_tests_with_args "$@"
 			then
-				printf '\b\b\b\033[31mFAILED\033[39m (Failed at meticulousness "%s")\n' "$meticulousness"
+				printf '\b\b\b\033[31mFAILED\033[39m (Failed at meticulousness "%s")\n' "$current_meticulousness"
 				return 1
 			fi
 		done
@@ -217,6 +217,7 @@ do
 		;;
 	-m|--meticulous)
 		shift
+		#shellcheck disable=SC2020
 		printf '%s\n' "$1" \
 		| tr '|;' '\n\n' \
 		| sed -E '/^(quickie|complete)$/d' \
