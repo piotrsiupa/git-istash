@@ -41,25 +41,36 @@ get_all_versions() { # sort_prefix
 }
 
 compile_version() {
-	printf 'Version %s\t...' "${version#v}"
-	if ! (
+	printf '\033[1mVersion %s\t...\033[0m (compiling)' "${version#v}"
+	if (
 		cd "$actual_git_repo_path"
 		git switch --detach "$version" 1>/dev/null 2>&1
 		make -j "$(nproc)" 1>/dev/null 2>&1
 	)
 	then
-		printf '\b\b\b\033[41mFAILED\033[49m (Cannot compile Git.)\n'
+		printf '\r\033[16C\033[0K'
+		return 0
+	else
+		printf '\r\033[16C\033[41mFAILED\033[49m (Cannot compile Git.)\n'
 		return 1
 	fi
 }
 
+clear_lines_up() { # line_count
+	printf '\033[%iA\033[0J' "$1"
+}
 _run_tests_with_args() { # [arg_to_ignore...] -- [free_arg...]
 	while [ "$1" != '--' ]
 	do
 		shift
 	done
 	shift
-	PATH="$new_PATH" ./run.sh --meticulousness="$current_meticulousness" --check --skip-version --jobs=0 "$@" 1>/dev/null 2>&1
+	set +e
+	PATH="$new_PATH" ./run.sh --meticulousness="$current_meticulousness" --check --progress --skip-version --jobs=0 --color=always "$@" 2>/dev/null
+	exit_code=$?
+	set -e
+	clear_lines_up 1
+	return $exit_code
 }
 check_version() { # meticulousnesses... -- [free_arg...]
 	if ! compile_version
@@ -78,20 +89,26 @@ check_version() { # meticulousnesses... -- [free_arg...]
 				printf ' '\''%s'\' "$@"
 			)"
 		fi
+		printf '\n'
+		run_counter=0
 		for current_meticulousness in "$@"
 		do
 			if [ "$current_meticulousness" = '--' ]
 			then
 				break
 			fi
+			printf '\033[1mRunning tests with meticulousness "%s"...\033[0m\n' "$current_meticulousness"
+			run_counter=$((run_counter + 1))
 			if ! _run_tests_with_args "$@"
 			then
-				printf '\b\b\b\033[31mFAILED\033[39m (Failed at meticulousness "%s")\n' "$current_meticulousness"
+				clear_lines_up $run_counter
+				printf '\033[1A\033[16C\033[31mFAILED\033[39m (Failed at meticulousness "%s")\n' "$current_meticulousness"
 				return 1
 			fi
 		done
 	fi
-	printf '\b\b\b\033[32mPASSED\033[39m\n'
+	clear_lines_up $run_counter
+	printf '\033[1A\033[16C\033[32mPASSED\033[39m\n'
 	return 0
 }
 
