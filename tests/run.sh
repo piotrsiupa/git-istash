@@ -238,7 +238,7 @@ format_time() ( # seconds
 	else
 		printf '%i' $((seconds % 60))
 	fi
-	if [ "$milli_timestamp" = y ]
+	if [ "$milli_timestamp" = y ] && [ "$seconds" -lt 600 ]
 	then
 		printf '.%s' "$milliseconds"
 	fi
@@ -542,8 +542,18 @@ update_current_category() { # test_name
 		fi
 	fi
 }
-print_progress() { # total_count running_count finalizing_count done_count alive_children_pids
-	printf '(Progress: Waiting - %i, Running - %i, Finalizing - %i, Done - %i)\n' "$(($1 - $2 - $3 - $4))" "$2" "$3" "$4"
+print_progress() { # total_count running_count finalizing_count done_count alive_children_pids include_bar
+	printf '(Progress: Waiting - %i, Running - %i, Finalizing - %i, Done - %i)' "$(($1 - $2 - $3 - $4))" "$2" "$3" "$4"
+	printf_color_code '\033[2m'
+	printf ' '
+	current_time="$(get_timestamp)"
+	format_time $((current_time - total_time_start))
+	printf_color_code '\033[22m'
+	printf '\033[0K\n'
+	if [ "$6" = n ]
+	then
+		return
+	fi
 	done_bar_lenght=$(($4 * 78 / $1))
 	done_bar_lenght=$((done_bar_lenght + (done_bar_lenght == 0 && $4 != 0)))
 	finalizing_bar_lenght=$(($3 * 78 / $1))
@@ -687,7 +697,7 @@ run_tests() {
 				if [ "$show_progress" = y ]
 				then
 					printf 'PENDNG - %s (?/?) \n' "$test_display_name"
-					print_progress "$total_test_count" "$running_tests_count" "$finalizing_tests_count" "$done_tests_count" "$alive_children"
+					print_progress "$total_test_count" "$running_tests_count" "$finalizing_tests_count" "$done_tests_count" "$alive_children" y
 				fi 1>>"$output_buffer_file"
 				pending_test_start_time="$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f4)"
 				while true
@@ -698,7 +708,9 @@ run_tests() {
 						printf_color_code '\033[2m'
 						format_time $(($(get_timestamp) - pending_test_start_time))
 						printf_color_code '\033[22m'
-						printf '\033[3E'
+						printf '\033[0K\n'
+						print_progress "$total_test_count" "$running_tests_count" "$finalizing_tests_count" "$done_tests_count" "$alive_children" n
+						printf '\n'
 					fi 1>>"$output_buffer_file"
 					cat "$output_buffer_file" 1>&5
 					: >"$output_buffer_file"
