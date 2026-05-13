@@ -12,11 +12,11 @@ print_help() {
 	printf '    -A, --since=X\t- Selects the commit used as reference by "--altered".\n\t\t\t  (It implies "--altered".)\n\t\t\t  Special cases:\n\t\t\t  * Empty / blank string means INDEX.\n\t\t\t  * Strings starting with "~" or "^" imply HEAD.\n\t\t\t    (So "~2" means the same as "HEAD~2".)\n\t\t\t  * "-" means all changes since branching from "master".\n'
 	printf '    -h, --help\t\t- Print this help text and exit.\n'
 	printf '    -s, --skip-tests\t- Do not check test scripts from sub-directories of\n\t\t\t  the directory "tests". (a lot faster execution)\n'
-	printf '\t--version\t- Print version information and exit.\n'
+	printf '    -V, --version\t- Print version information and exit.\n'
 }
 
 print_version() {
-	printf 'shellcheck wrapper script version 1.2.1\n'
+	printf 'shellcheck wrapper script version 1.2.2\n'
 }
 
 list_files() {
@@ -41,7 +41,7 @@ run_shellcheck() {
 	printf 'All %i files are correct.\n' "$(list_files | wc -l)"
 }
 
-getopt_short_options='aA:hs'
+getopt_short_options='aA:hsV'
 getopt_long_options='altered,since:,help,skip-tests,version'
 normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$normalized_options"
@@ -66,7 +66,7 @@ do
 	-s|--skip-tests)
 		skip_tests=y
 		;;
-	--version)
+	-V|--version)
 		print_version
 		exit 0
 		;;

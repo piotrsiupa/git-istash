@@ -17,7 +17,7 @@ print_help() {
 	printf '\n'
 	printf 'Options:\n'
 	printf '    -h, --help\t\t- Print this help text and exit.\n'
-	printf '\t--version\t- Print version information and exit.\n'
+	printf '    -V, --version\t- Print version information and exit.\n'
 	printf '    -g, --global\t- Install for all users. (Requires root access rights.)\n'
 	#shellcheck disable=SC2016
 	printf '    -c, --custom-dir=X\t- Use a custom installation directory instead of\n\t\t\t  "$HOME/.local" or "/usr/local".\n'
@@ -26,7 +26,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'installer version 1.1.0\n'
+	printf 'installer version 1.1.1\n'
 }
 
 is_windows() {
@@ -442,7 +442,7 @@ do_the_install_thing() {
 	fi
 }
 
-getopt_short_options='hgc:C:u'
+getopt_short_options='hVgc:C:u'
 getopt_long_options='help,version,global,custom-dir:,create-dir:,uninstall,debug'
 normalized_options="$(get_options "$getopt_short_options" "$getopt_long_options" "$@")"
 eval set -- "$normalized_options"
@@ -471,7 +471,7 @@ do
 		print_help
 		exit 0
 		;;
-	--version)
+	-V|--version)
 		print_version
 		exit 0
 		;;
