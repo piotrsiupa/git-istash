@@ -13,11 +13,12 @@ print_help() {
 	printf 'If %i mayor version didn'\''t work\nthe script stops.\n' "$subsequent_failed_version_limit"
 	printf 'The goal is to determine which versions of Git are supported by istash.\n'
 	printf '\n'
-	printf 'Usage: %s [-h | --help | -Q | --quick | -V | --version] [--] [<free_arg...>]\n' "$(basename "$0")"
+	printf 'Usage: %s [-h | --help | -Q | --quick | -V | --version] [--]\n\t\t[<free_arg...>]\n' "$(basename "$0")"
 	printf 'Options:\n'
 	printf '    -h, --help\t\t- Print this help text end exit.\n'
 	printf '    -l, --list\t\t- List all available Git versions and do nothing else.\n'
 	printf '    -m, --meticulous=X\t- Set how many tests / test variants will be run.\n\t\t\t  (For more info, run "run.sh --help".)\n\t\t\t  Use ";" to define a few rounds of tests.\n'
+	printf '    -P, --no-patch\t- Don'\''t check patch versions. (ones not ending with "0")\n'
 	printf '    -Q, --quick\t\t- Use binary search to try to find the oldest supported\n\t\t\t  version of Git without thoroughly testing all of them.\n'
 	printf '    -s, --single=<ver>\t- Check only the given version and use "monitor.sh"\n\t\t\t  instead of "run.sh".\n'
 	printf '    -V, --version\t- Print version information and exit.\n'
@@ -73,7 +74,14 @@ prepare_git_repo() {
 }
 
 get_all_versions() { # sort_prefix
-	git -C "$actual_git_repo_path" tag --sort="$1version:refname" | grep -E '^v[1-9][0-9.]+$'
+	git -C "$actual_git_repo_path" tag --sort="$1version:refname" \
+	| grep -E '^v[1-9][0-9.]+$' \
+	| if [ "$test_patch_versions" = y ]
+	then
+		cat
+	else
+		grep -E '\.0$'
+	fi
 }
 
 compile_version() {
@@ -259,12 +267,13 @@ check_versions() { # [free_arg...]
 	fi
 }
 
-getopt_short_options='hlm:Qs:V'
-getopt_long_options='help,list-versions,meticulous:,quickie,single-version:,version'
+getopt_short_options='hlm:PQs:V'
+getopt_long_options='help,list-versions,meticulous:,no-patch-versions,quickie,single-version:,version'
 normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$normalized_options"
 list_versions=n
 meticulousness=''
+test_patch_versions=y
 quickie=n
 single_version=''
 while true
@@ -288,6 +297,9 @@ do
 			parse_meticulousness "$x" 1>/dev/null
 		done
 		meticulousness="$1"
+		;;
+	-P|--no-patch-versions)
+		test_patch_versions=n
 		;;
 	-Q|--quickie)
 		quickie=y
