@@ -85,7 +85,7 @@ windows-install.bat
 
 Uninstalling is done by rerunning the same command with the added flag `--uninstall`.
 
-### Testing without Installation
+### Trying it out without Installation
 
 It is possible to run the command without installing it in the system, although it's less convenient:
 ```sh
