@@ -6,14 +6,14 @@ print_help() {
 	printf 'This script helps find all the scripts that should have the version number updated.\n'
 	printf 'It assumes that a merge to the master branch is currently in progress; it may not work correctly in other situations.\n'
 	printf '\n'
-	printf 'Usage: %s [-h | --help | -v | --version]\n' "$(basename "$0")"
+	printf 'Usage: %s [-h | --help | -V | --version]\n' "$(basename "$0")"
 	printf 'Options:\n'
 	printf '    -h, --help\t\t- Print this help text.\n'
-	printf '    -v, --version\t- Print version information and exit.\n'
+	printf '    -V, --version\t- Print version information and exit.\n'
 }
 
 print_version() {
-	printf 'version number update reminder script version 1.0.2\n'
+	printf 'version number update reminder script version 1.0.3\n'
 }
 
 find_scripts_to_update_versions() {
@@ -32,7 +32,7 @@ find_scripts_to_update_versions() {
 	} | sort -u
 }
 
-getopt_short_options='hv'
+getopt_short_options='hV'
 getopt_long_options='help,version'
 getopt_result="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$getopt_result"
@@ -43,7 +43,7 @@ do
 		print_help
 		exit 0
 		;;
-	-v|--version)
+	-V|--version)
 		print_version
 		exit 0
 		;;

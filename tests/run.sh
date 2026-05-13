@@ -48,7 +48,7 @@ print_help() {
 	printf '    -a, --altered\t- Run only the tests changed since the last commit.\n\t\t\t  (Only changes in individual test files count, not in\n\t\t\t  the common test utilities that affect every test.)\n\t\t\t  Renamed tests with 100%% similarity are omitted.\n\t\t\t  (See also "--since".)\n'
 	printf '    -A, --since=X\t- Selects the commit used as reference by "--altered".\n\t\t\t  (It implies "--altered".)\n\t\t\t  Special cases:\n\t\t\t  * Empty / blank string means INDEX.\n\t\t\t  * Strings starting with "~" or "^" imply HEAD.\n\t\t\t    (So "~2" means the same as "HEAD~2".)\n\t\t\t  * "-" means all changes since branching from "master".\n'
 	printf '    -c, --color=when\t- Set color mode (always / never / auto).\n'
-	printf '    -C, --check\t\t- Only check if all tests pass. (Equivalent to "-sSQ".)\n'
+	printf '    -C, --check\t\t- Only check if all tests pass. (Equivalent to "-_sS".)\n'
 	printf '    -d, --debug\t\t- Print outputs of all commands in run in the tests.\n'
 	printf '    -f, --failed\t- Rerun only the tests that failed the last time when\n\t\t\t  they were run. (Check the presence of the test dir.)\n'
 	printf '    -j, --jobs=N\t- Run N tests in parallel. (default is sequentially)\n\t\t\t  N=0 uses all available processing units. ("nproc")\n'
@@ -62,12 +62,13 @@ print_help() {
 	printf '\t--no-progress\t- Don'\''t show progress information. (See "--progress".)\n\t\t\t  This is useful to avoid outputting ANSI escape codes.\n'
 	printf '    -q, --quiet\t\t- Don'\''t print summaries for passed tests.\n'
 	printf '    -Q, --quieter\t- Don'\''t print summaries for known failures either.\n'
+	printf '    -_, --quietest\t- Don'\''t print failed tests, section headers and partial\n\t\t\t  results either. Leave only the final result and\n\t\t\t  the progress bar (if it'\''s enabled).\n'
 	printf '    -r, --raw-name\t- Print paths to test files instead of prettified names.\n'
 	printf '    -s, --skip-at-fail\t- Don'\''t test other sets of parameters for a test when\n\t\t\t  one already failed. (Other tests still run.)\n'
 	printf '    -S, --stop-at-fail\t- Don'\''t start other tests after one has failed; exit as\n\t\t\t  soon as all currently running ones has finished.\n'
+	printf '\t--skip-version\t- Set "git istash" to not check Git version.\n\t\t\t  (For reevaluating the minimum required Git version.)\n'
 	printf '    -v, --verbose\t- Show each set of parameters even of if passes.\n'
-	printf '    -V, --skip-version\t- Set "git istash" to not check Git version.\n\t\t\t  (For reevaluating the minimum required Git version.)\n'
-	printf '\t--version\t- Print version information and exit.\n'
+	printf '    -V, --version\t- Print version information and exit.\n'
 	printf '\n'
 	printf 'Filters:\n'
 	printf 'You can specify one or more filters in the command call. '
@@ -100,7 +101,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'test script version 2.6.0\n'
+	printf 'test script version 2.7.0\n'
 }
 
 printf_color_code() { # code_for_printf...
@@ -237,7 +238,7 @@ format_time() ( # seconds
 	else
 		printf '%i' $((seconds % 60))
 	fi
-	if [ "$milli_timestamp" = y ]
+	if [ "$milli_timestamp" = y ] && [ "$seconds" -lt 600 ]
 	then
 		printf '.%s' "$milliseconds"
 	fi
@@ -278,7 +279,10 @@ do_run_test() { # test_name
 				} 6>&2 2>&1 1>&6 6>&- | $SED_CALL -E 's/^/\t/'
 			fi 6>&4 4>&1 1>&6 6>&-
 		} 6>&3 3>&1 1>&6 6>&- \
-		| $SED_CALL -E 's/^/\tFailed assertion: /'
+		| if [ "$quiet_level" -lt 3 ]
+		then
+			$SED_CALL -E 's/^/\tFailed assertion: /'
+		fi
 	} 6>&3 3>&1 1>&6 6>&- 2>&4
 	exec 3>&-
 }
@@ -421,7 +425,8 @@ run_test() ( # test_name
 				else
 					test_result_is_correct=n
 				fi
-				if { [ "$test_result_is_correct" = n ] || [ "$verbose_mode" = y ] ; } \
+				if [ "$quiet_level" -lt 3 ] \
+					&& { [ "$test_result_is_correct" = n ] || [ "$verbose_mode" = y ] ; } \
 					&& { [ "$test_result_is_correct" = n ] || [ "$quiet_level" -eq 0 ] || { [ "$test_passed" = n ] && [ "$quiet_level" -eq 1 ] ; } ; }
 				then
 					print_test_result
@@ -487,7 +492,7 @@ run_test() ( # test_name
 		printf '\n'
 	fi
 	rm -f "$output_file"
-	if [ "$test_count" -ne 0 ] && { [ "$error_count" -ne 0 ] || [ "$quiet_level" -eq 0 ] || { [ "$failed_count" -ne 0 ] && [ "$quiet_level" -eq 1 ] ; } ; }
+	if [ "$test_count" -ne 0 ] && [ "$quiet_level" -lt 3 ] && { [ "$error_count" -ne 0 ] || [ "$quiet_level" -eq 0 ] || { [ "$failed_count" -ne 0 ] && [ "$quiet_level" -eq 1 ] ; } ; }
 	then
 		test_passed="$(test "$failed_count" -eq 0 && printf 'y' || printf 'n')"
 		test_result_is_correct="$(test "$error_count" -eq 0 && printf 'y' || printf 'n')"
@@ -526,18 +531,29 @@ update_current_category() { # test_name
 		previous_category="$current_category"
 		if [ -n "$current_category" ]
 		then
-			{
+			if [ "$quiet_level" -lt 3 ]
+			then
 				printf_color_code '\033[1m'
 				print_centered "$(get_display_name "$current_category")" '-'
 				printf_color_code '\033[22m'
 				printf '\n'
-			} 1>&5
+			fi 1>&5
 			printf '%s - passed\n%s - failed\n' "$current_category" "$current_category"
 		fi
 	fi
 }
-print_progress() { # total_count running_count finalizing_count done_count alive_children_pids
-	printf '(Progress: Waiting - %i, Running - %i, Finalizing - %i, Done - %i)\n' "$(($1 - $2 - $3 - $4))" "$2" "$3" "$4"
+print_progress() { # total_count running_count finalizing_count done_count alive_children_pids include_bar
+	printf '(Progress: Waiting - %i, Running - %i, Finalizing - %i, Done - %i)' "$(($1 - $2 - $3 - $4))" "$2" "$3" "$4"
+	printf_color_code '\033[2m'
+	printf ' '
+	current_time="$(get_timestamp)"
+	format_time $((current_time - total_time_start))
+	printf_color_code '\033[22m'
+	printf '\033[0K\n'
+	if [ "$6" = n ]
+	then
+		return
+	fi
 	done_bar_lenght=$(($4 * 78 / $1))
 	done_bar_lenght=$((done_bar_lenght + (done_bar_lenght == 0 && $4 != 0)))
 	finalizing_bar_lenght=$(($3 * 78 / $1))
@@ -681,7 +697,7 @@ run_tests() {
 				if [ "$show_progress" = y ]
 				then
 					printf 'PENDNG - %s (?/?) \n' "$test_display_name"
-					print_progress "$total_test_count" "$running_tests_count" "$finalizing_tests_count" "$done_tests_count" "$alive_children"
+					print_progress "$total_test_count" "$running_tests_count" "$finalizing_tests_count" "$done_tests_count" "$alive_children" y
 				fi 1>>"$output_buffer_file"
 				pending_test_start_time="$(printf '%s\n' "$running_tests_data" | head -n 1 | cut -d' ' -f4)"
 				while true
@@ -692,7 +708,9 @@ run_tests() {
 						printf_color_code '\033[2m'
 						format_time $(($(get_timestamp) - pending_test_start_time))
 						printf_color_code '\033[22m'
-						printf '\033[3E'
+						printf '\033[0K\n'
+						print_progress "$total_test_count" "$running_tests_count" "$finalizing_tests_count" "$done_tests_count" "$alive_children" n
+						printf '\n'
 					fi 1>>"$output_buffer_file"
 					cat "$output_buffer_file" 1>&5
 					: >"$output_buffer_file"
@@ -766,11 +784,14 @@ run_tests() {
 }
 
 print_summary() {
-	printf_color_code '\033[1m'
-	print_centered 'Results' '='
-	printf_color_code '\033[22m'
-	printf '\n'
-	if [ -n "$tests" ]
+	if [ "$quiet_level" -lt 3 ]
+	then
+		printf_color_code '\033[1m'
+		print_centered 'Results' '='
+		printf_color_code '\033[22m'
+		printf '\n'
+	fi
+	if [ -n "$tests" ] && [ "$quiet_level" -lt 3 ]
 	then
 		i=0
 		printf '%s\n' "$tests" | xargs -rn1 -- dirname | uniq -c | awk '{$1=$1;print}' \
@@ -852,8 +873,8 @@ print_summary() {
 	printf '\n'
 }
 
-getopt_short_options='aA:c:Cdfhj:l:m:pRqQrsSvV'
-getopt_long_options='altered,since:,color:,check,debug,failed,file-name,help,jobs:,limit:,meticulousness:,complete,quickie,facets:,print-paths,relative-paths,progress,no-progress,quiet,quieter,raw,raw-name,skip-at-fail,skip-at-error,skip-on-fail,skip-on-error,stop-at-fail,stop-at-error,stop-on-fail,stop-on-error,verbose,version,skip-version'
+getopt_short_options='aA:c:Cdfhj:l:m:pRqQ_rsSvV'
+getopt_long_options='altered,since:,color:,check,debug,failed,file-name,help,jobs:,limit:,meticulousness:,complete,quickie,facets:,print-paths,relative-paths,progress,no-progress,quiet,quieter,quietest,raw,raw-name,skip-at-fail,skip-at-error,skip-on-fail,skip-on-error,stop-at-fail,stop-at-error,stop-on-fail,stop-on-error,verbose,version,skip-version'
 normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$normalized_options"
 complete='
@@ -933,7 +954,7 @@ do
 		;;
 	-C|--check)
 		shift
-		set -- '-C' '--skip-at-fail' '--stop-at-fail' '--quieter' "$@"
+		set -- '-C' '--quietest' '--skip-at-fail' '--stop-at-fail' "$@"
 		;;
 	-d|--debug)
 		debug_mode=y
@@ -994,20 +1015,13 @@ do
 		show_progress=n
 		;;
 	-q|--quiet)
-		if [ "$quiet_level" -eq 2 ]
-		then
-			printf 'Options "--quiet" and "--quieter" are incompatible.\n' 1>&2
-			exit 1
-		fi
 		quiet_level=1
 		;;
 	-Q|--quieter)
-		if [ "$quiet_level" -eq 1 ]
-		then
-			printf 'Options "--quiet" and "--quieter" are incompatible.\n' 1>&2
-			exit 1
-		fi
 		quiet_level=2
+		;;
+	-_|--quietest)
+		quiet_level=3
 		;;
 	-r|--raw|--raw-name|--file-name)
 		raw_name=y
@@ -1018,15 +1032,15 @@ do
 	-S|--stop-at-fail|--stop-at-error|--stop-on-fail|--stop-on-error)
 		stop_on_error=y
 		;;
+	--skip-version)
+		skip_version=y
+		;;
 	-v|--verbose)
 		verbose_mode=y
 		;;
-	--version)
+	-V|--version)
 		print_version
 		exit 0
-		;;
-	-V|--skip-version)
-		skip_version=y
 		;;
 	--)
 		shift

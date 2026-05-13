@@ -5,7 +5,7 @@ set -eu
 print_help() {
 	printf 'This is a simple script that just prints the list of all tests.\n'
 	printf '\n'
-	printf 'Usage: %s ([-h | --help | --version)\n' "$(basename "$0")"
+	printf 'Usage: %s (-h | --help | -V | --version)\n' "$(basename "$0")"
 	printf '   or: %s [ -e | --essential | -E | --non_essential] [ -R | --relative]\n\t[-c | --changed] [-C X | --changed-since=X] [--] [<filter>...]\n' "$(basename "$0")"
 	printf '\n'
 	printf 'Options:\n'
@@ -15,7 +15,7 @@ print_help() {
 	printf '    -E, --non-essential\t- Print only the tests NOT marked as essential.\n'
 	printf '    -h, --help\t\t- Print this help text.\n'
 	printf '    -R, --relative\t- Print paths relative to the current directory.\n'
-	printf '    -v, --version\t- Print version information and exit.\n'
+	printf '    -V, --version\t- Print version information and exit.\n'
 	printf '\n'
 	printf 'Filters:\n'
 	printf 'Filters can be used to print only some of the tests.\n'
@@ -23,7 +23,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'test listing script version 1.1.1\n'
+	printf 'test listing script version 1.1.2\n'
 }
 
 find_master() {
@@ -53,7 +53,7 @@ find_master() {
 	fi
 }
 
-getopt_short_options='aA:eEhRv'
+getopt_short_options='aA:eEhRV'
 getopt_long_options='altered,since:,essential,non-essential,help,relative,version'
 normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$normalized_options"
@@ -93,7 +93,7 @@ do
 	-R|--relative)
 		relative_dir_prefix="$(dirname "$0")/"
 		;;
-	-v|--version)
+	-V|--version)
 		print_version
 		exit 0
 		;;
