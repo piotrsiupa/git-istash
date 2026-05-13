@@ -204,7 +204,7 @@ check_versions_binary_search() { # [free_arg...]
 		printf 'Remaining versions: %i (expected steps: %i)...\n' "$((versions_num - last_is_tested))" "$(printf '(l(%i) / l(2)) + 1\n' "$((versions_num - last_is_tested))" | bc -l | sed 's/\..*$//')"
 		middle=$(((versions_num - last_is_tested + 1) / 2))
 		version="$(printf '%s\n' "$versions" | tail -n "+$middle" | head -n 1)"
-		if check_version 'complete' -- "$@"
+		if check_version 'minimal' 'quickie' 'complete' -- "$@"
 		then
 			versions="$(printf '%s\n' "$versions" | head -n "$middle")"
 			versions_num="$middle"
