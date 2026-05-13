@@ -12,6 +12,11 @@ Executing it without parameters will run all the tests.
 There are also filtering and formatting options.
 (For more information, run `run.sh --help`. You really should; this is the most important script and there is quite a lot to it.)
 
+## `clear.sh`
+A simple script that removes files left by running tests.
+Normally, those files are left only if a test fail - allowing examination of the failure and acting as a marker that a test has failed (which is used by the flag `--failed` of `run.sh`).
+Removing those files effectively un-marks all test as failed.
+
 ## `monitor.sh`
 
 A simple wrapper for `run.sh`, which at first runs all specified tests to check which ones are not passing, and then it reruns them every time when any relevant file has changed.
@@ -26,10 +31,21 @@ A script that checks all the scripts in the projects (including the tests), usin
 ## `check-git-versions.sh`
 
 A script that runs the test suite with different versions of Git to determine which ones are supported by `istash` and whether there are no regressions in the latest version.
+For the purpose of debugging, it also have a capability to run `monitor.sh` using a specific Git version.
 
 ## `list.sh`
 A helper script that just prints the list of tests, with some rudimentary filtering options.
 It should be treated as the only source of truth when it comes to which files are tests, and it can be relied even if the directory structure or name convention changes. (Other scripts use this one to list tests.)
+
+## `facets.sh`
+This isn't really meant as a standalone script.
+It's more a utility used by other script to parse facets.
+However, its help text is the best place to find information about the various facets.
+
+## `test-manager.sh`
+A simple script that can create and remove test files without breaking the naming convention.
+(It can rename other tests when adding / removing a test in the middle of a category.)
+The script is rather dumb and it doesn't understand the directory structure of the project - it just accepts any directory that is given to it.
 
 ## `commons.sh`
 
@@ -86,3 +102,11 @@ Generally these prefixes work as follows:
   (See the `README.md` of a specific test category to learn more.)
 - The second character is an uppercase letter that with tandem with the digit acts as an ID of the test in the current directory.
   (In some cases, when there is a lot if tests in the sub-category, there are 2 letters instead of one.)
+
+## Number of tests and performance
+The tested scripts have a lot of options that interact with each other, and they have to handle a variety of different states of the repository.
+Testing all that is difficult, especially with a goal of high reliability.
+Usually, each test represent a specific state of repository and it is run multiple times, with different set of options for the command (parametrization).
+Many times it was the case that only a certain set of options for a specific test didn't pass, while the other ones looked like everything was working.
+For this reason, reducing the number of test is not an acceptable solution.
+An effort was made to prevent running duplicated tests (or ones that aren't meaningfully distinct from each other) but the runtime is still quite significant, especially on high meticulousness settings.
