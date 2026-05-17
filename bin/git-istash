@@ -5,7 +5,6 @@ set -eu
 . "$(dirname "$0")/../lib/git-istash/git-istash-io"
 
 min_git_version='2.43.0'
-min_git_version_regex='2\.(4[2-9]|[5-9][0-9]|[1-9][0-9]{2,})(\..+)?'
 
 print_help() {
 	printf 'git istash - Improved version of "git stash" that can handle more corner cases.\n'
@@ -46,7 +45,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'git-istash version 1.7.1\n'
+	printf 'git-istash version 1.7.2\n'
 	printf 'Author: Piotr Siupa\n'
 	printf 'Requires Git in version at least %s\n' "$min_git_version"
 }
@@ -216,9 +215,41 @@ then
 fi
 
 git_version="$(git --version | head -n 1 | grep -Eo '\<\S+$')"
-if [ "$skip_version_check" = n ] && ! printf '%s' "$git_version" | grep -Exq "$min_git_version_regex"
+if [ "$skip_version_check" = n ]
 then
-	fatal 'the current Git version (%s) is less than minimum required (%s)\n' "$git_version" "$min_git_version"
-fi
+	# No color here or fancy utility functions because we don't know if they would work correctly.
+	version_regex='([0-9]+(\.[0-9]+){2})(\..+)?'
+	if ! printf '%s' "$git_version" | grep -Exq "$version_regex"
+	then
+		printf 'fatal: cannot check the version number of Git\n'
+		printf 'fatal: (it'\''s "%s"; it was expected to match "%s")\n' "$git_version" "$version_regex"
+		printf 'hint: minimum version required to safely run this is command "%s"\n' "$min_git_version"
+		printf 'hint: if you believe that your version is compatible, you can add the option\nhint: "--_skip-version-check_" at your own risk '
+		printf '(and consider reporting this)\n'
+		exit 1
+	fi
+	version_parts="$(
+		printf '%s' "$git_version" \
+		| sed -E "s/^$version_regex\$/\\1/" \
+		| tr '.' '\n'
+	)"
+	major="$(printf '%s' "$version_parts" | sed -En '1{p;q}')"
+	minor="$(printf '%s' "$version_parts" | sed -En '2{p;q}')"
+	patch="$(printf '%s' "$version_parts" | sed -En '3{p;q}')"
+	min_version_parts="$(printf '%s' "$min_git_version" | tr '.' '\n')"
+	min_major="$(printf '%s' "$min_version_parts" | sed -En '1{p;q}')"
+	min_minor="$(printf '%s' "$min_version_parts" | sed -En '2{p;q}')"
+	min_patch="$(printf '%s' "$min_version_parts" | sed -En '3{p;q}')"
+	if ! [ "$major" -eq "$min_major" ]
+	then
+		printf 'this script is developed and testes only for Git in version %i\n' "$min_major"
+		exit 1
+	fi
+	if ! { [ "$minor" -gt "$min_minor" ] || { [ "$minor" -eq "$min_minor" ] && [ "$patch" -ge "$min_patch" ] ; } ; }
+	then
+		printf 'the current Git version (%s) is less than minimum required (%s)\n' "$git_version" "$min_git_version"
+		exit 1
+	fi
+fi 1>&2
 
 exec_subcommand "$subcommand" "$@"
