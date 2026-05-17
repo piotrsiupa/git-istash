@@ -17,6 +17,7 @@ print_help() {
 	printf '    -c, --color=when\t- Set color mode (always / never / auto).\n'
 	printf '    -m, --meticulous=X\t- Set how many tests / test variants will be run.\n\t\t\t  (For more info, run "run.sh --help".)\n'
 	printf '    -s, --skip-init\t- Skip the initial run that checks which tests fail.\n\t\t\t  (Assume that the relevant tests has failed already.)\n'
+	printf '\t--skip-version\t- Pass "--skip-version" to "run.sh".\n\t\t\t  (Set "git istash" to not check Git version.)\n'
 	printf '    -S, --stop-at-fail\t- Don'\''t find all failing tests first. Go to the fixing\n\t\t\t  mode after encountering the first one.\n\t\t\t  (Good when expecting a lot of errors.)\n'
 	printf '    -V, --version\t- Print version information and exit.\n'
 	printf '\n'
@@ -28,21 +29,23 @@ print_version() {
 }
 
 call_run_sh__with_altered() { # [arg...]
-	if [ "$only_altered" = n ]
+	if [ "$only_altered" = y ]
 	then
-		./run.sh "$@"
-	else
-		./run.sh --since="$altered_reference" "$@"
+		set -- --since="$altered_reference" "$@"
 	fi
+	./run.sh "$@"
 }
 
 call_run_sh__with_settings() { # [arg...]
 	if [ -n "$meticulousness" ]
 	then
-		call_run_sh__with_altered --meticulousness="$meticulousness" "$@"
-	else
-		call_run_sh__with_altered "$@"
+		set -- --meticulousness="$meticulousness" "$@"
 	fi
+	if [ "$skip_version" = y ]
+	then
+		set -- --skip-version "$@"
+	fi
+	call_run_sh__with_altered "$@"
 }
 
 get_all_tests_count() { # [filter]...
@@ -133,7 +136,7 @@ monitor_tests() { # [filter]...
 }
 
 getopt_short_options='aA:c:hm:sSV'
-getopt_long_options='altered,since:,color:,help,meticulousness:,skip-init,stop-at-fail,stop-on-fail,stop-at-error,stop-on-error,version'
+getopt_long_options='altered,since:,color:,help,meticulousness:,skip-init,skip-version,stop-at-fail,stop-on-fail,stop-at-error,stop-on-error,version'
 normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
 eval set -- "$normalized_options"
 only_altered=n
@@ -141,6 +144,7 @@ altered_reference=HEAD
 use_color=auto
 meticulousness=''
 skip_init=n
+skip_version=n
 stop_at_fail=n
 while true
 do
@@ -186,6 +190,9 @@ do
 		;;
 	-s|--skip-init)
 		skip_init=y
+		;;
+	--skip-version)
+		skip_version=y
 		;;
 	-S|--stop-at-fail|--stop-on-fail|--stop-at-error|--stop-on-error)
 		stop_at_fail=y

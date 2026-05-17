@@ -61,7 +61,7 @@ printf 'eee\n' >aaa
 git add aaa
 stash_sha="$(git rev-parse stash)"
 #shellcheck disable=SC2086
-assert_exit_code 0 git $ADVICE_FLAGS istash $QUIET_FLAGS $COLOR_FLAGS "$CONTINUE_FLAG" --_skip-version-check_ "$APPLY_OPERATION" $SUMMARY_FLAGS
+assert_exit_code 0 git $ADVICE_FLAGS istash --_skip-version-check_ $QUIET_FLAGS $COLOR_FLAGS "$CONTINUE_FLAG" "$APPLY_OPERATION" $SUMMARY_FLAGS
 assert_outputs__apply__success_HT "$APPLY_OPERATION" '
  M aaa
 ' '

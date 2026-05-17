@@ -244,7 +244,7 @@ monitor_single_version() { # [free_arg...]
 		then
 			set -- -m "$meticulousness" "$@"
 		fi
-		PATH="$new_PATH" exec ./monitor.sh "$@"
+		PATH="$new_PATH" exec ./monitor.sh --skip-version "$@"
 	fi
 }
 
@@ -326,7 +326,7 @@ do
 done
 if [ "$quickie" = y ] && [ -n "$single_version" ]
 then
-	printf '"--quickie" and "--single" are not compatible!\n' 1>&2
+	printf '"--quick" and "--single" are not compatible!\n' 1>&2
 	exit 1
 fi
 if [ "$list_versions" = y ] && [ -n "$single_version" ]
