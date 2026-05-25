@@ -2,12 +2,12 @@
 
 _sanitize_ls_tree() {
 	convert_to_octal_lines \
-	| sed -E 's/(\\(0[0-35-7][0-7]|04[1-7]|[1-3][0-7]{2}))+\\040(\\(0[0-35-7][0-7]|04[1-7]|[1-3][0-7]{2}))+\\040(\\(0[02-7][0-7]|01[02-7]|[1-3][0-7]{2}))+\\011/&\n/' \
-	| while read -r data && read -r path
-	do
-		printf -- "$data%s\n" "$path"
-	done \
-	| sed -E 's/\\057\\/\/\\/g'
+	| sed -E -e 's/\\/\\\\/g' \
+		-e 's/((\\\\(0[0-35-7][0-7]|04[1-7]|[1-3][0-7]{2}))+)\\\\040((\\\\(0[0-35-7][0-7]|04[1-7]|[1-3][0-7]{2}))+)\\\\040((\\\\(0[02-7][0-7]|01[02-7]|[1-3][0-7]{2}))+)\\\\011/\1\\040\4\\040\7\\011/' \
+		-e 's/\\\\(0(4[1-467]|[5-7][0-7])|1([0-24-6][0-7]|3[0-35-7]|7[0-6]))/\\\1/g' \
+		-e 's/$/\\n/' \
+	| tr '\n' '\0' \
+	| xargs -n1 -r0 -- printf --
 }
 
 _remove_tracked_files_from_untracked() ( # untracked_sha [path]
@@ -15,7 +15,7 @@ _remove_tracked_files_from_untracked() ( # untracked_sha [path]
 	then
 		#shellcheck disable=SC2164
 		cd "$(git rev-parse --show-toplevel)"
-		set -- "$1" '\072\057'
+		set -- "$1" ':/'
 	fi
 	#shellcheck disable=SC2059
 	tracked_files="$(printf -- "$2" | xargs -0 -- git --no-literal-pathspecs ls-tree -z "$1~" -- | _sanitize_ls_tree)"
@@ -57,7 +57,7 @@ _merge_tracked_and_untracked() ( # tracked_sha [path]
 	then
 		#shellcheck disable=SC2164
 		cd "$(git rev-parse --show-toplevel)"
-		set -- "$1" '\072\057'
+		set -- "$1" ':/'
 	fi
 	{
 		#shellcheck disable=SC2059
