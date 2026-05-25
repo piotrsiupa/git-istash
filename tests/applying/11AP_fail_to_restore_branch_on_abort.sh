@@ -60,7 +60,6 @@ assert_exit_code 1 git $ADVICE_FLAGS istash "$APPLY_OPERATION" $QUIET_FLAGS $COL
 assert_outputs__apply__branch_already_used "$APPLY_OPERATION" 'master'
 assert_all_files '
 aaa
-block-master/.git
 block-master/aaa
 ignored0
 ignored1

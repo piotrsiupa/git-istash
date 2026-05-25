@@ -118,14 +118,19 @@ assert_stash_commit_files_with_content() { # commit expected_files
 	printf '%s\n' "$2" \
 	| while read -r line
 	do
-		if [ -z "$line" ]
+		if [ -z "$line" ] || [ "$line" != "${line% <skip>}" ]
 		then
 			continue
 		fi
 		file_path_for_assertion="$(printf '%s' "$line" | awk '{print $1}')"
-		value_for_assert="$(printf "%s:$file_path_for_assertion" "$1" | xargs -0 -- git show)"
+		if [ "$line" = "${line%<submodule>}" ]
+		then
+			value_for_assert="$(printf "%s:$file_path_for_assertion" "$1" | xargs -0 -- git show)"
+		else
+			value_for_assert="$(printf "%s:$file_path_for_assertion" "$1" | xargs -0 -- git rev-parse)"
+		fi
 		#shellcheck disable=SC2059
-		expected_value="$(printf -- "$(printf '%s' "$line" | awk '{print $2}' | sed -E 's/^""$//')")"
+		expected_value="$(printf -- "$(printf '%s' "${line%<submodule>}" | awk '{print $2}' | sed -E -e 's/<empty>//' -e 's/^""$//')")"
 		test "$value_for_assert" = "$expected_value" ||
 			fail 'Expected content of file "'"$file_path_for_assertion"'" in "%s" to be:\n"%s"\nbut it is:\n"%s"!\n' "$1" "$expected_value" "$value_for_assert"
 		unset file_path_for_assertion
@@ -139,14 +144,14 @@ assert_stash_files() { # stash_num expect_untracked expected_files
 	assert_stash_commit_files_with_content "stash@{$1}" "$(
 			printf '%s\n' "$expected_files" \
 			| grep -vE '^(\?\?|!!|D[^A]|.D) ' \
-			| cut -c4- | awk '{print $1,$2}' \
-			| sed -E 's/<empty>//'
+			| sed -E 's/^(## \S+)(\s.+)?$/\1 <skip>/' \
+			| sed -E 's/^(#[^#] \S+)(\s.+)$/\1\2<submodule>/' \
+			| cut -c4- | awk '{print $1,$2}'
 		)"
 	assert_stash_commit_files "stash@{$1}^1" "$(
 			printf '%s\n' "$expected_files" \
 			| grep -vE '^(\?\?|!!|A.|[^D]A) ' \
-			| cut -c4- | awk '{print $1}' \
-			| sed -E 's/<empty>//'
+			| cut -c4- | awk '{print $1}'
 		)"
 	assert_stash_commit_files_with_content "stash@{$1}^2" "$(
 			printf '%s\n' "$expected_files" \
@@ -154,13 +159,15 @@ assert_stash_files() { # stash_num expect_untracked expected_files
 			do
 				if printf '%s' "$line" | grep -qE '^([ AM][^ DA]) '
 				then
-					printf '%s' "$line" | cut -c4- | awk '{print $1,$3}'
-				elif printf '%s' "$line" | grep -qE '^([ AM][ D]) '
+					printf '%s' "$line" \
+					| cut -c4- | awk '{print $1,$3}'
+				elif printf '%s' "$line" | grep -qE '^([ AM][ D]|#[^#]) '
 				then
-					printf '%s' "$line" | cut -c4- | awk '{print $1,$2}'
+					printf '%s' "$line" \
+					| sed -E 's/^(#. \S+)(\s.+)?$/\1 <skip>/' \
+					| cut -c4- | awk '{print $1,$2}'
 				fi
-			done \
-			| sed -E 's/<empty>//'
+			done
 		)"
 	if [ "$2" = n ]
 	then

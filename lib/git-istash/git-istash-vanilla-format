@@ -27,7 +27,7 @@ _remove_tracked_files_from_untracked() ( # untracked_sha [path]
 		then
 			continue
 		fi
-		if [ "$(printf '%s\n' "$line" | awk '{print $2}')" = 'blob' ]
+		if [ "$(printf '%s\n' "$line" | awk '{print $2}')" != 'tree' ]
 		then
 			printf '%s\\000' "$line"
 		else
@@ -67,7 +67,7 @@ _merge_tracked_and_untracked() ( # tracked_sha [path]
 	} | awk '!seen[$4]++' \
 	| while read -r line
 	do
-		if [ "$(printf '%s\n' "$line" | awk '{print $2}')" = 'blob' ]
+		if [ "$(printf '%s\n' "$line" | awk '{print $2}')" != 'tree' ]
 		then
 			printf '%s\\000' "$line"
 		else

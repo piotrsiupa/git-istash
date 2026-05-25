@@ -149,7 +149,9 @@ create_test_remote() {
 		git init --quiet .
 		git config --local user.email 'test@localhost'
 		git config --local user.name 'test'
-		git commit --quiet --allow-empty --message='some commit'
+		printf 'aaa\n' >aaa
+		git add aaa
+		git commit --quiet --message='some commit'
 		git branch --move 'my-branch'
 	)
 }
