@@ -19,7 +19,7 @@ PARAMETRIZE_CREATE_OPERATION() { # [operations...]
 		PARAMETRIZE 'CREATE_OPERATION' 'subcommand' "$@"
 	fi
 	#shellcheck disable=SC2034
-	CAP_CREATE_OPERATION="$(printf '%s' "$CREATE_OPERATION" | cut  -c1 | tr '[:lower:]' '[:upper:]')$(printf '%s' "$CREATE_OPERATION" | cut  -c2-)"
+	CAP_CREATE_OPERATION="$(printf '%s' "$CREATE_OPERATION" | head -c1 | tr '[:lower:]' '[:upper:]')${CREATE_OPERATION#?}"
 }
 IS_CREATE() {
 	test "$CREATE_OPERATION" = 'create'
@@ -57,10 +57,16 @@ PARAMETRIZE_KEEP_INDEX() { # keys
 	esac
 }
 IS_KEEP_INDEX_ON() {
-	printf '%s' "${KEEP_INDEX-'INDEX-DEFAULT'}" | grep -Eq '^INDEX-YES-'
+	case "${KEEP_INDEX-'INDEX-DEFAULT'}" in
+		INDEX-YES-*)	return 0 ;;
+		*)		return 1 ;;
+	esac
 }
 IS_KEEP_INDEX_OFF() {
-	printf '%s' "${KEEP_INDEX-'INDEX-DEFAULT'}" | grep -Eq '^INDEX-NO-'
+	case "${KEEP_INDEX-'INDEX-DEFAULT'}" in
+		INDEX-NO-*)	return 0 ;;
+		*)		return 1 ;;
+	esac
 }
 
 
@@ -77,7 +83,10 @@ PARAMETRIZE_STAGED() { # keys
 	esac
 }
 IS_STAGED_ON() {
-	printf '%s' "${STAGED-'STAGED-YES'}" | grep -Eq '^STAGED-YES$'
+	case "${STAGED-'STAGED-YES'}" in
+		STAGED-YES)	return 0 ;;
+		*)		return 1 ;;
+	esac
 }
 
 
@@ -94,7 +103,10 @@ PARAMETRIZE_UNSTAGED() { # keys
 	esac
 }
 IS_UNSTAGED_ON() {
-	printf '%s' "${UNSTAGED-'UNSTGD-YES'}" | grep -Eq '^UNSTGD-YES$'
+	case "${UNSTAGED-'UNSTGD-YES'}" in
+		UNSTGD-YES)	return 0 ;;
+		*)		return 1 ;;
+	esac
 }
 
 #shellcheck disable=SC2120
@@ -108,7 +120,10 @@ PARAMETRIZE_ALL() { # keys
 	esac
 }
 IS_ALL_ON() {
-	printf '%s' "${ALL-'ALL-DEFAULT'}" | grep -Eq '^ALL-YES-'
+	case "${ALL-'ALL-DEFAULT'}" in
+		ALL-YES-*)	return 0 ;;
+		*)		return 1 ;;
+	esac
 }
 
 #shellcheck disable=SC2120
@@ -127,10 +142,16 @@ PARAMETRIZE_UNTRACKED() { # keys
 	esac
 }
 IS_UNTRACKED_ON() {
-	printf '%s' "${UNTRACKED-'UNTR-DEFAULT'}" | grep -Eq '^UNTR-YES-'
+	case "${UNTRACKED-'UNTR-DEFAULT'}" in
+		UNTR-YES-*)	return 0 ;;
+		*)		return 1 ;;
+	esac
 }
 IS_UNTRACKED_OFF() {
-	printf '%s' "${UNTRACKED-'UNTR-DEFAULT'}" | grep -Eq '^UNTR-NO-'
+	case "${UNTRACKED-'UNTR-DEFAULT'}" in
+		UNTR-NO-*)	return 0 ;;
+		*)		return 1 ;;
+	esac
 }
 
 PARAMETRIZE_OPTIONS_INDICATOR() { # condition
@@ -185,7 +206,7 @@ PARAMETRIZE_PATHSPEC_STYLE() { # keys
 	if IS_PATHSPEC_IN_ARGS
 	then
 		PATHSPEC_FROM_FILE_FLAG=''
-	elif ! printf '%s' "$PATHSPEC" | grep -qE -- '-ISH$'
+	elif [ "${PATHSPEC%-ISH}" = "$PATHSPEC" ]
 	then
 		PATHSPEC_FROM_FILE_FLAG='--pathspec-from-file'
 	else
@@ -195,7 +216,7 @@ PARAMETRIZE_PATHSPEC_STYLE() { # keys
 	if ! IS_PATHSPEC_NULL_SEP
 	then
 		PATHSPEC_NULL_FLAGS=''
-	elif ! printf '%s' "$PATHSPEC" | grep -qE -- '-ISH$'
+	elif [ "${PATHSPEC%-ISH}" = "$PATHSPEC" ]
 	then
 		PATHSPEC_NULL_FLAGS='--pathspec-file-nul'
 	else
@@ -206,13 +227,22 @@ IS_PATHSPEC_IN_ARGS() {
 	test "$PATHSPEC" = 'PS-ARGS'
 }
 IS_PATHSPEC_IN_STDIN() {
-	printf '%s' "$PATHSPEC" | grep -qE -- '-STDIN(-ISH)?$'
+	case "$PATHSPEC" in
+		*-STDIN|*-STDIN-ISH)	return 0 ;;
+		*)			return 1 ;;
+	esac
 }
 IS_PATHSPEC_IN_FILE() {
-	printf '%s' "$PATHSPEC" | grep -qE -- '-FILE(-ISH)?$'
+	case "$PATHSPEC" in
+		*-FILE|*-FILE-ISH)	return 0 ;;
+		*)			return 1 ;;
+	esac
 }
 IS_PATHSPEC_NULL_SEP() {
-	printf '%s' "$PATHSPEC" | grep -qE -- '-NULL-'
+	case "$PATHSPEC" in
+		*-NULL-*)	return 0 ;;
+		*)		reutrn 1 ;;
+	esac
 }
 PREPARE_PATHSPEC_FILE() {
 	if IS_PATHSPEC_NULL_SEP

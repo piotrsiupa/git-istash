@@ -9,7 +9,7 @@ fi
 
 # It's called after all parameters are initialised to skip the run if one of the previous runs had the exact same parameters.
 _DEDUPLICATE_PAREMETRIZATION() {
-	CURRENT_PARAMETERS="$(awk '$2 { print $2 }' "$PARAMETERS_FILE" | tr '\n' ' ')"
+	CURRENT_PARAMETERS="$(awk '$2 { printf "%s ", $2 }' "$PARAMETERS_FILE")"
 	if grep -Fxq -- "$CURRENT_PARAMETERS" "$PARAM_HISTORY_FILE"
 	then
 		skip_silently
@@ -33,7 +33,7 @@ PARAMETRIZE() { # name facet values...
 	CUR_VAL="$(awk -v key="$PARAM_NAME" '$1 == key { print $2 }' "$PARAMETERS_FILE")"
 	LAST_VAL="$(awk -v key="$PARAM_NAME" '$1 == key { print $3 }' "$PARAMETERS_FILE")"
 	sed -iE "/^$PARAM_NAME\\>/ d" "$PARAMETERS_FILE"
-	OTHER_IS_EXCLUSIVE="$(awk '$4 == "exclusive" { other_is_exclusive = 1 } END { print(other_is_exclusive ? "y" : "n") }' "$PARAMETERS_FILE")"
+	OTHER_IS_EXCLUSIVE="$(awk '$4 == "exclusive" { other_is_ex = 1 } END { print(other_is_ex ? "y" : "n") }' "$PARAMETERS_FILE")"
 	if [ "$CUR_VAL" = "$LAST_VAL" ]
 	then
 		if { [ -z "$LAST_VAL" ] || [ "$ROTATE_PARAMETER" = y ] ; } && [ "$OTHER_IS_EXCLUSIVE" = n ]
@@ -143,7 +143,7 @@ PARAMETRIZE_OPTION() { # condition name override_facet map [values...]
 	NAME="$2"
 	FACET="${3:-options}"
 	#shellcheck disable=SC2020
-	MAP="$(printf '%s' "$4" | sed -E 's/\s+//g' | tr '|' '\n' | sed -E 's/^(.+:)(.*&&)(.*&&)(.*)$/\1\3\2\4/')"
+	MAP="$(printf '%s' "$4" | tr -d ' \t' | tr '|' '\n' | sed -E 's/^(.+:)(.*&&)(.*&&)(.*)$/\1\3\2\4/')"
 	shift 4
 	PREVIOUS_VALUE="$(awk -v key="$NAME" '$1 == key { print $2 }' "$PARAMETERS_FILE")"
 	ALTERNATIVE_SPELLINGS="$(printf '%s\n' "$MAP" | sed -E 's/^.+:.*&&(.*&&)(.*)$/\1\2/' | tr '&' '\n' | grep -Ev '^$' || true)"
@@ -263,7 +263,10 @@ PARAMETRIZE_COLOR() { # keys
 	esac
 }
 IS_COLOR_ON() {
-	printf '%s' "${COLOR-}" | grep -Eq '^COLOR-YES-|^COLOR-LONG$'
+	case "${COLOR-}" in
+		COLOR-YES-*|COLOR-LONG) return 0 ;;
+		*)			return 1 ;;
+	esac
 }
 
 #shellcheck disable=SC2120
@@ -307,5 +310,8 @@ PARAMETRIZE_HINT() { # advice_name...
 	esac
 }
 HINT_ENABLED() { # advice_name
-	printf '%s\n' "$HINT" | grep -E -q '^ALL-HINTS$|^ENBL-HINT(-|$)'
+	case "$HINT" in
+		ALL-HINTS|ENBL-HINT|ENBL-HINT-*)	return 0 ;;
+		*)					return 1 ;;
+	esac
 }

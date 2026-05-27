@@ -131,15 +131,11 @@ sanitize_for_sed() { # string
 }
 
 make_stash_name_regex() { # stash_name
-	if [ "$(printf '%s' "$1" | cut -c1)" = '~' ]
-	then
-		sanitize_for_ere "$(printf '%s' "$1" | cut -c2-)"
-	elif [ "$1" != 'HEAD' ]
-	then
-		sanitize_for_ere "$1"
-	else
-		printf '\(no branch\)'
-	fi
+	case "$1" in
+	HEAD)	printf '\(no branch\)' ;;
+	~*)	sanitize_for_ere "${1#?}" ;;
+	*)	sanitize_for_ere "$1" ;;
+	esac
 }
 
 get_head_sha() {
@@ -162,10 +158,10 @@ remove_all_changes() {
 get_relative_path() { # absolute_path
 	current_dir="$(pwd)"
 	istash_abs_path="$1"
-	while [ "$(printf '%s' "$current_dir" | sed -E 's;^([^/]*/).*$;\1;')" = "$(printf '%s' "$istash_abs_path" | sed -E 's;^([^/]*/).*$;\1;')" ]
+	while [ "${current_dir%%/*}" = "${istash_abs_path%%/*}" ]
 	do
-		current_dir="$(printf '%s' "$current_dir" | sed -E 's;^[^/]*/(.*)$;\1;')"
-		istash_abs_path="$(printf '%s' "$istash_abs_path" | sed -E 's;^[^/]*/(.*)$;\1;')"
+		current_dir="${current_dir#*/}"
+		istash_abs_path="${istash_abs_path#*/}"
 	done
 	printf '%s' "$current_dir" | sed -E 's;[^/]+;..;g'
 	printf '/%s\n' "$istash_abs_path"

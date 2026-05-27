@@ -142,8 +142,8 @@ assert_file_contents() { # file expected_current [expected_staged]
 	fi
 	if printf '%s' "$2" | grep -qE '\|'
 	then
-		ours_expected_contents="$(printf '%s' "$2" | cut -d'|' -f1 | sed -E 's/^""$//')"
-		theirs_expected_contents="$(printf '%s' "$2" | cut -d'|' -f2 | sed -E 's/^""$//')"
+		ours_expected_contents="${2%%|*}"
+		theirs_expected_contents="${2##*|}"
 		test "$(printf '%s\n' "$value_for_assert" | grep -cE '^={7}')" -eq 1 ||
 			fail 'Expected file "'"$1"'" contain exactly 1 conflict!\n'
 		#shellcheck disable=SC2015
@@ -161,7 +161,7 @@ assert_file_contents() { # file expected_current [expected_staged]
 		unset theirs_expected_contents
 	else
 		#shellcheck disable=SC2059
-		expected_contents="$(printf -- "$2" | sed -E 's/^""$//')"
+		expected_contents="$(printf -- "${2#<empty>}")"
 		test "$value_for_assert" = "$expected_contents" ||
 			fail 'Expected content of file "'"$1"'" to be:\n"%s"\nbut it is:\n"%s"!\n' "$expected_contents" "$value_for_assert"
 		if [ $# -eq 3 ]
@@ -169,7 +169,7 @@ assert_file_contents() { # file expected_current [expected_staged]
 			#shellcheck disable=SC2059
 			value_for_assert="$(printf -- ":$1" | xargs -0 -- git show)"
 			#shellcheck disable=SC2059
-			expected_contents="$(printf -- "$3" | sed -E 's/^""$//')"
+			expected_contents="$(printf -- "${3#<empty>}")"
 			test "$value_for_assert" = "$expected_contents" ||
 				fail 'Expected staged content of file "'"$1"'" to be:\n"%s"\nbut it is:\n"%s"!\n' "$expected_contents" "$value_for_assert"
 		fi
@@ -190,40 +190,31 @@ assert_files() { # expected_files (see one of the tests as an example)
 		then
 			continue
 		fi
-		stripped_line="$(printf '%s' "$line" | cut -c4-)"
-		if printf '%s' "$line" | grep -qE '^(D ) '
-		then
-			test "$(printf '%s' "$stripped_line" | awk '{printf NF}')" -eq 1 ||
-				fail 'Error in test: the file "%s" should have 0 versions of content to check!\n' "$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}')"
-		elif printf '%s' "$line" | grep -qE '^([UD]U|!!|\?\?|.[ AD]) '
-		then
-			test "$(printf '%s' "$stripped_line" | awk '{printf NF}')" -eq 2 ||
-				fail 'Error in test: the file "%s" should have 1 version of content to check!\n' "$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}')"
-			if printf '%s' "$line" | grep -qE '^(. ) '
-			then
-				assert_file_contents \
-					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}' | sed -E 's/<empty>//')" \
-					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}' | sed -E 's/<empty>//')" \
-					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}' | sed -E 's/<empty>//')"
-			elif printf '%s' "$line" | grep -qE '^([^U]D) '
-			then
-				assert_file_contents \
-					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}' | sed -E 's/<empty>//')" \
-					'' \
-					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}' | sed -E 's/<empty>//')"
-			else
-				assert_file_contents \
-					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}' | sed -E 's/<empty>//')" \
-					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}' | sed -E 's/<empty>//')"
-			fi
-		else
-			test "$(printf '%s' "$stripped_line" | awk '{printf NF}')" -eq 3 ||
-				fail 'Error in test: the file "%s" should have 2 versions of content to check!\n' "$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}')"
-			assert_file_contents \
-				"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}' | sed -E 's/<empty>//')" \
-				"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}' | sed -E 's/<empty>//')" \
-				"$(printf '%s' "$stripped_line" | awk '{printf "%s", $3}' | sed -E 's/<empty>//')"
-		fi
+		set -f
+		#shellcheck disable=SC2086
+		set -- ${line#???}
+		set +f
+		prefix="${line%"${line#??}"}"
+		case "$prefix" in
+		D\ )
+			test $# -eq 1 ||
+				fail 'Error in test: the file "%s" should have 0 versions of content to check!\n' "$1"
+			;;
+		[UD]U|!!|\?\?|?[\ AD])
+			test $# -eq 2 ||
+				fail 'Error in test: the file "%s" should have 1 version of content to check!\n' "$1"
+			case "$prefix" in
+			?\ )	assert_file_contents "$1" "${2#<empty>}" "${2#<empty>}" ;;
+			[!U]D)	assert_file_contents "$1" '' "${2#<empty>}" ;;
+			*)	assert_file_contents "$1" "${2#<empty>}" ;;
+			esac
+			;;
+		*)
+			test $# -eq 3 ||
+				fail 'Error in test: the file "%s" should have 2 versions of content to check!\n' "$1"
+			assert_file_contents "$1" "${2#<empty>}" "${3#<empty>}"
+			;;
+		esac
 	done
 }
 
@@ -272,17 +263,19 @@ assert_stash_sha() { # stash_num expected
 }
 
 assert_head_name() { # expected
-	if printf '%s' "$1" | grep -qE '^~'
-	then
-		set -- "$(printf '%s' "$1" | cut -c2-)"
+	case "$1" in
+	'~'*)
+		set -- "${1#?}"
 		! git rev-parse HEAD 1>/dev/null 2>&1 ||
 			fail 'Expected HEAD to be an orphan!\n'
 		value_for_assert="$(git branch --show-current)"
-	else
+		;;
+	*)
 		git rev-parse HEAD 1>/dev/null 2>&1 ||
 			fail 'Didn'\''t expect HEAD to be an orphan!\n'
 		value_for_assert="$(git rev-parse --abbrev-ref --symbolic-full-name HEAD)"
-	fi
+		;;
+	esac
 	test "$value_for_assert" = "$1" ||
 		if [ "$value_for_assert" = 'HEAD' ]
 		then

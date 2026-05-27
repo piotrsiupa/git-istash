@@ -5,8 +5,8 @@ set -eu
 print_help() {
 	printf 'This is a simple script that just prints the list of all tests.\n'
 	printf '\n'
-	printf 'Usage: %s (-h | --help | -V | --version)\n' "$(basename "$0")"
-	printf '   or: %s [ -e | --essential | -E | --non_essential] [ -R | --relative]\n\t[-c | --changed] [-C X | --changed-since=X] [--] [<filter>...]\n' "$(basename "$0")"
+	printf 'Usage: %s (-h | --help | -V | --version)\n' "${0##*/}"
+	printf '   or: %s [ -e | --essential | -E | --non_essential] [ -R | --relative]\n\t[-c | --changed] [-C X | --changed-since=X] [--] [<filter>...]\n' "${0##*/}"
 	printf '\n'
 	printf 'Options:\n'
 	printf '    -a, --altered\t- Print only the tests changed since the last commit.\n\t\t\t  (Only changes in individual test files count, not in\n\t\t\t  the common test utilities that affect every test.)\n\t\t\t  Renamed tests with 100%% similarity are omitted.\n\t\t\t  (See also "--since".)\n'
@@ -55,7 +55,7 @@ find_master() {
 
 getopt_short_options='aA:eEhRV'
 getopt_long_options='altered,since:,essential,non-essential,help,relative,version'
-normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
+normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"${0##*/}" -ssh -- "$@")"
 eval set -- "$normalized_options"
 only_changed=n
 changed_reference=HEAD
@@ -71,13 +71,10 @@ do
 	-A|--since)
 		shift
 		changed_reference="$1"
-		if printf '%s' "$changed_reference" | grep -qE '^[~^]'
-		then
-			changed_reference="HEAD$changed_reference"
-		elif [ "$changed_reference" = '-' ]
-		then
-			changed_reference="$(find_master)...HEAD"
-		fi
+		case "$changed_reference" in
+		[~^]*)	changed_reference="HEAD$changed_reference" ;;
+		-)	changed_reference="$(find_master)...HEAD" ;;
+		esac
 		only_changed=y
 		;;
 	-e|--essential)
@@ -110,13 +107,14 @@ then
 	exit 1
 fi
 
+current_dir_name="$(basename "$(pwd)")"
 normalize_filter_entry() { # filter_entry
 	if [ -f "$1" ]
 	then
 		printf '%s' "$1" \
 		| sed -E -e 's;^.*/([^/]+/[^/]+)$;\1;' \
 			-e 's;^[^/]+$;./&;' \
-			-e "s;^\\./;$(basename "$(pwd)")/;" \
+			-e "s;^\\./;$current_dir_name/;" \
 			-e 's/\.sh$//' \
 			-e 's/^/^/' -e 's/$/$/'
 	else
@@ -127,22 +125,18 @@ filter=''
 negative_filter=''
 while [ $# -ne 0 ]
 do
-	if printf '%s' "$1" | grep -E -v -q '^-'
-	then
-		if [ -n "$filter" ]
-		then
-			filter="$filter|"
-		fi
-		filter="$filter($(normalize_filter_entry "$(printf '%s' "$1" | sed 's/^\\-/-/')"))"
-	else
-		if [ -n "$negative_filter" ]
-		then
-			negative_filter="$negative_filter|"
-		fi
-		negative_filter="$negative_filter($(normalize_filter_entry "$(printf '%s' "$1" | cut -c2-)"))"
-	fi
+	case "$1" in
+	-*)
+		negative_filter="$negative_filter|($(normalize_filter_entry "${1#?}"))"
+		;;
+	*)
+		filter="$filter|($(normalize_filter_entry "$(printf '%s' "$1" | sed 's/^\\-/-/')"))"
+		;;
+	esac
 	shift
 done
+filter="$(printf '%s' "${filter#|}" | sed -E 's;/;\\/;g')"
+negative_filter="$(printf '%s' "${negative_filter#|}" | sed -E 's;/;\\/;g')"
 
 cd "$(dirname "$0")"
 
@@ -162,8 +156,8 @@ cd "$(dirname "$0")"
 		| sed -E -e '/^R100\t/d' \
 			-e '/^D\t/d' \
 			-e 's/^[CR][0-9]{3}\t(\S+)\t(\S+)$/A\t\2/' \
-		| cut -c3- \
-		| grep -E '^[^/]+/[^/]+\.sh$' || true
+			-e 's/^..//' \
+			-e '/^[^/]+/[^/]+\.sh$/!d'
 	fi
 } | {
 	if [ -n "$filter" ] || [ -n "$negative_filter" ]
@@ -172,10 +166,10 @@ cd "$(dirname "$0")"
 		then
 			negative_filter='^$'
 		fi
-		sed -E 's/\.sh$//' \
-		| grep -E -- "$filter" \
-		| grep -E -v -- "$negative_filter" \
-		| sed -E 's/$/.sh/'
+		sed -E -e 's/\.sh$//' \
+			-e "/$filter/!d" \
+			-e "/$negative_filter/d" \
+			-e 's/$/.sh/'
 	else
 		cat
 	fi

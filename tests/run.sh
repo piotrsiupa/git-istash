@@ -39,9 +39,9 @@ format_facets_for_help() { # facets
 }
 
 print_help() {
-	printf '%s - Script that runs tests from sub-directories of this directory.\n' "$(basename "$0")"
+	printf '%s - Script that runs tests from sub-directories of this directory.\n' "${0##*/}"
 	printf '\n'
-	printf 'Usage: %s [<options>] [--] [<filter>...]\n' "$(basename "$0")"
+	printf 'Usage: %s [<options>] [--] [<filter>...]\n' "${0##*/}"
 	printf '\n'
 	printf 'Options:\n'
 	printf '    -h, --help\t\t- Print this help text end exit.\n'
@@ -875,7 +875,7 @@ print_summary() {
 
 getopt_short_options='aA:c:Cdfhj:l:m:pRqQ_rsSvV'
 getopt_long_options='altered,since:,color:,check,debug,failed,file-name,help,jobs:,limit:,meticulousness:,complete,quickie,facets:,print-paths,relative-paths,progress,no-progress,quiet,quieter,quietest,raw,raw-name,skip-at-fail,skip-at-error,skip-on-fail,skip-on-error,stop-at-fail,stop-at-error,stop-on-fail,stop-on-error,verbose,version,skip-version'
-normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
+normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"${0##*/}" -ssh -- "$@")"
 eval set -- "$normalized_options"
 complete='
 	non-essential,head-type,subcommand,options,color,summary,miscellaneous

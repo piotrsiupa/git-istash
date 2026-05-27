@@ -29,7 +29,8 @@ create_patch_output_regex_for_single_file() { # nr_of_questions
 }
 
 create_patch_output_regex_for_single_call() { # (t|u) [nr_of_questions...]
-	printf '### Using the interactive patch for %s files\\.\\.\\.' "$(if [ "$1" = u ] ; then printf 'untracked' ; else printf 'tracked' ; fi)"
+	if [ "$1" = u ] ; then patch_type='untracked' ; else patch_type='tracked' ; fi
+	printf '### Using the interactive patch for %s files\\.\\.\\.' "$patch_type"
 	shift
 	if [ $# -ne 0 ]
 	then

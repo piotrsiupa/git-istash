@@ -129,8 +129,8 @@ sort_u_facets() (
 	set -eu
 	facet_regex="^($(tr '\n' '|'))\$"
 	printf '%s\n' "$facets" \
-	| sed -E 's/^([^=]+)=.*$/\1/' \
-	| grep -E "$facet_regex" || true
+	| sed -E -e 's/^([^=]+)=.*$/\1/' \
+		-e "/$facet_regex/!d"
 )
 
 # It takes lists of facets and facet lists. It breaks the lists into individual facets, deduplicates and sorts the list.
@@ -153,7 +153,7 @@ parse_meticulousness() ( # [facet_list]...
 		matched_categories_name_regex="^($(printf '%s' "$matched_categories" | sed -E 's/^([^=]+)=.*$/\1/' | tr '\n' '|'))\$"
 		names="$(
 			printf '%s\n' "$names" | grep -E -v "$matched_categories_name_regex" || true
-			printf '%s\n' "$matched_categories" | sed -E 's/^.*:([^:]*)$/\1/' | tr ',' '\n'
+			printf '%s\n' "$matched_categories" | sed -E -e 's/^.*:([^:]*)$/\1/' -e 's/,/\n/g'
 		)"
 	done
 	printf '%s' "$names" | sort_u_facets
@@ -164,7 +164,7 @@ parse_meticulousness() ( # [facet_list]...
 
 
 # Do this only if the script doesn't appear to be sourced.
-if [ $# -ne 0 ] && [ "$(basename "$0" 2>/dev/null)" = 'facets.sh' ]
+if [ $# -ne 0 ] && [ "${0##*/}" = 'facets.sh' ]
 then
 	break_long_lines() { # new_line_prefix
 		while IFS= read -r line
@@ -238,9 +238,9 @@ then
 		printf 'Meticulousness is just a name for a list of facets / facet categories.)\n'
 		printf 'It reads arguments or stdin if the first argument is "-".\n'
 		printf '\n'
-		printf 'Usage: %s (-h | --help | -V | --version)\n' "$(basename "$0")"
-		printf '   or: %s [<meticulousness>...]\n' "$(basename "$0")"
-		printf '   or: %s -\n' "$(basename "$0")"
+		printf 'Usage: %s (-h | --help | -V | --version)\n' "${0##*/}"
+		printf '   or: %s [<meticulousness>...]\n' "${0##*/}"
+		printf '   or: %s -\n' "${0##*/}"
 		printf '\n'
 		printf 'Options:\n'
 		printf '    -h, --help\t\t- Print this help text.\n'
@@ -264,7 +264,7 @@ then
 	
 	getopt_short_options='hV'
 	getopt_long_options='help,version'
-	normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
+	normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"${0##*/}" -ssh -- "$@")"
 	eval set -- "$normalized_options"
 	while true
 	do
