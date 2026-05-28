@@ -6,6 +6,8 @@ then
 	exit 1
 fi
 
+tab='	'
+
 
 # This serves both as a pseudo-comment in test code to make it easier to understand and as a way to more easily find where a test failed.
 # These names are not displayed during a normal run of a test but the name of the current section is included in the failure message.
@@ -78,7 +80,8 @@ capture_outputs() { # command [arguments...]
 }
 
 dedent_regex() ( # text
-	printf '%s' "$1" | sed -E -e 's/^\t+//' -e 's/^\\\\\t/\t/' | tr -d '\n'
+	#shellcheck disable=SC1003
+	printf '%s' "$1" | sed -E -e 's/^'"$tab"'+//' -e 's/^\\\\'"$tab"'/'"$tab"'/' | tr -d '\n'
 )
 
 match_multiline_regex() { # text regex

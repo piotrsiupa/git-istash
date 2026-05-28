@@ -39,8 +39,9 @@ convert_pathspec_file() {
 	then
 		cat
 	else
+		#shellcheck disable=SC1003,SC2031
 		convert_to_octal \
-		| sed -E 's/(\\042(\\(0[0-35-7][0-7]|04[0-13-7]|1[0-24-7][0-7]|13[0-35-7]|[2-3][0-7]{2}|134\\[0-7]{1,3}))*\\042|(\\(0[02-7][0-7]|01[13-7]|[1-3][0-7]{2}))*)((\\015)?\\012|$)/\1\n/g' \
+		| sed -E 's/(\\042(\\(0[0-35-7][0-7]|04[0-13-7]|1[0-24-7][0-7]|13[0-35-7]|[2-3][0-7]{2}|134\\[0-7]{1,3}))*\\042|(\\(0[02-7][0-7]|01[13-7]|[1-3][0-7]{2}))*)((\\015)?\\012|$)/\1\'"$nl"'/g' \
 		| sed -E 's/\\015$//' \
 		| while read -r line
 		do
@@ -202,6 +203,7 @@ commit_changes() {
 			printf '### Using the interactive patch for tracked files...\n' 1>&2
 			there_was_patch_message=y
 		fi
+		#shellcheck disable=SC1003,SC2031
 		if [ -z "$pathspec_file" ]
 		then
 			git --no-literal-pathspecs add --update $patch_options :/ 1>&2 2>/dev/null || true
@@ -212,7 +214,7 @@ commit_changes() {
 			else
 				add_with_patch_and_pathspec
 			fi
-		fi 2>&1 | sed -E '1s/^/\n/' 1>&2
+		fi 2>&1 | sed -E '1s/^/\'"$nl"'/' 1>&2
 	fi
 	if [ -n "$message" ]
 	then
@@ -249,6 +251,7 @@ commit_changes() {
 			printf '### Using the interactive patch for untracked files...\n' 1>&2
 			there_was_patch_message=y
 		fi
+		#shellcheck disable=SC1003,SC2031
 		if [ -z "$pathspec_file" ]
 		then
 			git --no-literal-pathspecs add $patch_options --update :/ 1>&2 2>/dev/null || true
@@ -259,7 +262,7 @@ commit_changes() {
 			else
 				add_with_patch_and_pathspec
 			fi
-		fi 2>&1 | sed -E '1s/^/\n/' 1>&2
+		fi 2>&1 | sed -E '1s/^/\'"$nl"'/' 1>&2
 		git commit --message="untracked files on $branch_name_for_msg: $default_message" --allow-empty 1>/dev/null
 		if [ "$there_are_enough_changes" = n ] && [ "$(git rev-parse 'HEAD^{tree}')" != "$(git rev-parse 'HEAD~^{tree}')" ]
 		then
@@ -270,7 +273,7 @@ commit_changes() {
 	git commit --message="non-stashed untracked files on $branch_name_for_msg: $default_message" --allow-empty 1>/dev/null
 	
 	# staged (for real)
-	index_editor='sed -i -E "1 s/^(\s*)\w+(\s)/\1edit\2/"'
+	index_editor='sed -i -E "1 s/^([[:blank:]]*)[[:alpha:]]+([[:blank:]])/\1edit\2/"'
 	if [ "$has_3_commits" = n ]
 	then
 		GIT_EDITOR="$index_editor" git rebase --quiet --interactive --keep-empty --empty=keep --reapply-cherry-picks -- 'HEAD~4' 1>/dev/null 2>&1

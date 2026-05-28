@@ -6,6 +6,8 @@ then
 	exit 1
 fi
 
+tab='	'
+
 
 assert_stash_structure() { # stash_num expected_to_have_untracked
 	git rev-parse --quiet --verify "stash@{$1}^{commit}" 1>/dev/null ||
@@ -138,7 +140,7 @@ assert_stash_commit_files_with_content() { # commit expected_files
 }
 
 assert_stash_files() { # stash_num expect_untracked expected_files
-	expected_files="$(printf '%s\n' "$3" | sed -E -e 's/^\t+//' -e '/^\s*$/ d')"
+	expected_files="$(printf '%s\n' "$3" | sed -E -e 's/^'"$tab"'+//' -e '/^[[:blank:]]*$/ d')"
 	assert_stash_commit_files_with_content "stash@{$1}" "$(
 			printf '%s\n' "$expected_files" \
 			| grep -vE '^(\?\?|!!|D[^A]|.D) ' \
@@ -176,7 +178,7 @@ assert_stash_files() { # stash_num expect_untracked expected_files
 }
 
 assert_stash() { # stash_num expected_branch_name expected_stash_name expected_files
-	if IS_ALL_ON || IS_UNTRACKED_ON || printf '%s\n' "$4" | sed -E 's/^\t+//' | grep -qE '^(\?\?|!!) '
+	if IS_ALL_ON || IS_UNTRACKED_ON || printf '%s\n' "$4" | sed -E 's/^'"$tab"'+//' | grep -qE '^(\?\?|!!) '
 	then
 		expect_untracked=y
 	else
@@ -189,7 +191,7 @@ assert_stash() { # stash_num expected_branch_name expected_stash_name expected_f
 	unset expect_untracked
 }
 assert_stash_CO() { # stash_num expected_branch_name expected_stash_name expected_files
-	if IS_ALL_ON || IS_UNTRACKED_ON || printf '%s\n' "$4" | sed -E 's/^\t+//' | grep -qE '^(\?\?|!!) '
+	if IS_ALL_ON || IS_UNTRACKED_ON || printf '%s\n' "$4" | sed -E 's/^'"$tab"'+//' | grep -qE '^(\?\?|!!) '
 	then
 		expect_untracked=y
 	else

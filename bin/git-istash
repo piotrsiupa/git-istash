@@ -215,7 +215,7 @@ then
 	fi
 fi
 
-git_version="$(git --version | head -n 1 | grep -Eo '\<\S+$')"
+git_version="$(git --version | head -n 1 | grep -Eo '[[:graph:]]+$')"
 if [ "$skip_version_check" = n ] && ! printf '%s' "$git_version" | grep -Exq "$min_git_version_regex"
 then
 	fatal 'the current Git version (%s) is less than minimum required (%s)\n' "$git_version" "$min_git_version"

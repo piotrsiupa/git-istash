@@ -15,6 +15,8 @@ escape_for_shell() {
 # See "print_help" for usage.
 get_options() ( # [-P | -R | -U] short_options_string long_options_string [argument...]
 	set -eu
+	nl='
+'
 	
 	fatal() { # printf_arg...
 		printf 'fatal: '
@@ -45,26 +47,28 @@ get_options() ( # [-P | -R | -U] short_options_string long_options_string [argum
 	
 	test $# -ge 2 ||
 		fatal 'not enough arguments for get_options'
-	printf '%s' "$1" | tr '\n' ' ' | grep -E -q '\s' &&
+	printf '%s' "$1" | tr '\n' ' ' | grep -E -q '[[:space:]]' &&
 		fatal 'white character in short options definition for get_options'
 	printf '%s' "$1" | grep -E -q '^:' &&
 		fatal 'empty entry in short options definition for get_options'
 	printf '%s' "$1" | grep -E -q ':::' &&
 		fatal 'triple : in short options definition for get_options'
 	short_options="$(
+		#shellcheck disable=SC1003
 		printf '%s' "$1" \
-		| sed -E 's/([^:]):*/\1\n/g'
+		| sed -E 's/([^:]):*/\1\'"$nl"'/g'
 	)"
-	repeated_option="$(printf '%s' "$short_options" | sort | uniq -c | sed -E -n '/^\s*1\s/!s/^\s*[0-9]+\s+//p' | head -n 1)"
+	repeated_option="$(printf '%s' "$short_options" | sort | uniq -c | sed -E -n '/^[[:blank:]]*1[[:blank:]]/!s/^[[:blank:]]*[0-9]+[[:blank:]]+//p' | head -n 1)"
 	test -z "$repeated_option" ||
 		fatal 'option -%s repeats in options definition for get_options' "$repeated_option"
 	short_options_args="$(
+		#shellcheck disable=SC1003
 		printf '%s' "$1" \
-		| sed -E 's/[^:]:*/&\n/g' \
+		| sed -E 's/[^:]:*/&\'"$nl"'/g' \
 		| sed -E -e 's/^.$/n/' -e 's/^.:$/y/' -e 's/^.::$/o/' \
 		| tr -d '\n'
 	)"
-	printf '%s' "$2" | tr '\n' ' ' | grep -E -q '\s' &&
+	printf '%s' "$2" | tr '\n' ' ' | grep -E -q '[[:space:]]' &&
 		fatal 'white character in long options definition for get_options'
 	printf '%s' "$2" | grep -E -q '(^|,):*,|,:*$' &&
 		fatal 'empty entry in long options definition for get_options'
@@ -79,7 +83,7 @@ get_options() ( # [-P | -R | -U] short_options_string long_options_string [argum
 		fatal ': in a name of a long option in definition for get_options'
 	printf '%s' "$long_options" | grep -E -q '=' &&
 		fatal '= in a name of a long option in definition for get_options'
-	repeated_option="$(printf '%s' "$long_options" | sort | uniq -c | sed -E -n '/^\s*1\s/!s/^\s*[0-9]+\s+//p' | head -n 1)"
+	repeated_option="$(printf '%s' "$long_options" | sort | uniq -c | sed -E -n '/^[[:blank:]]*1[[:blank:]]/!s/^[[:blank:]]*[0-9]+[[:blank:]]+//p' | head -n 1)"
 	test -z "$repeated_option" ||
 		fatal 'option --%s repeats in options definition for get_options' "$repeated_option"
 	long_options_args="$(

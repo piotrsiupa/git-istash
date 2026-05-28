@@ -1,5 +1,10 @@
 # A set of utility functions for istash scripts.
 
+#shellcheck disable=SC2034
+tab='	'
+nl='
+'
+
 if command -v od 1>/dev/null 2>&1
 then
 	convert_to_octal() {
@@ -12,8 +17,9 @@ else
 	}
 fi
 convert_to_octal_lines() {
+	#shellcheck disable=SC1003
 	convert_to_octal \
-	| sed -E 's/\\000/\n/g'
+	| sed -E 's/\\000/\'"$nl"'/g'
 }
 
 make_data_file_path() { # name
@@ -214,8 +220,8 @@ parse_git_bool() { # boolean_to_parse
 }
 
 set_getopt_options_from_command() { # full_command_name
-	getopt_short_options="$(sed -E -n 's/^\s*getopt_short_options='\''([^'\'']+)'\''\s*$/\1/p' "$(dirname "$0")/$1")"
-	getopt_long_options="$(sed -E -n 's/^\s*getopt_long_options='\''([^'\'']+)'\''\s*$/\1/p' "$(dirname "$0")/$1")"
+	getopt_short_options="$(sed -E -n 's/^[[:blank:]]*getopt_short_options='\''([^'\'']+)'\''[[:blank:]]*$/\1/p' "$(dirname "$0")/$1")"
+	getopt_long_options="$(sed -E -n 's/^[[:blank:]]*getopt_long_options='\''([^'\'']+)'\''[[:blank:]]*$/\1/p' "$(dirname "$0")/$1")"
 	if [ "$(printf '%s\n' "$getopt_short_options" | wc -l)" -ne 1 ] || [ "$(printf '%s\n' "$getopt_long_options" | wc -l)" -ne 1 ]
 	then
 		# Not tested because it cannot be triggered. It's here in a case something gets broken by a future change.

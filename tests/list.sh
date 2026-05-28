@@ -2,6 +2,8 @@
 
 set -eu
 
+tab='	'
+
 print_help() {
 	printf 'This is a simple script that just prints the list of all tests.\n'
 	printf '\n'
@@ -147,15 +149,15 @@ cd "$(dirname "$0")"
 		| cut -c3-
 	else
 		find . -mindepth 1 -maxdepth 1 -type d ! -name 'remote-for-tests' ! -name 'the-actual-git' \
-		| if printf '%s ' "$changed_reference" | grep -q '^\s*$'
+		| if printf '%s ' "$changed_reference" | grep -q '^[[:blank:]]*$'
 		then
 			xargs -- git --literal-pathspecs diff -M --name-status --relative --
 		else
 			xargs -- git --literal-pathspecs diff -M --name-status --relative "$changed_reference" --
 		fi \
-		| sed -E -e '/^R100\t/d' \
-			-e '/^D\t/d' \
-			-e 's/^[CR][0-9]{3}\t(\S+)\t(\S+)$/A\t\2/' \
+		| sed -E -e '/^R100'"$tab"'/d' \
+			-e '/^D'"$tab"'/d' \
+			-e 's/^[CR][0-9]{3}'"$tab"'([^[:blank:]]+)'"$tab"'([^[:blank:]]+)$/A'"$tab"'\2/' \
 			-e 's/^..//' \
 			-e '/^[^/]+/[^/]+\.sh$/!d'
 	fi
@@ -174,7 +176,7 @@ cd "$(dirname "$0")"
 		cat
 	fi
 } | {
-	non_essential_regex='(^|;)\s*non_essential_test\s*(;|$|#)'
+	non_essential_regex='(^|;)[[:blank:]]*non_essential_test[[:blank:]]*(;|$|#)'
 	if [ "$essential" = y ]
 	then
 		xargs -- grep -EL "$non_essential_regex"

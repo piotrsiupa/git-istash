@@ -4,6 +4,8 @@ set -eu
 
 . "$(dirname "$0")/facets.sh"
 
+tab='	'
+
 
 break_long_lines() { # new_line_prefix
 	while IFS= read -r line
@@ -34,7 +36,7 @@ format_facets_for_help() { # facets
 	| tr '|' '\n' \
 	| tr -d '\t' \
 	| grep -E '.' \
-	| sed -E -e 's/,/, /g' -e 's/^/\t\t  + /' \
+	| sed -E -e 's/,/, /g' -e 's/^/'"$tab$tab"'  + /' \
 	| break_long_lines '\t\t    '
 }
 
@@ -325,13 +327,13 @@ print_test_result() {
 		if [ "$use_color" = y ]
 		then
 			failed_assertion_color="$(test "$test_result_is_correct" = y && printf '33' || printf '31')"
-			sed -E 's/^\t(Failed assertion:)(.*)$/\t'"$esc_char"'[1;'"$failed_assertion_color"'m\1'"$esc_char"'[22m\2'"$esc_char"'[39m/'
+			sed -E 's/^'"$tab"'(Failed assertion:)(.*)$/'"$tab$esc_char"'[1;'"$failed_assertion_color"'m\1'"$esc_char"'[22m\2'"$esc_char"'[39m/'
 		else
 			cat
 		fi <"$output_file" \
 		| while IFS= read -r line
 		do
-			if printf '%s' "$line" | grep -qE '^	'  # Line starts with TAB
+			if printf '%s' "$line" | grep -qE "^$tab"
 			then
 				printf '%s\n' "$line" 1>&2
 			else
@@ -344,9 +346,9 @@ print_test_result() {
 			printf '%s\n' "$known_failure_reason" | cut -c2- \
 			| if [ "$use_color" = y ]
 			then
-				sed -E 's/^.*$/\tKnown failure:'"$esc_char"'[22m &'"$esc_char"'[1m/'
+				sed -E 's/^.*$/'"$tab"'Known failure:'"$esc_char"'[22m &'"$esc_char"'[1m/'
 			else
-				sed -E 's/^/\tKnown failure: /'
+				sed -E 's/^/'"$tab"'Known failure: /'
 			fi 1>&2
 			printf_color_code '\033[22;39m' 1>&2
 		fi
@@ -746,7 +748,7 @@ run_tests() {
 					head -n-1 "$result_file" \
 					| while IFS= read -r line
 					do
-						if printf '%s' "$line" | grep -qE '^	'  # Line starts with TAB
+						if printf '%s' "$line" | grep -qE "^$tab"
 						then
 							cat "$output_buffer_file" 1>&5
 							: >"$output_buffer_file"

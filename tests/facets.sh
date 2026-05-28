@@ -6,10 +6,15 @@
 set -eu
 
 
+tab='	'
+nl='
+'
+
+
 normalize_facet_list() { # list
 	printf '%s\n' "$1" \
-	| sed -E -e 's/\s*#.*$//' \
-		-e 's/\s+//g' \
+	| sed -E -e 's/[[:blank:]]*#.*$//' \
+		-e 's/[[:blank:]]+//g' \
 		-e '/^$/d'
 }
 
@@ -98,8 +103,10 @@ canonize_facet_names() (
 	set -eu
 	names="$(cat)"
 	{
-		printf '%s\n' "$facets" | sed -E 's/^([^=]+)=(.*)$/\1\n\2/'
-		printf '%s\n' "$facet_categories" | sed -E 's/^([^=]+)=(.*):[^:]*$/\1\n\2/'
+		#shellcheck disable=SC1003
+		printf '%s\n' "$facets" | sed -E 's/^([^=]+)=(.*)$/\1\'"$nl"'\2/'
+		#shellcheck disable=SC1003
+		printf '%s\n' "$facet_categories" | sed -E 's/^([^=]+)=(.*):[^:]*$/\1\'"$nl"'\2/'
 	} | {
 		while read -r canon_name
 		do
@@ -153,7 +160,8 @@ parse_meticulousness() ( # [facet_list]...
 		matched_categories_name_regex="^($(printf '%s' "$matched_categories" | sed -E 's/^([^=]+)=.*$/\1/' | tr '\n' '|'))\$"
 		names="$(
 			printf '%s\n' "$names" | grep -E -v "$matched_categories_name_regex" || true
-			printf '%s\n' "$matched_categories" | sed -E -e 's/^.*:([^:]*)$/\1/' -e 's/,/\n/g'
+			#shellcheck disable=SC1003
+			printf '%s\n' "$matched_categories" | sed -E -e 's/^.*:([^:]*)$/\1/' -e 's/,/\'"$nl"'/g'
 		)"
 	done
 	printf '%s' "$names" | sort_u_facets
@@ -190,10 +198,11 @@ then
 	}
 	
 	pretty_print() { # list_of_facets_or_facet_categories
+		#shellcheck disable=SC1003
 		printf '%s' "$1" \
-		| sed -E -e 's/^\s+//' -e 's/^([^= ]+) *=[^:]*(:[^:]*)?$/\1\2/' \
+		| sed -E -e 's/^[[:blank:]]+//' -e 's/^([^= ]+) *=[^:]*(:[^:]*)?$/\1\2/' \
 		| tr '\n' '~' \
-		| sed -E -e 's/~~|~$/\n/g' -e 's/^~//' \
+		| sed -E -e 's/~~|~$/\'"$nl"'/g' -e 's/^~//' \
 		| while read -r entry
 		do
 			printf ' - '
@@ -210,10 +219,11 @@ then
 				printf ' '
 			fi
 			printf -- '- '
+			#shellcheck disable=SC1003
 			printf '%s' "$entry" \
 			| sed -E -e 's/~[^~]+$//' \
-				-e 's/(^|~)\s*#\s*/\1/g' \
-				-e 's/~/\n\t\t  /g'
+				-e 's/(^|~)[[:blank:]]*#[[:blank:]]*/\1/g' \
+				-e 's/~/\'"$nl$tab$tab"'  /g'
 			printf '\n'
 			if printf '%s\n' "$entry" | grep -E -q ':'
 			then

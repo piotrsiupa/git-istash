@@ -4,6 +4,9 @@ set -eu
 
 . "$(dirname "$0")/lib/git-istash/get_options"
 
+nl='
+'
+
 print_help() {
 	printf '%s - An installation script for "git istash".\n' "$(basename "$0")"
 	printf '    It copies files to the appropriate places and sets up the PATH variable if\n    needed. '
@@ -276,7 +279,8 @@ print_remove_from_profile_task() { # source_path
 	printf 'The line in "%s" that appends "%s" to PATH will be removed.\n' "$(make_profile_path)" "$(make_target_path "$1")"
 }
 execute_remove_from_profile_task() { # source_path
-	delete_regex='(^|\n?\n)([\t ]*#[^\n]*\n)?\s*'"$(make_profile_insertion "$(make_target_path "$1")" | tail -n 1 | head -c -1 | sed -E -e 's/[^^\\;]/[&]/g' -e 's/\^/\\^/g' -e 's/\\/\\\\/g' -e 's/;/\\;/g')"'[\t ]*'
+	#shellcheck disable=SC1003
+	delete_regex='(^|\'"$nl"'?\'"$nl"')([[:blank:]]*#[^\'"$nl"']*\'"$nl"')?[[:space:]]*'"$(make_profile_insertion "$(make_target_path "$1")" | tail -n 1 | head -c -1 | sed -E -e 's/[^^\\;]/[&]/g' -e 's/\^/\\^/g' -e 's/\\/\\\\/g' -e 's/;/\\;/g')"'[[:space:]]*'
 	sed -iE -e ':s ; $! { N ; bs }' -e "\$s;$delete_regex;;" "$(make_profile_path)"
 }
 
@@ -315,7 +319,7 @@ gather_tasks() {
 }
 
 get_istash_version() { # path_to_main_bin_file
-	sed -E -n '/^\s*print_version\s*\(\)\s*\{\s*$/,/^\s*\}\s*$/ s/^\s*printf\>.*istash.*\<version\>.*\s(\S+)\\n'\''\s*$/\1/p' "$1" \
+	sed -E -n '/^[[:blank:]]*print_version[[:blank:]]*\(\)[[:blank:]]*\{[[:blank:]]*$/,/^[[:blank:]]*\}[[:blank:]]*$/ s/^[[:blank:]]*printf\>.*istash.*\<version\>.*[[:blank:]]([[:graph:]]+)\\n'\''[[:blank:]]*$/\1/p' "$1" \
 	| head -n1
 }
 

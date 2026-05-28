@@ -51,13 +51,13 @@ assert_outputs() { # stdout_regex stderr_regex
 	match_multiline_regex "$stdout" "$(dedent_regex "$1")" ||
 		fail 'Expected stdout of "%s" to match:\n"%s"\nbut it is:\n"%s"!\n' \
 			"$last_command" \
-			"$(dedent_regex "$1" | sed -e 's/\\n/\n/g' -e 's/\\t/\t/g' | escape_escape_characters)" \
+			"$(dedent_regex "$1" | sed -e 's/\\n/'"$nl"'/g' -e 's/\\t/'"$tab"'/g' | escape_escape_characters)" \
 			"$(printf '%s' "$stdout" | escape_escape_characters)"
 	#shellcheck disable=SC2154
 	match_multiline_regex "$stderr" "$(dedent_regex "$2")" ||
 		fail 'Expected stderr of "%s" to match:\n"%s"\nbut it is:\n"%s"!\n' \
 			"$last_command" \
-			"$(dedent_regex "$2" | sed -e 's/\\n/\n/g' -e 's/\\t/\t/g' | escape_escape_characters)" \
+			"$(dedent_regex "$2" | sed -e 's/\\n/'"$nl"'/g' -e 's/\\t/'"$tab"'/g' | escape_escape_characters)" \
 			"$(printf '%s' "$stderr" | escape_escape_characters)"
 }
 
@@ -179,10 +179,10 @@ assert_file_contents() { # file expected_current [expected_staged]
 }
 
 assert_files() { # expected_files (see one of the tests as an example)
-	expected_files="$(printf '%s\n' "$1" | sed -E -e 's/^\t+//' -e '/^\s*$/ d')"
-	assert_all_files "$(printf '%s\n' "$expected_files" | grep -vE '^(D |[^U]D) ' | sed -E 's/^...(\S+)(\s.*)?$/\1/')"
-	assert_tracked_files "$(printf '%s\n' "$expected_files" | grep -vE '^(!!|\?\?|A[^A]| A|DU) ' | sed -E 's/^...(\S+)(\s.*)?$/\1/')"
-	assert_status "$(printf '%s\n' "$expected_files" | grep -vE '^(  ) ' | sed -E 's/^(...\S+)(\s.*)?$/\1/')"
+	expected_files="$(printf '%s\n' "$1" | sed -E -e 's/^'"$tab"'+//' -e '/^[[:blank:]]*$/ d')"
+	assert_all_files "$(printf '%s\n' "$expected_files" | grep -vE '^(D |[^U]D) ' | sed -E 's/^...([[:graph:]]+)([[:blank:]].*)?$/\1/')"
+	assert_tracked_files "$(printf '%s\n' "$expected_files" | grep -vE '^(!!|\?\?|A[^A]| A|DU) ' | sed -E 's/^...([[:graph:]]+)([[:blank:]].*)?$/\1/')"
+	assert_status "$(printf '%s\n' "$expected_files" | grep -vE '^(  ) ' | sed -E 's/^(...[[:graph:]]+)([[:blank:]].*)?$/\1/')"
 	printf '%s\n' "$expected_files" \
 	| while IFS= read -r line
 	do

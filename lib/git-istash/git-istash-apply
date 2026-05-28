@@ -246,25 +246,25 @@ print_changes_summary() {
 			# index
 			if [ "$ni$oi" = '10' ]
 			then
-				printf 'i A\t%s\n' "$file"
+				printf 'i A %s\n' "$file"
 			elif [ "$ni$oi" = '01' ]
 			then
-				printf 'i D\t%s\n' "$file"
+				printf 'i D %s\n' "$file"
 			elif [ "$ni_sha" != "$oi_sha" ]
 			then
-				printf 'i M\t%s\n' "$file"
+				printf 'i M %s\n' "$file"
 			fi
 			# tracked
 			if [ "$ni$nt$oi" = '011' ] \
 				|| [ "$ni$nt$ot" = '010' ] \
 				|| [ "$nt$oi$ot" = '110' ]
 			then
-				printf 't A\t%s\n' "$file"
+				printf 't A %s\n' "$file"
 			elif [ "$ni$nt$oi" = '100' ] \
 				|| [ "$ni$nt$ot" = '101' ] \
 				|| [ "$nt$oi$ot" = '001' ]
 			then
-				printf 't D\t%s\n' "$file"
+				printf 't D %s\n' "$file"
 			elif [ "$ni$nt$oi" = '110' ] \
 				|| [ "$ni$nt$ot" = '111' ] \
 				|| [ "$nt$oi$ot" = '101' ]
@@ -285,7 +285,7 @@ print_changes_summary() {
 					)"
 					if [ "$old_changes" != "$new_changes" ]
 					then
-						printf 't M\t%s\n' "$file"
+						printf 't M %s\n' "$file"
 					fi
 				fi
 			fi
@@ -297,29 +297,29 @@ print_changes_summary() {
 				if [ "$nt$nu$ot" = '011' ] \
 					|| [ "$nt$nu$ou" = '010' ]
 				then
-					printf 'u C\t%s\n' "$file"
+					printf 'u C %s\n' "$file"
 				elif [ "$ni$nu$ot$ou" = '0001' ]
 				then
-					printf 'u D\t%s\n' "$file"
+					printf 'u D %s\n' "$file"
 				elif [ "$nt$nu$oi$ot" = '0111' ] \
 					|| [ "$nt$nu$ot$ou" = '0101' ]
 				then
 					if [ "$nu_sha" != "$ou_sha" ]
 					then
-						printf 'u M\t%s\n' "$file"
+						printf 'u M %s\n' "$file"
 					fi
 				fi
 			elif [ "$summary_mode" = 'complete' ]
 			then
 				if [ "$ou" = '1' ]
 				then
-					printf 'u I\t%s\n' "$file"
+					printf 'u I %s\n' "$file"
 				elif [ "$nu" = 1 ]
 				then
 					if printf -- "%s:$file" "$untracked_changes_sha" \
 						| xargs -0 -- git --literal-pathspecs rev-parse --verify --quiet 1>/dev/null 2>&1
 					then
-						printf 'u T\t%s\n' "$file"
+						printf 'u T %s\n' "$file"
 					fi
 				fi
 			fi
@@ -347,29 +347,29 @@ print_changes_summary() {
 			then
 				printf '    %sindex:%s\\n' "$header_color_escape_code" "${header_color_escape_code:+$reset_escape_code}"
 				printf '%s\n' "$index_changes" \
-				| sed -E -e 's/^A\t(.+)$/added:\t\t\1/' \
-					-e 's/^M\t(.+)$/modified:\t\1/' \
-					-e 's/^D\t(.+)$/deleted:\t\1/' \
+				| sed -E -e 's/^A (.+)$/added:'"$tab$tab"'\1/' \
+					-e 's/^M (.+)$/modified:'"$tab"'\1/' \
+					-e 's/^D (.+)$/deleted:'"$tab"'\1/' \
 					-e 's/^.+$/\t'"$updated_color_escape_code"'&'"${updated_color_escape_code:+$reset_escape_code}"'\\n/'
 			fi
 			if [ -n "$tracked_changes" ]
 			then
 				printf '    %stracked files:%s\\n' "$header_color_escape_code" "${header_color_escape_code:+$reset_escape_code}"
 				printf '%s\n' "$tracked_changes" \
-				| sed -E -e 's/^A\t(.+)$/added:\t\t\1/' \
-					-e 's/^M\t(.+)$/modified:\t\1/' \
-					-e 's/^D\t(.+)$/deleted:\t\1/' \
+				| sed -E -e 's/^A (.+)$/added:'"$tab$tab"'\1/' \
+					-e 's/^M (.+)$/modified:'"$tab"'\1/' \
+					-e 's/^D (.+)$/deleted:'"$tab"'\1/' \
 					-e 's/^.+$/\t'"$changed_color_escape_code"'&'"${changed_color_escape_code:+$reset_escape_code}"'\\n/'
 			fi
 			if [ -n "$untracked_changes" ]
 			then
 				printf '    %suntracked files:%s\\n' "$header_color_escape_code" "${header_color_escape_code:+$reset_escape_code}"
 				printf '%s\n' "$untracked_changes" \
-				| sed -E -e 's/^C\t(.+)$/created:\t\1/' \
-					-e 's/^M\t(.+)$/modified:\t\1/' \
-					-e 's/^D\t(.+)$/deleted:\t\1/' \
-					-e 's/^T\t(.+)$/touched:\t\1/' \
-					-e 's/^I\t(.+)$/ignored:\t\1/' \
+				| sed -E -e 's/^C (.+)$/created:'"$tab"'\1/' \
+					-e 's/^M (.+)$/modified:'"$tab"'\1/' \
+					-e 's/^D (.+)$/deleted:'"$tab"'\1/' \
+					-e 's/^T (.+)$/touched:'"$tab"'\1/' \
+					-e 's/^I (.+)$/ignored:'"$tab"'\1/' \
 					-e 's/^.+$/\t'"$untracked_color_escape_code"'&'"${untracked_color_escape_code:+$reset_escape_code}"'\\n/'
 			fi
 		} \
