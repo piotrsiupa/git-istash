@@ -22,13 +22,13 @@ convert_to_octal_lines() {
 	| sed -E 's/\\000/\'"$nl"'/g'
 }
 # Convert to octal lines to have only the problematic characters octalized.
-# (Restore printable characters except the "\" and "%" to plain text.)
+# (Restore printable characters except the "\" to plain text.)
 relax_octal_sanitization() {
 	sed -E -e 's/\\/\\\\/g' \
-		-e 's/\\\\(0(4[1-467]|[5-7][0-7])|1([0-24-6][0-7]|3[0-35-7]|7[0-6]))/\\\1/g' \
+		-e 's/\\\\(0(4[1-7]|[5-7][0-7])|1([0-24-6][0-7]|3[0-35-7]|7[0-6]))/\\\1/g' \
 		-e 's/$/\\n/' \
 	| tr '\n' '\0' \
-	| xargs -0 -n1 -r -- printf --
+	| xargs -0 -r -- printf '%b'
 }
 
 data_dir_path="$(git rev-parse --git-dir)"

@@ -15,10 +15,8 @@ _remove_tracked_files_from_untracked() ( # untracked_sha [path]
 		cd "$(git rev-parse --show-toplevel)"
 		set -- "$1" ':/'
 	fi
-	#shellcheck disable=SC2059
-	tracked_files="$(printf -- "$2" | xargs -0 -- git --no-literal-pathspecs ls-tree -z "$1~" -- | _sanitize_ls_tree)"
-	#shellcheck disable=SC2059
-	printf -- "$2" | xargs -0 -- git --no-literal-pathspecs ls-tree -z "$1" -- | _sanitize_ls_tree \
+	tracked_files="$(printf '%b' "$2" | xargs -0 -- git --no-literal-pathspecs ls-tree -z "$1~" -- | _sanitize_ls_tree)"
+	printf '%b' "$2" | xargs -0 -- git --no-literal-pathspecs ls-tree -z "$1" -- | _sanitize_ls_tree \
 	| while read -r line
 	do
 		if printf '%s' "$tracked_files" | grep -qxF "$line"
@@ -33,12 +31,11 @@ _remove_tracked_files_from_untracked() ( # untracked_sha [path]
 		then
 			printf '%s\\000' "$line"
 		else
-			#shellcheck disable=SC2059
 			subtree_sha="$(_remove_tracked_files_from_untracked "$1" "$5/")"
 			printf '%s\\000' "$line" | sed -E 's;^([[:digit:]]+[[:blank:]]+[[:alpha:]]+[[:blank:]]+)[[:xdigit:]]+([[:blank:]]);\1'"$subtree_sha"'\2;'
 		fi | sed -E 's;^(.*'"$tab"')(.*/)?([^/]+)$;\1\3;'
 		printf '\0'
-	done | xargs -n1 -r0 -- printf -- \
+	done | xargs -r0 -- printf '%b' \
 	| git mktree -z
 )
 
@@ -62,10 +59,8 @@ _merge_tracked_and_untracked() ( # tracked_sha [path]
 		set -- "$1" ':/'
 	fi
 	{
-		#shellcheck disable=SC2059
-		printf -- "$2" | xargs -0 -- git --no-literal-pathspecs ls-tree -z "$1" -- | _sanitize_ls_tree
-		#shellcheck disable=SC2059
-		printf -- "$2" | xargs -0 -- git --no-literal-pathspecs ls-tree -z "$1^3" -- | _sanitize_ls_tree
+		printf '%b' "$2" | xargs -0 -- git --no-literal-pathspecs ls-tree -z "$1" -- | _sanitize_ls_tree
+		printf '%b' "$2" | xargs -0 -- git --no-literal-pathspecs ls-tree -z "$1^3" -- | _sanitize_ls_tree
 	} | awk '!seen[$4]++' \
 	| while read -r line
 	do
@@ -77,12 +72,11 @@ _merge_tracked_and_untracked() ( # tracked_sha [path]
 		then
 			printf '%s\\000' "$line"
 		else
-			#shellcheck disable=SC2059
 			subtree_sha="$(_merge_tracked_and_untracked "$1" "$5/")"
 			printf '%s\\000' "$line" | sed -E 's;^([[:digit:]]+[[:blank:]]+[[:alpha:]]+[[:blank:]]+)[[:xdigit:]]+([[:blank:]]);\1'"$subtree_sha"'\2;'
 		fi | sed -E 's;^(.*'"$tab"')(.*/)?([^/]+)$;\1\3;'
 		printf '\0'
-	done | xargs -n1 -r0 -- printf -- \
+	done | xargs -r0 -- printf '%b' \
 	| git mktree -z
 )
 

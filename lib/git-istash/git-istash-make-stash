@@ -97,7 +97,6 @@ is_pathspec_exclude() { # pathspec
 	then
 		return 1
 	fi
-	#shellcheck disable=SC2059
 	printf '%s' "$1" | grep -qE '^:([!^]:?|\(([^()]+,)?exclude(,[^()]+)?\))'
 }
 
@@ -109,28 +108,25 @@ check_pathspec() {
 		| while read -r ps || [ -n "$ps" ]
 		do
 			good=n
-			#shellcheck disable=SC2059
 			if is_pathspec_exclude "$ps"
 			then
 				good=y
-			elif printf -- "$ps" | xargs -0 -- git commit --dry-run --short --quiet -- 1>/dev/null 2>&1
+			elif printf '%b' "$ps" | xargs -0 -- git commit --dry-run --short --quiet -- 1>/dev/null 2>&1
 			then
 				good=y
-			elif [ "$has_3_commits" = y ] && printf -- "$ps" | xargs -0 -- git ls-files --others --error-unmatch -- 1>/dev/null 2>&1
+			elif [ "$has_3_commits" = y ] && printf '%b' "$ps" | xargs -0 -- git ls-files --others --error-unmatch -- 1>/dev/null 2>&1
 			then
 				good=y
-				#shellcheck disable=SC2059
-				if [ "$include_ignored" = n ] && ! printf -- "$ps" | xargs -0 -- git ls-files --others --exclude-standard --error-unmatch -- 1>/dev/null 2>&1
+				if [ "$include_ignored" = n ] && ! printf '%b' "$ps" | xargs -0 -- git ls-files --others --exclude-standard --error-unmatch -- 1>/dev/null 2>&1
 				then
 					good=n
-				elif [ "$include_untracked" = n ] && [ "$(printf -- "$ps" | xargs -0 -- git ls-files --others -z -- | tr -cd '\0' | wc -c)" -eq "$(printf -- "$ps" | xargs -0 -- git ls-files --others --exclude-standard -z -- | tr -cd '\0' | wc -c)" ] 2>/dev/null
+				elif [ "$include_untracked" = n ] && [ "$(printf '%b' "$ps" | xargs -0 -- git ls-files --others -z -- | tr -cd '\0' | wc -c)" -eq "$(printf '%b' "$ps" | xargs -0 -- git ls-files --others --exclude-standard -z -- | tr -cd '\0' | wc -c)" ] 2>/dev/null
 				then
 					good=n
 				fi
 			fi
 			if [ "$good" = n ]
 			then
-				#shellcheck disable=SC2059
 				error 'pathspec '\'"$ps"\'' did not match any file(s)\n'
 			fi
 		done
@@ -142,11 +138,9 @@ add_with_pathspec() {
 	| relax_octal_sanitization \
 	| while read -r ps || [ -n "$ps" ]
 	do
-		#shellcheck disable=SC2059
-		if is_pathspec_exclude "$ps" || printf -- "$ps" | xargs -0 -- git add --update --dry-run -- 1>/dev/null 2>&1
+		if is_pathspec_exclude "$ps" || printf '%b' "$ps" | xargs -0 -- git add --update --dry-run -- 1>/dev/null 2>&1
 		then
-			#shellcheck disable=SC2059
-			printf -- "$ps\0"
+			printf '%b\0' "$ps"
 		fi
 	done \
 	| xargs -r0 -- git add --update --ignore-errors -- #TODO "--ignore-errors" is temporary - there is a regression in Git
@@ -158,11 +152,9 @@ add_with_patch_and_pathspec() {
 	| relax_octal_sanitization \
 	| while read -r ps || [ -n "$ps" ]
 	do
-		#shellcheck disable=SC2059
-		if is_pathspec_exclude "$ps" || printf -- "$ps" | xargs -0 -- git add --update --dry-run -- 1>/dev/null 2>&1
+		if is_pathspec_exclude "$ps" || printf '%b' "$ps" | xargs -0 -- git add --update --dry-run -- 1>/dev/null 2>&1
 		then
-			#shellcheck disable=SC2059
-			printf -- "$ps\0"
+			printf '%b\0' "$ps"
 		fi
 	done \
 	| xargs -r0 -- sh -c 'git add --update --patch -- "$@" <&3 1>&2' --

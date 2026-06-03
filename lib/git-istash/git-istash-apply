@@ -192,30 +192,27 @@ print_changes_summary() {
 			# the 2nd letter is "index" / "tracked" / "untracked".
 			#shellcheck disable=SC2015
 			oi_sha="$(
-				printf -- "%s:$file" "$working_dir_changes_sha~2" \
+				printf '%s:%b' "$working_dir_changes_sha~2" "$file" \
 				| xargs -0 -- git --literal-pathspecs rev-parse --verify 2>/dev/null
 			)" && oi=1 || { oi_sha="$zero_sha" ; oi=0 ; }
-			printf -- "%s:$file" "$working_dir_changes_sha~1" \
+			printf '%s:%b' "$working_dir_changes_sha~1" "$file" \
 			| xargs -0 -- git --literal-pathspecs rev-parse --verify 1>/dev/null 2>&1 \
 			&& ot=1 || ot=0
 			#shellcheck disable=SC2015
 			ou_sha="$(
-				printf -- "%s:$file" "$working_dir_changes_sha~0" \
+				printf '%s:%b' "$working_dir_changes_sha~0" "$file" \
 				| xargs -0 -- git --literal-pathspecs rev-parse --verify 2>/dev/null
 			)" && ou=1 || { ou_sha="$zero_sha" ; ou=0 ; }
 			ni_sha="$(
-				#shellcheck disable=SC2059
-				if ! printf -- "$file" \
+				if ! printf '%b' "$file" \
 					| xargs -0 -- git --literal-pathspecs status --porcelain -- \
 					| grep -E -q '^.A'
 				then
-					#shellcheck disable=SC2059
-					printf -- "$file" \
+					printf '%b' "$file" \
 					| xargs -0 -- git --literal-pathspecs ls-files -s -- \
 					| cut -d' ' -f2
 				else
-					#shellcheck disable=SC2059
-					printf -- "$file" \
+					printf '%b' "$file" \
 					| xargs -0 -- git --literal-pathspecs status --porcelain=2 -- \
 					| head -n1 \
 					| cut -d' ' -f8
@@ -223,16 +220,14 @@ print_changes_summary() {
 			)" ; ni_sha="${ni_sha:-"$zero_sha"}" ; test "$ni_sha" != "$zero_sha" && ni=1 || ni=0
 			#shellcheck disable=SC2015
 			nt_sha="$(
-				#shellcheck disable=SC2059
-				printf -- "$file" \
+				printf '%b' "$file" \
 				| xargs -0 -- git --literal-pathspecs ls-files --error-unmatch -- 1>/dev/null 2>&1 \
-				&& printf -- "$file" \
+				&& printf '%b' "$file" \
 				| xargs -0 -- git --literal-pathspecs hash-object -- 2>/dev/null
 			)" && nt=1 || { nt_sha="$zero_sha" ; nt=0 ; }
 			#shellcheck disable=SC2015
 			nu_sha="$(
-				#shellcheck disable=SC2059
-				printf -- "$file" \
+				printf '%b' "$file" \
 				| xargs -0 -- git --literal-pathspecs hash-object -- 2>/dev/null
 			)" && nu=1 || nu=0
 			# The ifs can be interpreted by their direct meaning but it's complicated.
@@ -264,14 +259,12 @@ print_changes_summary() {
 				if [ "$ni_sha" = "$oi_sha" ] || [ "$nt_sha" != "$ni_sha" ]
 				then
 					old_changes="$(
-						#shellcheck disable=SC2059
-						printf -- "$file" \
+						printf '%b' "$file" \
 						| xargs -0 -- git --literal-pathspecs diff-files -p -- \
 						| sed -E -e 's/^@@.*$/@@/'
 					)"
 					new_changes="$(
-						#shellcheck disable=SC2059
-						printf -- "$file" \
+						printf '%b' "$file" \
 						| xargs -0 -- git --literal-pathspecs diff-tree -p "$working_dir_changes_sha~2" "$working_dir_changes_sha~1" -- \
 						| sed -E -e 's/^@@.*$/@@/'
 					)"
@@ -283,8 +276,7 @@ print_changes_summary() {
 				;;
 			esac
 			# untracked
-			#shellcheck disable=SC2059
-			if ! printf -- "$file" \
+			if ! printf '%b' "$file" \
 				| xargs -0 -- git check-ignore --quiet --
 			then
 				#shellcheck disable=SC2221,SC2222
@@ -309,7 +301,7 @@ print_changes_summary() {
 					printf 'u I %s\n' "$file"
 				elif [ "$nu" = 1 ]
 				then
-					if printf -- "%s:$file" "$untracked_changes_sha" \
+					if printf '%s:%b' "$untracked_changes_sha" "$file" \
 						| xargs -0 -- git --literal-pathspecs rev-parse --verify --quiet 1>/dev/null 2>&1
 					then
 						printf 'u T %s\n' "$file"
@@ -364,7 +356,7 @@ print_changes_summary() {
 			fi
 		} \
 		| tr '\n' '\0' \
-		| xargs -0 -n1 -- printf --
+		| xargs -0 -- printf '%b'
 	else
 		printf '\t%sno changes were made%s\n' "$header_color_escape_code" "${header_color_escape_code:+$reset_escape_code}"
 	fi

@@ -23,8 +23,7 @@ break_long_lines() { # new_line_prefix
 				| sed -E 's/ [^ ]*$//'
 			)"
 			printf '%s\n' "$cut_line"
-			#shellcheck disable=SC2059
-			line="$(printf "$1")$(printf '%s' "$line" | tail -c+$((${#cut_line} + 2)))"
+			line="$(printf '%b' "$1")$(printf '%s' "$line" | tail -c+$((${#cut_line} + 2)))"
 		done
 		printf '%s\n' "$line"
 	done

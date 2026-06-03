@@ -126,7 +126,7 @@ convert_escapes() {
 	#shellcheck disable=SC2016
 	sed -E -e 's/\\/\\\\/g' -e 's/\\\\\\\\([0-9t])/\\\1/g' -e 's/\\\\\\\\\\\\\\\\/\\\\\\\\/g' \
 	| tr '\n' '\0' \
-	| xargs -0 -n1 -- sh -c 'printf -- "$1\n"' --
+	| xargs -0 -- printf '%b\n'
 }
 
 sanitize_for_sed() { # string
