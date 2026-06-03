@@ -126,7 +126,7 @@ assert_tracked_files() { # expected
 
 assert_status() { # expected
 	set -- "$(printf '%s\n' "$1" | _prepare_path_list_for_assertion y)"
-	value_for_assert="$(git status --porcelain -z --untracked-files=all --ignored --no-renames --ignore-submodules=all | _convert_zero_separated_path_list | _prepare_path_list_for_assertion y)"
+	value_for_assert="$(git status --porcelain -z --untracked-files=all --ignored --no-renames --ignore-submodules=dirty | _convert_zero_separated_path_list | _prepare_path_list_for_assertion y)"
 	test "$value_for_assert" = "$1" ||
 		fail 'Expected repository status to be:\n"%s"\nbut it is:\n"%s"!\n' "$1" "$value_for_assert"
 	unset value_for_assert
@@ -190,8 +190,8 @@ assert_submodule_file_contents() { # file expected
 assert_files() { # expected_files (see one of the tests as an example)
 	expected_files="$(printf '%s\n' "$1" | sed -E -e 's/^\t+//' -e '/^\s*$/ d')"
 	assert_all_files "$(printf '%s\n' "$expected_files" | grep -vE '^(D |[^U]D|#[^#]) ' | sed -E 's/^...(\S+)(\s.*)?$/\1/')"
-	assert_tracked_files "$(printf '%s\n' "$expected_files" | grep -vE '^(!!|\?\?|A[^A]| A|DU|##) ' | sed -E 's/^...(\S+)(\s.*)?$/\1/')"
-	assert_status "$(printf '%s\n' "$expected_files" | grep -vE '^(  |#[# ]) ' | sed -E 's/^(...\S+)(\s.*)?$/\1/')"
+	assert_tracked_files "$(printf '%s\n' "$expected_files" | grep -vE '^(!!|\?\?|A[^A]| A|DU|#[#A?]) ' | sed -E 's/^...(\S+)(\s.*)?$/\1/')"
+	assert_status "$(printf '%s\n' "$expected_files" | grep -vE '^(  |#[^A?]) ' | sed -E -e 's/^#\?/??/' -e 's/^#(.)/\1 /' -e 's/^(...\S+)(\s.*)?$/\1/')"
 	printf '%s\n' "$expected_files" \
 	| while IFS= read -r line
 	do
@@ -200,7 +200,7 @@ assert_files() { # expected_files (see one of the tests as an example)
 			continue
 		fi
 		stripped_line="$(printf '%s' "$line" | cut -c4-)"
-		if printf '%s' "$line" | grep -qE '^(D |##) '
+		if printf '%s' "$line" | grep -qE '^(D |#[#?]) '
 		then
 			test "$(printf '%s' "$stripped_line" | awk '{printf NF}')" -eq 1 ||
 				fail 'Error in test: the file "%s" should have 0 versions of content to check!\n' "$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}')"
@@ -220,7 +220,7 @@ assert_files() { # expected_files (see one of the tests as an example)
 					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}' | sed -E 's/<empty>//')" \
 					'' \
 					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}' | sed -E 's/<empty>//')"
-			elif printf '%s' "$line" | grep -qEv '^(# ) '
+			elif printf '%s' "$line" | grep -qEv '^(#[ A]) '
 			then
 				assert_file_contents \
 					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}' | sed -E 's/<empty>//')" \

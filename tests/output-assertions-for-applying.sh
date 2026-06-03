@@ -103,15 +103,15 @@ assert_outputs__apply__success() { # operation changes [stash_id stash_sha] [err
 					printf '    [<color>34mindex:[<color>0?m\\n\n'
 					printf '%s' "$changes" \
 					| grep -E '^[^ ?!]' \
-					| sed -E -e 's/^A. (.+)$/\\\\t\[<color>32madded:\\t\\t\1\[<color>0?m\\n/' \
+					| sed -E -e 's/^(A.|#A) (.+)$/\\\\t\[<color>32madded:\\t\\t\2\[<color>0?m\\n/' \
 						-e 's/^M. (.+)$/\\\\t\[<color>32mmodified:\\t\1\[<color>0?m\\n/' \
 						-e 's/^D. (.+)$/\\\\t\[<color>32mdeleted:\\t\1\[<color>0?m\\n/'
 				fi
-				if printf '%s' "$changes" | grep -Eq '^[^?!][^ ]'
+				if printf '%s' "$changes" | grep -Eq '^[^?!#][^ ]'
 				then
 					printf '    [<color>34mtracked files:[<color>0?m\\n\n'
 					printf '%s' "$changes" \
-					| grep -E '^[^?!][^ ]' \
+					| grep -E '^[^?!#][^ ]' \
 					| sed -E -e 's/^.A (.+)$/\\\\t\[<color>31madded:\\t\\t\1\[<color>0?m\\n/' \
 						-e 's/^.M (.+)$/\\\\t\[<color>31mmodified:\\t\1\[<color>0?m\\n/' \
 						-e 's/^.D (.+)$/\\\\t\[<color>31mdeleted:\\t\1\[<color>0?m\\n/'

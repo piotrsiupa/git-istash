@@ -414,7 +414,7 @@ handle_stash_sha() { # stash_sha
 }
 
 restore_working_tree() {
-	git switch --quiet --detach "$unstashed_changes_sha"
+	git switch --quiet --detach "$unstashed_changes_sha" 2>/dev/null
 	unstaged_commit_sha="$(git rev-parse 'HEAD~')"
 	git reset --mixed HEAD~2 1>/dev/null
 	(
