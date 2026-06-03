@@ -2,10 +2,14 @@
 
 set -eu
 
-. "$(dirname "$0")/../lib/git-istash/git-istash-io"
-
 min_git_version='2.43.0'
 min_git_version_regex='2\.(4[2-9]|[5-9][0-9]|[1-9][0-9]{2,})(\..+)?'
+bin_dir="$(dirname "$0")"
+lib_dir="$bin_dir/../lib"
+man_dir="$bin_dir/../man"
+
+#shellcheck source=SCRIPTDIR/../lib/git-istash/git-istash-io
+. "$lib_dir/git-istash/git-istash-io"
 
 print_help() {
 	printf 'git istash - Improved version of "git stash" that can handle more corner cases.\n'
@@ -58,20 +62,20 @@ is_option_alias() { # subcommand
 exec_subcommand() { # subcommand [arguments...]
 	subcommand="$1"
 	shift
-	subcommand_path="$(dirname "$0")/../lib/git-istash/git-istash-$subcommand"
+	subcommand_path="$lib_dir/git-istash/git-istash-$subcommand"
 	if [ ! -f "$subcommand_path" ] || [ ! -x "$subcommand_path" ]
 	then
-		subcommand_path="$(dirname "$0")/../lib/git-istash/git-istash-push"
+		subcommand_path="$lib_dir/git-istash/git-istash-push"
 		set -- '--_implicit-push_' "$subcommand" "$@"
 	fi
 	exec sh "$subcommand_path" "$@"
 }
 
 show_manual() {
-	if [ -f "$(dirname "$0")/../man/man1/git-istash.1" ]
+	if [ -f "$man_dir/man1/git-istash.1" ]
 	then
 		if (
-			cd "$(dirname "$0")/../man"
+			cd "$man_dir"
 			MANPATH="$(pwd)"
 			export MANPATH
 			man git-istash
@@ -150,16 +154,16 @@ do
 		exit 0
 		;;
 	-c|--continue|--abort|--quit)
-		options_to_put_back="$options_to_put_back $(printf '%s' "$1" | escape_for_shell)"
 		continuation_option="$1"
+		options_to_put_back="$options_to_put_back $(printf '%s' "$1" | escape_for_shell)"
 		;;
 	--)
 		shift
-		if [ $# -ne 0 ] && printf '%s' "$1" | grep -E -q '^[^-]'
+		if [ $# -ne 0 ] && [ "${1#-}" = "$1" ]
 		then
 			if is_option_alias "$1"
 			then
-				if [ "$(printf '%s' "$1" | head -c1)" = 'c' ]
+				if [ "${1#c}" != "$1" ]
 				then
 					shift
 					set -- 'continue' "$@"
@@ -190,7 +194,8 @@ then
 		subcommand='push'
 		set -- '--_implicit-push_' "$@"
 	else
-		. "$(dirname "$0")/../lib/git-istash/git-istash-commons"
+		#shellcheck source=SCRIPTDIR/../lib/git-istash/git-istash-commons
+		. "$lib_dir/git-istash/git-istash-commons"
 		data_files="$(find_data_files)"
 		case "$data_files" in
 			nothing)
@@ -205,7 +210,7 @@ then
 			error-*)
 				if [ "$continuation_option" = '--quit' ]
 				then
-					subcommand="$(printf '%s' "$data_files" | tail -c+7)"
+					subcommand="${data_files#error-}"
 				else
 					print_error_for_data_files_check "$data_files" 'push'
 					exit 1

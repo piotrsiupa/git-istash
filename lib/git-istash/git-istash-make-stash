@@ -42,28 +42,15 @@ convert_pathspec_file() {
 		#shellcheck disable=SC1003,SC2031
 		convert_to_octal \
 		| sed -E 's/(\\042(\\(0[0-35-7][0-7]|04[0-13-7]|1[0-24-7][0-7]|13[0-35-7]|[2-3][0-7]{2}|134\\[0-7]{1,3}))*\\042|(\\(0[02-7][0-7]|01[13-7]|[1-3][0-7]{2}))*)((\\015)?\\012|$)/\1\'"$nl"'/g' \
-		| sed -E 's/\\015$//' \
-		| while read -r line
-		do
-			if printf '%s\n' "$line" | grep -qEx '\\042.*\\042'
-			then
-				#shellcheck disable=SC2059
-				printf -- "$(
-					#shellcheck disable=SC2059
-					printf -- "$(
-						printf '%s' "$line" \
-						| sed -E -e 's/\\042(.*)\\042/\1/' \
-							-e 's/\\/\\\\/g' \
-							-e 's/\\134\\(\\06[0-3])\\(\\0(6[0-7]|7[0-1]))\\(\\0(6[0-7]|7[0-1]))\\/\\134\\\1\2\4\\/g' \
-							-e 's/\\134\\(\\0(6[0-7]|7[0-1]))\\(\\0(6[0-7]|7[0-1]))\\/\\134\\\1\3\\/g' \
-							-e 's/\\134\\(\\[0-7]{1,3})\\/134\1\\/g'
-					)"
-				)\\0"
-			else
-				#shellcheck disable=SC2059
-				printf -- "$line\0"
-			fi
-		done
+		| relax_octal_sanitization \
+		| sed -E -e 's/\\015$//' \
+			-e 's/^"(.*)"$/\1/' \
+			-e 't end' \
+			-e 's/\\/\\\\/g' \
+			-e ':end' \
+		| tr '\n' '\0' \
+		| xargs -0 -r -- printf '%b\0' \
+		| xargs -0 -r -- printf '%b\0'
 	fi
 }
 
@@ -106,19 +93,19 @@ cleanup() {
 }
 
 is_pathspec_exclude() { # pathspec
-	if parse_git_bool "${GIT_LITERAL_PATHSPECS+"$GIT_LITERAL_PATHSPECS"}"
+	if parse_git_bool "${GIT_LITERAL_PATHSPECS-}"
 	then
 		return 1
 	fi
 	#shellcheck disable=SC2059
-	! printf '%s' "$1" | grep -qE '\\012' \
-	&& printf -- "$1" | grep -qE '^:([!^]:?|\(([^()],)?exclude(,[^()])?\))'
+	printf '%s' "$1" | grep -qE '^:([!^]:?|\(([^()]+,)?exclude(,[^()]+)?\))'
 }
 
 check_pathspec() {
 	if [ -n "$pathspec_file" ]
 	then
 		convert_to_octal_lines <"$pathspec_file" \
+		| relax_octal_sanitization \
 		| while read -r ps || [ -n "$ps" ]
 		do
 			good=n
@@ -152,6 +139,7 @@ check_pathspec() {
 
 add_with_pathspec() {
 	convert_to_octal_lines <"$pathspec_file" \
+	| relax_octal_sanitization \
 	| while read -r ps || [ -n "$ps" ]
 	do
 		#shellcheck disable=SC2059
@@ -167,6 +155,7 @@ add_with_pathspec() {
 add_with_patch_and_pathspec() {
 	exec 3<&0
 	convert_to_octal_lines <"$pathspec_file" \
+	| relax_octal_sanitization \
 	| while read -r ps || [ -n "$ps" ]
 	do
 		#shellcheck disable=SC2059

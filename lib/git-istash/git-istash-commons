@@ -21,9 +21,19 @@ convert_to_octal_lines() {
 	convert_to_octal \
 	| sed -E 's/\\000/\'"$nl"'/g'
 }
+# Convert to octal lines to have only the problematic characters octalized.
+# (Restore printable characters except the "\" and "%" to plain text.)
+relax_octal_sanitization() {
+	sed -E -e 's/\\/\\\\/g' \
+		-e 's/\\\\(0(4[1-467]|[5-7][0-7])|1([0-24-6][0-7]|3[0-35-7]|7[0-6]))/\\\1/g' \
+		-e 's/$/\\n/' \
+	| tr '\n' '\0' \
+	| xargs -0 -n1 -r -- printf --
+}
 
+data_dir_path="$(git rev-parse --git-dir)"
 make_data_file_path() { # name
-	git rev-parse --git-dir | tr -d '\n'
+	printf '%s' "$data_dir_path"
 	printf '/istash %s' "$1" | tr ' a-z' '_A-Z'
 }
 make_target_data_file_path() {
@@ -174,15 +184,15 @@ check_stash() { # stash
 		fatal \''%s^1'\'' isn'\''t the parent of '\''%s^2'\'' like in a stash\n' "$stash_commit" "$stash_commit"
 	fi
 	correct_commit_msgs=0
-	if [ "$parents_num" -eq 3 ] && git rev-list --format='%B' --max-count=1 "$stash_commit^3" | head -n 2 | tail -n 1 | grep -qE '^untracked files on .+:'
+	if [ "$parents_num" -eq 3 ] && git rev-list --format='%B' --max-count=1 "$stash_commit^3" | sed -E -n '2p' | grep -qE '^untracked files on .+:'
 	then
 		correct_commit_msgs=$((correct_commit_msgs + 1))
 	fi
-	if git rev-list --format='%B' --max-count=1 "$stash_commit^2" | head -n 2 | tail -n 1 | grep -qE '^index on .+:'
+	if git rev-list --format='%B' --max-count=1 "$stash_commit^2" | sed -E -n '2p' | grep -qE '^index on .+:'
 	then
 		correct_commit_msgs=$((correct_commit_msgs + 1))
 	fi
-	if git rev-list --format='%B' --max-count=1 "$stash_commit" | head -n 2 | tail -n 1 | grep -qE '^(WIP on|On) .+:'
+	if git rev-list --format='%B' --max-count=1 "$stash_commit" | sed -E -n '2p' | grep -qE '^(WIP on|On) .+:'
 	then
 		correct_commit_msgs=$((correct_commit_msgs + 1))
 	fi

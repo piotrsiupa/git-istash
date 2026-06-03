@@ -4,12 +4,8 @@ tab='	'
 
 _sanitize_ls_tree() {
 	convert_to_octal_lines \
-	| sed -E -e 's/\\/\\\\/g' \
-		-e 's/((\\\\(0[0-35-7][0-7]|04[1-7]|[1-3][0-7]{2}))+)\\\\040((\\\\(0[0-35-7][0-7]|04[1-7]|[1-3][0-7]{2}))+)\\\\040((\\\\(0[02-7][0-7]|01[02-7]|[1-3][0-7]{2}))+)\\\\011/\1\\040\4\\040\7\\011/' \
-		-e 's/\\\\(0(4[1-467]|[5-7][0-7])|1([0-24-6][0-7]|3[0-35-7]|7[0-6]))/\\\1/g' \
-		-e 's/$/\\n/' \
-	| tr '\n' '\0' \
-	| xargs -n1 -r0 -- printf --
+	| relax_octal_sanitization \
+	| sed -E 's/^([[:digit:]]+)\\040([[:alpha:]]+)\\040([[:xdigit:]]+)\\011/\1 \2 \3'"$tab"'/'
 }
 
 _remove_tracked_files_from_untracked() ( # untracked_sha [path]
@@ -29,12 +25,16 @@ _remove_tracked_files_from_untracked() ( # untracked_sha [path]
 		then
 			continue
 		fi
-		if [ "$(printf '%s\n' "$line" | awk '{print $2}')" = 'blob' ]
+		set -f
+		#shellcheck disable=SC2086
+		set -- "$1" $line
+		set +f
+		if [ "$3" = 'blob' ]
 		then
 			printf '%s\\000' "$line"
 		else
 			#shellcheck disable=SC2059
-			subtree_sha="$(_remove_tracked_files_from_untracked "$1" "$(printf '%s' "$line" | sed -E '1 s/^.*'"$tab"'//')/")"
+			subtree_sha="$(_remove_tracked_files_from_untracked "$1" "$5/")"
 			printf '%s\\000' "$line" | sed -E 's;^([[:digit:]]+[[:blank:]]+[[:alpha:]]+[[:blank:]]+)[[:xdigit:]]+([[:blank:]]);\1'"$subtree_sha"'\2;'
 		fi | sed -E 's;^(.*'"$tab"')(.*/)?([^/]+)$;\1\3;'
 		printf '\0'
@@ -63,18 +63,22 @@ _merge_tracked_and_untracked() ( # tracked_sha [path]
 	fi
 	{
 		#shellcheck disable=SC2059
-		printf -- "$2" | xargs -0 -- git --no-literal-pathspecs ls-tree -z "$1" -- | _sanitize_ls_tree || true
+		printf -- "$2" | xargs -0 -- git --no-literal-pathspecs ls-tree -z "$1" -- | _sanitize_ls_tree
 		#shellcheck disable=SC2059
-		printf -- "$2" | xargs -0 -- git --no-literal-pathspecs ls-tree -z "$1^3" -- | _sanitize_ls_tree || true
+		printf -- "$2" | xargs -0 -- git --no-literal-pathspecs ls-tree -z "$1^3" -- | _sanitize_ls_tree
 	} | awk '!seen[$4]++' \
 	| while read -r line
 	do
-		if [ "$(printf '%s\n' "$line" | awk '{print $2}')" = 'blob' ]
+		set -f
+		#shellcheck disable=SC2086
+		set -- "$1" $line
+		set +f
+		if [ "$3" = 'blob' ]
 		then
 			printf '%s\\000' "$line"
 		else
 			#shellcheck disable=SC2059
-			subtree_sha="$(_merge_tracked_and_untracked "$1" "$(printf '%s' "$line" | sed -E '1 s/^.*'"$tab"'//')/")"
+			subtree_sha="$(_merge_tracked_and_untracked "$1" "$5/")"
 			printf '%s\\000' "$line" | sed -E 's;^([[:digit:]]+[[:blank:]]+[[:alpha:]]+[[:blank:]]+)[[:xdigit:]]+([[:blank:]]);\1'"$subtree_sha"'\2;'
 		fi | sed -E 's;^(.*'"$tab"')(.*/)?([^/]+)$;\1\3;'
 		printf '\0'
