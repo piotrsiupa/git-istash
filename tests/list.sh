@@ -159,7 +159,7 @@ cd "$(dirname "$0")"
 			-e '/^D'"$tab"'/d' \
 			-e 's/^[CR][0-9]{3}'"$tab"'([^[:blank:]]+)'"$tab"'([^[:blank:]]+)$/A'"$tab"'\2/' \
 			-e 's/^..//' \
-			-e '/^[^/]+/[^/]+\.sh$/!d'
+			-e '/^[^/]+\/[^/]+\.sh$/!d'
 	fi
 } | {
 	if [ -n "$filter" ] || [ -n "$negative_filter" ]

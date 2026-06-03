@@ -155,13 +155,7 @@ IS_UNTRACKED_OFF() {
 }
 
 PARAMETRIZE_OPTIONS_INDICATOR() { # condition
-	#shellcheck disable=SC2154
-	if [ "$meticulousness" -le 3 ]
-	then
-		PARAMETRIZE_COND "$1" 'END_OPTIONS_INDICATOR' 'end-options-indicator' 'EOI-NO'
-	else
-		PARAMETRIZE_COND "$1" 'END_OPTIONS_INDICATOR' 'end-options-indicator' 'EOI-NO' 'EOI-YES'
-	fi
+	PARAMETRIZE_COND "$1" 'END_OPTIONS_INDICATOR' 'end-options-indicator' 'EOI-NO' 'EOI-YES'
 	#shellcheck disable=SC2034
 	case "$END_OPTIONS_INDICATOR" in
 		'EOI-NO') EOI='' ;;
@@ -241,7 +235,7 @@ IS_PATHSPEC_IN_FILE() {
 IS_PATHSPEC_NULL_SEP() {
 	case "$PATHSPEC" in
 		*-NULL-*)	return 0 ;;
-		*)		reutrn 1 ;;
+		*)		return 1 ;;
 	esac
 }
 PREPARE_PATHSPEC_FILE() {
