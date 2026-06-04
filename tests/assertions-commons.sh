@@ -175,9 +175,9 @@ assert_file_contents() { # file expected_current [expected_staged]
 
 assert_files() { # expected_files (see one of the tests as an example)
 	expected_files="$(printf '%s\n' "$1" | sed -E -e 's/^'"$tab"'+//' -e '/^[[:blank:]]*$/ d')"
-	assert_all_files "$(printf '%s\n' "$expected_files" | grep -vE '^(D |[^U]D) ' | sed -E 's/^...([[:graph:]]+)([[:blank:]].*)?$/\1/')"
-	assert_tracked_files "$(printf '%s\n' "$expected_files" | grep -vE '^(!!|\?\?|A[^A]| A|DU) ' | sed -E 's/^...([[:graph:]]+)([[:blank:]].*)?$/\1/')"
-	assert_status "$(printf '%s\n' "$expected_files" | grep -vE '^(  ) ' | sed -E 's/^(...[[:graph:]]+)([[:blank:]].*)?$/\1/')"
+	assert_all_files "$(printf '%s\n' "$expected_files" | sed -E -n '/^(D |[^U]D) /!s/^...([[:graph:]]+)([[:blank:]].*)?$/\1/p')"
+	assert_tracked_files "$(printf '%s\n' "$expected_files" | sed -E -n '/^(!!|\?\?|A[^A]| A|DU) /!s/^...([[:graph:]]+)([[:blank:]].*)?$/\1/p')"
+	assert_status "$(printf '%s\n' "$expected_files" | sed -E -n '/^(  ) /!s/^(...[[:graph:]]+)([[:blank:]].*)?$/\1/p')"
 	printf '%s\n' "$expected_files" \
 	| while IFS= read -r line
 	do
