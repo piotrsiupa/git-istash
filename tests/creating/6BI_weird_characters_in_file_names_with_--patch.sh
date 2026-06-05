@@ -46,7 +46,12 @@ printf 'eee2\n' >'bo	=ÿþ€{e}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'
 printf 'fff2\n' >'bo	=ÿþ€{f}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'
 printf 'e n e n ' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
-GIT_EDITOR="sed -Ei 's/^\+[a-z]{3}2/+xxx/'" assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $COLOR_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $QUIET_FLAGS $STAGED_FLAGS <.git/answers_for_patch
+GIT_EDITOR="sh -c '
+	x=\"\$(cat \"\$1\")\"
+	printf '%s\\n' \"\$x\" \\
+	| sed -E \"s/^\\+[a-z]{3}2/+xxx/\" \\
+	>\"\$1\"
+	' _" assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $COLOR_FLAGS $ALL_FLAGS --patch $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $QUIET_FLAGS $STAGED_FLAGS <.git/answers_for_patch
 assert_outputs__create__success '*' 0 '' 't,1,1' 'u,1,1'
 new_stash_sha_CO="$stdout"
 if ! IS_KEEP_INDEX_ON

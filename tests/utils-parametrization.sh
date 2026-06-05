@@ -34,7 +34,8 @@ PARAMETRIZE() { # name facet values...
 	shift 2
 	CUR_VAL="$(awk -v key="$PARAM_NAME" '$1 == key { print $2 }' "$PARAMETERS_FILE")"
 	LAST_VAL="$(awk -v key="$PARAM_NAME" '$1 == key { print $3 }' "$PARAMETERS_FILE")"
-	sed -iE "/^${PARAM_NAME}[[:blank:]]/ d" "$PARAMETERS_FILE"
+	sed -E "/^${PARAM_NAME}[[:blank:]]/ d" "$PARAMETERS_FILE" >"$PARAMETERS_FILE_"
+	mv "$PARAMETERS_FILE_" "$PARAMETERS_FILE"
 	OTHER_IS_EXCLUSIVE="$(awk '$4 == "exclusive" { other_is_ex = 1 } END { print(other_is_ex ? "y" : "n") }' "$PARAMETERS_FILE")"
 	if [ "$CUR_VAL" = "$LAST_VAL" ]
 	then
@@ -71,13 +72,11 @@ _SKIP_PARAMETER() { # name first_value
 	CUR_VAL="$(awk -v key="$1" '$1 == key { print $2 }' "$PARAMETERS_FILE")"
 	if [ "$CUR_VAL" = "$2" ]
 	then
-		TMP_FILE="$(mktemp)"
 		{
 			sed -En '/^'"$1"'/ p' "$PARAMETERS_FILE"
 			sed -E '/^'"$1"'/ d' "$PARAMETERS_FILE"
-		} >"$TMP_FILE"
-		mv "$TMP_FILE" "$PARAMETERS_FILE"
-		unset TMP_FILE
+		} >"$PARAMETERS_FILE_"
+		mv "$PARAMETERS_FILE_" "$PARAMETERS_FILE"
 	else
 		skip_silently
 	fi
@@ -106,8 +105,9 @@ IS_FIRST_PARAMETRIZE_CALL() { # name
 	then
 		eval "$1"=1
 	fi
-	sed -iE "/^$1[[:blank:]]/ d" "$PARAMETERS_FILE"
-	printf '%s\t%i\t%i\n' "$1" 1 1 >>"$PARAMETERS_FILE"
+	sed -E "/^$1[[:blank:]]/ d" "$PARAMETERS_FILE" >"$PARAMETERS_FILE_"
+	printf '%s\t%i\t%i\n' "$1" 1 1 >>"$PARAMETERS_FILE_"
+	mv "$PARAMETERS_FILE_" "$PARAMETERS_FILE"
 	unset CUR_VAL
 }
 # This is a helper function to make other parameter-related functions.
@@ -131,8 +131,9 @@ IS_LAST_PARAMETRIZE_CALL() { # name
 	then
 		eval "$1"=1
 	fi
-	sed -iE "/^$1[[:blank:]]/ d" "$PARAMETERS_FILE"
+	sed -E "/^$1[[:blank:]]/ d" "$PARAMETERS_FILE" >"$PARAMETERS_FILE_"
 	printf '%s\t%i\t%i\n' "$1" "$CUR_VAL" "$LAST_VAL" >>"$PARAMETERS_FILE"
+	mv "$PARAMETERS_FILE_" "$PARAMETERS_FILE"
 	unset CUR_VAL
 	unset LAST_VAL
 }
@@ -181,7 +182,8 @@ PARAMETRIZE_OPTION() { # condition name override_facet map [values...]
 	if awk -v key="$NAME" -v first_val="$1" '$1 == key && $2 == first_val && $3 != first_val { printf "y" }' "$PARAMETERS_FILE" | grep -Eq '.'
 	then
 		shift $(($# - 2))
-		sed -i -E "s/^($NAME)$tab(.+)$tab(.+)$/\\1$tab\\2$tab$1/" "$PARAMETERS_FILE"
+		sed -E "s/^($NAME)$tab(.+)$tab(.+)$/\\1$tab\\2$tab$1/" "$PARAMETERS_FILE" >"$PARAMETERS_FILE_"
+		mv "$PARAMETERS_FILE_" "$PARAMETERS_FILE"
 	fi
 	if awk -v key="$NAME" -v prev_val="$PREVIOUS_VALUE" '$1 == key && $2 != prev_val { printf "y" }' "$PARAMETERS_FILE" | grep -Eq '.'
 	then
@@ -191,13 +193,15 @@ PARAMETRIZE_OPTION() { # condition name override_facet map [values...]
 	CURRENT_VALUE="$(awk -v key="$NAME" '$1 == key { print $2 }' "$PARAMETERS_FILE")"
 	if printf '%s\n' "$ALTERNATIVE_SPELLINGS" | grep -Fxq -- "$CURRENT_VALUE"
 	then
-		sed -iE "s/^$NAME$tab.*\$/&${tab}exclusive/" "$PARAMETERS_FILE"
+		sed -E "s/^$NAME$tab.*\$/&${tab}exclusive/" "$PARAMETERS_FILE" >"$PARAMETERS_FILE_"
 	else
-		sed -iE "s/^$NAME$tab.*\$/&${tab}normal/" "$PARAMETERS_FILE"
+		sed -E "s/^$NAME$tab.*\$/&${tab}normal/" "$PARAMETERS_FILE" >"$PARAMETERS_FILE_"
 	fi
+	mv "$PARAMETERS_FILE_" "$PARAMETERS_FILE"
 	if printf '%s\n' "$DONE_ALTERNATIVE_SPELLINGS" | grep -Eq '[^ ]'
 	then
-		sed -iE "s/^$NAME$tab.*\$/&$tab$DONE_ALTERNATIVE_SPELLINGS/" "$PARAMETERS_FILE"
+		sed -E "s/^$NAME$tab.*\$/&$tab$DONE_ALTERNATIVE_SPELLINGS/" "$PARAMETERS_FILE" >"$PARAMETERS_FILE_"
+		mv "$PARAMETERS_FILE_" "$PARAMETERS_FILE"
 	fi
 	unset CONDITION
 	unset NAME

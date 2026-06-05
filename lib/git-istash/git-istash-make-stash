@@ -254,12 +254,17 @@ commit_changes() {
 	git commit --message="non-stashed untracked files on $branch_name_for_msg: $default_message" --allow-empty 1>/dev/null
 	
 	# staged (for real)
-	index_editor='sed -i -E "1 s/^([[:blank:]]*)[[:alpha:]]+([[:blank:]])/\1edit\2/"'
+	index_editor="sh -c '
+		x=\"\$(cat \"\$1\")\"
+		printf '%s\\n' \"\$x\" \\
+		| sed -E \"1 s/^([[:blank:]]*)[[:alpha:]]+([[:blank:]])/\\1edit\\2/\" \\
+		>\"\$1\"
+		' _"
 	if [ "$has_3_commits" = n ]
 	then
-		GIT_EDITOR="$index_editor" git rebase --quiet --interactive --keep-empty --empty=keep --reapply-cherry-picks -- 'HEAD~4' 1>/dev/null 2>&1
+		GIT_SEQUENCE_EDITOR="$index_editor" git rebase --quiet --interactive --keep-empty --empty=keep --reapply-cherry-picks -- 'HEAD~4' 1>/dev/null 2>&1
 	else
-		GIT_EDITOR="$index_editor" git rebase --quiet --interactive --keep-empty --empty=keep --reapply-cherry-picks -- 'HEAD~5' 1>/dev/null 2>&1
+		GIT_SEQUENCE_EDITOR="$index_editor" git rebase --quiet --interactive --keep-empty --empty=keep --reapply-cherry-picks -- 'HEAD~5' 1>/dev/null 2>&1
 	fi
 	git reset --soft 'HEAD^' 1>/dev/null
 	if [ "$leave_staged" = n ]
@@ -337,44 +342,62 @@ handle_rebase_conflict_using_theirs() {
 }
 
 sort_commits() {
-	stashed_commits_editor='sed -i -En -e "1 p" -e "3 p"'
+	stashed_commits_editor="sh -c '
+		x=\"\$(cat \"\$1\")\"
+		printf '%s\\n' \"\$x\" \\
+		| sed -En -e \"1 p\" -e \"3 p\""
+	unstashed_commits_editor="sh -c '
+		x=\"\$(cat \"\$1\")\"
+		printf '%s\\n' \"\$x\" \\
+		| sed -E"
 	if [ "$has_3_commits" = y ]
 	then
-		stashed_commits_editor="$stashed_commits_editor"' -e "5 p"'
+		stashed_commits_editor="$stashed_commits_editor -e \"5 p\""
 	fi
 	if [ "$remove_stashed" = n ]
 	then
-		unstashed_commits_editor='sed -i -E -e "2 s/^pick\\>/fixup/" -e "4 s/^pick\\>/fixup/"'
+		unstashed_commits_editor="$unstashed_commits_editor -e \"2 s/^pick\\\\>/fixup/\" -e \"4 s/^pick\\\\>/fixup/\""
 		if [ "$has_3_commits" = y ]
 		then
-			unstashed_commits_editor="$unstashed_commits_editor"' -e "6 s/^pick\\>/fixup/"'
+			unstashed_commits_editor="$unstashed_commits_editor -e \"6 s/^pick\\\\>/fixup/\""
 		fi
 	else
-		unstashed_commits_editor='sed -i -En -e "1 p" -e "2 p" -e "4 p"'
+		unstashed_commits_editor="$unstashed_commits_editor -n -e \"1 p\" -e \"2 p\" -e \"4 p\""
 		if [ "$has_3_commits" = y ]
 		then
-			unstashed_commits_editor="$unstashed_commits_editor"' -e "6 p"'
+			unstashed_commits_editor="$unstashed_commits_editor -e \"6 p\""
 		else
-			unstashed_commits_editor="$unstashed_commits_editor"' -e "5 p"'
+			unstashed_commits_editor="$unstashed_commits_editor -e \"5 p\""
 		fi
 	fi
-	stashed_commits_editor="$stashed_commits_editor --"
-	unstashed_commits_editor="$unstashed_commits_editor --"
+	stashed_commits_editor="$stashed_commits_editor \\
+		>\"\$1\"
+		' _"
+	unstashed_commits_editor="$unstashed_commits_editor \\
+		>\"\$1\"
+		' _"
 	
 	last_commit_sha="$(git rev-parse HEAD)"
-	if ! GIT_EDITOR="$unstashed_commits_editor" git -c merge.renames=false rebase --quiet --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_sha" 1>/dev/null 2>&1
+	if ! GIT_SEQUENCE_EDITOR="$unstashed_commits_editor" git -c merge.renames=false rebase --quiet --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_sha" 1>/dev/null 2>&1
 	then
 		handle_rebase_conflict_using_theirs
 	fi
 	if [ "$remove_stashed" = y ]
 	then
+		keep_index_editor="sh -c '
+			x=\"\$(cat \"\$1\")\"
+			printf '%s\\n' \"\$x\" \\
+			| sed -E"
 		if [ "$keep_index" = n ]
 		then
-			keep_index_editor='sed -i -E -e "1 d" --'
+			keep_index_editor="$keep_index_editor -e \"1 d\""
 		else
-			keep_index_editor='sed -i -E -e "2 s/^pick\\>/fixup/" --'
+			keep_index_editor="$keep_index_editor -e \"2 s/^pick\\\\>/fixup/\""
 		fi
-		if ! GIT_EDITOR="$keep_index_editor" git -c merge.renames=false rebase --quiet --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_sha" 1>/dev/null 2>&1
+		keep_index_editor="$keep_index_editor \\
+			>\"\$1\"
+			' _"
+		if ! GIT_SEQUENCE_EDITOR="$keep_index_editor" git -c merge.renames=false rebase --quiet --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_sha" 1>/dev/null 2>&1
 		then
 			handle_rebase_conflict_using_theirs
 		fi
@@ -382,7 +405,7 @@ sort_commits() {
 	unstashed_changes_sha="$(git rev-parse HEAD)"
 	
 	git switch --quiet --detach "$last_commit_sha"
-	if ! GIT_EDITOR="$stashed_commits_editor" git -c merge.renames=false rebase --quiet --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_sha" 1>/dev/null 2>&1
+	if ! GIT_SEQUENCE_EDITOR="$stashed_commits_editor" git -c merge.renames=false rebase --quiet --strategy=recursive --interactive --keep-empty --empty=keep --reapply-cherry-picks --strategy-option=theirs -- "$stash_base_sha" 1>/dev/null 2>&1
 	then
 		handle_rebase_conflict_using_theirs
 	fi

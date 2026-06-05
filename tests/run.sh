@@ -384,7 +384,9 @@ run_test() ( # test_name
 	failed_count=0
 	error_count=0
 	PARAMETERS_FILE="$(mktemp)"
+	PARAMETERS_FILE_="$(mktemp)"
 	export PARAMETERS_FILE
+	export PARAMETERS_FILE_
 	PARAM_HISTORY_FILE="$(mktemp)"
 	export PARAM_HISTORY_FILE
 	output_file="$(mktemp)"
@@ -398,7 +400,8 @@ run_test() ( # test_name
 		export meticulousness
 		for i in $(seq 1 $iteration_cap)
 		do
-			sed -iE '/^--------$/ d' "$PARAMETERS_FILE"
+			sed -E '/^--------$/ d' "$PARAMETERS_FILE" >"$PARAMETERS_FILE_"
+			mv "$PARAMETERS_FILE_" "$PARAMETERS_FILE"
 			printf -- '--------\n' >>"$PARAMETERS_FILE"
 			ROTATE_PARAMETER=y
 			export ROTATE_PARAMETER
@@ -505,7 +508,7 @@ run_test() ( # test_name
 		printf_color_code '\033[22m'
 		printf '\n'
 	fi
-	rm -f "$PARAMETERS_FILE"
+	rm -f "$PARAMETERS_FILE" "$PARAMETERS_FILE_"
 	rm -f "$PARAM_HISTORY_FILE"
 	if [ $test_count -eq 0 ]
 	then
