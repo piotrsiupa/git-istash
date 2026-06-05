@@ -47,17 +47,17 @@ escape_escape_characters() {
 
 # Requires outputs to be saved via "capture_outputs". ("assert_exit_code" does run this function intenally.)
 assert_outputs() { # stdout_regex stderr_regex
-	#shellcheck disable=SC2154
+	#shellcheck disable=SC2154,SC1003
 	match_multiline_regex "$stdout" "$(dedent_regex "$1")" ||
 		fail 'Expected stdout of "%s" to match:\n"%s"\nbut it is:\n"%s"!\n' \
 			"$last_command" \
-			"$(dedent_regex "$1" | sed -e 's/\\n/'"$nl"'/g' -e 's/\\t/'"$tab"'/g' | escape_escape_characters)" \
+			"$(dedent_regex "$1" | sed -e 's/\\n/\'"$nl"'/g' -e 's/\\t/'"$tab"'/g' | escape_escape_characters)" \
 			"$(printf '%s' "$stdout" | escape_escape_characters)"
-	#shellcheck disable=SC2154
+	#shellcheck disable=SC2154,SC1003
 	match_multiline_regex "$stderr" "$(dedent_regex "$2")" ||
 		fail 'Expected stderr of "%s" to match:\n"%s"\nbut it is:\n"%s"!\n' \
 			"$last_command" \
-			"$(dedent_regex "$2" | sed -e 's/\\n/'"$nl"'/g' -e 's/\\t/'"$tab"'/g' | escape_escape_characters)" \
+			"$(dedent_regex "$2" | sed -e 's/\\n/\'"$nl"'/g' -e 's/\\t/'"$tab"'/g' | escape_escape_characters)" \
 			"$(printf '%s' "$stderr" | escape_escape_characters)"
 }
 

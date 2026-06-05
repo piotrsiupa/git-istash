@@ -86,6 +86,10 @@ assert_outputs__apply__success() { # operation changes [stash_id stash_sha] [err
 			return
 		fi
 		printf '%s' 'Stash of the old working dir: [0-9a-fA-F]{40}'
+		if [ "$1" = 'pop' ]
+		then
+			printf '%s' '\n\nDropped refs\/stash@\{'"$3"'\} \('"$4"'\)'
+		fi
 		if IS_SUMMARY_ON
 		then
 			printf '%s' '\n\n\[<color>34mChanges made to the working directory:\[<color>0?m\n'
@@ -141,10 +145,6 @@ assert_outputs__apply__success() { # operation changes [stash_id stash_sha] [err
 				-e 's/\\\[<color>0\\\?m/\\[<color>0?m/g'
 		fi
 		if ! IS_SUMMARY_ON ; then printf '\\n' ; fi
-		if [ "$1" = 'pop' ]
-		then
-			printf '%s' '\nDropped refs\/stash@\{'"$3"'\} \('"$4"'\)\n'
-		fi
 		printf '%s' '\nSuccessfully ' ; if [ "$1" = 'pop' ] ; then printf 'popped' ; else printf 'applied' ; fi ; printf ' the stash'
 	)" "$(
 		if [ $# -ge 4 ]

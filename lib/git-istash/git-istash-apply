@@ -445,7 +445,6 @@ end_with_success() {
 	if [ "$is_quiet" != y ]
 	then
 		printf 'Stash of the old working dir: %s\n' "$(prepare_stash_of_working_dir)"
-		print_changes_summary
 	fi
 	if [ "$sub_command_name" = 'pop' ]
 	then
@@ -459,6 +458,7 @@ end_with_success() {
 	fi
 	if [ "$is_quiet" != y ]
 	then
+		print_changes_summary
 		printf '\nSuccessfully %sed the stash\n' "$(printf '%s' "$sub_command_name" | sed -E 's/y$/i/;s/p$/&p/')"
 	fi
 }
