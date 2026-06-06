@@ -13,7 +13,7 @@ print_help() {
 	printf 'If %i mayor version didn'\''t work\nthe script stops.\n' "$subsequent_failed_version_limit"
 	printf 'The goal is to determine which versions of Git are supported by istash.\n'
 	printf '\n'
-	printf 'Usage: %s [-h | --help | -Q | --quick | -V | --version] [--]\n\t\t[<free_arg...>]\n' "$(basename "$0")"
+	printf 'Usage: %s [-h | --help | -Q | --quick | -V | --version] [--]\n\t\t[<free_arg...>]\n' "${0##*/}"
 	printf 'Options:\n'
 	printf '    -h, --help\t\t- Print this help text end exit.\n'
 	printf '    -l, --list\t\t- List all available Git versions and do nothing else.\n'
@@ -26,7 +26,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'Git version checking script version 1.3.0\n'
+	printf 'Git version checking script version 1.3.1\n'
 }
 
 if date '+%N' 1>/dev/null 2>&1 && [ "$(date '+%N')" -ge 0 ] 2>/dev/null && [ "$(date '+%N' | tr -d '\n' | wc -c)" -eq 9 ]
@@ -269,7 +269,7 @@ check_versions() { # [free_arg...]
 
 getopt_short_options='hlm:PQs:V'
 getopt_long_options='help,list-versions,meticulous:,no-patch-versions,quickie,single-version:,version'
-normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
+normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"${0##*/}" -ssh -- "$@")"
 eval set -- "$normalized_options"
 list_versions=n
 meticulousness=''

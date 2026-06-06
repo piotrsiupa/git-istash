@@ -27,7 +27,12 @@ git reset --hard HEAD~
 git merge --no-ff --no-commit "$index_commit_sha"
 printf 'ccc\n' >aaa
 git add aaa
-GIT_EDITOR='sed -i "1s/^.*$/On master: my stash/"' git merge --continue
+GIT_EDITOR="sh -c '
+	x=\"\$(cat \"\$1\")\"
+	printf '%s\\n' \"\$x\" \\
+	| sed -E \"1s/^.*$/On master: my stash/\" \\
+	>\"\$1\"
+	' _" git merge --continue
 stash_sha="$(git commit-tree -p HEAD^1 -p HEAD^2 -p "$untracked_files_commit_sha" 'HEAD^{tree}' -m "$(git show --no-patch --format="%s")")"
 git reset --hard HEAD~
 

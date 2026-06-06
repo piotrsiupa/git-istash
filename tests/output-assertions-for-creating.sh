@@ -6,6 +6,9 @@ then
 	exit 1
 fi
 
+nl='
+'
+
 
 # This is kinda testing the output of vanilla git command but without this part I would have trouble assessing if output of istash itself is correct.
 create_patch_output_regex_for_single_file() { # nr_of_questions
@@ -29,7 +32,8 @@ create_patch_output_regex_for_single_file() { # nr_of_questions
 }
 
 create_patch_output_regex_for_single_call() { # (t|u) [nr_of_questions...]
-	printf '### Using the interactive patch for %s files\\.\\.\\.' "$(if [ "$1" = u ] ; then printf 'untracked' ; else printf 'tracked' ; fi)"
+	if [ "$1" = u ] ; then patch_type='untracked' ; else patch_type='tracked' ; fi
+	printf '### Using the interactive patch for %s files\\.\\.\\.' "$patch_type"
 	shift
 	if [ $# -ne 0 ]
 	then
@@ -71,8 +75,9 @@ create_success_message_regex() { # summary_code branch_name base_commit message
 		return
 	fi
 	printf 'Saved '
+	#shellcheck disable=SC1003
 	printf '%s' "$1" \
-	| sed -E -e 's/^[^-]+-//' -e 's/./&\n/g' | tr 'WSUI' '1-4' | tr -d -c '1-4\n' | sort | tr '1-4' 'WSUI' | tr -d '\n' \
+	| sed -E -e 's/^[^-]+-//' -e 's/./&\'"$nl"'/g' | tr 'WSUI' '1-4' | tr -d -c '1-4\n' | sort | tr '1-4' 'WSUI' | tr -d '\n' \
 	| sed -E -e 's/./&,/g' -e 's/,$//' -e 's/U,I/UI/' -e 's/,/, /g' -e 's/,([^,]+)$/ \&\1/' \
 	| sed -E -e 's/W/working directory/' -e 's/S/index state/' -e 's/UI/untracked files \\(including ignored\\)/' -e 's/U/untracked files/' -e 's/I/ignored files/' -e 's/\&/and/' | grep '.' || printf 'nothing'
 	if [ -n "$4" ]

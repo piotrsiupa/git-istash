@@ -18,7 +18,7 @@ assert_data_file() { # is_expected data_point_name
 			fail 'Expected the file "%s" to be present!\n' "$file_path_for_assert"
 		test -f "$file_path_for_assert" ||
 			fail 'Expected "%s" to be a file!\n' "$file_path_for_assert"
-		test "$(wc -l "$file_path_for_assert" | awk '{print $1}')" -eq 1 ||
+		test "$(wc -l <"$file_path_for_assert")" -eq 1 ||
 			fail 'Expected the file "%s" to have 1 line!\n' "$file_path_for_assert"
 	fi
 	unset file_path_for_assert

@@ -30,7 +30,12 @@ printf 'foo\nbar\n' >ccc
 git add --intent-to-add ccc
 printf '' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
-GIT_EDITOR="sed -Ei '/^\+bar$/ d'" assert_exit_code 1 git istash "$CREATE_OPERATION" $STAGED_FLAGS $COLOR_FLAGS $UNSTAGED_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS $QUIET_FLAGS $KEEP_INDEX_FLAGS --patch --message 'some nice stash name' <.git/answers_for_patch
+GIT_EDITOR="sh -c '
+	x=\"\$(cat \"\$1\")\"
+	printf '%s\\n' \"\$x\" \\
+	| sed -E \"/^\\+bar$/ d\" \\
+	>\"\$1\"
+	' _" assert_exit_code 1 git istash "$CREATE_OPERATION" $STAGED_FLAGS $COLOR_FLAGS $UNSTAGED_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS $QUIET_FLAGS $KEEP_INDEX_FLAGS --patch --message 'some nice stash name' <.git/answers_for_patch
 assert_outputs__create__no_changes_to_stash
 assert_files_HT '
 M  aaa		foo\nbar

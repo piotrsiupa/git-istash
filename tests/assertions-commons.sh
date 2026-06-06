@@ -47,17 +47,17 @@ escape_escape_characters() {
 
 # Requires outputs to be saved via "capture_outputs". ("assert_exit_code" does run this function intenally.)
 assert_outputs() { # stdout_regex stderr_regex
-	#shellcheck disable=SC2154
+	#shellcheck disable=SC2154,SC1003
 	match_multiline_regex "$stdout" "$(dedent_regex "$1")" ||
 		fail 'Expected stdout of "%s" to match:\n"%s"\nbut it is:\n"%s"!\n' \
 			"$last_command" \
-			"$(dedent_regex "$1" | sed -e 's/\\n/\n/g' -e 's/\\t/\t/g' | escape_escape_characters)" \
+			"$(dedent_regex "$1" | sed -e 's/\\n/\'"$nl"'/g' -e 's/\\t/'"$tab"'/g' | escape_escape_characters)" \
 			"$(printf '%s' "$stdout" | escape_escape_characters)"
-	#shellcheck disable=SC2154
+	#shellcheck disable=SC2154,SC1003
 	match_multiline_regex "$stderr" "$(dedent_regex "$2")" ||
 		fail 'Expected stderr of "%s" to match:\n"%s"\nbut it is:\n"%s"!\n' \
 			"$last_command" \
-			"$(dedent_regex "$2" | sed -e 's/\\n/\n/g' -e 's/\\t/\t/g' | escape_escape_characters)" \
+			"$(dedent_regex "$2" | sed -e 's/\\n/\'"$nl"'/g' -e 's/\\t/'"$tab"'/g' | escape_escape_characters)" \
 			"$(printf '%s' "$stderr" | escape_escape_characters)"
 }
 
@@ -87,9 +87,8 @@ _convert_zero_separated_path_list() {
 	fi \
 	| sed -E -e 's/\\015/\\\\r/g' -e 's/\\012/\\\\n/g' -e 's/\\011/\\\\t/g' -e 's/\\134/\\\\\\\\/g' \
 		-e 's/\\(00[1-7]|0[1-3][0-7]|040|177|[2-3][0-7]{2})/\\\\\1/g' \
-		-e 's/\\045/\\045\\045/g' \
 	| tr '\n' '\0' \
-	| xargs -r0 -n1 -- printf -- \
+	| xargs -r0 -- printf '%b' \
 	| tr '\0' '\n'
 }
 
@@ -135,15 +134,14 @@ assert_status() { # expected
 assert_file_contents() { # file expected_current [expected_staged]
 	if [ -n "$2" ]
 	then
-		#shellcheck disable=SC2059
-		value_for_assert="$(printf -- "$1" | xargs -0 -- cat)"
+		value_for_assert="$(printf '%b' "$1" | xargs -0 -- cat)"
 	else
 		value_for_assert=''
 	fi
 	if printf '%s' "$2" | grep -qE '\|'
 	then
-		ours_expected_contents="$(printf '%s' "$2" | cut -d'|' -f1 | sed -E 's/^""$//')"
-		theirs_expected_contents="$(printf '%s' "$2" | cut -d'|' -f2 | sed -E 's/^""$//')"
+		ours_expected_contents="${2%%|*}"
+		theirs_expected_contents="${2##*|}"
 		test "$(printf '%s\n' "$value_for_assert" | grep -cE '^={7}')" -eq 1 ||
 			fail 'Expected file "'"$1"'" contain exactly 1 conflict!\n'
 		#shellcheck disable=SC2015
@@ -160,16 +158,13 @@ assert_file_contents() { # file expected_current [expected_staged]
 		unset ours_expected_contents
 		unset theirs_expected_contents
 	else
-		#shellcheck disable=SC2059
-		expected_contents="$(printf -- "$2" | sed -E 's/^""$//')"
+		expected_contents="$(printf '%b' "${2#<empty>}")"
 		test "$value_for_assert" = "$expected_contents" ||
 			fail 'Expected content of file "'"$1"'" to be:\n"%s"\nbut it is:\n"%s"!\n' "$expected_contents" "$value_for_assert"
 		if [ $# -eq 3 ]
 		then
-			#shellcheck disable=SC2059
-			value_for_assert="$(printf -- ":$1" | xargs -0 -- git show)"
-			#shellcheck disable=SC2059
-			expected_contents="$(printf -- "$3" | sed -E 's/^""$//')"
+			value_for_assert="$(printf ':%b' "$1" | xargs -0 -- git show)"
+			expected_contents="$(printf '%b' "${3#<empty>}")"
 			test "$value_for_assert" = "$expected_contents" ||
 				fail 'Expected staged content of file "'"$1"'" to be:\n"%s"\nbut it is:\n"%s"!\n' "$expected_contents" "$value_for_assert"
 		fi
@@ -179,10 +174,10 @@ assert_file_contents() { # file expected_current [expected_staged]
 }
 
 assert_files() { # expected_files (see one of the tests as an example)
-	expected_files="$(printf '%s\n' "$1" | sed -E -e 's/^\t+//' -e '/^\s*$/ d')"
-	assert_all_files "$(printf '%s\n' "$expected_files" | grep -vE '^(D |[^U]D) ' | sed -E 's/^...(\S+)(\s.*)?$/\1/')"
-	assert_tracked_files "$(printf '%s\n' "$expected_files" | grep -vE '^(!!|\?\?|A[^A]| A|DU) ' | sed -E 's/^...(\S+)(\s.*)?$/\1/')"
-	assert_status "$(printf '%s\n' "$expected_files" | grep -vE '^(  ) ' | sed -E 's/^(...\S+)(\s.*)?$/\1/')"
+	expected_files="$(printf '%s\n' "$1" | sed -E -e 's/^'"$tab"'+//' -e '/^[[:blank:]]*$/ d')"
+	assert_all_files "$(printf '%s\n' "$expected_files" | sed -E -n '/^(D |[^U]D) /!s/^...([[:graph:]]+)([[:blank:]].*)?$/\1/p')"
+	assert_tracked_files "$(printf '%s\n' "$expected_files" | sed -E -n '/^(!!|\?\?|A[^A]| A|DU) /!s/^...([[:graph:]]+)([[:blank:]].*)?$/\1/p')"
+	assert_status "$(printf '%s\n' "$expected_files" | sed -E -n '/^(  ) /!s/^(...[[:graph:]]+)([[:blank:]].*)?$/\1/p')"
 	printf '%s\n' "$expected_files" \
 	| while IFS= read -r line
 	do
@@ -190,40 +185,31 @@ assert_files() { # expected_files (see one of the tests as an example)
 		then
 			continue
 		fi
-		stripped_line="$(printf '%s' "$line" | cut -c4-)"
-		if printf '%s' "$line" | grep -qE '^(D ) '
-		then
-			test "$(printf '%s' "$stripped_line" | awk '{printf NF}')" -eq 1 ||
-				fail 'Error in test: the file "%s" should have 0 versions of content to check!\n' "$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}')"
-		elif printf '%s' "$line" | grep -qE '^([UD]U|!!|\?\?|.[ AD]) '
-		then
-			test "$(printf '%s' "$stripped_line" | awk '{printf NF}')" -eq 2 ||
-				fail 'Error in test: the file "%s" should have 1 version of content to check!\n' "$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}')"
-			if printf '%s' "$line" | grep -qE '^(. ) '
-			then
-				assert_file_contents \
-					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}' | sed -E 's/<empty>//')" \
-					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}' | sed -E 's/<empty>//')" \
-					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}' | sed -E 's/<empty>//')"
-			elif printf '%s' "$line" | grep -qE '^([^U]D) '
-			then
-				assert_file_contents \
-					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}' | sed -E 's/<empty>//')" \
-					'' \
-					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}' | sed -E 's/<empty>//')"
-			else
-				assert_file_contents \
-					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}' | sed -E 's/<empty>//')" \
-					"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}' | sed -E 's/<empty>//')"
-			fi
-		else
-			test "$(printf '%s' "$stripped_line" | awk '{printf NF}')" -eq 3 ||
-				fail 'Error in test: the file "%s" should have 2 versions of content to check!\n' "$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}')"
-			assert_file_contents \
-				"$(printf '%s' "$stripped_line" | awk '{printf "%s", $1}' | sed -E 's/<empty>//')" \
-				"$(printf '%s' "$stripped_line" | awk '{printf "%s", $2}' | sed -E 's/<empty>//')" \
-				"$(printf '%s' "$stripped_line" | awk '{printf "%s", $3}' | sed -E 's/<empty>//')"
-		fi
+		set -f
+		#shellcheck disable=SC2086
+		set -- ${line#???}
+		set +f
+		prefix="${line%"${line#??}"}"
+		case "$prefix" in
+		D\ )
+			test $# -eq 1 ||
+				fail 'Error in test: the file "%s" should have 0 versions of content to check!\n' "$1"
+			;;
+		[UD]U|!!|\?\?|?[\ AD])
+			test $# -eq 2 ||
+				fail 'Error in test: the file "%s" should have 1 version of content to check!\n' "$1"
+			case "$prefix" in
+			?\ )	assert_file_contents "$1" "${2#<empty>}" "${2#<empty>}" ;;
+			[!U]D)	assert_file_contents "$1" '' "${2#<empty>}" ;;
+			*)	assert_file_contents "$1" "${2#<empty>}" ;;
+			esac
+			;;
+		*)
+			test $# -eq 3 ||
+				fail 'Error in test: the file "%s" should have 2 versions of content to check!\n' "$1"
+			assert_file_contents "$1" "${2#<empty>}" "${3#<empty>}"
+			;;
+		esac
 	done
 }
 
@@ -272,17 +258,19 @@ assert_stash_sha() { # stash_num expected
 }
 
 assert_head_name() { # expected
-	if printf '%s' "$1" | grep -qE '^~'
-	then
-		set -- "$(printf '%s' "$1" | cut -c2-)"
+	case "$1" in
+	'~'*)
+		set -- "${1#?}"
 		! git rev-parse HEAD 1>/dev/null 2>&1 ||
 			fail 'Expected HEAD to be an orphan!\n'
 		value_for_assert="$(git branch --show-current)"
-	else
+		;;
+	*)
 		git rev-parse HEAD 1>/dev/null 2>&1 ||
 			fail 'Didn'\''t expect HEAD to be an orphan!\n'
 		value_for_assert="$(git rev-parse --abbrev-ref --symbolic-full-name HEAD)"
-	fi
+		;;
+	esac
 	test "$value_for_assert" = "$1" ||
 		if [ "$value_for_assert" = 'HEAD' ]
 		then

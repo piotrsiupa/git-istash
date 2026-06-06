@@ -33,7 +33,12 @@ printf 'foo\nbar\n' >ccc
 git add --intent-to-add ccc
 printf 'e e ' | tr ' ' '\n' >.git/answers_for_patch
 #shellcheck disable=SC2086
-GIT_EDITOR="sed -Ei '/^\+bar$/ d'" assert_exit_code 0 git istash "$CREATE_OPERATION" $STAGED_FLAGS $UNSTAGED_FLAGS $COLOR_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS --patch $QUIET_FLAGS --message 'some nice stash name' <.git/answers_for_patch
+GIT_EDITOR="sh -c '
+	x=\"\$(cat \"\$1\")\"
+	printf '%s\\n' \"\$x\" \\
+	| sed -E \"/^\\+bar$/ d\" \\
+	>\"\$1\"
+	' _" assert_exit_code 0 git istash "$CREATE_OPERATION" $STAGED_FLAGS $UNSTAGED_FLAGS $COLOR_FLAGS $UNTRACKED_FLAGS $ALL_FLAGS $KEEP_INDEX_FLAGS --patch $QUIET_FLAGS --message 'some nice stash name' <.git/answers_for_patch
 assert_outputs__create__success '*' 0 'some nice stash name' 't,1,1'
 new_stash_sha_CO="$stdout"
 if ! IS_KEEP_INDEX_ON

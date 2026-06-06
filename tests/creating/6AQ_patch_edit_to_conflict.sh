@@ -44,7 +44,12 @@ new_stash_sha_CO="$(
 		 cat .git/answers_for_patch1
 	} | {
 		#shellcheck disable=SC2086
-		GIT_EDITOR="sed -Ei 's/^\+[a-z]{3}2/+xxx/'" assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS --patch $COLOR_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $QUIET_FLAGS $STAGED_FLAGS
+		GIT_EDITOR="sh -c '
+			x=\"\$(cat \"\$1\")\"
+			printf '%s\\n' \"\$x\" \\
+			| sed -E \"s/^\\+[a-z]{3}2/+xxx/\" \\
+			>\"\$1\"
+			' _" assert_exit_code 0 git istash "$CREATE_OPERATION" $UNTRACKED_FLAGS $ALL_FLAGS --patch $COLOR_FLAGS $KEEP_INDEX_FLAGS $UNSTAGED_FLAGS $QUIET_FLAGS $STAGED_FLAGS
 		assert_outputs__create__success '*' 0 '' 't,1,1' 'u,1,1'
 	}
 )"

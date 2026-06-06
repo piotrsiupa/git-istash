@@ -5,10 +5,10 @@ set -eu
 . "$(dirname "$0")/facets.sh"
 
 print_help() {
-	printf '%s - Script that runs "run.sh" first with all tests and then reruns it\nfor all failed test every time any relevant file changes.\n' "$(basename "$0")"
+	printf '%s - Script that runs "run.sh" first with all tests and then reruns it\nfor all failed test every time any relevant file changes.\n' "${0##*/}"
 	printf 'When there are no failed tests it reruns all tests again and exits if they pass\n(or else it goes back to running tests one by one).\n'
 	printf '\n'
-	printf 'Usage: %s [<options>] [--] [<filter>...]\n' "$(basename "$0")"
+	printf 'Usage: %s [<options>] [--] [<filter>...]\n' "${0##*/}"
 	printf '\n'
 	printf 'Options:\n'
 	printf '    -a, --altered\t- Run only the tests changed since the last commit.\n\t\t\t  (Only changes in individual test files count, not in\n\t\t\t  the common test utilities that affect every test.)\n\t\t\t  Renamed tests with 100%% similarity are omitted.\n\t\t\t  (See also "--since".)\n'
@@ -18,13 +18,14 @@ print_help() {
 	printf '    -m, --meticulous=X\t- Set how many tests / test variants will be run.\n\t\t\t  (For more info, run "run.sh --help".)\n'
 	printf '    -s, --skip-init\t- Skip the initial run that checks which tests fail.\n\t\t\t  (Assume that the relevant tests has failed already.)\n'
 	printf '    -S, --stop-at-fail\t- Don'\''t find all failing tests first. Go to the fixing\n\t\t\t  mode after encountering the first one.\n\t\t\t  (Good when expecting a lot of errors.)\n'
+	printf '\t--quickie\t- Same as "--meticulousness=quickie".\n'
 	printf '    -V, --version\t- Print version information and exit.\n'
 	printf '\n'
 	printf 'For info about filters, run "run.sh --help".\n'
 }
 
 print_version() {
-	printf 'test monitoring script version 1.0.1\n'
+	printf 'test monitoring script version 1.1.0\n'
 }
 
 call_run_sh__with_altered() { # [arg...]
@@ -65,8 +66,13 @@ get_common_test_files() {
 	find '.' -maxdepth 1 -type f -name '*.sh' ! -name '.*' | sort
 }
 
+case "$(uname -s)" in
+Darwin|BSD)	stat_flags='-f %m' ;;
+*)		stat_flags='-c %Y' ;;
+esac
 get_times() { # file_lists...
-	printf '%s\n' "$@" | xargs -- stat -c '%Y' -- 2>/dev/null || true
+	#shellcheck disable=SC2086
+	printf '%s\n' "$@" | xargs -- stat $stat_flags -- 2>/dev/null || true
 }
 
 wait_for_change() { # [filter]...
@@ -133,8 +139,8 @@ monitor_tests() { # [filter]...
 }
 
 getopt_short_options='aA:c:hm:sSV'
-getopt_long_options='altered,since:,color:,help,meticulousness:,skip-init,stop-at-fail,stop-on-fail,stop-at-error,stop-on-error,version'
-normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
+getopt_long_options='altered,since:,color:,help,meticulousness:,skip-init,stop-at-fail,stop-on-fail,stop-at-error,stop-on-error,quickie,version'
+normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"${0##*/}" -ssh -- "$@")"
 eval set -- "$normalized_options"
 only_altered=n
 altered_reference=HEAD
@@ -189,6 +195,11 @@ do
 		;;
 	-S|--stop-at-fail|--stop-on-fail|--stop-at-error|--stop-on-error)
 		stop_at_fail=y
+		;;
+	--quickie)
+		shift
+		set -- '--meticulousness' 'quickie' "$@"
+		continue
 		;;
 	-V|--version)
 		print_version

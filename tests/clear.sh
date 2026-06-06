@@ -3,11 +3,11 @@
 set -eu
 
 print_help() {
-	printf '%s - A script to remove all the tests results.\n' "$(basename "$0")"
+	printf '%s - A script to remove all the tests results.\n' "${0##*/}"
 	printf '(This has no purpose except visually clearing the directories. '
 	printf 'Other scripts can\nwork around existing test results no problem, or even use them.)\n'
 	printf '\n'
-	printf 'Usage: %s [<options...>]\n' "$(basename "$0")"
+	printf 'Usage: %s [<options...>]\n' "${0##*/}"
 	printf '\n'
 	printf 'Options:\n'
 	printf '    -h, --help\t\t- Print this help text and exit.\n'
@@ -15,7 +15,7 @@ print_help() {
 }
 
 print_version() {
-	printf 'tests cleanup script version 1.0.3\n'
+	printf 'tests cleanup script version 1.0.4\n'
 }
 
 clear_results() {
@@ -24,7 +24,7 @@ clear_results() {
 
 getopt_short_options='hV'
 getopt_long_options='help,version'
-normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
+normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"${0##*/}" -ssh -- "$@")"
 eval set -- "$normalized_options"
 while true
 do

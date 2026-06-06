@@ -6,6 +6,8 @@ then
 	exit 1
 fi
 
+tab='	'
+
 
 assert_stash_structure() { # stash_num expected_to_have_untracked
 	git rev-parse --quiet --verify "stash@{$1}^{commit}" 1>/dev/null ||
@@ -122,12 +124,14 @@ assert_stash_commit_files_with_content() { # commit expected_files
 		then
 			continue
 		fi
-		file_path_for_assertion="$(printf '%s' "$line" | awk '{print $1}')"
-		value_for_assert="$(printf "%s:$file_path_for_assertion" "$1" | xargs -0 -- git show)"
-		#shellcheck disable=SC2059
-		expected_value="$(printf -- "$(printf '%s' "$line" | awk '{print $2}' | sed -E 's/^""$//')")"
+		set -f
+		#shellcheck disable=SC2086
+		set -- "$1" $line
+		set +f
+		value_for_assert="$(printf '%s:%b' "$1" "$2" | xargs -0 -- git show)"
+		expected_value="$(printf '%b' "${3#<empty>}")"
 		test "$value_for_assert" = "$expected_value" ||
-			fail 'Expected content of file "'"$file_path_for_assertion"'" in "%s" to be:\n"%s"\nbut it is:\n"%s"!\n' "$1" "$expected_value" "$value_for_assert"
+			fail 'Expected content of file "'"$2"'" in "%s" to be:\n"%s"\nbut it is:\n"%s"!\n' "$1" "$expected_value" "$value_for_assert"
 		unset file_path_for_assertion
 	done
 	unset value_for_assert
@@ -135,18 +139,16 @@ assert_stash_commit_files_with_content() { # commit expected_files
 }
 
 assert_stash_files() { # stash_num expect_untracked expected_files
-	expected_files="$(printf '%s\n' "$3" | sed -E -e 's/^\t+//' -e '/^\s*$/ d')"
+	expected_files="$(printf '%s\n' "$3" | sed -E -e 's/^'"$tab"'+//' -e '/^[[:blank:]]*$/ d')"
 	assert_stash_commit_files_with_content "stash@{$1}" "$(
 			printf '%s\n' "$expected_files" \
 			| grep -vE '^(\?\?|!!|D[^A]|.D) ' \
-			| cut -c4- | awk '{print $1,$2}' \
-			| sed -E 's/<empty>//'
+			| cut -c4- | awk '{print $1,$2}'
 		)"
 	assert_stash_commit_files "stash@{$1}^1" "$(
 			printf '%s\n' "$expected_files" \
 			| grep -vE '^(\?\?|!!|A.|[^D]A) ' \
-			| cut -c4- | awk '{print $1}' \
-			| sed -E 's/<empty>//'
+			| cut -c4- | awk '{print $1}'
 		)"
 	assert_stash_commit_files_with_content "stash@{$1}^2" "$(
 			printf '%s\n' "$expected_files" \
@@ -159,8 +161,7 @@ assert_stash_files() { # stash_num expect_untracked expected_files
 				then
 					printf '%s' "$line" | cut -c4- | awk '{print $1,$2}'
 				fi
-			done \
-			| sed -E 's/<empty>//'
+			done
 		)"
 	if [ "$2" = n ]
 	then
@@ -176,7 +177,7 @@ assert_stash_files() { # stash_num expect_untracked expected_files
 }
 
 assert_stash() { # stash_num expected_branch_name expected_stash_name expected_files
-	if IS_ALL_ON || IS_UNTRACKED_ON || printf '%s\n' "$4" | sed -E 's/^\t+//' | grep -qE '^(\?\?|!!) '
+	if IS_ALL_ON || IS_UNTRACKED_ON || printf '%s\n' "$4" | sed -E 's/^'"$tab"'+//' | grep -qE '^(\?\?|!!) '
 	then
 		expect_untracked=y
 	else
@@ -189,7 +190,7 @@ assert_stash() { # stash_num expected_branch_name expected_stash_name expected_f
 	unset expect_untracked
 }
 assert_stash_CO() { # stash_num expected_branch_name expected_stash_name expected_files
-	if IS_ALL_ON || IS_UNTRACKED_ON || printf '%s\n' "$4" | sed -E 's/^\t+//' | grep -qE '^(\?\?|!!) '
+	if IS_ALL_ON || IS_UNTRACKED_ON || printf '%s\n' "$4" | sed -E 's/^'"$tab"'+//' | grep -qE '^(\?\?|!!) '
 	then
 		expect_untracked=y
 	else
@@ -210,8 +211,8 @@ assert_stash_untracked() { # stash_num expected_branch_name expected_stash_name 
 assert_stash_base() { # stash_num expected_base
 	git rev-parse --verify "stash@{$1}{commit}" 1>/dev/null ||
 		fail 'There is no stash number %i!\n' "$1"
-	if [ "$(printf '%s' "$2" | cut -c1)" != '~' ]
-	then
+	case "$2" in
+	[!~]*)
 		value_for_assert="$(git rev-parse "stash@{$1}^1")"
 		expected_value="$(git rev-parse "$2")" ||
 			fail 'There is no commit "%s"!\n' "$2"
@@ -224,17 +225,19 @@ assert_stash_base() { # stash_num expected_base
 			fi
 		unset value_for_assert
 		unset expected_value
-	else
+		;;
+	*)
 		value_for_assert="$(git rev-list --no-walk --count "stash@{$1}^1^@")"
 		test "$value_for_assert" -eq 0 ||
 			fail '"%s" should have no parents but it has %i!\n' "stash@{$1}" "$value_for_assert"
 		value_for_assert="$(git rev-list --format=%B --max-count=1 --no-commit-header "stash@{$1}^1")"
-		expected_value_regex="Base commit for stash entry on an orphan branch \"$(sanitize_for_ere "$(printf '%s' "$2" | cut -c2-)")\""
+		expected_value_regex="Base commit for stash entry on an orphan branch \"$(sanitize_for_ere "${2#?}")\""
 		! printf '%s\n' "$value_for_assert" | grep -xvqE "$expected_value_regex" ||
 			fail 'The message on the stash commit with untracked files is different than expected!\n(It'\''s "%s".)\n(It should match "%s".)\n' "$value_for_assert" "$expected_value_regex"
 		unset expected_value_regex
 		unset value_for_assert
-	fi
+		;;
+	esac
 }
 
 assert_stash_HT() { # stash_num expected_stash_name expected_files [expected_files_for_orphan]

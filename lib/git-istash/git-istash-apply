@@ -27,10 +27,15 @@ print_help() {
 }
 
 save_data() {
-	target_data="$(if [ "$curr_branch_type" = 'orphan' ] ; then printf '~' ; fi ; printf '%s' "$current_branch")"
-	printf '%s\n' "$target_data" >"$target_data_file"
+	if [ "$curr_branch_type" = 'orphan' ]
+	then
+		printf '~%s\n' "$current_branch" >"$target_data_file"
+	else
+		printf '%s\n' "$current_branch" >"$target_data_file"
+	fi
 	
 	printf '%s\n' "$working_dir_changes_sha" >"$working_dir_sha_file"
+	
 	if [ "$sub_command_name" = 'pop' ]
 	then
 		printf '%s\n' "$stash" >"$stash_data_file"
@@ -45,9 +50,9 @@ load_target_data() {
 		fatal
 	fi
 	current_branch="$(cat "$target_data_file")"
-	if printf '%s' "$current_branch" | grep -qE '^~'
+	if [ "${current_branch#[~]}" != "$current_branch" ]
 	then
-		current_branch="$(printf '%s' "$current_branch" | cut -c2-)"
+		current_branch="${current_branch#[~]}"
 		curr_branch_type='orphan'
 	else
 		curr_branch_type='normal'
@@ -164,6 +169,7 @@ print_changes_summary() {
 		reset_escape_code=''
 	fi
 	printf '\n%sChanges made to the working directory:%s\n' "$header_color_escape_code" "${header_color_escape_code:+$reset_escape_code}"
+	zero_sha='0000000000000000000000000000000000000000'
 	all_changes="$(
 		set -eu
 		{
@@ -178,203 +184,179 @@ print_changes_summary() {
 		} \
 		| convert_to_octal_lines \
 		| sort -u \
+		| relax_octal_sanitization \
 		| while read -r file
 		do
 			# The abbreviations used here:
 			# the 1st letter is "old" / "new"
 			# the 2nd letter is "index" / "tracked" / "untracked".
+			#shellcheck disable=SC2015
 			oi_sha="$(
-				printf -- "%s:$file" "$working_dir_changes_sha~2" \
-				| xargs -0 -- git --literal-pathspecs rev-parse 2>/dev/null \
-				| tr -d -c '0-9A-Za-z:' \
-				| sed -E 's/^.*:.*$/0000000000000000000000000000000000000000/'
-			)"
-			ot_sha="$(
-				printf -- "%s:$file" "$working_dir_changes_sha~1" \
-				| xargs -0 -- git --literal-pathspecs rev-parse 2>/dev/null \
-				| tr -d -c '0-9A-Za-z:' \
-				| sed -E 's/^.*:.*$/0000000000000000000000000000000000000000/'
-			)"
+				printf '%s:%b' "$working_dir_changes_sha~2" "$file" \
+				| xargs -0 -- git --literal-pathspecs rev-parse --verify 2>/dev/null
+			)" && oi=1 || { oi_sha="$zero_sha" ; oi=0 ; }
+			printf '%s:%b' "$working_dir_changes_sha~1" "$file" \
+			| xargs -0 -- git --literal-pathspecs rev-parse --verify 1>/dev/null 2>&1 \
+			&& ot=1 || ot=0
+			#shellcheck disable=SC2015
 			ou_sha="$(
-				printf -- "%s:$file" "$working_dir_changes_sha~0" \
-				| xargs -0 -- git --literal-pathspecs rev-parse 2>/dev/null \
-				| tr -d -c '0-9A-Za-z:' \
-				| sed -E 's/^.*:.*$/0000000000000000000000000000000000000000/'
-			)"
+				printf '%s:%b' "$working_dir_changes_sha~0" "$file" \
+				| xargs -0 -- git --literal-pathspecs rev-parse --verify 2>/dev/null
+			)" && ou=1 || { ou_sha="$zero_sha" ; ou=0 ; }
 			ni_sha="$(
-				#shellcheck disable=SC2059
-				if ! printf -- "$file" \
+				if ! printf '%b' "$file" \
 					| xargs -0 -- git --literal-pathspecs status --porcelain -- \
 					| grep -E -q '^.A'
 				then
-					#shellcheck disable=SC2059
-					printf -- "$file" \
+					printf '%b' "$file" \
 					| xargs -0 -- git --literal-pathspecs ls-files -s -- \
 					| cut -d' ' -f2
 				else
-					#shellcheck disable=SC2059
-					printf -- "$file" \
+					printf '%b' "$file" \
 					| xargs -0 -- git --literal-pathspecs status --porcelain=2 -- \
 					| head -n1 \
 					| cut -d' ' -f8
-				fi \
-				| grep -E '.' \
-				|| printf '0000000000000000000000000000000000000000'
-			)"
+				fi
+			)" ; ni_sha="${ni_sha:-"$zero_sha"}" ; test "$ni_sha" != "$zero_sha" && ni=1 || ni=0
+			#shellcheck disable=SC2015
 			nt_sha="$(
-				#shellcheck disable=SC2059
-				printf -- "$file" \
+				printf '%b' "$file" \
 				| xargs -0 -- git --literal-pathspecs ls-files --error-unmatch -- 1>/dev/null 2>&1 \
-				&& printf -- "$file" \
-				| xargs -0 -- git --literal-pathspecs hash-object -- 2>/dev/null \
-				|| printf '0000000000000000000000000000000000000000'
-			)"
+				&& printf '%b' "$file" \
+				| xargs -0 -- git --literal-pathspecs hash-object -- 2>/dev/null
+			)" && nt=1 || { nt_sha="$zero_sha" ; nt=0 ; }
+			#shellcheck disable=SC2015
 			nu_sha="$(
-				#shellcheck disable=SC2059
-				printf -- "$file" \
-				| xargs -0 -- git --literal-pathspecs hash-object -- 2>/dev/null \
-				|| printf '0000000000000000000000000000000000000000'
-			)"
-			oi="$(test "$oi_sha" = '0000000000000000000000000000000000000000' && printf '0' || printf '1')"
-			ot="$(test "$ot_sha" = '0000000000000000000000000000000000000000' && printf '0' || printf '1')"
-			ou="$(test "$ou_sha" = '0000000000000000000000000000000000000000' && printf '0' || printf '1')"
-			ni="$(test "$ni_sha" = '0000000000000000000000000000000000000000' && printf '0' || printf '1')"
-			nt="$(test "$nt_sha" = '0000000000000000000000000000000000000000' && printf '0' || printf '1')"
-			nu="$(test "$nu_sha" = '0000000000000000000000000000000000000000' && printf '0' || printf '1')"
+				printf '%b' "$file" \
+				| xargs -0 -- git --literal-pathspecs hash-object -- 2>/dev/null
+			)" && nu=1 || nu=0
 			# The ifs can be interpreted by their direct meaning but it's complicated.
-			# Conditions are in a large part generated by a Karnaugh map solver. You can find the input data and the result in the commit message of 50abf565859942c5e19dc2dbea8dd583ddd4bf76.
+			# The case statements are in a large part generated by a Karnaugh map solver. You can find the input data and the result in the commit message of 50abf565859942c5e19dc2dbea8dd583ddd4bf76.
 			# index
-			if [ "$ni$oi" = '10' ]
-			then
-				printf 'i A\t%s\n' "$file"
-			elif [ "$ni$oi" = '01' ]
-			then
-				printf 'i D\t%s\n' "$file"
-			elif [ "$ni_sha" != "$oi_sha" ]
-			then
-				printf 'i M\t%s\n' "$file"
-			fi
+			case "$oi-$ni" in
+			0-1)
+				printf 'i A %s\n' "$file"
+				;;
+			1-0)
+				printf 'i D %s\n' "$file"
+				;;
+			1-1)
+				if [ "$ni_sha" != "$oi_sha" ]
+				then
+					printf 'i M %s\n' "$file"
+				fi
+				;;
+			esac
 			# tracked
-			if [ "$ni$nt$oi" = '011' ] \
-				|| [ "$ni$nt$ot" = '010' ] \
-				|| [ "$nt$oi$ot" = '110' ]
-			then
-				printf 't A\t%s\n' "$file"
-			elif [ "$ni$nt$oi" = '100' ] \
-				|| [ "$ni$nt$ot" = '101' ] \
-				|| [ "$nt$oi$ot" = '001' ]
-			then
-				printf 't D\t%s\n' "$file"
-			elif [ "$ni$nt$oi" = '110' ] \
-				|| [ "$ni$nt$ot" = '111' ] \
-				|| [ "$nt$oi$ot" = '101' ]
-			then
+			case "$oi$ot-$ni$nt" in
+			1?-01|?0-01|10-?1)
+				printf 't A %s\n' "$file"
+				;;
+			0?-10|?1-10|01-?0)
+				printf 't D %s\n' "$file"
+				;;
+			0?-11|?1-11|01-?1)
 				if [ "$ni_sha" = "$oi_sha" ] || [ "$nt_sha" != "$ni_sha" ]
 				then
 					old_changes="$(
-						#shellcheck disable=SC2059
-						printf -- "$file" \
+						printf '%b' "$file" \
 						| xargs -0 -- git --literal-pathspecs diff-files -p -- \
 						| sed -E -e 's/^@@.*$/@@/'
 					)"
 					new_changes="$(
-						#shellcheck disable=SC2059
-						printf -- "$file" \
+						printf '%b' "$file" \
 						| xargs -0 -- git --literal-pathspecs diff-tree -p "$working_dir_changes_sha~2" "$working_dir_changes_sha~1" -- \
 						| sed -E -e 's/^@@.*$/@@/'
 					)"
 					if [ "$old_changes" != "$new_changes" ]
 					then
-						printf 't M\t%s\n' "$file"
+						printf 't M %s\n' "$file"
 					fi
 				fi
-			fi
+				;;
+			esac
 			# untracked
-			#shellcheck disable=SC2059
-			if ! printf -- "$file" \
+			if ! printf '%b' "$file" \
 				| xargs -0 -- git check-ignore --quiet --
 			then
-				if [ "$nt$nu$ot" = '011' ] \
-					|| [ "$nt$nu$ou" = '010' ]
-				then
-					printf 'u C\t%s\n' "$file"
-				elif [ "$ni$nu$ot$ou" = '0001' ]
-				then
-					printf 'u D\t%s\n' "$file"
-				elif [ "$nt$nu$oi$ot" = '0111' ] \
-					|| [ "$nt$nu$ot$ou" = '0101' ]
-				then
+				#shellcheck disable=SC2221,SC2222
+				case "$oi$ot$ou-$ni$nt$nu" in
+				?1?-?01|??0-?01)
+					printf 'u C %s\n' "$file"
+					;;
+				?01-0?0)
+					printf 'u D %s\n' "$file"
+					;;
+				11?-?01|?01-?01)
 					if [ "$nu_sha" != "$ou_sha" ]
 					then
-						printf 'u M\t%s\n' "$file"
+						printf 'u M %s\n' "$file"
 					fi
-				fi
+					;;
+				esac
 			elif [ "$summary_mode" = 'complete' ]
 			then
 				if [ "$ou" = '1' ]
 				then
-					printf 'u I\t%s\n' "$file"
+					printf 'u I %s\n' "$file"
 				elif [ "$nu" = 1 ]
 				then
-					if printf -- "%s:$file" "$untracked_changes_sha" \
+					if printf '%s:%b' "$untracked_changes_sha" "$file" \
 						| xargs -0 -- git --literal-pathspecs rev-parse --verify --quiet 1>/dev/null 2>&1
 					then
-						printf 'u T\t%s\n' "$file"
+						printf 'u T %s\n' "$file"
 					fi
 				fi
 			fi
 		done
 	)"
-	index_changes="$(
-		printf '%s' "$all_changes" \
-		| grep -E '^i ' \
-		| cut -c3-
-	)"
-	tracked_changes="$(
-		printf '%s' "$all_changes" \
-		| grep -E '^t ' \
-		| cut -c3-
-	)"
-	untracked_changes="$(
-		printf '%s' "$all_changes" \
-		| grep -E '^u ' \
-		| cut -c3-
-	)"
 	if [ -n "$all_changes" ]
 	then
+		index_changes="$(
+			printf '%s' "$all_changes" \
+			| sed -En 's/^i (.*)$/\1/p'
+		)"
+		tracked_changes="$(
+			printf '%s' "$all_changes" \
+			| sed -En 's/^t (.*)$/\1/p'
+		)"
+		untracked_changes="$(
+			printf '%s' "$all_changes" \
+			| sed -En 's/^u (.*)$/\1/p'
+		)"
 		{
 			if [ -n "$index_changes" ]
 			then
 				printf '    %sindex:%s\\n' "$header_color_escape_code" "${header_color_escape_code:+$reset_escape_code}"
 				printf '%s\n' "$index_changes" \
-				| sed -E -e 's/^A\t(.+)$/added:\t\t\1/' \
-					-e 's/^M\t(.+)$/modified:\t\1/' \
-					-e 's/^D\t(.+)$/deleted:\t\1/' \
+				| sed -E -e 's/^A (.+)$/added:'"$tab$tab"'\1/' \
+					-e 's/^M (.+)$/modified:'"$tab"'\1/' \
+					-e 's/^D (.+)$/deleted:'"$tab"'\1/' \
 					-e 's/^.+$/\t'"$updated_color_escape_code"'&'"${updated_color_escape_code:+$reset_escape_code}"'\\n/'
 			fi
 			if [ -n "$tracked_changes" ]
 			then
 				printf '    %stracked files:%s\\n' "$header_color_escape_code" "${header_color_escape_code:+$reset_escape_code}"
 				printf '%s\n' "$tracked_changes" \
-				| sed -E -e 's/^A\t(.+)$/added:\t\t\1/' \
-					-e 's/^M\t(.+)$/modified:\t\1/' \
-					-e 's/^D\t(.+)$/deleted:\t\1/' \
+				| sed -E -e 's/^A (.+)$/added:'"$tab$tab"'\1/' \
+					-e 's/^M (.+)$/modified:'"$tab"'\1/' \
+					-e 's/^D (.+)$/deleted:'"$tab"'\1/' \
 					-e 's/^.+$/\t'"$changed_color_escape_code"'&'"${changed_color_escape_code:+$reset_escape_code}"'\\n/'
 			fi
 			if [ -n "$untracked_changes" ]
 			then
 				printf '    %suntracked files:%s\\n' "$header_color_escape_code" "${header_color_escape_code:+$reset_escape_code}"
 				printf '%s\n' "$untracked_changes" \
-				| sed -E -e 's/^C\t(.+)$/created:\t\1/' \
-					-e 's/^M\t(.+)$/modified:\t\1/' \
-					-e 's/^D\t(.+)$/deleted:\t\1/' \
-					-e 's/^T\t(.+)$/touched:\t\1/' \
-					-e 's/^I\t(.+)$/ignored:\t\1/' \
+				| sed -E -e 's/^C (.+)$/created:'"$tab"'\1/' \
+					-e 's/^M (.+)$/modified:'"$tab"'\1/' \
+					-e 's/^D (.+)$/deleted:'"$tab"'\1/' \
+					-e 's/^T (.+)$/touched:'"$tab"'\1/' \
+					-e 's/^I (.+)$/ignored:'"$tab"'\1/' \
 					-e 's/^.+$/\t'"$untracked_color_escape_code"'&'"${untracked_color_escape_code:+$reset_escape_code}"'\\n/'
 			fi
 		} \
 		| tr '\n' '\0' \
-		| xargs -0 -n1 -- printf --
+		| xargs -0 -- printf '%b'
 	else
 		printf '\t%sno changes were made%s\n' "$header_color_escape_code" "${header_color_escape_code:+$reset_escape_code}"
 	fi
@@ -463,7 +445,6 @@ end_with_success() {
 	if [ "$is_quiet" != y ]
 	then
 		printf 'Stash of the old working dir: %s\n' "$(prepare_stash_of_working_dir)"
-		print_changes_summary
 	fi
 	if [ "$sub_command_name" = 'pop' ]
 	then
@@ -477,6 +458,7 @@ end_with_success() {
 	fi
 	if [ "$is_quiet" != y ]
 	then
+		print_changes_summary
 		printf '\nSuccessfully %sed the stash\n' "$(printf '%s' "$sub_command_name" | sed -E 's/y$/i/;s/p$/&p/')"
 	fi
 }
@@ -572,16 +554,22 @@ prepare_stash_of_working_dir() {
 }
 
 run_first_time_rebase() { # untangled_stash_sha
-	todo_list_editor="sed -i -E \
-			-e '1 i pick $working_dir_changes_sha~2 Staged working directory' \
-			-e '2 i pick $working_dir_changes_sha~1 Unstaged working directory' \
-			-e '3 i pick $working_dir_changes_sha~0 Untracked working directory'"
+	#shellcheck disable=SC2031
+	todo_list_editor="sh -c \"
+		x=\\\"\\\$(cat \\\"\\\$1\\\")\\\"
+		printf '%s\\\\n' \\\"\\\$x\\\" \\\\
+		| sed -E \\\\
+			-e '1i\\\\${nl}pick $working_dir_changes_sha~2 Staged working directory' \\\\
+			-e '2i\\\\${nl}pick $working_dir_changes_sha~1 Unstaged working directory' \\\\
+			-e '3i\\\\${nl}pick $working_dir_changes_sha~0 Untracked working directory' \\\\
+		>\\\"\\\$1\\\"
+		\" _"
 	set -- --onto "$current_branch" "$1~3" "$1" --empty=keep --keep-empty --reapply-cherry-picks --interactive
 	if [ "$is_quiet" = n ]
 	then
-		GIT_EDITOR="$todo_list_editor" git rebase "$@" 2>/dev/null
+		GIT_SEQUENCE_EDITOR="$todo_list_editor" git rebase "$@" 2>/dev/null
 	else
-		GIT_EDITOR="$todo_list_editor" git rebase "$@" 1>/dev/null 2>&1
+		GIT_SEQUENCE_EDITOR="$todo_list_editor" git rebase "$@" 1>/dev/null 2>&1
 	fi
 }
 

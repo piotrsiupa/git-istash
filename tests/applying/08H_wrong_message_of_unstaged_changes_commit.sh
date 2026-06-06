@@ -22,7 +22,12 @@ git reset --hard HEAD~
 git merge --no-ff --no-commit "$index_commit_sha"
 printf 'ccc\n' >aaa
 git add aaa
-GIT_EDITOR='sed -i "1s/^.*$/Wrong message/"' git merge --continue
+GIT_EDITOR="sh -c '
+	x=\"\$(cat \"\$1\")\"
+	printf '%s\\n' \"\$x\" \\
+	| sed -E \"1s/^.*$/Wrong message/\" \\
+	>\"\$1\"
+	' _" git merge --continue
 stash_sha="$(git rev-parse HEAD)"
 git reset --hard HEAD~
 

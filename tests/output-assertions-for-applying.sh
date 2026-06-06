@@ -6,6 +6,10 @@ then
 	exit 1
 fi
 
+tab='	'
+nl='
+'
+
 
 create_continue_or_abort_hint_regex() { # operation stage
 	if IS_QUIET
@@ -38,11 +42,12 @@ assert_outputs__apply__conflict() { # operation stage conflicts
 	fi
 	# This assertion may be a little frafile because it asserts outputs originated from other Git commands.
 	# The goal is not as much to presisely check this output but rather if it is the intended thing in general and whether there is any additional unwanted text.
+	#shellcheck disable=SC1003
 	assert_outputs_with_color "$(
 		sanitize_for_ere "$3" \
-		| sed -E -e 's/^\t+//' -e 's/^(..) (.*)$/\2 \1/' \
+		| sed -E -e 's/^'"$tab"'+//' -e 's/^(..) (.*)$/\2 \1/' \
 		| LC_ALL=C sort \
-		| sed -E -e 's/^(.*) (..)$/\2 \1/' -e '$!s/.$/&\n\\n/' \
+		| sed -E -e 's/^(.*) (..)$/\2 \1/' -e '$!s/.$/&\'"$nl"'\\n/' \
 		| sed -E \
 			-e 's/^UU (.+)$/Auto-merging \1\\nCONFLICT \\(content\\): Merge conflict in \1/' \
 			-e 's/^AA (.+)$/Auto-merging \1\\nCONFLICT \\(add\\\/add\\): Merge conflict in \1/' \
@@ -81,6 +86,10 @@ assert_outputs__apply__success() { # operation changes [stash_id stash_sha] [err
 			return
 		fi
 		printf '%s' 'Stash of the old working dir: [0-9a-fA-F]{40}'
+		if [ "$1" = 'pop' ]
+		then
+			printf '%s' '\n\nDropped refs\/stash@\{'"$3"'\} \('"$4"'\)'
+		fi
 		if IS_SUMMARY_ON
 		then
 			printf '%s' '\n\n\[<color>34mChanges made to the working directory:\[<color>0?m\n'
@@ -92,7 +101,7 @@ assert_outputs__apply__success() { # operation changes [stash_id stash_sha] [err
 				else
 					cat
 				fi \
-				| sed -E -e 's/^\t+//' -e '/^\s*$/ d' -e 's/^\\\?/?/' -e 's/^(..) (.+)$/\2 \1/' \
+				| sed -E -e 's/^'"$tab"'+//' -e '/^[[:blank:]]*$/ d' -e 's/^\\\?/?/' -e 's/^(..) (.+)$/\2 \1/' \
 				| LC_ALL=C sort \
 				| sed -E 's/^(.+) (..)$/\2 \1/'
 			)"
@@ -136,11 +145,7 @@ assert_outputs__apply__success() { # operation changes [stash_id stash_sha] [err
 				-e 's/\\\[<color>0\\\?m/\\[<color>0?m/g'
 		fi
 		if ! IS_SUMMARY_ON ; then printf '\\n' ; fi
-		if [ "$1" = 'pop' ]
-		then
-			printf '%s' '\nDropped refs\/stash@\{'"$3"'\} \('"$4"'\)\n'
-		fi
-		printf '%s' '\nSuccessfully '"$(if [ "$1" = 'pop' ] ; then printf 'popped' ; else printf 'applied' ; fi)"' the stash'
+		printf '%s' '\nSuccessfully ' ; if [ "$1" = 'pop' ] ; then printf 'popped' ; else printf 'applied' ; fi ; printf ' the stash'
 	)" "$(
 		if [ $# -ge 4 ]
 		then

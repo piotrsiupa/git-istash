@@ -15,6 +15,8 @@ escape_for_shell() {
 # See "print_help" for usage.
 get_options() ( # [-P | -R | -U] short_options_string long_options_string [argument...]
 	set -eu
+	nl='
+'
 	
 	fatal() { # printf_arg...
 		printf 'fatal: '
@@ -45,41 +47,43 @@ get_options() ( # [-P | -R | -U] short_options_string long_options_string [argum
 	
 	test $# -ge 2 ||
 		fatal 'not enough arguments for get_options'
-	printf '%s' "$1" | tr '\n' ' ' | grep -E -q '\s' &&
+	printf '%s' "$1" | tr '\n' ' ' | grep -E -q '[[:space:]]' &&
 		fatal 'white character in short options definition for get_options'
-	printf '%s' "$1" | grep -E -q '^:' &&
+	test "${1#:}" = "$1" ||
 		fatal 'empty entry in short options definition for get_options'
-	printf '%s' "$1" | grep -E -q ':::' &&
+	test "${1#*:::}" = "$1" ||
 		fatal 'triple : in short options definition for get_options'
 	short_options="$(
+		#shellcheck disable=SC1003
 		printf '%s' "$1" \
-		| sed -E 's/([^:]):*/\1\n/g'
+		| sed -E 's/([^:]):*/\1\'"$nl"'/g'
 	)"
-	repeated_option="$(printf '%s' "$short_options" | sort | uniq -c | sed -E -n '/^\s*1\s/!s/^\s*[0-9]+\s+//p' | head -n 1)"
+	repeated_option="$(printf '%s' "$short_options" | sort | uniq -c | sed -E -n '/^[[:blank:]]*1[[:blank:]]/!s/^[[:blank:]]*[0-9]+[[:blank:]]+//p' | head -n 1)"
 	test -z "$repeated_option" ||
 		fatal 'option -%s repeats in options definition for get_options' "$repeated_option"
 	short_options_args="$(
+		#shellcheck disable=SC1003
 		printf '%s' "$1" \
-		| sed -E 's/[^:]:*/&\n/g' \
+		| sed -E 's/[^:]:*/&\'"$nl"'/g' \
 		| sed -E -e 's/^.$/n/' -e 's/^.:$/y/' -e 's/^.::$/o/' \
 		| tr -d '\n'
 	)"
-	printf '%s' "$2" | tr '\n' ' ' | grep -E -q '\s' &&
+	printf '%s' "$2" | tr '\n' ' ' | grep -E -q '[[:space:]]' &&
 		fatal 'white character in long options definition for get_options'
 	printf '%s' "$2" | grep -E -q '(^|,):*,|,:*$' &&
 		fatal 'empty entry in long options definition for get_options'
-	printf '%s' "$2" | grep -E -q ':::' &&
+	test "${2#*:::}" = "$2" ||
 		fatal 'triple : in long options definition for get_options'
 	long_options="$(
 		printf '%s' "$2" \
 		| tr ',' '\n' \
 		| sed -E 's/:+$//'
 	)"
-	printf '%s' "$long_options" | grep -E -q ':' &&
+	test "${long_options#*:}" = "$long_options" ||
 		fatal ': in a name of a long option in definition for get_options'
-	printf '%s' "$long_options" | grep -E -q '=' &&
+	test "${long_options#*=}" = "$long_options" ||
 		fatal '= in a name of a long option in definition for get_options'
-	repeated_option="$(printf '%s' "$long_options" | sort | uniq -c | sed -E -n '/^\s*1\s/!s/^\s*[0-9]+\s+//p' | head -n 1)"
+	repeated_option="$(printf '%s' "$long_options" | sort | uniq -c | sed -E -n '/^[[:blank:]]*1[[:blank:]]/!s/^[[:blank:]]*[0-9]+[[:blank:]]+//p' | head -n 1)"
 	test -z "$repeated_option" ||
 		fatal 'option --%s repeats in options definition for get_options' "$repeated_option"
 	long_options_args="$(
@@ -104,142 +108,148 @@ get_options() ( # [-P | -R | -U] short_options_string long_options_string [argum
 	while [ $# -ne 0 ]
 	do
 		case "$1" in
-			--)
-				if [ "$reorder" = n ]
+		--)
+			if [ "$reorder" = n ]
+			then
+				printf \ \'--\'
+			fi
+			if [ "$partial" = n ]
+			then
+				shift
+			fi
+			break
+			;;
+		--*)
+			option_name="${1%%"$nl"*}"
+			option_name="${option_name%%=*}"
+			option_name="${option_name#--}"
+			if ! long_option_nr="$(printf '%s\n' "$long_options" | grep -n -F -x -- "$option_name")"
+			then
+				long_option_nr="$(printf '%s\n' "$long_options" | cut -c-${#option_name} | grep -n -F -x -- "$option_name")" || {
+					if [ "$partial" = n ]
+					then
+						error 'unknown option `%s'\' "$option_name"
+					else
+						break
+					fi
+				}
+				test "${long_option_nr#*"$nl"}" = "$long_option_nr" ||
+					error 'ambiguous option abbreviation `%s'\' "$option_name"
+			fi
+			long_option_nr="${long_option_nr%%:*}"
+			option_name="$(printf '%s' "$long_options" | sed -E -n "${long_option_nr}p")"
+			printf ' --%s' "$option_name"
+			has_parameter="$(printf '%s' "$long_options_args" | cut -c"$long_option_nr")"
+			case "$has_parameter" in
+			y)
+				printf ' '
+				if [ "${1#*=}" != "$1" ]
 				then
-					printf \ \'--\'
-				fi
-				if [ "$partial" = n ]
-				then
-					shift
-				fi
-				break
-				;;
-			--*)
-				option_name="$(printf '%s' "$1" | head -n1 | cut -d= -f1 | cut -c3-)"
-				if ! long_option_nr="$(printf '%s\n' "$long_options" | grep -n -F -x -- "$option_name")"
-				then
-					long_option_nr="$(printf '%s\n' "$long_options" | cut -c-${#option_name} | grep -n -F -x -- "$option_name")" || {
-						if [ "$partial" = n ]
+					{
+						printf '%s' "$1" | head -n1 | cut -d= -f2- | tr -d '\n'
+						if [ "${1#*"$nl"}" != "$1" ]
 						then
-							error 'unknown option `%s'\' "$option_name"
-						else
-							break
+							printf '\n'
+							printf '%s' "$1" | tail -n+2
 						fi
-					}
-					test "$(printf '%s\n' "$long_option_nr" | wc -l)" -eq 1 ||
-						error 'ambiguous option abbreviation `%s'\' "$option_name"
+					} | escape_for_shell
+				elif [ $# -ge 2 ]
+				then
+					printf '%s' "$2" | escape_for_shell
+					shift
+				else
+					error 'option `%s'\'' requires a value' "$option_name"
 				fi
-				long_option_nr="$(printf '%s' "$long_option_nr" | cut -d: -f1)"
-				option_name="$(printf '%s' "$long_options" | sed -E -n "${long_option_nr}p")"
-				printf ' --%s' "$option_name"
-				has_parameter="$(printf '%s' "$long_options_args" | cut -c"$long_option_nr")"
+				;;
+			o)
+				printf ' '
+				if [ "${1#*=}" != "$1" ]
+				then
+					{
+						printf '%s' "$1" | head -n1 | cut -d= -f2- | tr -d '\n'
+						if [ "${1#*"$nl"}" != "$1" ]
+						then
+							printf '\n'
+							printf '%s' "$1" | tail -n+2
+						fi
+					} | escape_for_shell
+				else
+					printf \'\'
+				fi
+				;;
+			n)
+				if [ "${1#*=}" != "$1" ]
+				then
+					error 'option `%s'\'' takes no value' "$option_name"
+				fi
+				;;
+			esac
+			;;
+		-*)
+			i=2
+			was_non_option=n
+			while [ ${#1} -ge $i ]
+			do
+				option_letter="$(printf '%s' "$1" | head -c$i | tail -c+$i)"
+				short_option_nr="$(printf '%s\n' "$short_options" | grep -n -F -x -- "$option_letter")" || {
+					if [ "$partial" = n ]
+					then
+						error 'unknown switch `%s'\' "$option_letter"
+					else
+						non_option_args="$non_option_args $({ printf -- '-' ; printf '%s' "$1" | tail -c+$i ; } | escape_for_shell)"
+						shift
+						was_non_option=y
+						break
+					fi
+				}
+				printf ' -%s' "$option_letter"
+				short_option_nr="${short_option_nr%%:*}"
+				has_parameter="$(printf '%s' "$short_options_args" | cut -c"$short_option_nr")"
 				if [ "$has_parameter" = y ]
 				then
 					printf ' '
-					if printf '%s' "$1" | grep -E -q '='
+					if [ ${#1} -gt $i ]
 					then
-						{
-							printf '%s' "$1" | head -n1 | cut -d= -f2- | tr -d '\n'
-							if [ "$(printf '%s\n' "$1" | wc -l)" -gt 1 ]
-							then
-								printf '\n'
-								printf '%s' "$1" | tail -n+2
-							fi
-						} | escape_for_shell
+						printf '%s' "$1" | tail -c+$((i+1)) | escape_for_shell
 					elif [ $# -ge 2 ]
 					then
 						printf '%s' "$2" | escape_for_shell
 						shift
 					else
-						error 'option `%s'\'' requires a value' "$option_name"
+						error 'switch `%s'\'' requires a value' "$option_letter"
 					fi
+					break
 				elif [ "$has_parameter" = o ]
 				then
 					printf ' '
-					if printf '%s' "$1" | grep -E -q '='
+					if [ ${#1} -gt $i ]
 					then
-						{
-							printf '%s' "$1" | head -n1 | cut -d= -f2- | tr -d '\n'
-							if [ "$(printf '%s\n' "$1" | wc -l)" -gt 1 ]
-							then
-								printf '\n'
-								printf '%s' "$1" | tail -n+2
-							fi
-						} | escape_for_shell
+						printf '%s' "$1" | tail -c+$((i+1)) | escape_for_shell
 					else
 						printf \'\'
 					fi
-				elif printf '%s' "$1" | grep -E -q '='
-				then
-					error 'option `%s'\'' takes no value' "$option_name"
-				fi
-				;;
-			-*)
-				i=2
-				was_non_option=n
-				while [ ${#1} -ge $i ]
-				do
-					option_letter="$(printf '%s' "$1" | head -c$i | tail -c+$i)"
-					short_option_nr="$(printf '%s\n' "$short_options" | grep -n -F -x -- "$option_letter")" || {
-						if [ "$partial" = n ]
-						then
-							error 'unknown switch `%s'\' "$option_letter"
-						else
-							non_option_args="$non_option_args $({ printf -- '-' ; printf '%s' "$1" | tail -c+$i ; } | escape_for_shell)"
-							shift
-							was_non_option=y
-							break
-						fi
-					}
-					printf ' -%s' "$option_letter"
-					short_option_nr="$(printf '%s' "$short_option_nr" | cut -d: -f1)"
-					has_parameter="$(printf '%s' "$short_options_args" | cut -c"$short_option_nr")"
-					if [ "$has_parameter" = y ]
-					then
-						printf ' '
-						if [ ${#1} -gt $i ]
-						then
-							printf '%s' "$1" | tail -c+$((i+1)) | escape_for_shell
-						elif [ $# -ge 2 ]
-						then
-							printf '%s' "$2" | escape_for_shell
-							shift
-						else
-							error 'switch `%s'\'' requires a value' "$option_letter"
-						fi
-						break
-					elif [ "$has_parameter" = o ]
-					then
-						printf ' '
-						if [ ${#1} -gt $i ]
-						then
-							printf '%s' "$1" | tail -c+$((i+1)) | escape_for_shell
-						else
-							printf \'\'
-						fi
-						break
-					else
-						i=$((i+1))
-					fi
-				done
-				if [ "$was_non_option" = y ]
-				then
 					break
-				fi
-				;;
-			*)
-				if [ "$posixly" = y ]
-				then
-					break
-				elif [ "$reorder" = y ]
-				then
-					non_option_args="$non_option_args $(printf '%s' "$1" | escape_for_shell)"
 				else
-					printf ' '
-					printf '%s' "$1" | escape_for_shell
+					i=$((i+1))
 				fi
-				;;
+			done
+			if [ "$was_non_option" = y ]
+			then
+				break
+			fi
+			;;
+		*)
+			if [ "$posixly" = y ]
+			then
+				break
+			elif [ "$reorder" = y ]
+			then
+				non_option_args="$non_option_args $(printf '%s' "$1" | escape_for_shell)"
+			else
+				printf ' '
+				printf '%s' "$1" | escape_for_shell
+			fi
+			;;
 		esac
 		shift
 	done
@@ -260,7 +270,7 @@ get_options() ( # [-P | -R | -U] short_options_string long_options_string [argum
 	fi
 )
 
-if [ "$(basename "$0")" = 'get_options' ]
+if [ "${0##*/}" = 'get_options' ]
 then
 	set -eu
 	
@@ -270,8 +280,8 @@ then
 		#shellcheck disable=SC2016
 		printf 'The output should be generally the same as in "getopt" with analogous settings\nand it is meant to be used with "eval" to set positional parameters in shell,\nlike this: eval set -- "$output_of_get_options".\n'
 		printf '\n'
-		printf 'Usage:\tget_options [-P | -R | -U] <short_opts_descr> <long_opts_descr> [arg...]\n'
-		printf '   or:\tget_options [-h | --help | -V | --version]    (Only in standalone mode.)\n'
+		printf 'Usage:\t%s [-P | -R | -U] <short_opts_descr> <long_opts_descr> [arg...]\n' "${0##*/}"
+		printf '   or:\t%s [-h | --help | -V | --version]    (Only in standalone mode.)\n' "${0##*/}"
 		printf '(Ironically, the order of arguments has to be exactly as described.)\n'
 		printf 'Options:\n'
 		printf '    -P\t- Posixly correct mode - after the first encountered non-option, treat\n\t  everything else as non-options. Preserve the first "--" if it'\''s after\n\t  a non-option.\n'
@@ -302,11 +312,11 @@ then
 		printf 'Exit values:\n'
 		printf ' - 0 - Success.\n'
 		printf ' - 1 - Parse error. (normal error)\n'
-		printf ' - 2 - Error with the usage of the get_options itself. (fatal error)\n'
+		printf ' - 2 - Error with the usage of the %s itself. (fatal error)\n' "${0##*/}"
 	}
 	
 	print_version() {
-		printf 'get_options version 1.0.0\n'
+		printf 'get_options version 1.0.1\n'
 		printf 'Author: Piotr Siupa'
 	}
 	
