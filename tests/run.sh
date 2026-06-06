@@ -57,6 +57,7 @@ print_help() {
 	printf '    -m, --meticulous=X\t- Set how many tests / test variants will be run.\n\t\t\t  (See the section "Meticulousness".)\n'
 	printf '\t--complete\t- Same as "--meticulousness=complete".\n'
 	printf '\t--quickie\t- Same as "--meticulousness=quickie".\n'
+	printf '\t--qq\t\t- Same as "--quickie --jobs=0" (quick test).\n'
 	printf '    -p, --print-paths\t- Instead of running tests, print their paths and exit.\n\t\t\t  (The paths are relative to the directory "tests".)\n'
 	printf '    -R, --relative\t- Print paths relative to the currect directory.\n\t\t\t  (Implies "--print-paths".)\n'
 	printf '\t--progress\t- Show progress information during testing. (It uses the\n\t\t\t  multi-threaded code, which adds some overhead for\n\t\t\t  a single job run.)\n\t\t\t  This is the default when color is enabled, the quiet\n\t\t\t  mode is disabled and there are multiple jobs.\n'
@@ -880,7 +881,7 @@ print_summary() {
 }
 
 getopt_short_options='aA:c:Cdfhj:l:m:pRqQ_rsSvV'
-getopt_long_options='altered,since:,color:,check,debug,failed,file-name,help,jobs:,limit:,meticulousness:,complete,quickie,facets:,print-paths,relative-paths,progress,no-progress,quiet,quieter,quietest,raw,raw-name,skip-at-fail,skip-at-error,skip-on-fail,skip-on-error,stop-at-fail,stop-at-error,stop-on-fail,stop-on-error,verbose,version,skip-version'
+getopt_long_options='altered,since:,color:,check,debug,failed,file-name,help,jobs:,limit:,meticulousness:,complete,quickie,qq,facets:,print-paths,relative-paths,progress,no-progress,quiet,quieter,quietest,raw,raw-name,skip-at-fail,skip-at-error,skip-on-fail,skip-on-error,stop-at-fail,stop-at-error,stop-on-fail,stop-on-error,verbose,version,skip-version'
 normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"${0##*/}" -ssh -- "$@")"
 eval set -- "$normalized_options"
 complete='
@@ -1006,6 +1007,10 @@ do
 		;;
 	--quickie)
 		meticulousnesses="$(set -e ; parse_meticulousnesses 'quickie')"
+		;;
+	--qq)
+		shift
+		set -- '--cc' '--quickie' '--jobs' '0' "$@"
 		;;
 	-p|--print-paths)
 		print_paths=y
