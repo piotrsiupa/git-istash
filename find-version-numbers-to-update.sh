@@ -17,7 +17,7 @@ print_version() {
 }
 
 find_scripts_to_update_versions() {
-	regex='\<print_version\>\s*\(\)'
+	regex='(^|[[:blank:]])print_version[[:blank:]]*\(\)'
 	changed_files="$(git status --porcelain --no-renames | grep -vE 'D  ' | cut -c4- | grep -vE '^tests/.*/')"
 	{
 		printf '%s\n' "$changed_files" | xargs -- grep -El "$regex" -- || true

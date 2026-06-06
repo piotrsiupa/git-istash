@@ -32,9 +32,9 @@ A  aaa
 !A ccc
 ' 0 "$stash_sha"
 assert_files '
-A  aaa	""
-?? bbb	""
-!! ccc	""
+A  aaa	<empty>
+?? bbb	<empty>
+!! ccc	<empty>
 '
 assert_stash_count_AO 1
 assert_log_length_HT 1

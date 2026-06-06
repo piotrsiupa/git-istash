@@ -34,8 +34,8 @@ new_stash_sha_CO="$stdout"
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_HTCO '
-	M  aaa			""
-	 M bbb		""	bbb
+	M  aaa			<empty>
+	 M bbb		<empty>	bbb
 	!! ignored0	ignored0
 	!! ignored1	ignored1
 	' '
@@ -46,12 +46,12 @@ then
 	'
 else
 	assert_files_HTCO '
-	M  aaa			""
-	 M bbb		""	bbb
+	M  aaa			<empty>
+	 M bbb		<empty>	bbb
 	!! ignored0	ignored0
 	!! ignored1	ignored1
 	' '
-	M  aaa		""
+	M  aaa		<empty>
 	   bbb		bbb
 	!! ignored0	ignored0
 	!! ignored1	ignored1
@@ -59,8 +59,8 @@ else
 fi
 store_stash_CO "$new_stash_sha_CO"
 assert_stash_HTCO 0 '' '
-M  aaa			""
- M bbb		""	bbb
+M  aaa			<empty>
+ M bbb		<empty>	bbb
 '
 assert_stash_base_HT 0 'HEAD'
 assert_stash_count 1
@@ -78,8 +78,8 @@ RESTORE_HEAD_TYPE
 __test_section__ 'Pop stash'
 assert_exit_code 0 git stash pop --index
 assert_files '
-M  aaa			""
- M bbb		""	bbb
+M  aaa			<empty>
+ M bbb		<empty>	bbb
 '
 assert_stash_count 0
 assert_log_length 2

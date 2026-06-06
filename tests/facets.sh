@@ -6,10 +6,15 @@
 set -eu
 
 
+tab='	'
+nl='
+'
+
+
 normalize_facet_list() { # list
 	printf '%s\n' "$1" \
-	| sed -E -e 's/\s*#.*$//' \
-		-e 's/\s+//g' \
+	| sed -E -e 's/[[:blank:]]*#.*$//' \
+		-e 's/[[:blank:]]+//g' \
 		-e '/^$/d'
 }
 
@@ -98,8 +103,10 @@ canonize_facet_names() (
 	set -eu
 	names="$(cat)"
 	{
-		printf '%s\n' "$facets" | sed -E 's/^([^=]+)=(.*)$/\1\n\2/'
-		printf '%s\n' "$facet_categories" | sed -E 's/^([^=]+)=(.*):[^:]*$/\1\n\2/'
+		#shellcheck disable=SC1003
+		printf '%s\n' "$facets" | sed -E 's/^([^=]+)=(.*)$/\1\'"$nl"'\2/'
+		#shellcheck disable=SC1003
+		printf '%s\n' "$facet_categories" | sed -E 's/^([^=]+)=(.*):[^:]*$/\1\'"$nl"'\2/'
 	} | {
 		while read -r canon_name
 		do
@@ -129,8 +136,8 @@ sort_u_facets() (
 	set -eu
 	facet_regex="^($(tr '\n' '|'))\$"
 	printf '%s\n' "$facets" \
-	| sed -E 's/^([^=]+)=.*$/\1/' \
-	| grep -E "$facet_regex" || true
+	| sed -E -e 's/^([^=]+)=.*$/\1/' \
+		-e "/$facet_regex/!d"
 )
 
 # It takes lists of facets and facet lists. It breaks the lists into individual facets, deduplicates and sorts the list.
@@ -153,7 +160,8 @@ parse_meticulousness() ( # [facet_list]...
 		matched_categories_name_regex="^($(printf '%s' "$matched_categories" | sed -E 's/^([^=]+)=.*$/\1/' | tr '\n' '|'))\$"
 		names="$(
 			printf '%s\n' "$names" | grep -E -v "$matched_categories_name_regex" || true
-			printf '%s\n' "$matched_categories" | sed -E 's/^.*:([^:]*)$/\1/' | tr ',' '\n'
+			#shellcheck disable=SC1003
+			printf '%s\n' "$matched_categories" | sed -E -e 's/^.*:([^:]*)$/\1/' -e 's/,/\'"$nl"'/g'
 		)"
 	done
 	printf '%s' "$names" | sort_u_facets
@@ -164,7 +172,7 @@ parse_meticulousness() ( # [facet_list]...
 
 
 # Do this only if the script doesn't appear to be sourced.
-if [ $# -ne 0 ] && [ "$(basename "$0" 2>/dev/null)" = 'facets.sh' ]
+if [ $# -ne 0 ] && [ "${0##*/}" = 'facets.sh' ]
 then
 	break_long_lines() { # new_line_prefix
 		while IFS= read -r line
@@ -182,18 +190,18 @@ then
 					| sed -E 's/ [^ ]*$//'
 				)"
 				printf '%s\n' "$cut_line"
-				#shellcheck disable=SC2059
-				line="$(printf "$1")$(printf '%s' "$line" | tail -c+$((${#cut_line} + 2)))"
+				line="$(printf '%b' "$1")$(printf '%s' "$line" | tail -c+$((${#cut_line} + 2)))"
 			done
 			printf '%s\n' "$line"
 		done
 	}
 	
 	pretty_print() { # list_of_facets_or_facet_categories
+		#shellcheck disable=SC1003
 		printf '%s' "$1" \
-		| sed -E -e 's/^\s+//' -e 's/^([^= ]+) *=[^:]*(:[^:]*)?$/\1\2/' \
+		| sed -E -e 's/^[[:blank:]]+//' -e 's/^([^= ]+) *=[^:]*(:[^:]*)?$/\1\2/' \
 		| tr '\n' '~' \
-		| sed -E -e 's/~~|~$/\n/g' -e 's/^~//' \
+		| sed -E -e 's/~~|~$/\'"$nl"'/g' -e 's/^~//' \
 		| while read -r entry
 		do
 			printf ' - '
@@ -210,10 +218,11 @@ then
 				printf ' '
 			fi
 			printf -- '- '
+			#shellcheck disable=SC1003
 			printf '%s' "$entry" \
 			| sed -E -e 's/~[^~]+$//' \
-				-e 's/(^|~)\s*#\s*/\1/g' \
-				-e 's/~/\n\t\t  /g'
+				-e 's/(^|~)[[:blank:]]*#[[:blank:]]*/\1/g' \
+				-e 's/~/\'"$nl$tab$tab"'  /g'
 			printf '\n'
 			if printf '%s\n' "$entry" | grep -E -q ':'
 			then
@@ -238,9 +247,9 @@ then
 		printf 'Meticulousness is just a name for a list of facets / facet categories.)\n'
 		printf 'It reads arguments or stdin if the first argument is "-".\n'
 		printf '\n'
-		printf 'Usage: %s (-h | --help | -V | --version)\n' "$(basename "$0")"
-		printf '   or: %s [<meticulousness>...]\n' "$(basename "$0")"
-		printf '   or: %s -\n' "$(basename "$0")"
+		printf 'Usage: %s (-h | --help | -V | --version)\n' "${0##*/}"
+		printf '   or: %s [<meticulousness>...]\n' "${0##*/}"
+		printf '   or: %s -\n' "${0##*/}"
 		printf '\n'
 		printf 'Options:\n'
 		printf '    -h, --help\t\t- Print this help text.\n'
@@ -264,7 +273,7 @@ then
 	
 	getopt_short_options='hV'
 	getopt_long_options='help,version'
-	normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
+	normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"${0##*/}" -ssh -- "$@")"
 	eval set -- "$normalized_options"
 	while true
 	do

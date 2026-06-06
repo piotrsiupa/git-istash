@@ -114,7 +114,7 @@ new_stash_sha_CO="$stdout"
 if ! IS_KEEP_INDEX_ON
 then
 	assert_files_HTCO '
-	M  %%^$#&#@	yyy
+	M  %^$#&#@	yyy
 	 M \n		yyy	xxx
 	M  aaa\nbbb	yyy
 	 M ccc\r\nddd	yyy	xxx
@@ -128,9 +128,9 @@ then
 	 M ?*?*?*	yyy	xxx
 	M  ^&@*#	yyy
 	 M o\007o	yyy	xxx
-	 M o\007%%so	yyy	xxx
+	 M o\007%so	yyy	xxx
 	 M p\007p	yyy	xxx
-	 M p\007%%sp	yyy	xxx
+	 M p\007%sp	yyy	xxx
 	 M r\tr		yyy	xxx
 	 M r\\tr	yyy	xxx
 	 M q\tq		yyy	xxx
@@ -139,7 +139,7 @@ then
 	!! ignored0	ignored0
 	!! ignored1	ignored1
 	' '
-	   %%^$#&#@	xxx
+	   %^$#&#@	xxx
 	 M \n		yyy	xxx
 	M  aaa\nbbb	yyy
 	   ccc\r\nddd	xxx
@@ -153,9 +153,9 @@ then
 	   ?*?*?*	xxx
 	M  ^&@*#	yyy
 	 M o\007o	yyy	xxx
-	   o\007%%so	xxx
+	   o\007%so	xxx
 	 M p\007p	yyy	xxx
-	   p\007%%sp	xxx
+	   p\007%sp	xxx
 	   r\tr		xxx
 	 M r\\tr	yyy	xxx
 	 M q\tq		yyy	xxx
@@ -165,7 +165,7 @@ then
 	'
 else
 	assert_files_HTCO '
-	M  %%^$#&#@	yyy
+	M  %^$#&#@	yyy
 	 M \n		yyy	xxx
 	M  aaa\nbbb	yyy
 	 M ccc\r\nddd	yyy	xxx
@@ -179,9 +179,9 @@ else
 	 M ?*?*?*	yyy	xxx
 	M  ^&@*#	yyy
 	 M o\007o	yyy	xxx
-	 M o\007%%so	yyy	xxx
+	 M o\007%so	yyy	xxx
 	 M p\007p	yyy	xxx
-	 M p\007%%sp	yyy	xxx
+	 M p\007%sp	yyy	xxx
 	 M r\tr		yyy	xxx
 	 M r\\tr	yyy	xxx
 	 M q\tq		yyy	xxx
@@ -190,7 +190,7 @@ else
 	!! ignored0	ignored0
 	!! ignored1	ignored1
 	' '
-	M  %%^$#&#@	yyy
+	M  %^$#&#@	yyy
 	 M \n		yyy	xxx
 	M  aaa\nbbb	yyy
 	   ccc\r\nddd	xxx
@@ -204,9 +204,9 @@ else
 	   ?*?*?*	xxx
 	M  ^&@*#	yyy
 	 M o\007o	yyy	xxx
-	   o\007%%so	xxx
+	   o\007%so	xxx
 	 M p\007p	yyy	xxx
-	   p\007%%sp	xxx
+	   p\007%sp	xxx
 	   r\tr		xxx
 	 M r\\tr	yyy	xxx
 	 M q\tq		yyy	xxx
@@ -217,7 +217,7 @@ else
 fi
 store_stash_CO "$new_stash_sha_CO"
 assert_stash_HTCO 0 'a fine stash' '
-M  %%^$#&#@	yyy
+M  %^$#&#@	yyy
    \n		xxx
    aaa\nbbb	xxx
  M ccc\r\nddd	yyy	xxx
@@ -231,9 +231,9 @@ MM "ggg"	zzz	yyy
  M ?*?*?*	yyy	xxx
    ^&@*#	xxx
    o\007o	xxx
- M o\007%%so	yyy	xxx
+ M o\007%so	yyy	xxx
    p\007p	xxx
- M p\007%%sp	yyy	xxx
+ M p\007%sp	yyy	xxx
  M r\tr		yyy	xxx
    r\\tr	xxx
    q\tq		xxx
@@ -257,7 +257,7 @@ __test_section__ 'Pop stash'
 #shellcheck disable=SC2086
 assert_exit_code 0 git stash pop --index
 assert_files '
-M  %%^$#&#@	yyy
+M  %^$#&#@	yyy
    \n		xxx
    aaa\nbbb	xxx
  M ccc\r\nddd	yyy	xxx
@@ -271,9 +271,9 @@ MM "ggg"	zzz	yyy
  M ?*?*?*	yyy	xxx
    ^&@*#	xxx
    o\007o	xxx
- M o\007%%so	yyy	xxx
+ M o\007%so	yyy	xxx
    p\007p	xxx
- M p\007%%sp	yyy	xxx
+ M p\007%sp	yyy	xxx
  M r\tr		yyy	xxx
    r\\tr	xxx
    q\tq		xxx

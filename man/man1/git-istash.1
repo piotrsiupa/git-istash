@@ -83,7 +83,7 @@ Additionally, the state of working copy, from before the \fBapply\fR / \fBpop\fR
 .br
 After the operation is complete, it prints a summary of all changes done to the working directory. \
 This includes \fIonly\fR the changes related to the stash and not the changes that were already there before running the command, which is different from vanilla stash which just runs \fBgit status\fR. \
-(See also \fB--summary\fR.)
+(See also \fB\-\-summary\fR.)
 .RE
 
 \fBgit istash c\fR, \fBgit istash create\fR, \fBgit istash abort\fR and \fBgit istash quit\fR
@@ -439,6 +439,9 @@ There are 3 modes:
 .RE
 .PP
 Summary mode can also be changed by the config variable \fBistash.summary\fR but this option has a higher priority.
+.sp
+(It's also safe to kill the script during generation of the summary. \
+At the point when "\fIChanges made to the working directory:\fR" is displayed, all the actual changes to the repository are already done.)
 .RE
 
 .PP

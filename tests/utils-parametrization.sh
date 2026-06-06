@@ -6,10 +6,12 @@ then
 	exit 1
 fi
 
+tab='	'
+
 
 # It's called after all parameters are initialised to skip the run if one of the previous runs had the exact same parameters.
 _DEDUPLICATE_PAREMETRIZATION() {
-	CURRENT_PARAMETERS="$(awk '$2 { print $2 }' "$PARAMETERS_FILE" | tr '\n' ' ')"
+	CURRENT_PARAMETERS="$(awk '$2 { printf "%s ", $2 }' "$PARAMETERS_FILE")"
 	if grep -Fxq -- "$CURRENT_PARAMETERS" "$PARAM_HISTORY_FILE"
 	then
 		skip_silently
@@ -32,8 +34,9 @@ PARAMETRIZE() { # name facet values...
 	shift 2
 	CUR_VAL="$(awk -v key="$PARAM_NAME" '$1 == key { print $2 }' "$PARAMETERS_FILE")"
 	LAST_VAL="$(awk -v key="$PARAM_NAME" '$1 == key { print $3 }' "$PARAMETERS_FILE")"
-	sed -iE "/^$PARAM_NAME\\>/ d" "$PARAMETERS_FILE"
-	OTHER_IS_EXCLUSIVE="$(awk '$4 == "exclusive" { other_is_exclusive = 1 } END { print(other_is_exclusive ? "y" : "n") }' "$PARAMETERS_FILE")"
+	sed -E "/^${PARAM_NAME}[[:blank:]]/ d" "$PARAMETERS_FILE" >"$PARAMETERS_FILE_"
+	mv "$PARAMETERS_FILE_" "$PARAMETERS_FILE"
+	OTHER_IS_EXCLUSIVE="$(awk '$4 == "exclusive" { other_is_ex = 1 } END { print(other_is_ex ? "y" : "n") }' "$PARAMETERS_FILE")"
 	if [ "$CUR_VAL" = "$LAST_VAL" ]
 	then
 		if { [ -z "$LAST_VAL" ] || [ "$ROTATE_PARAMETER" = y ] ; } && [ "$OTHER_IS_EXCLUSIVE" = n ]
@@ -69,13 +72,11 @@ _SKIP_PARAMETER() { # name first_value
 	CUR_VAL="$(awk -v key="$1" '$1 == key { print $2 }' "$PARAMETERS_FILE")"
 	if [ "$CUR_VAL" = "$2" ]
 	then
-		TMP_FILE="$(mktemp)"
 		{
 			sed -En '/^'"$1"'/ p' "$PARAMETERS_FILE"
 			sed -E '/^'"$1"'/ d' "$PARAMETERS_FILE"
-		} >"$TMP_FILE"
-		mv "$TMP_FILE" "$PARAMETERS_FILE"
-		unset TMP_FILE
+		} >"$PARAMETERS_FILE_"
+		mv "$PARAMETERS_FILE_" "$PARAMETERS_FILE"
 	else
 		skip_silently
 	fi
@@ -104,8 +105,9 @@ IS_FIRST_PARAMETRIZE_CALL() { # name
 	then
 		eval "$1"=1
 	fi
-	sed -iE "/^$1\\>/ d" "$PARAMETERS_FILE"
-	printf '%s\t%i\t%i\n' "$1" 1 1 >>"$PARAMETERS_FILE"
+	sed -E "/^$1[[:blank:]]/ d" "$PARAMETERS_FILE" >"$PARAMETERS_FILE_"
+	printf '%s\t%i\t%i\n' "$1" 1 1 >>"$PARAMETERS_FILE_"
+	mv "$PARAMETERS_FILE_" "$PARAMETERS_FILE"
 	unset CUR_VAL
 }
 # This is a helper function to make other parameter-related functions.
@@ -129,8 +131,9 @@ IS_LAST_PARAMETRIZE_CALL() { # name
 	then
 		eval "$1"=1
 	fi
-	sed -iE "/^$1\\>/ d" "$PARAMETERS_FILE"
+	sed -E "/^$1[[:blank:]]/ d" "$PARAMETERS_FILE" >"$PARAMETERS_FILE_"
 	printf '%s\t%i\t%i\n' "$1" "$CUR_VAL" "$LAST_VAL" >>"$PARAMETERS_FILE"
+	mv "$PARAMETERS_FILE_" "$PARAMETERS_FILE"
 	unset CUR_VAL
 	unset LAST_VAL
 }
@@ -143,7 +146,7 @@ PARAMETRIZE_OPTION() { # condition name override_facet map [values...]
 	NAME="$2"
 	FACET="${3:-options}"
 	#shellcheck disable=SC2020
-	MAP="$(printf '%s' "$4" | sed -E 's/\s+//g' | tr '|' '\n' | sed -E 's/^(.+:)(.*&&)(.*&&)(.*)$/\1\3\2\4/')"
+	MAP="$(printf '%s' "$4" | tr -d ' \t' | tr '|' '\n' | sed -E 's/^(.+:)(.*&&)(.*&&)(.*)$/\1\3\2\4/')"
 	shift 4
 	PREVIOUS_VALUE="$(awk -v key="$NAME" '$1 == key { print $2 }' "$PARAMETERS_FILE")"
 	ALTERNATIVE_SPELLINGS="$(printf '%s\n' "$MAP" | sed -E 's/^.+:.*&&(.*&&)(.*)$/\1\2/' | tr '&' '\n' | grep -Ev '^$' || true)"
@@ -179,7 +182,8 @@ PARAMETRIZE_OPTION() { # condition name override_facet map [values...]
 	if awk -v key="$NAME" -v first_val="$1" '$1 == key && $2 == first_val && $3 != first_val { printf "y" }' "$PARAMETERS_FILE" | grep -Eq '.'
 	then
 		shift $(($# - 2))
-		sed -i -E "s/^($NAME)\\t(.+)\\t(.+)$/\\1\\t\\2\\t$1/" "$PARAMETERS_FILE"
+		sed -E "s/^($NAME)$tab(.+)$tab(.+)$/\\1$tab\\2$tab$1/" "$PARAMETERS_FILE" >"$PARAMETERS_FILE_"
+		mv "$PARAMETERS_FILE_" "$PARAMETERS_FILE"
 	fi
 	if awk -v key="$NAME" -v prev_val="$PREVIOUS_VALUE" '$1 == key && $2 != prev_val { printf "y" }' "$PARAMETERS_FILE" | grep -Eq '.'
 	then
@@ -189,13 +193,15 @@ PARAMETRIZE_OPTION() { # condition name override_facet map [values...]
 	CURRENT_VALUE="$(awk -v key="$NAME" '$1 == key { print $2 }' "$PARAMETERS_FILE")"
 	if printf '%s\n' "$ALTERNATIVE_SPELLINGS" | grep -Fxq -- "$CURRENT_VALUE"
 	then
-		sed -iE "s/^$NAME\\>.*\$/&\texclusive/" "$PARAMETERS_FILE"
+		sed -E "s/^$NAME$tab.*\$/&${tab}exclusive/" "$PARAMETERS_FILE" >"$PARAMETERS_FILE_"
 	else
-		sed -iE "s/^$NAME\\>.*\$/&\tnormal/" "$PARAMETERS_FILE"
+		sed -E "s/^$NAME$tab.*\$/&${tab}normal/" "$PARAMETERS_FILE" >"$PARAMETERS_FILE_"
 	fi
+	mv "$PARAMETERS_FILE_" "$PARAMETERS_FILE"
 	if printf '%s\n' "$DONE_ALTERNATIVE_SPELLINGS" | grep -Eq '[^ ]'
 	then
-		sed -iE "s/^$NAME\\>.*\$/&\t$DONE_ALTERNATIVE_SPELLINGS/" "$PARAMETERS_FILE"
+		sed -E "s/^$NAME$tab.*\$/&$tab$DONE_ALTERNATIVE_SPELLINGS/" "$PARAMETERS_FILE" >"$PARAMETERS_FILE_"
+		mv "$PARAMETERS_FILE_" "$PARAMETERS_FILE"
 	fi
 	unset CONDITION
 	unset NAME
@@ -263,7 +269,10 @@ PARAMETRIZE_COLOR() { # keys
 	esac
 }
 IS_COLOR_ON() {
-	printf '%s' "${COLOR-}" | grep -Eq '^COLOR-YES-|^COLOR-LONG$'
+	case "${COLOR-}" in
+		COLOR-YES-*|COLOR-LONG) return 0 ;;
+		*)			return 1 ;;
+	esac
 }
 
 #shellcheck disable=SC2120
@@ -307,5 +316,8 @@ PARAMETRIZE_HINT() { # advice_name...
 	esac
 }
 HINT_ENABLED() { # advice_name
-	printf '%s\n' "$HINT" | grep -E -q '^ALL-HINTS$|^ENBL-HINT(-|$)'
+	case "$HINT" in
+		ALL-HINTS|ENBL-HINT|ENBL-HINT-*)	return 0 ;;
+		*)					return 1 ;;
+	esac
 }

@@ -87,11 +87,20 @@ PARAMETRIZE_SUMMARY() { # keys
 	esac
 }
 IS_SUMMARY_COMPL() {
-	printf '%s' "$SUMMARY" | grep -E -q '^SUM-(DEFAULT$|COMPL-)'
+	case "$SUMMARY" in
+		SUM-DEFAULT|SUM-COMPL-*)	return 0 ;;
+		*)				return 1 ;;
+	esac
 }
 IS_SUMMARY_NON_IGNORED() {
-	printf '%s' "$SUMMARY" | grep -E -q '^SUM-NON-IGN-'
+	case "$SUMMARY" in
+		SUM-NON-IGN-*)	return 0 ;;
+		*)		return 1 ;;
+	esac
 }
 IS_SUMMARY_ON() {
-	! printf '%s' "$SUMMARY" | grep -E -q '^SUM-NO-'
+	case "$SUMMARY" in
+		SUM-NO-*)	return 1 ;;
+		*)		return 0 ;;
+	esac
 }

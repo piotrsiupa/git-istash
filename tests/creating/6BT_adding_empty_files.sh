@@ -29,16 +29,16 @@ assert_exit_code 0 git istash "$CREATE_OPERATION" $KEEP_INDEX_FLAGS -m 'emptiest
 assert_outputs__create__success '*' 0 'emptiest stash ever'
 new_stash_sha_CO="$stdout"
 assert_files_HTCO '
-A  aaa		""
-?? bbb		""
-!! ccc		""
+A  aaa		<empty>
+?? bbb		<empty>
+!! ccc		<empty>
 ' '
 '
 store_stash_CO "$new_stash_sha_CO"
 assert_stash_HTCO 0 'emptiest stash ever' '
-A  aaa		""
-?? bbb		""
-!! ccc		""
+A  aaa		<empty>
+?? bbb		<empty>
+!! ccc		<empty>
 '
 assert_stash_base_HT 0 'HEAD'
 assert_stash_count 1
@@ -56,9 +56,9 @@ RESTORE_HEAD_TYPE
 __test_section__ 'Pop stash'
 assert_exit_code 0 git stash pop --index
 assert_files '
-A  aaa		""
-?? bbb		""
-!! ccc		""
+A  aaa		<empty>
+?? bbb		<empty>
+!! ccc		<empty>
 '
 assert_stash_count 0
 assert_log_length 1

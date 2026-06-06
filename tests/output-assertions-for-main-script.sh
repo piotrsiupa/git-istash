@@ -59,7 +59,7 @@ assert_outputs__main_script__help() { # [is_fallback]
 	)"
 	#shellcheck disable=SC2154
 	mentions_of_this_subcommand="$(printf '%s\n' "$stdout" | grep -Fc "git istash $SUBCOMMAND" || true)"
-	mentions_of_any_subcommand="$(printf '%s\n' "$stdout" | grep -Ec 'git istash \w+' || true)"
+	mentions_of_any_subcommand="$(printf '%s\n' "$stdout" | grep -Ec 'git istash [a-z]+' || true)"
 	test "$mentions_of_this_subcommand" -ge 1 ||
 		fail 'The "-h" help is not for the subcommand "%s"!\n' "$SUBCOMMAND"
 	test "$mentions_of_this_subcommand" -ge "$mentions_of_any_subcommand" ||

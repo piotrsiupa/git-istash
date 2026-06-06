@@ -4,6 +4,9 @@ set -eu
 
 . "$(dirname "$0")/lib/git-istash/get_options"
 
+nl='
+'
+
 print_help() {
 	printf '%s - An installation script for "git istash".\n' "$(basename "$0")"
 	printf '    It copies files to the appropriate places and sets up the PATH variable if\n    needed. '
@@ -162,9 +165,11 @@ is_target_in_PATH() { # source_path
 
 make_profile_insertion() { # path
 	printf '\n'
-	printf '# add user'\''s private bin directory to PATH\n'
+	printf '# set PATH so it includes user'\''s private bin if it exists\n'
+	printf 'if [ -d "%s" ] ; then\n' "$1"
 	#shellcheck disable=SC2016
-	printf 'export PATH="%s:$PATH"\n' "$1"
+	printf '\tPATH="%s:$PATH"\n' "$1"
+	printf 'fi\n'
 }
 
 get_task_path() { # task
@@ -260,24 +265,26 @@ make_add_to_profile_task() { # source_path
 	fi
 }
 print_add_to_profile_task() { # source_path
-	printf '"%s" will be added to PATH by appending the "%s".\n' "$(make_target_path "$1")" "$(make_profile_path)"
+	printf '"%s" will be added to PATH by appending to the "%s".\n' "$(make_target_path "$1")" "$(make_profile_path)"
 }
 execute_add_to_profile_task() { # source_path
 	make_profile_insertion "$(make_target_path "$1")" >>"$(make_profile_path)"
 }
 
 make_remove_from_profile_task() { # source_path
-	if { is_target_in_PATH "$1" && ! are_foreign_files_in_target "$1" ; } || [ "$debug" = y ]
+	if ! [ -d "$(make_target_path 'bin')" ] \
+		|| ! are_foreign_files_in_target 'bin' \
+		|| [ "$debug" = y ]
 	then
 		printf 'remove-path_%s\n' "$1"
 	fi
 }
 print_remove_from_profile_task() { # source_path
-	printf 'The line in "%s" that appends "%s" to PATH will be removed.\n' "$(make_profile_path)" "$(make_target_path "$1")"
+	printf 'The lines in "%s" that append "%s" to PATH cound be removed BUT this script WON'\''T touch it.\n' "$(make_profile_path)" "$(make_target_path "$1")"
 }
 execute_remove_from_profile_task() { # source_path
-	delete_regex='(^|\n?\n)([\t ]*#[^\n]*\n)?\s*'"$(make_profile_insertion "$(make_target_path "$1")" | tail -n 1 | head -c -1 | sed -E -e 's/[^^\\;]/[&]/g' -e 's/\^/\\^/g' -e 's/\\/\\\\/g' -e 's/;/\\;/g')"'[\t ]*'
-	sed -iE -e ':s ; $! { N ; bs }' -e "\$s;$delete_regex;;" "$(make_profile_path)"
+	printf '\n'
+	printf 'If you want, you can now go to your "%s" and remove the lines that append "%s" to PATH.\n' "$(make_profile_path)" "$(make_target_path "$1")"
 }
 
 gather_tasks() {
@@ -301,9 +308,9 @@ gather_tasks() {
 				make_remove_files_tasks 'share/man'
 				make_remove_directory_task 'share/man'
 			fi
-			if [ -n "$custom_dir" ] || [ "$global" = n ] ; then make_remove_from_profile_task 'bin' ; fi
 			make_remove_files_tasks 'bin'
 			if [ -n "$custom_dir" ] || [ "$global" = n ] ; then make_remove_directory_task 'bin' ; fi
+			if [ -n "$custom_dir" ] || [ "$global" = n ] ; then make_remove_from_profile_task 'bin' ; fi
 			make_remove_files_tasks 'lib'
 			if [ -n "$custom_dir" ] || [ "$global" = n ] ; then make_remove_directory_task 'lib' ; fi
 			if { [ -n "$custom_dir" ] && [ "$create_custom_dir" = y ] ; } || { [ -z "$custom_dir" ] && [ "$global" = n ] ; }
@@ -315,33 +322,42 @@ gather_tasks() {
 }
 
 get_istash_version() { # path_to_main_bin_file
-	sed -E -n '/^\s*print_version\s*\(\)\s*\{\s*$/,/^\s*\}\s*$/ s/^\s*printf\>.*istash.*\<version\>.*\s(\S+)\\n'\''\s*$/\1/p' "$1" \
+	sed -E -n '/^[[:blank:]]*print_version[[:blank:]]*\(\)[[:blank:]]*\{[[:blank:]]*$/,/^[[:blank:]]*\}[[:blank:]]*$/ s/^[[:blank:]]*printf\>.*istash.*\<version\>.*[[:blank:]]([[:graph:]]+)\\n'\''[[:blank:]]*$/\1/p' "$1" \
 	| head -n1
 }
 
 show_tasks() {
+	if [ "$uninstall" = n ]
+	then
+		printf 'Installing '
+	else
+		printf 'Uninstalling '
+	fi
 	if [ "$(id -u)" -eq 0 ]
 	then
-		printf 'Installing "git-istash" for the all users (%s)...\n' "$(id -nu)"
+		printf '"git-istash" for the all users (%s)...\n' "$(id -nu)"
 	else
-		printf 'Installing "git-istash" for the current user (%s)...\n' "$(id -nu)"
+		printf '"git-istash" for the current user (%s)...\n' "$(id -nu)"
 	fi
-	installed_bin_path="$(make_target_path 'bin/git-istash')"
-	if [ -e "$installed_bin_path" ]
+	if [ "$uninstall" = n ]
 	then
-		old_version="$(get_istash_version "$installed_bin_path")"
-		new_version="$(get_istash_version 'bin/git-istash')"
-		printf 'There is already "git-istash" in the chosen location.\nIt will be replaced. (%s -> %s)\n' "$old_version" "$new_version"
-		short_old_version="$(printf '%s' "$old_version" | sed -E 's/^([0-9]+\.[0-9]+)\..*$/\1/')"
-		short_new_version="$(printf '%s' "$new_version" | sed -E 's/^([0-9]+\.[0-9]+)\..*$/\1/')"
-		if [ "$short_old_version" != "$short_new_version" ]
+		installed_bin_path="$(make_target_path 'bin/git-istash')"
+		if [ -e "$installed_bin_path" ]
 		then
-			printf 'WARNING: '
-			printf 'This version may not be compatible with the operations started in the old one.\n'
-			printf 'Make sure to finalize or abort all "apply" / "pop" operations in progress, before continuing.\n'
+			old_version="$(get_istash_version "$installed_bin_path")"
+			new_version="$(get_istash_version 'bin/git-istash')"
+			printf 'There is already "git-istash" in the chosen location.\nIt will be replaced. (%s -> %s)\n' "$old_version" "$new_version"
+			short_old_version="$(printf '%s' "$old_version" | sed -E 's/^([0-9]+\.[0-9]+)\..*$/\1/')"
+			short_new_version="$(printf '%s' "$new_version" | sed -E 's/^([0-9]+\.[0-9]+)\..*$/\1/')"
+			if [ "$short_old_version" != "$short_new_version" ]
+			then
+				printf 'WARNING: '
+				printf 'This version may not be compatible with the operations started in the old one.\n'
+				printf 'Make sure to finalize or abort all "apply" / "pop" operations in progress, before continuing.\n'
+			fi
+		else
+			printf 'No existing "git-istash" has been found in the chosen location.\nThe version %s will be installed.\n' "$(get_istash_version 'bin/git-istash')"
 		fi
-	else
-		printf 'No existing "git-istash" has been found in the chosen location.\nThe version %s will be installed.\n' "$(get_istash_version 'bin/git-istash')"
 	fi
 	printf 'Operations that are to be performed:\n'
 	printf '%s\n' "$tasks" \
@@ -403,7 +419,7 @@ do_the_install_thing() {
 	check_root
 	prepare_man
 	gather_tasks
-	if [ -n "$tasks" ]
+	if printf '%s' "$tasks" | grep -E -q -v '^remove-path_'
 	then
 		show_tasks
 		if ask_confirmation
@@ -416,7 +432,7 @@ do_the_install_thing() {
 			else
 				printf 'Uninstall finished successfully.\n'
 			fi
-			if printf '%s\n' "$tasks" | grep -qE '^(add|remove)-path_'
+			if printf '%s\n' "$tasks" | grep -qE '^add-path_'
 			then
 				printf '\nPATH was modified. Restart the session to apply those changes.\n'
 			fi

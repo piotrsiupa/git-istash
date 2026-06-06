@@ -4,6 +4,8 @@ set -eu
 
 . "$(dirname "$0")/facets.sh"
 
+tab='	'
+
 
 break_long_lines() { # new_line_prefix
 	while IFS= read -r line
@@ -21,8 +23,7 @@ break_long_lines() { # new_line_prefix
 				| sed -E 's/ [^ ]*$//'
 			)"
 			printf '%s\n' "$cut_line"
-			#shellcheck disable=SC2059
-			line="$(printf "$1")$(printf '%s' "$line" | tail -c+$((${#cut_line} + 2)))"
+			line="$(printf '%b' "$1")$(printf '%s' "$line" | tail -c+$((${#cut_line} + 2)))"
 		done
 		printf '%s\n' "$line"
 	done
@@ -34,14 +35,14 @@ format_facets_for_help() { # facets
 	| tr '|' '\n' \
 	| tr -d '\t' \
 	| grep -E '.' \
-	| sed -E -e 's/,/, /g' -e 's/^/\t\t  + /' \
+	| sed -E -e 's/,/, /g' -e 's/^/'"$tab$tab"'  + /' \
 	| break_long_lines '\t\t    '
 }
 
 print_help() {
-	printf '%s - Script that runs tests from sub-directories of this directory.\n' "$(basename "$0")"
+	printf '%s - Script that runs tests from sub-directories of this directory.\n' "${0##*/}"
 	printf '\n'
-	printf 'Usage: %s [<options>] [--] [<filter>...]\n' "$(basename "$0")"
+	printf 'Usage: %s [<options>] [--] [<filter>...]\n' "${0##*/}"
 	printf '\n'
 	printf 'Options:\n'
 	printf '    -h, --help\t\t- Print this help text end exit.\n'
@@ -327,13 +328,13 @@ print_test_result() {
 		if [ "$use_color" = y ]
 		then
 			failed_assertion_color="$(test "$test_result_is_correct" = y && printf '33' || printf '31')"
-			sed -E 's/^\t(Failed assertion:)(.*)$/\t'"$esc_char"'[1;'"$failed_assertion_color"'m\1'"$esc_char"'[22m\2'"$esc_char"'[39m/'
+			sed -E 's/^'"$tab"'(Failed assertion:)(.*)$/'"$tab$esc_char"'[1;'"$failed_assertion_color"'m\1'"$esc_char"'[22m\2'"$esc_char"'[39m/'
 		else
 			cat
 		fi <"$output_file" \
 		| while IFS= read -r line
 		do
-			if printf '%s' "$line" | grep -qE '^	'  # Line starts with TAB
+			if printf '%s' "$line" | grep -qE "^$tab"
 			then
 				printf '%s\n' "$line" 1>&2
 			else
@@ -346,9 +347,9 @@ print_test_result() {
 			printf '%s\n' "$known_failure_reason" | cut -c2- \
 			| if [ "$use_color" = y ]
 			then
-				sed -E 's/^.*$/\tKnown failure:'"$esc_char"'[22m &'"$esc_char"'[1m/'
+				sed -E 's/^.*$/'"$tab"'Known failure:'"$esc_char"'[22m &'"$esc_char"'[1m/'
 			else
-				sed -E 's/^/\tKnown failure: /'
+				sed -E 's/^/'"$tab"'Known failure: /'
 			fi 1>&2
 			printf_color_code '\033[22;39m' 1>&2
 		fi
@@ -385,7 +386,9 @@ run_test() ( # test_name
 	failed_count=0
 	error_count=0
 	PARAMETERS_FILE="$(mktemp)"
+	PARAMETERS_FILE_="$(mktemp)"
 	export PARAMETERS_FILE
+	export PARAMETERS_FILE_
 	PARAM_HISTORY_FILE="$(mktemp)"
 	export PARAM_HISTORY_FILE
 	output_file="$(mktemp)"
@@ -399,7 +402,8 @@ run_test() ( # test_name
 		export meticulousness
 		for i in $(seq 1 $iteration_cap)
 		do
-			sed -iE '/^--------$/ d' "$PARAMETERS_FILE"
+			sed -E '/^--------$/ d' "$PARAMETERS_FILE" >"$PARAMETERS_FILE_"
+			mv "$PARAMETERS_FILE_" "$PARAMETERS_FILE"
 			printf -- '--------\n' >>"$PARAMETERS_FILE"
 			ROTATE_PARAMETER=y
 			export ROTATE_PARAMETER
@@ -506,7 +510,7 @@ run_test() ( # test_name
 		printf_color_code '\033[22m'
 		printf '\n'
 	fi
-	rm -f "$PARAMETERS_FILE"
+	rm -f "$PARAMETERS_FILE" "$PARAMETERS_FILE_"
 	rm -f "$PARAM_HISTORY_FILE"
 	if [ $test_count -eq 0 ]
 	then
@@ -748,7 +752,7 @@ run_tests() {
 					head -n-1 "$result_file" \
 					| while IFS= read -r line
 					do
-						if printf '%s' "$line" | grep -qE '^	'  # Line starts with TAB
+						if printf '%s' "$line" | grep -qE "^$tab"
 						then
 							cat "$output_buffer_file" 1>&5
 							: >"$output_buffer_file"
@@ -877,7 +881,7 @@ print_summary() {
 
 getopt_short_options='aA:c:Cdfhj:l:m:pRqQ_rsSvV'
 getopt_long_options='altered,since:,color:,check,debug,failed,file-name,help,jobs:,limit:,meticulousness:,complete,quickie,facets:,print-paths,relative-paths,progress,no-progress,quiet,quieter,quietest,raw,raw-name,skip-at-fail,skip-at-error,skip-on-fail,skip-on-error,stop-at-fail,stop-at-error,stop-on-fail,stop-on-error,verbose,version,skip-version'
-normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
+normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"${0##*/}" -ssh -- "$@")"
 eval set -- "$normalized_options"
 complete='
 	non-essential,head-type,subcommand,options,color,summary,miscellaneous

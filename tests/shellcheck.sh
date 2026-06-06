@@ -3,9 +3,9 @@
 set -eu
 
 print_help() {
-	printf '%s - A test script that runs "shellcheck" on all shell scripts in\n    this repository.\n' "$(basename "$0")"
+	printf '%s - A test script that runs "shellcheck" on all shell scripts in\n    this repository.\n' "${0##*/}"
 	printf '\n'
-	printf 'Usage: %s [<options...>]\n' "$(basename "$0")"
+	printf 'Usage: %s [<options...>]\n' "${0##*/}"
 	printf '\n'
 	printf 'Options:\n'
 	printf '    -a, --altered\t- Check only the tests changed since the last commit.\n\t\t\t  (Only changes in individual test files count, not in\n\t\t\t  the common test utilities that affect every test.)\n\t\t\t  Renamed tests with 100%% similarity are omitted.\n\t\t\t  (See also "--since".)\n'
@@ -43,7 +43,7 @@ run_shellcheck() {
 
 getopt_short_options='aA:hsV'
 getopt_long_options='altered,since:,help,skip-tests,version'
-normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
+normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"${0##*/}" -ssh -- "$@")"
 eval set -- "$normalized_options"
 only_altered=n
 altered_reference=HEAD

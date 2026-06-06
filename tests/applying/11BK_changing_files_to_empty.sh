@@ -34,8 +34,8 @@ M  aaa
  M bbb
 ' 0 "$stash_sha"
 assert_files '
-M  aaa	""
- M bbb	"" bbb
+M  aaa	<empty>
+ M bbb	<empty> bbb
 !! ignored0 ignored0
 !! ignored1 ignored1
 '

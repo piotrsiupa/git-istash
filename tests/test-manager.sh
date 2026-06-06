@@ -9,7 +9,7 @@ print_help() {
 	printf '(It also assumes that there is no spaces or weird characters in the names.)\n'
 	printf '(And it also assumes that you always refer to the same folder in the same way,\nso e.g. it may mess up order of operation with creating files "./1C_first_test"\nand "1C_second_test".)\n'
 	printf '\n'
-	printf 'Usage: %s <command> [<option>] [--] <test_name>...\n' "$(basename "$0")"
+	printf 'Usage: %s <command> [<option>] [--] <test_name>...\n' "${0##*/}"
 	printf '\n'
 	printf 'Options:\n'
 	printf '    -h, --help\t\t- Print this help text and exit.\n'
@@ -29,7 +29,7 @@ print_version() {
 }
 
 list_category() { # category_path
-	find "$(dirname "$1")" -maxdepth 1 -type f -name '*.sh' -name "$(basename "$1")*" \
+	find "$(dirname "$1")" -maxdepth 1 -type f -name '*.sh' -name "${1##*/}*" \
 	| grep -E '^.*/[0-9]+[A-Z]+_[^/]+\.sh$'
 }
 
@@ -278,7 +278,7 @@ delete_test() { # test_name...
 
 getopt_short_options='hV'
 getopt_long_options='help,version'
-normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"$(basename "$0")" -ssh -- "$@")"
+normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"${0##*/}" -ssh -- "$@")"
 eval set -- "$normalized_options"
 while true
 do
