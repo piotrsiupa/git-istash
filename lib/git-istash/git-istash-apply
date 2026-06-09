@@ -140,9 +140,10 @@ check_stash_for_pop() {
 	fi
 }
 
-put_files_into_working_copy() { # untracked_changes_sha non_staged_changes_sha staged_changes_sha
+put_files_into_working_copy() { # untracked_changes_sha non_staged_changes_sha staged_changes_sha base_sha
 	git restore --quiet --source="$3" -- . 2>/dev/null || true
-	git add -- . 2>/dev/null
+	git --no-literal-pathspecs diff-tree -r --name-only --no-commit-id "$3" "$4" -z :/ \
+	| xargs -r0 -- git --literal-pathspecs add -- 2>/dev/null
 	git restore --quiet --source="$1" -- . 2>/dev/null || true
 	git --no-literal-pathspecs ls-tree -r --name-only "$2" -z :/ \
 	| xargs -r0 -- git --literal-pathspecs add --intent-to-add --
@@ -431,6 +432,7 @@ end_with_success() {
 	untracked_changes_sha="$(git rev-parse HEAD~0)"
 	non_staged_changes_sha="$(git rev-parse HEAD~2)"
 	staged_changes_sha="$(git rev-parse HEAD~4)"
+	base_sha="$(git rev-parse HEAD~6)"
 	case "$curr_branch_type" in
 		normal)
 			git switch --quiet "$current_branch" 2>/dev/null
@@ -448,7 +450,7 @@ end_with_success() {
 			git switch --quiet --orphan "$current_branch" 2>/dev/null
 			;;
 	esac
-	put_files_into_working_copy "$untracked_changes_sha" "$non_staged_changes_sha" "$staged_changes_sha"
+	put_files_into_working_copy "$untracked_changes_sha" "$non_staged_changes_sha" "$staged_changes_sha" "$base_sha"
 	delete_data
 	if [ "$is_quiet" != y ]
 	then
@@ -685,7 +687,8 @@ do_abort() { # args...
 		put_files_into_working_copy \
 			"$(git rev-parse "$working_dir_changes_sha~0")" \
 			"$(git rev-parse "$working_dir_changes_sha~1")" \
-			"$(git rev-parse "$working_dir_changes_sha~2")"
+			"$(git rev-parse "$working_dir_changes_sha~2")" \
+			"$(git rev-parse "$working_dir_changes_sha~3")"
 		
 		delete_data
 		

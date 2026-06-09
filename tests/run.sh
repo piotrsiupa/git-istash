@@ -155,6 +155,15 @@ create_test_remote() {
 		git add aaa
 		git commit --quiet --message='some commit'
 		git branch --move 'my-branch'
+		git switch --quiet --create 'other-branch'
+		printf 'xxx\n' >xxx
+		git add xxx
+		git commit --quiet --message='a commit in the other branch'
+		git switch --quiet --create 'third-branch'
+		printf 'yyy\n' >yyy
+		git add yyy
+		git commit --quiet --message='a commit in yet another branch'
+		git switch --quiet 'my-branch'
 	)
 }
 

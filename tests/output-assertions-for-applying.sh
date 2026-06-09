@@ -113,7 +113,7 @@ assert_outputs__apply__success() { # operation changes [stash_id stash_sha] [err
 					printf '%s' "$changes" \
 					| sed -E -e '/^[^ ?!]/!d' \
 						-e 's/^(A.|#A) (.+)$/\\\\t\[<color>32madded:\\t\\t\2\[<color>0?m\\n/' \
-						-e 's/^M. (.+)$/\\\\t\[<color>32mmodified:\\t\1\[<color>0?m\\n/' \
+						-e 's/^(M.|#M) (.+)$/\\\\t\[<color>32mmodified:\\t\2\[<color>0?m\\n/' \
 						-e 's/^D. (.+)$/\\\\t\[<color>32mdeleted:\\t\1\[<color>0?m\\n/'
 				fi
 				if printf '%s' "$changes" | grep -Eq '^[^?!#][^ ]'

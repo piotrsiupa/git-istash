@@ -173,12 +173,14 @@ assert_file_contents() { # file expected_current [expected_staged]
 	unset value_for_assert
 }
 
-assert_submodule_file_contents() { # file expected
+assert_submodule_file_contents() { # submodule expected_current expected_staged
 	#shellcheck disable=SC2059
-	value_for_assert="$(printf -- ":$1" | xargs -0 -- git rev-parse)"
-	#shellcheck disable=SC2059
+	value_for_assert="$(cd "$1" ; git rev-parse HEAD)"
 	test "$value_for_assert" = "$2" ||
-		fail 'Expected staged SHA of submodule "'"$1"'" to be:\n"%s"\nbut it is:\n"%s"!\n' "$2" "$value_for_assert"
+		fail 'Expected current SHA of submodule "'"$1"'" to be:\n"%s"\nbut it is:\n"%s"!\n' "$2" "$value_for_assert"
+	value_for_assert="$(printf -- ':%b' "$1" | xargs -0 -- git rev-parse)"
+	test "$value_for_assert" = "$3" ||
+		fail 'Expected staged SHA of submodule "'"$1"'" to be:\n"%s"\nbut it is:\n"%s"!\n' "$3" "$value_for_assert"
 	unset value_for_assert
 }
 
@@ -186,7 +188,7 @@ assert_files() { # expected_files (see one of the tests as an example)
 	expected_files="$(printf '%s\n' "$1" | sed -E -e 's/^'"$tab"'+//' -e '/^[[:blank:]]*$/ d')"
 	assert_all_files "$(printf '%s\n' "$expected_files" | sed -E -n '/^(D |[^U]D|#[^#]) /!s/^...([[:graph:]]+)([[:blank:]].*)?$/\1/p')"
 	assert_tracked_files "$(printf '%s\n' "$expected_files" | sed -E -n '/^(!!|\?\?|A[^A]| A|DU|#[#A?]) /!s/^...([[:graph:]]+)([[:blank:]].*)?$/\1/p')"
-	assert_status "$(printf '%s\n' "$expected_files" | sed -E -n -e '/^(  |#[^A?]) /!{' -e 's/^#\?/??/' -e 's/^#(.)/\1 /' -e 's/^(...[[:graph:]]+)([[:blank:]].*)?$/\1/' -e 'p' -e '}')"
+	assert_status "$(printf '%s\n' "$expected_files" | sed -E -n -e '/^(  |#[^AmMX?]) /!{' -e 's/^#\?/??/' -e 's/^#m/ M/' -e 's/^#X/MM/' -e 's/^#(.)/\1 /' -e 's/^(...[[:graph:]]+)([[:blank:]].*)?$/\1/' -e 'p' -e '}')"
 	printf '%s\n' "$expected_files" \
 	| while IFS= read -r line
 	do
@@ -204,20 +206,23 @@ assert_files() { # expected_files (see one of the tests as an example)
 			test $# -eq 1 ||
 				fail 'Error in test: the file "%s" should have 0 versions of content to check!\n' "$1"
 			;;
-		[UD]U|!!|\?\?|?[\ AD])
+		[UD]U|!!|\?\?|?[\ AD]|\#M)
 			test $# -eq 2 ||
 				fail 'Error in test: the file "%s" should have 1 version of content to check!\n' "$1"
 			case "$prefix" in
-			[!#]\ )		assert_file_contents "$1" "${2#<empty>}" "${2#<empty>}" ;;
-			[!U#]D)		assert_file_contents "$1" '' "${2#<empty>}" ;;
-			\#[\ A])	assert_submodule_file_contents "$1" "${2#<empty>}" ;;
-			*)		assert_file_contents "$1" "${2#<empty>}" ;;
+			[!#]\ )	assert_file_contents "$1" "${2#<empty>}" "${2#<empty>}" ;;
+			[!U#]D)	assert_file_contents "$1" '' "${2#<empty>}" ;;
+			\#?)	assert_submodule_file_contents "$1" "${2#<empty>}" "${2#<empty>}" ;;
+			*)	assert_file_contents "$1" "${2#<empty>}" ;;
 			esac
 			;;
 		*)
 			test $# -eq 3 ||
 				fail 'Error in test: the file "%s" should have 2 versions of content to check!\n' "$1"
-			assert_file_contents "$1" "${2#<empty>}" "${3#<empty>}"
+			case "$prefix" in
+			\#?)	assert_submodule_file_contents "$1" "${2#<empty>}" "${3#<empty>}" ;;
+			*)	assert_file_contents "$1" "${2#<empty>}" "${3#<empty>}" ;;
+			esac
 			;;
 		esac
 	done

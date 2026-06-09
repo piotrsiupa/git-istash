@@ -151,7 +151,7 @@ assert_stash_files() { # stash_num expect_untracked expected_files
 			| sed -E -e '/^[[:blank:]]*$/d' \
 				-e '/^(\?\?|!!|D[^A]|.D) /d' \
 				-e 's/^(## [[:graph:]+)([[:blank:]].+)?$/\1 <skip>/' \
-				-e 's/^(#[^#] [[:graph:]]+)([[:blank:]].+)$/\1\2<submodule>/' \
+				-e 's/^(#[^#] [[:graph:]]+)([[:blank:]][[:graph:]]+)([[:blank:]].*)?$/\1\2<submodule>/' \
 			| cut -c4- | awk '{print $1,$2}'
 		)"
 	assert_stash_commit_files "stash@{$1}^1" "$(
