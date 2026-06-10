@@ -188,7 +188,7 @@ assert_files() { # expected_files (see one of the tests as an example)
 	expected_files="$(printf '%s\n' "$1" | sed -E -e 's/^'"$tab"'+//' -e '/^[[:blank:]]*$/ d')"
 	assert_all_files "$(printf '%s\n' "$expected_files" | sed -E -n '/^(D |[^U]D|#[^#]) /!s/^...([[:graph:]]+)([[:blank:]].*)?$/\1/p')"
 	assert_tracked_files "$(printf '%s\n' "$expected_files" | sed -E -n '/^(!!|\?\?|A[^A]| A|DU|#[#A?]) /!s/^...([[:graph:]]+)([[:blank:]].*)?$/\1/p')"
-	assert_status "$(printf '%s\n' "$expected_files" | sed -E -n -e '/^(  |#[^AmMX?]) /!{' -e 's/^#\?/??/' -e 's/^#m/ M/' -e 's/^#X/MM/' -e 's/^#(.)/\1 /' -e 's/^(...[[:graph:]]+)([[:blank:]].*)?$/\1/' -e 'p' -e '}')"
+	assert_status "$(printf '%s\n' "$expected_files" | sed -E -n -e '/^(  |#[^AmMXD?]) /!{' -e 's/^#\?/??/' -e 's/^#m/ M/' -e 's/^#X/MM/' -e 's/^#(.)/\1 /' -e 's/^(...[[:graph:]]+)([[:blank:]].*)?$/\1/' -e 'p' -e '}')"
 	printf '%s\n' "$expected_files" \
 	| while IFS= read -r line
 	do
@@ -202,7 +202,7 @@ assert_files() { # expected_files (see one of the tests as an example)
 		set +f
 		prefix="${line%"${line#??}"}"
 		case "$prefix" in
-		D\ |\#[#?])
+		D\ |\#[#?Dd])
 			test $# -eq 1 ||
 				fail 'Error in test: the file "%s" should have 0 versions of content to check!\n' "$1"
 			;;

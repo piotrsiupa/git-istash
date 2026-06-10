@@ -167,7 +167,7 @@ assert_stash_files() { # stash_num expect_untracked expected_files
 				then
 					printf '%s' "$line" \
 					| cut -c4- | awk '{print $1,$3}'
-				elif printf '%s' "$line" | grep -qE '^([ AM][ D]|#[^#]) '
+				elif printf '%s' "$line" | grep -qE '^([ AM][ D]|#[^#D]) '
 				then
 					printf '%s' "$line" \
 					| sed -E 's/^(#. [[:graph:]]+)([[:blank:]].+)?$/\1 <skip>/' \
