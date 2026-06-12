@@ -6,6 +6,7 @@ set -eu
 
 print_help() {
 	printf '%s - Script that runs "run.sh" first with all tests and then reruns it\nfor all failed test every time any relevant file changes.\n' "${0##*/}"
+	printf '(Touching a file without changing it causes the script to rerun the test with\n"--debug" enabled.)\n'
 	printf 'When there are no failed tests it reruns all tests again and exits if they pass\n(or else it goes back to running tests one by one).\n'
 	printf '\n'
 	printf 'Usage: %s [<options>] [--] [<filter>...]\n' "${0##*/}"
@@ -75,7 +76,12 @@ get_times() { # file_lists...
 	printf '%s\n' "$@" | xargs -- stat $stat_flags -- 2>/dev/null || true
 }
 
-wait_for_change() { # [filter]...
+get_checksums() { # file_lists...
+	#shellcheck disable=SC2086
+	printf '%s\n' "$@" | xargs -- git hash-object -- 2>/dev/tty || true
+}
+
+wait_for_change() ( # [filter]...
 	printf '\n\n' 1>&2
 	printf 'Failing tests count: %i/%i\n' "$(get_failing_tests_count "$@")" "$(get_all_tests_count "$@")" 1>&2
 	first_failing_test="$(get_first_failing_test "$@")"
@@ -83,6 +89,8 @@ wait_for_change() { # [filter]...
 	previous_istash_files="$(get_istash_files)"
 	previous_test_files="$(get_common_test_files)"
 	previous_times="$(get_times "$first_failing_test" "$previous_test_files" "$previous_istash_files")"
+	previous_checksums="$(get_checksums "$first_failing_test" "$previous_test_files" "$previous_istash_files")"
+	result=0
 	while true
 	do
 		sleep 1
@@ -98,11 +106,17 @@ wait_for_change() { # [filter]...
 		fi
 		if [ "$current_times" != "$previous_times" ]
 		then
+			current_checksums="$(get_checksums "$first_failing_test" "$previous_test_files" "$previous_istash_files")"
+			if [ "$current_checksums" = "$previous_checksums" ]
+			then
+				result=2
+			fi
 			break
 		fi
 	done
 	sleep 1
-}
+	return $result
+)
 
 initial_run() { # [filter]...
 	if [ "$skip_init" = y ]
@@ -128,9 +142,15 @@ monitor_tests() { # [filter]...
 		then
 			printf '\n\n\n'
 		fi
-		while ! call_run_sh__with_settings --failed --skip-at-fail --stop-at-fail --verbose --color="$use_color" -- "$@"
+		debug_flag=''
+		while ! call_run_sh__with_settings --failed --skip-at-fail --stop-at-fail --verbose $debug_flag --color="$use_color" -- "$@"
 		do
-			wait_for_change "$@"
+			if wait_for_change "$@"
+			then
+				debug_flag=''
+			else
+				debug_flag='--debug'
+			fi
 			printf '\n\n\n'
 		done
 		printf '\n\n\n'
