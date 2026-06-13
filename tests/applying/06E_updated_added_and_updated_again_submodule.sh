@@ -28,6 +28,9 @@ printf 'ccc\n' >aaa
 printf 'ddd\n' >ddd
 git submodule set-branch --branch other-branch the-sub-mod
 git -c protocol.file.allow=always submodule update --remote the-sub-mod
+cd the-sub-mod
+middle_correct_sub_mod_head_sha="$(get_head_sha)"
+cd -
 git add .gitmodules the-sub-mod
 git submodule set-branch --branch third-branch the-sub-mod
 git -c protocol.file.allow=always submodule update --remote the-sub-mod
@@ -55,7 +58,7 @@ MM aaa		ccc	bbb
 !! ignored0	ignored0
 !! ignored1	ignored1
 MM .gitmodules	[submodule\040"the-sub-mod"]\n\tpath\040=\040the-sub-mod\n\turl\040=\040'"$(dirname "$(dirname "$(dirname "$(pwd)")")")"'/remote-for-tests\n\tbranch\040=\040third-branch [submodule\040"the-sub-mod"]\n\tpath\040=\040the-sub-mod\n\turl\040=\040'"$(dirname "$(dirname "$(dirname "$(pwd)")")")"'/remote-for-tests\n\tbranch\040=\040other-branch
-#M the-sub-mod	'"$new_correct_sub_mod_head_sha"'
+#X the-sub-mod	'"$new_correct_sub_mod_head_sha $middle_correct_sub_mod_head_sha"'
 ## the-sub-mod/aaa
 ## the-sub-mod/xxx
 ## the-sub-mod/yyy

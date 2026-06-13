@@ -141,10 +141,9 @@ check_stash_for_pop() {
 }
 
 put_files_into_working_copy() { # untracked_changes_sha non_staged_changes_sha staged_changes_sha base_sha
-	git restore --quiet --source="$3" -- . 2>/dev/null || true
-	git --no-literal-pathspecs diff-tree -r --name-only --no-commit-id "$3" "$4" -z :/ \
-	| xargs -r0 -- git --literal-pathspecs add -- 2>/dev/null
-	git restore --quiet --source="$1" -- . 2>/dev/null || true
+	git --no-literal-pathspecs restore --quiet --source="$3" -- :/ 2>/dev/null || true
+	git --no-literal-pathspecs restore --quiet --source="$3" --staged -- :/ 2>/dev/null || true
+	git --no-literal-pathspecs restore --quiet --source="$1" -- :/ 2>/dev/null || true
 	git --no-literal-pathspecs ls-tree -r --name-only "$2" -z :/ \
 	| xargs -r0 -- git --literal-pathspecs add --intent-to-add --
 }
