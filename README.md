@@ -51,11 +51,33 @@ Additionally, the state of working copy, from before the `apply` / `pop` has sta
 
 ## Installation
 
-This command requires Git in version `2.42.0` or higher to be present.
-Otherwise, the installation will succeed but the command will refuse to run until the required version of Git is provided.
-(Except for Windows, which needs Git to run the installer, because it uses the shell implementation provided by git.)
+To work, this command requires Git in a sufficient version.
+(You can check what it is currently by running `bin/git-istash --version`.)
+Any other dependency is expected to be present on any decently POSIX-compatible system.
+(On Windows it uses the POSIX shell provided by the Git installation.)
 
-### Every OS except Windows
+You can install the command without the required Git version but it will refuse to run, unless you disable the check at the start (which is very much not recommended).
+
+### Manual installation
+
+Installation is very simple.
+All you need to do is to make sure that `bin/git-istash` is in the `PATH` and that the relative path for it to `lib/git-istash/` is the same as in this repository.
+
+The recommend way to achieve this is to copy the files to `/usr/local/bin/` / `/usr/local/lib/` or to `~/.local/bin/` / `~/.local/lib/` (depending on whether this is a system or a single-user installation.)
+
+Optionally (but recommended), to have access to the manual page, the `man/man1/git-istash.1` should be copied to a path where `man` can find it, like `/usr/local/share/man/man1/` / `~/.local/share/man/man1/`.
+(The file should be first compressed with `gzip` but technically it's not required.)
+
+### Installer script
+
+The script `install.sh` does everything that's described in the manual installation section and it also adds the directory to `PATH` if necessary.
+First, it prepares a TODO list, and after you reviewed and accepted it, the listed operations are performed.
+
+It supports system and local-user installation as well as installation in a custom directory.
+It can also uninstall.
+(See `install.sh --help` for the list of all options.)
+
+#### Every OS except Windows
 
 To install `git istash` ("ingenious stash") for the current user only, run:
 ```sh
@@ -64,26 +86,21 @@ To install `git istash` ("ingenious stash") for the current user only, run:
 
 To install the command for all users (requires root privileges), run:
 ```sh
-sudo ./install.sh --global
+sudo ./install.sh --system
 ```
 
-Uninstalling is done by rerunning the install command with the added flag `--uninstall`.
+Uninstalling is done by rerunning the same command with the same flags *plus* `--uninstall`.
 
-You can learn more by running:
-```sh
-./install.sh --help
-```
+#### Windows
 
-### Windows
-
-There is a wrapper script that allows running the installer on Windows, although it has fewer options than the normal version.
+There is a wrapper script that allows running the installer on Windows, however, it supports only system installation.
 
 To install the command for all users (requires administrator access), run:
 ```bat
 windows-install.bat
 ```
 
-Uninstalling is done by rerunning the same command with the added flag `--uninstall`.
+Uninstalling is done by rerunning the same command with the same flags *plus* `--uninstall`.
 
 ### Trying it out without Installation
 

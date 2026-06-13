@@ -21,11 +21,13 @@ print_help() {
 	printf 'Options:\n'
 	printf '    -h, --help\t\t- Print this help text and exit.\n'
 	printf '    -V, --version\t- Print version information and exit.\n'
-	printf '    -g, --global\t- Install for all users. (Requires root access rights.)\n'
+	printf '    -s, --system\t- Install for all users. (Requires root access rights.)\n'
 	#shellcheck disable=SC2016
 	printf '    -c, --custom-dir=X\t- Use a custom installation directory instead of\n\t\t\t  "$HOME/.local" or "/usr/local".\n'
 	printf '    -C, --create-dir=X\t- Like "--custom-dir" but the directory is created if\n\t\t\t  it doesn'\''t exist.\n'
 	printf '    -u, --uninstall\t- Undo all the changes that the script would have made\n\t\t\t  when run with the same flags (excluding this one).\n'
+	printf '    -M, --no-manual\t- Do not add/remove the manual entry for the command.\n'
+	printf '    -P, --no-path\t- Do not add the installation directory to "PATH".\n'
 }
 
 print_version() {
@@ -48,19 +50,19 @@ check_root() {
 		if [ "$global" = n ]
 		then
 			printf 'error: You'\''ve attempted to install / uninstall "git istash" for a single user using a root access.\n' 1>&2
-			printf 'hint: Did you mean "install.sh --global"?\n' 1>&2
+			printf 'hint: Did you mean "install.sh --system"?\n' 1>&2
 			exit 1
 		fi
 	else
 		is_root=n
 		if is_windows && [ "$global" = n ]
 		then
-			printf 'error: Installation without the option "--global" is not suppported on Windows.\n' 1>&2
+			printf 'error: Installation without the option "--system" is not suppported on Windows.\n' 1>&2
 			exit 1
 		fi
 		if [ "$global" = y ]
 		then
-			printf 'error: You'\''ve attempted to install / uninstall "git istash" for for all users without a root access.\n' 1>&2
+			printf 'error: You'\''ve attempted to install / uninstall "git istash" for for all users, without a root access.\n' 1>&2
 			if is_windows
 			then
 				printf 'hint: Try to right click on the script and "run as administrator".\n' 1>&2
@@ -125,7 +127,7 @@ are_files_correct_in_target() { # source_path
 	source_path="$1"
 	target_path="$(make_target_path "$source_path")"
 	test "$(
-			find "$source_path" -type f \
+			find "$source_path" -type f 2>/dev/null \
 			| while read -r f
 			do
 				if ! cmp -s "$f" "$(switch_prefix "$source_path" "$target_path" "$f")"
@@ -141,7 +143,7 @@ are_foreign_files_in_target() { # source_path
 	source_path="$1"
 	target_path="$(make_target_path "$source_path")"
 	test "$(
-			find "$target_path" -mindepth 1 \
+			find "$target_path" -mindepth 1 2>/dev/null \
 			| while read -r f
 			do
 				if [ ! -e "$(switch_prefix "$target_path" "$source_path" "$f")" ]
@@ -154,9 +156,17 @@ are_foreign_files_in_target() { # source_path
 }
 
 are_foreign_files_in_root_target() {
-	are_foreign_files_in_target 'bin' \
-	|| are_foreign_files_in_target 'lib' \
-	|| find "$(make_target_path '')" -mindepth 1 -maxdepth 1 | grep -qEv '/(bin|lib)$'
+	if [ "$copy_manual" = y ]
+	then
+		are_foreign_files_in_target 'bin' \
+		|| are_foreign_files_in_target 'lib' \
+		|| are_foreign_files_in_target 'share' \
+		|| find "$(make_target_path '')" -mindepth 1 -maxdepth 1 2>/dev/null | grep -qEv '/(bin|lib|share)$'
+	else
+		are_foreign_files_in_target 'bin' \
+		|| are_foreign_files_in_target 'lib' \
+		|| find "$(make_target_path '')" -mindepth 1 -maxdepth 1 2>/dev/null | grep -qEv '/(bin|lib)$'
+	fi
 }
 
 is_target_in_PATH() { # source_path
@@ -233,7 +243,7 @@ execute_copy_files_task() { # source_path
 make_remove_files_tasks() { # source_path
 	source_path="$1"
 	target_path="$(make_target_path "$source_path")"
-	find "$source_path" -mindepth 1 -maxdepth 1 \
+	find "$source_path" -mindepth 1 -maxdepth 1 2>/dev/null \
 	| while read -r f
 	do
 		if [ -e "$(switch_prefix "$source_path" "$target_path" "$f")" ] || [ "$debug" = y ]
@@ -280,7 +290,7 @@ make_remove_from_profile_task() { # source_path
 	fi
 }
 print_remove_from_profile_task() { # source_path
-	printf 'The lines in "%s" that append "%s" to PATH cound be removed BUT this script WON'\''T touch it.\n' "$(make_profile_path)" "$(make_target_path "$1")"
+	printf 'The lines in "%s" that append "%s" to PATH could be removed BUT this script WON'\''T touch it.\n' "$(make_profile_path)" "$(make_target_path "$1")"
 }
 execute_remove_from_profile_task() { # source_path
 	printf '\n'
@@ -296,21 +306,31 @@ gather_tasks() {
 			make_copy_files_task 'lib'
 			make_create_directory_task 'bin'
 			make_copy_files_task 'bin'
-			if ! is_windows ; then make_add_to_profile_task 'bin' ; fi
-			if [ "$man_present" = y ]
+			if [ "$add_to_path" = y ] && ! is_windows
+			then
+				make_add_to_profile_task 'bin'
+			fi
+			if [ "$copy_manual" = y ] && [ "$man_present" = y ]
 			then
 				make_create_directory_task 'share/man/man1'
 				make_copy_files_task 'share/man/man1'
 			fi
 		else
-			if [ "$man_present" = y ]
+			if [ "$copy_manual" = y ] && [ "$man_present" = y ]
 			then
 				make_remove_files_tasks 'share/man'
 				make_remove_directory_task 'share/man'
+				if [ -n "$custom_dir" ]
+				then
+					make_remove_directory_task 'share'
+				fi
 			fi
 			make_remove_files_tasks 'bin'
 			if [ -n "$custom_dir" ] || [ "$global" = n ] ; then make_remove_directory_task 'bin' ; fi
-			if [ -n "$custom_dir" ] || [ "$global" = n ] ; then make_remove_from_profile_task 'bin' ; fi
+			if [ "$add_to_path" = y ]
+			then
+				if [ -n "$custom_dir" ] || [ "$global" = n ] ; then make_remove_from_profile_task 'bin' ; fi
+			fi
 			make_remove_files_tasks 'lib'
 			if [ -n "$custom_dir" ] || [ "$global" = n ] ; then make_remove_directory_task 'lib' ; fi
 			if { [ -n "$custom_dir" ] && [ "$create_custom_dir" = y ] ; } || { [ -z "$custom_dir" ] && [ "$global" = n ] ; }
@@ -458,14 +478,16 @@ do_the_install_thing() {
 	fi
 }
 
-getopt_short_options='hVgc:C:u'
-getopt_long_options='help,version,global,custom-dir:,create-dir:,uninstall,debug'
+getopt_short_options='hVgsc:C:uMP'
+getopt_long_options='help,version,global,system,custom-dir:,create-dir:,uninstall,no-manual,no-path,no-PATH,debug'
 normalized_options="$(get_options "$getopt_short_options" "$getopt_long_options" "$@")"
 eval set -- "$normalized_options"
 global=n
 uninstall=n
 debug=n
 custom_dir=''
+copy_manual=y
+add_to_path=y
 set_custom_dir() { # dir
 	if [ -n "$custom_dir" ]
 	then
@@ -491,7 +513,7 @@ do
 		print_version
 		exit 0
 		;;
-	-g|--global)
+	-g|--global|-s|--system)
 		global=y
 		;;
 	-c|--custom-dir)
@@ -511,6 +533,12 @@ do
 		;;
 	-u|--uninstall)
 		uninstall=y
+		;;
+	-M|--no-manual)
+		copy_manual=n
+		;;
+	-P|--no-path|--no-PATH)
+		add_to_path=n
 		;;
 	--debug)
 		debug=y
