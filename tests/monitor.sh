@@ -18,6 +18,7 @@ print_help() {
 	printf '    -c, --color=when\t- Set color mode (always / never / auto).\n'
 	printf '    -m, --meticulous=X\t- Set how many tests / test variants will be run.\n\t\t\t  (For more info, run "run.sh --help".)\n'
 	printf '    -s, --skip-init\t- Skip the initial run that checks which tests fail.\n\t\t\t  (Assume that the relevant tests has failed already.)\n'
+	printf '    -f, --failed\t- Run only for tests that are currently failed.\n\t\t\t  (Implies "--skip-init".)\n'
 	printf '    -S, --stop-at-fail\t- Don'\''t find all failing tests first. Go to the fixing\n\t\t\t  mode after encountering the first one.\n\t\t\t  (Good when expecting a lot of errors.)\n'
 	printf '\t--quickie\t- Same as "--meticulousness=quickie".\n'
 	printf '    -V, --version\t- Print version information and exit.\n'
@@ -51,12 +52,16 @@ get_all_tests_count() { # [filter]...
 	call_run_sh__with_altered --print-paths -- "$@" | wc -l
 }
 
+get_failing_tests() { # [filter]...
+	call_run_sh__with_altered --failed --print-paths -- "$@"
+}
+
 get_failing_tests_count() { # [filter]...
-	call_run_sh__with_altered --failed --print-paths -- "$@" | wc -l
+	get_failing_tests "$@" | wc -l
 }
 
 get_first_failing_test() { # [filter]...
-	call_run_sh__with_altered --failed --print-paths -- "$@" 2>/dev/null | head -n 1
+	get_failing_tests "$@" 2>/dev/null | head -n 1
 }
 
 get_istash_files() {
@@ -158,8 +163,8 @@ monitor_tests() { # [filter]...
 	done
 }
 
-getopt_short_options='aA:c:hm:sSV'
-getopt_long_options='altered,since:,color:,help,meticulousness:,skip-init,stop-at-fail,stop-on-fail,stop-at-error,stop-on-error,quickie,version'
+getopt_short_options='aA:c:hm:sfSV'
+getopt_long_options='altered,since:,color:,help,meticulousness:,skip-init,failed,stop-at-fail,stop-on-fail,stop-at-error,stop-on-error,quickie,version'
 normalized_options="$(getopt -o"$getopt_short_options" --long="$getopt_long_options" -n"${0##*/}" -ssh -- "$@")"
 eval set -- "$normalized_options"
 only_altered=n
@@ -167,6 +172,7 @@ altered_reference=HEAD
 use_color=auto
 meticulousness=''
 skip_init=n
+only_failed=n
 stop_at_fail=n
 while true
 do
@@ -213,6 +219,10 @@ do
 	-s|--skip-init)
 		skip_init=y
 		;;
+	-f|--failed)
+		only_failed=y
+		skip_init=y
+		;;
 	-S|--stop-at-fail|--stop-on-fail|--stop-at-error|--stop-on-error)
 		stop_at_fail=y
 		;;
@@ -234,4 +244,10 @@ do
 done
 
 cd "$(dirname "$0")"
+
+if [ $only_failed = y ]
+then
+	set -- $(get_failing_tests "$@" | sed -E 's;(/[[:digit:]]+[[:upper:]]+)_[^/]+$;\1;')
+fi
+
 monitor_tests "$@"
