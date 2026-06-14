@@ -15,16 +15,17 @@ git\-istash \- Handle Git stashes without arbitrary limitations of the original 
 \fIgit istash\fR [<options>] [<subcommand>] (\-h\~|\~\-\-help\~|\~\-\-man\~|
             |\~\-V\~|\~\-\-version)
 \fIgit istash\fR [<options>] (create\~|\~snatch\~|\~save\~|\~push) [\-a\~|\~\-\-all]
-            [\-\-allow\-empty] [\-k\~|\~\-\-[no\-]keep\-index]
-            [\-I\~|\~\-\-skip\-index] [(\-m\~|\~\-\-message)\~<message>] [\-\-patch]
-            [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<file>]
-            [\-T\~|\~\-\-skip\-tracked] [\-u\~|\~\-\-[no\-]include\-untracked]
-            [\-\-] [<pathspec>...]
-\fIgit istash\fR [<options>] [\-a\~|\~\-\-all] [\-\-allow\-empty]
             [\-k\~|\~\-\-[no\-]keep\-index] [\-I\~|\~\-\-skip\-index]
-            [(\-m\~|\~\-\-message)\~<message>] [\-\-patch] [\-\-patchspec\-file\-nul]
-            [\-\-patchspec\-from\-file=<file>] [\-T\~|\~\-\-skip\-tracked]
-            [\-u\~|\~\-\-[no\-]include\-untracked] [\-\-\~<pathspec>...]
+            [\-T\~|\~\-\-skip\-tracked] [\-u\~|\~\-\-[no\-]include\-untracked]
+            [\-\-patch] [\-\-patchspec\-file\-nul]
+            [\-\-patchspec\-from\-file=<file>] [\-\-allow\-empty]
+            [(\-m\~|\~\-\-message)\~<message>] [\-\-] [<pathspec>...]
+\fIgit istash\fR [<options>] [\-a\~|\~\-\-all] [\-k\~|\~\-\-[no\-]keep\-index]
+            [\-I\~|\~\-\-skip\-index] [\-T\~|\~\-\-skip\-tracked]
+            [\-u\~|\~\-\-[no\-]include\-untracked] [\-\-patch]
+            [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<file>]
+            [\-\-allow\-empty] [(\-m\~|\~\-\-message)\~<message>]
+            [\-\-\~<pathspec>...]
 \fIgit istash\fR [<options>] (pop\~|\~apply) [\-\-summary\~<mode>] [<stash>]
 \fIgit istash\fR [<options>] [pop\~|\~apply] (\-c\~|\~\-\-continue) [\-\-summary\~<mode>]
 \fIgit istash\fR [<options>] [pop\~|\~apply] (\-\-abort\~|\~\-\-quit)
@@ -97,7 +98,7 @@ See \fB\-c\fR, \fB\-\-continue\fR, \fB\-\-abort\fR and \fB\-\-quit\fR.
 .SH "SUBCOMMANDS"
 
 .PP
-create [\-a\~|\~\-\-all] [\-\-allow\-empty] [\-I\~|\~\-\-skip\-index] [(\-m\~|\~\-\-message)\~<message>] [\-\-patch] [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<file>] [\-T\~|\~\-\-skip\-tracked] [\-u\~|\~\-\-[no\-]include\-untracked] [\-\-] [<pathspec>...]
+create [\-a\~|\~\-\-all] [\-I\~|\~\-\-skip\-index] [\-T\~|\~\-\-skip\-tracked] [\-u\~|\~\-\-[no\-]include\-untracked] [\-\-patch] [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<file>] [\-\-allow\-empty] [(\-m\~|\~\-\-message)\~<message>] [\-\-] [<pathspec>...]
 .RS 4
 Like \fBgit stash create\fR, except some minor differences and support for options.
 .br
@@ -111,7 +112,7 @@ And finally, the options \fB\-\-patch\fR and \fB\-\-pathspec\-from\-file\fR are 
 .RE
 
 .PP
-snatch [\-a\~|\~\-\-all] [\-\-allow\-empty] [\-k\~|\~\-\-[no\-]keep\-index] [\-I\~|\~\-\-skip\-index] [(\-m\~|\~\-\-message)\~<message>] [\-\-patch] [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<file>] [\-T\~|\~\-\-skip\-tracked] [\-u\~|\~\-\-[no\-]include\-untracked] [\-\-] [<pathspec>...]
+snatch [\-a\~|\~\-\-all] [\-k\~|\~\-\-[no\-]keep\-index] [\-I\~|\~\-\-skip\-index] [\-T\~|\~\-\-skip\-tracked] [\-u\~|\~\-\-[no\-]include\-untracked] [\-\-patch] [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<file>] [\-\-allow\-empty] [(\-m\~|\~\-\-message)\~<message>] [\-\-] [<pathspec>...]
 .RS 4
 Same as \fBgit istash push\fR, except the created stash \fIisn\(cqt stored\fR.
 .br
@@ -125,7 +126,7 @@ And finally, the options \fB\-\-patch\fR and \fB\-\-pathspec\-from\-file\fR are 
 .RE
 
 .PP
-save [\-a\~|\~\-\-all] [\-\-allow\-empty] [\-I\~|\~\-\-skip\-index] [(\-m\~|\~\-\-message)\~<message>] [\-\-patch] [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<file>] [\-T\~|\~\-\-skip\-tracked] [\-u\~|\~\-\-[no\-]include\-untracked] [\-\-] [<pathspec>...]
+save [\-a\~|\~\-\-all] [\-I\~|\~\-\-skip\-index] [\-T\~|\~\-\-skip\-tracked] [\-u\~|\~\-\-[no\-]include\-untracked] [\-\-patch] [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<file>] [\-\-allow\-empty] [(\-m\~|\~\-\-message)\~<message>] [\-\-] [<pathspec>...]
 .RS 4
 This \fIisn\(cqt\fR equivalent of \fBgit stash save\fR. \
 It\(cqs similar to \fBgit istash create\fR, except that the created stash is stored.
@@ -140,7 +141,7 @@ And finally, the options \fB\-\-patch\fR and \fB\-\-pathspec\-from\-file\fR are 
 .RE
 
 .PP
-push [\-a\~|\~\-\-all] [\-\-allow\-empty] [\-k\~|\~\-\-[no\-]keep\-index] [\-I\~|\~\-\-skip\-index] [(\-m\~|\~\-\-message)\~<message>] [\-\-patch] [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<file>] [\-T\~|\~\-\-skip\-tracked] [\-u\~|\~\-\-[no\-]include\-untracked] [\-\-] [<pathspec>...]
+push [\-a\~|\~\-\-all] [\-k\~|\~\-\-[no\-]keep\-index] [\-I\~|\~\-\-skip\-index] [\-T\~|\~\-\-skip\-tracked] [\-u\~|\~\-\-[no\-]include\-untracked] [\-\-patch] [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<file>] [\-\-allow\-empty] [(\-m\~|\~\-\-message)\~<message>] [\-\-] [<pathspec>...]
 .RS 4
 Like \fBgit stash push\fR, except some minor differences.
 .br
