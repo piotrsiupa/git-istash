@@ -16,14 +16,14 @@ git\-istash \- Handle Git stashes without arbitrary limitations of the original 
             |\~\-V\~|\~\-\-version)
 \fIgit istash\fR [<options>] (create\~|\~snatch\~|\~save\~|\~push) [\-a\~|\~\-\-all]
             [\-\-allow\-empty] [\-k\~|\~\-\-[no\-]keep\-index]
-            [\-l\~|\~\-\-leave\-staged] [(\-m\~|\~\-\-message)\~<message>] [\-\-patch]
+            [\-I\~|\~\-\-skip\-index] [(\-m\~|\~\-\-message)\~<message>] [\-\-patch]
             [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<file>]
-            [\-S\~|\~\-\-staged] [\-u\~|\~\-\-[no\-]include\-untracked]
+            [\-T\~|\~\-\-skip\-tracked] [\-u\~|\~\-\-[no\-]include\-untracked]
             [\-\-] [<pathspec>...]
 \fIgit istash\fR [<options>] [\-a\~|\~\-\-all] [\-\-allow\-empty]
-            [\-k\~|\~\-\-[no\-]keep\-index] [\-l\~|\~\-\-leave\-staged]
+            [\-k\~|\~\-\-[no\-]keep\-index] [\-I\~|\~\-\-skip\-index]
             [(\-m\~|\~\-\-message)\~<message>] [\-\-patch] [\-\-patchspec\-file\-nul]
-            [\-\-patchspec\-from\-file=<file>] [\-S\~|\~\-\-staged]
+            [\-\-patchspec\-from\-file=<file>] [\-T\~|\~\-\-skip\-tracked]
             [\-u\~|\~\-\-[no\-]include\-untracked] [\-\-\~<pathspec>...]
 \fIgit istash\fR [<options>] (pop\~|\~apply) [\-\-summary\~<mode>] [<stash>]
 \fIgit istash\fR [<options>] [pop\~|\~apply] (\-c\~|\~\-\-continue) [\-\-summary\~<mode>]
@@ -97,7 +97,7 @@ See \fB\-c\fR, \fB\-\-continue\fR, \fB\-\-abort\fR and \fB\-\-quit\fR.
 .SH "SUBCOMMANDS"
 
 .PP
-create [\-a\~|\~\-\-all] [\-\-allow\-empty] [\-l\~|\~\-\-leave\-staged] [(\-m\~|\~\-\-message)\~<message>] [\-\-patch] [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<file>] [\-S\~|\~\-\-staged] [\-u\~|\~\-\-[no\-]include\-untracked] [\-\-] [<pathspec>...]
+create [\-a\~|\~\-\-all] [\-\-allow\-empty] [\-I\~|\~\-\-skip\-index] [(\-m\~|\~\-\-message)\~<message>] [\-\-patch] [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<file>] [\-T\~|\~\-\-skip\-tracked] [\-u\~|\~\-\-[no\-]include\-untracked] [\-\-] [<pathspec>...]
 .RS 4
 Like \fBgit stash create\fR, except some minor differences and support for options.
 .br
@@ -111,7 +111,7 @@ And finally, the options \fB\-\-patch\fR and \fB\-\-pathspec\-from\-file\fR are 
 .RE
 
 .PP
-snatch [\-a\~|\~\-\-all] [\-\-allow\-empty] [\-k\~|\~\-\-[no\-]keep\-index] [\-l\~|\~\-\-leave\-staged] [(\-m\~|\~\-\-message)\~<message>] [\-\-patch] [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<file>] [\-S\~|\~\-\-staged] [\-u\~|\~\-\-[no\-]include\-untracked] [\-\-] [<pathspec>...]
+snatch [\-a\~|\~\-\-all] [\-\-allow\-empty] [\-k\~|\~\-\-[no\-]keep\-index] [\-I\~|\~\-\-skip\-index] [(\-m\~|\~\-\-message)\~<message>] [\-\-patch] [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<file>] [\-T\~|\~\-\-skip\-tracked] [\-u\~|\~\-\-[no\-]include\-untracked] [\-\-] [<pathspec>...]
 .RS 4
 Same as \fBgit istash push\fR, except the created stash \fIisn\(cqt stored\fR.
 .br
@@ -125,7 +125,7 @@ And finally, the options \fB\-\-patch\fR and \fB\-\-pathspec\-from\-file\fR are 
 .RE
 
 .PP
-save [\-a\~|\~\-\-all] [\-\-allow\-empty] [\-l\~|\~\-\-leave\-staged] [(\-m\~|\~\-\-message)\~<message>] [\-\-patch] [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<file>] [\-S\~|\~\-\-staged] [\-u\~|\~\-\-[no\-]include\-untracked] [\-\-] [<pathspec>...]
+save [\-a\~|\~\-\-all] [\-\-allow\-empty] [\-I\~|\~\-\-skip\-index] [(\-m\~|\~\-\-message)\~<message>] [\-\-patch] [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<file>] [\-T\~|\~\-\-skip\-tracked] [\-u\~|\~\-\-[no\-]include\-untracked] [\-\-] [<pathspec>...]
 .RS 4
 This \fIisn\(cqt\fR equivalent of \fBgit stash save\fR. \
 It\(cqs similar to \fBgit istash create\fR, except that the created stash is stored.
@@ -140,7 +140,7 @@ And finally, the options \fB\-\-patch\fR and \fB\-\-pathspec\-from\-file\fR are 
 .RE
 
 .PP
-push [\-a\~|\~\-\-all] [\-\-allow\-empty] [\-k\~|\~\-\-[no\-]keep\-index] [\-l\~|\~\-\-leave\-staged] [(\-m\~|\~\-\-message)\~<message>] [\-\-patch] [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<file>] [\-S\~|\~\-\-staged] [\-u\~|\~\-\-[no\-]include\-untracked] [\-\-] [<pathspec>...]
+push [\-a\~|\~\-\-all] [\-\-allow\-empty] [\-k\~|\~\-\-[no\-]keep\-index] [\-I\~|\~\-\-skip\-index] [(\-m\~|\~\-\-message)\~<message>] [\-\-patch] [\-\-patchspec\-file\-nul] [\-\-patchspec\-from\-file=<file>] [\-T\~|\~\-\-skip\-tracked] [\-u\~|\~\-\-[no\-]include\-untracked] [\-\-] [<pathspec>...]
 .RS 4
 Like \fBgit stash push\fR, except some minor differences.
 .br
@@ -225,9 +225,11 @@ See also \fB\-\-leave\-staged\fR.
 .RE
 
 .PP
-\-l, \-\-leave\-staged
+\-I, \-l, \-\-skip-index, \-\-leave\-index, \-\-skip\-staged, \-\-leave\-staged
 .RS 4
 This option is only valid for \fBcreate\fR, \fBsnatch\fR, \fBsave\fR and \fBpush\fR subcommands.
+.sp
+The short option variant \fB\-l\fR is deprecated and it will be removed in the next major version.
 .sp
 All changes already added to the index are not stashed and left intact. \
 (Unlike \fB\-\-keep\-index\fR which also adds the index to the stash.) \
@@ -235,9 +237,11 @@ See also \fB\-\-keep\-index\fR and \fB\-\-staged\fR.
 .RE
 
 .PP
-\-S, \-\-staged
+\-T, \-S, \-\-skip\-tracked, \-\-leave\-tracked, \-\-skip\-unstaged, \-\-leave\-unstaged, \-\-staged
 .RS 4
 This option is only valid for \fBcreate\fR, \fBsnatch\fR, \fBsave\fR and \fBpush\fR subcommands.
+.sp
+The option variants \fB\-S\fR and \fB\-\-staged\fR are deprecated and they will be removed in the next major version.
 .sp
 All changes that are tracked but not yet added to the index are not staged and left intact. \
 (It\(cqs the same as \fB\-\-leave\-staged\fR, except it targets unstaged files instead of staged ones.) \
@@ -245,13 +249,21 @@ See also \fB\-\-leave\-staged\fR.
 .RE
 
 .PP
-\-u, \-\-include\-untracked, \-\-no\-include\-untracked
+\-u, \-\-untracked, \-\-include\-untracked
 .RS 4
 This option is only valid for \fBcreate\fR, \fBsnatch\fR, \fBsave\fR and \fBpush\fR subcommands.
 .sp
 All untracked files are also stashed and then removed.
+.RE
+
+.PP
+\-\-skip\-untracked, \-\-leave\-untracked, \-\-no\-include\-untracked
+.RS 4
+This option is only valid for \fBcreate\fR, \fBsnatch\fR, \fBsave\fR and \fBpush\fR subcommands.
+.sp
+All untracked files are not stashed and neither removed.
 .br
-\fB\-\-no\-include\-untracked\fR also affects \fB\-\-all\fR, resulting in stashing and removing only ignored files.
+It also affects \fB\-\-all\fR, resulting in stashing and removing only ignored files.
 .RE
 
 .PP

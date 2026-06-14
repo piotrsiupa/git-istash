@@ -21,17 +21,17 @@ print_help() {
 	printf '    -h\t\t\t- Print this help text and exit.\n'
 	printf '    -k, --keep-index\t- Left intact all changes already added to the index.\n'
 	printf '\t--no-keep-index\t- Cancel --keep-index.\n'
-	printf '    -l, --leave-staged\t- Left intact all changes already added to the index\n\t\t\t  and don'\''t add them to stash.\n'
+	printf '    -I, --skip-index\t- Left intact all changes already added to the index\n\t\t\t  and don'\''t add them to stash.\n'
 	printf '    -m, --message=MSG\t- Set stash description.\n'
 	printf '\t--patch\t\t- Interactively select non-staged chunks to stash.\n'
 	printf '\t--pathspec-from-file=FILE - Read pathspec from the specified file.\n'
 	printf '\t--pathspec-file-nul - Treat the pathspec file as NUL-separated.\n\t\t\t  (Only valid with --pathspec-from-file.)\n'
 	printf '    -q, --quiet\t\t- Suppress human-readable summaries and information.\n'
 	printf '\t--remove-stashed - Removes stashed changes unless there'\''s another option\n\t\t\t  to explicitely keep them.\n'
-	printf '    -S, --staged\t- Left intact all changes NOT already added to the index\n\t\t\t  and don'\''t add them to stash.\n'
+	printf '    -T, --skip-tracked\t- Left intact all changes NOT already added to the index\n\t\t\t  and don'\''t add them to stash.\n'
 	printf '\t--no-store\t- Don'\''t store the created stash with "git stash store".\n\t\t\t  Instead write its sha to stdout.\n'
-	printf '    -u, --include-untracked - Stash and clean also untracked files.\n'
-	printf '\t--no-include-untracked - Do not touch untracked files even with --all.\n'
+	printf '    -u, --untracked\t- Stash and clean also untracked files.\n'
+	printf '\t--skip-untracked - Do not touch untracked files even with --all.\n'
 }
 
 convert_pathspec_file() {
@@ -516,8 +516,8 @@ make_stash() { # pathspecs...
 	print_summary
 }
 
-getopt_short_options='ahklm:qSu'
-getopt_long_options='all,allow-empty,color::,no-color,keep-index,no-keep-index,leave-staged,message:,patch,pathspec-file-null,pathspec-from-file:,quiet,remove-stashed,staged,no-store,include-untracked,no-include-untracked'
+getopt_short_options='ahklIm:qSTu'
+getopt_long_options='all,allow-empty,color::,no-color,keep-index,no-keep-index,skip-index,leave-index,no-include-index,skip-staged,leave-staged,no-include-staged,message:,patch,pathspec-file-null,pathspec-from-file:,quiet,remove-stashed,skip-tracked,leave-tracked,no-include-tracked,skip-unstaged,leave-unstaged,no-include-unstaged,staged,no-store,untracked,include-untracked,skip-untracked,leave-untracked,no-include-untracked'
 normalized_options="$(get_options_color "$getopt_short_options" "$getopt_long_options" "$@")"
 eval set -- "$normalized_options"
 include_ignored=n
@@ -563,7 +563,7 @@ do
 	--no-keep-index)
 		keep_index=n
 		;;
-	-l|--leave-staged)
+	-l|-I|--skip-index|--leave-index|--no-include-index|--skip-staged|--leave-staged|--no-include-staged)
 		leave_staged=y
 		;;
 	-m|--message)
@@ -586,16 +586,16 @@ do
 	--remove-stashed)
 		remove_stashed=y
 		;;
-	-S|--staged)
+	-S|-T|--skip-tracked|--leave-tracked|--no-include-tracked|--skip-unstaged|--leave-unstaged|--no-include-unstaged|--staged)
 		leave_unstaged=y
 		;;
 	--no-store)
 		store_stash=n
 		;;
-	-u|--include-untracked)
+	-u|--untracked|--include-untracked)
 		include_untracked=y
 		;;
-	--no-include-untracked)
+	--skip-untracked|--leave-untracked|--no-include-untracked)
 		include_untracked=n
 		;;
 	--)
