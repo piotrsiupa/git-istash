@@ -204,3 +204,23 @@ test_get_options_success \
 	" -c -b 'a' -- 'abcd' '--' '-da' '-e' '--' '-fxyz' '-a' 'a b'\\\\''c d' '-dasdfg' '--'" \
 	" -c -b 'a' -- 'abcd' '--' '-da' '-e' '--' '-fxyz' '-a' 'a b'\\\\''c d' '-dasdfg' '--'" \
 	-cba abcd -- -da -e -- -fxyz -a 'a b'\''c d' -dasdfg --
+
+__test_section__ 'With "," as a short option'
+test_get_options_success \
+	'ab:cd:,::f::' \
+	'' \
+	" -b ' xyz ' -f '' -c -, 'xyz' -d '-a'" \
+	" -b ' xyz ' -f '' -c -, 'xyz' -d '-a' --" \
+	" -b ' xyz ' -f '' -c -, 'xyz' -d '-a' --" \
+	" -b ' xyz ' -f '' -c -, 'xyz' -d '-a' --" \
+	-b ' xyz ' -f -c -,xyz -d -a
+
+__test_section__ 'With "," in merged options'
+test_get_options_success \
+	'ab:c,:e::f::' \
+	'' \
+	" -b ' xyz ' -e 'f' -c -, 'a' -a -f ''" \
+	" -b ' xyz ' -e 'f' -c -, 'a' -a -f '' --" \
+	" -b ' xyz ' -e 'f' -c -, 'a' -a -f '' --" \
+	" -b ' xyz ' -e 'f' -c -, 'a' -a -f '' --" \
+	-b' xyz ' -ef -c,a -af

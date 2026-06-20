@@ -4,6 +4,7 @@
 # The small deviations of the output (from what getopt with similar options would produce with similar settings) are there because of how get_options is used by the script for which it was written.
 # The user should still get exactly what their expect from a GNU-like program.
 # It can be either sourced or used as a standalone script.
+# See, "--help" for more information.
 
 # Escapes stdin in a way that it will be "eval"ed as a single string in a POSIX shell.
 escape_for_shell() {
@@ -279,10 +280,11 @@ then
 		printf 'It is meant to be a portable alternative when "getopt" may not be available,\nor in some rare parsing scenarios that are not supported by "getopt".\n'
 		#shellcheck disable=SC2016
 		printf 'The output should be generally the same as in "getopt" with analogous settings\nand it is meant to be used with "eval" to set positional parameters in shell,\nlike this: eval set -- "$output_of_get_options".\n'
+		printf 'The script can be run as a standalone or it can be sourced in another script.\n'
 		printf '\n'
 		printf 'Usage:\t%s [-P | -R | -U] <short_opts_descr> <long_opts_descr> [arg...]\n' "${0##*/}"
 		printf '   or:\t%s [-h | --help | -V | --version]    (Only in standalone mode.)\n' "${0##*/}"
-		printf '(Ironically, the order of arguments has to be exactly as described.)\n'
+		printf '(Ironically, the order of arguments has to be exactly as described and the short\noptions cannot be bundled.)\n'
 		printf 'Options:\n'
 		printf '    -P\t- Posixly correct mode - after the first encountered non-option, treat\n\t  everything else as non-options. Preserve the first "--" if it'\''s after\n\t  a non-option.\n'
 		printf '    -R\t- Don'\''t reorder entries by placing all non-option arguments after "--"\n\t  (normalize only) and don'\''t generate an additional "--" if not present.\n'
