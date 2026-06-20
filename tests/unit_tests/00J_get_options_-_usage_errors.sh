@@ -32,6 +32,18 @@ __test_section__ 'With duplicated short option (mixed arguments)'
 assert_exit_code 2 "$GET_OPTIONS_COMMAND" $MODE_FLAGS 'ab:ca:d:e::f::' ''
 assert_outputs '' 'fatal: option `-a'\'' repeats in options definition for get_options'
 
+__test_section__ 'With duplicated whitespace short option'
+#shellcheck disable=SC2086
+assert_exit_code 2 "$GET_OPTIONS_COMMAND" $MODE_FLAGS 'ab:c d:e:: f::' ''
+assert_outputs '' 'fatal: option `- '\'' repeats in options definition for get_options'
+
+__test_section__ 'With duplicated new-line short option'
+#shellcheck disable=SC2086
+assert_exit_code 2 "$GET_OPTIONS_COMMAND" $MODE_FLAGS 'ab:c
+d:e::
+f::' ''
+assert_outputs '' 'fatal: option `-\n'\'' repeats in options definition for get_options'
+
 __test_section__ 'With duplicated long option (without arguments)'
 #shellcheck disable=SC2086
 assert_exit_code 2 "$GET_OPTIONS_COMMAND" $MODE_FLAGS '' 'thingy,other,something:,other,object::'
@@ -46,6 +58,20 @@ __test_section__ 'With duplicated long option (mixed arguments)'
 #shellcheck disable=SC2086
 assert_exit_code 2 "$GET_OPTIONS_COMMAND" $MODE_FLAGS '' 'thingy,other:,something:,other,object::'
 assert_outputs '' 'fatal: option `--other'\'' repeats in options definition for get_options'
+
+__test_section__ 'With duplicated whitespace-only long option'
+#shellcheck disable=SC2086
+assert_exit_code 2 "$GET_OPTIONS_COMMAND" $MODE_FLAGS '' 'thingy, 	 :,something:, 	 :,object::'
+assert_outputs '' 'fatal: option `-- 	 '\'' repeats in options definition for get_options'
+
+__test_section__ 'With duplicated new-line-only long option'
+#shellcheck disable=SC2086
+assert_exit_code 2 "$GET_OPTIONS_COMMAND" $MODE_FLAGS '' 'thingy,
+
+:,something:,
+
+:,object::'
+assert_outputs '' 'fatal: option `--\n\n'\'' repeats in options definition for get_options'
 
 __test_section__ 'With unnamed long option (at the beginning)'
 #shellcheck disable=SC2086
@@ -156,38 +182,6 @@ __test_section__ 'With "=" in a name of long option'
 #shellcheck disable=SC2086
 assert_exit_code 2 "$GET_OPTIONS_COMMAND" $MODE_FLAGS '' 'thingy,other:,somet=hing:,object'
 assert_outputs '' 'fatal: `='\'' in a name of a long option in definition for get_options'
-
-__test_section__ 'White characters in short options definition (at the beginning)'
-#shellcheck disable=SC2086
-assert_exit_code 2 "$GET_OPTIONS_COMMAND" $MODE_FLAGS '	ab:cd:e::f::' ''
-assert_outputs '' 'fatal: white character in short options definition for get_options'
-
-__test_section__ 'White characters in short options definition (in a middle)'
-#shellcheck disable=SC2086
-assert_exit_code 2 "$GET_OPTIONS_COMMAND" $MODE_FLAGS 'ab:
-cd:e::f::' ''
-assert_outputs '' 'fatal: white character in short options definition for get_options'
-
-__test_section__ 'White characters in short options definition (at the end)'
-#shellcheck disable=SC2086
-assert_exit_code 2 "$GET_OPTIONS_COMMAND" $MODE_FLAGS 'ab:cd:e::f:: ' ''
-assert_outputs '' 'fatal: white character in short options definition for get_options'
-
-__test_section__ 'White characters in long options definition (at the beginning)'
-#shellcheck disable=SC2086
-assert_exit_code 2 "$GET_OPTIONS_COMMAND" $MODE_FLAGS '' '	thingy,other:,something:,object::'
-assert_outputs '' 'fatal: white character in long options definition for get_options'
-
-__test_section__ 'White characters in long options definition (in a middle)'
-#shellcheck disable=SC2086
-assert_exit_code 2 "$GET_OPTIONS_COMMAND" $MODE_FLAGS '' 'thingy,other:,
-something:,object::'
-assert_outputs '' 'fatal: white character in long options definition for get_options'
-
-__test_section__ 'White characters in long options definition (at the end)'
-#shellcheck disable=SC2086
-assert_exit_code 2 "$GET_OPTIONS_COMMAND" $MODE_FLAGS '' 'thingy,other:,something:,object:: '
-assert_outputs '' 'fatal: white character in long options definition for get_options'
 
 __test_section__ 'Unknown option to get_options'
 #shellcheck disable=SC2086
