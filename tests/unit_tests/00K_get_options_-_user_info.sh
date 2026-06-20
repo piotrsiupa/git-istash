@@ -21,7 +21,7 @@ then
 	'
 else
 	assert_exit_code 2 "$GET_OPTIONS_COMMAND" --help
-	assert_outputs '' 'fatal: unknown option --help for get_options'
+	assert_outputs '' 'fatal: unknown option `--help'\'' for get_options'
 fi
 
 
@@ -42,7 +42,7 @@ then
 		'
 	else
 		assert_exit_code 2 "$GET_OPTIONS_COMMAND" -h
-		assert_outputs '' 'fatal: unknown option -h for get_options'
+		assert_outputs '' 'fatal: unknown option `-h'\'' for get_options'
 	fi
 fi
 
@@ -57,7 +57,7 @@ then
 	'
 else
 	assert_exit_code 2 "$GET_OPTIONS_COMMAND" --version
-	assert_outputs '' 'fatal: unknown option --version for get_options'
+	assert_outputs '' 'fatal: unknown option `--version'\'' for get_options'
 fi
 
 if is_facet_active 'short-options'
@@ -73,6 +73,6 @@ then
 		'
 	else
 		assert_exit_code 2 "$GET_OPTIONS_COMMAND" -V
-		assert_outputs '' 'fatal: unknown option -V for get_options'
+		assert_outputs '' 'fatal: unknown option `-V'\'' for get_options'
 	fi
 fi
