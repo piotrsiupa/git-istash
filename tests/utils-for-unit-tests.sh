@@ -73,9 +73,30 @@ IS_GET_OPTIONS_STANDALONE() {
 	test "$CALL_STYLE" = 'STANDALONE'
 }
 
+#shellcheck disable=SC2120
+PARAMETRIZE_GET_OPTIONS_REMOVE_WHITESPACE() { # remove_whitespace
+	if [ $# -eq 0 ]
+	then
+		PARAMETRIZE 'WHITESPACE' 'options' 'KEEP-WS' 'STRIP-WS'
+	else
+		PARAMETRIZE 'WHITESPACE' 'options' "$@"
+	fi
+	case "$WHITESPACE" in
+		KEEP-WS)
+			WHITESPACE_FLAG=''
+			;;
+		STRIP-WS)
+			WHITESPACE_FLAG='-w'
+			;;
+	esac
+}
+IS_WHITESPACE_STRIPPING_ON() {
+	test "$WHITESPACE" = 'STRIP-WS'
+}
+
 run_get_options() { # option_definitions_and_free_args...
 	#shellcheck disable=SC2086
-	"$GET_OPTIONS_COMMAND" $MODE_FLAGS "$@"
+	"$GET_OPTIONS_COMMAND" $WHITESPACE_FLAG $MODE_FLAGS "$@"
 }
 
 test_get_options_success() { # short_options long_options no_reorder_stdout reorder_stdout posixly_stdout partial_parse_stdout [argument_to_parse...]

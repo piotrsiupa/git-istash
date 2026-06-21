@@ -4,6 +4,7 @@ non_essential_test
 
 PARAMETRIZE_GET_OPTIONS_MODE
 PARAMETRIZE_GET_OPTIONS_CALL_STYLE
+PARAMETRIZE_GET_OPTIONS_REMOVE_WHITESPACE
 
 __end_of_initialization__
 
@@ -27,15 +28,20 @@ __test_section__ 'With duplicated short option (mixed arguments)'
 assert_exit_code 2 run_get_options 'ab:ca:d:e::f::' ''
 assert_outputs '' 'fatal: option `-a'\'' repeats in options definition for get_options'
 
-__test_section__ 'With duplicated whitespace short option'
-assert_exit_code 2 run_get_options 'ab:c d:e:: f::' ''
-assert_outputs '' 'fatal: option `- '\'' repeats in options definition for get_options'
-
-__test_section__ 'With duplicated new-line short option'
-assert_exit_code 2 run_get_options 'ab:c
+if ! IS_WHITESPACE_STRIPPING_ON
+then
+	
+	__test_section__ 'With duplicated whitespace short option'
+	assert_exit_code 2 run_get_options 'ab:c d:e:: f::' ''
+	assert_outputs '' 'fatal: option `- '\'' repeats in options definition for get_options'
+	
+	__test_section__ 'With duplicated new-line short option'
+	assert_exit_code 2 run_get_options 'ab:c
 d:e::
 f::' ''
-assert_outputs '' 'fatal: option `-\n'\'' repeats in options definition for get_options'
+	assert_outputs '' 'fatal: option `-\n'\'' repeats in options definition for get_options'
+	
+fi
 
 __test_section__ 'With duplicated long option (without arguments)'
 assert_exit_code 2 run_get_options '' 'thingy,other,something:,other,object::'
@@ -49,17 +55,26 @@ __test_section__ 'With duplicated long option (mixed arguments)'
 assert_exit_code 2 run_get_options '' 'thingy,other:,something:,other,object::'
 assert_outputs '' 'fatal: option `--other'\'' repeats in options definition for get_options'
 
-__test_section__ 'With duplicated whitespace-only long option'
-assert_exit_code 2 run_get_options '' 'thingy, 	 :,something:, 	 :,object::'
-assert_outputs '' 'fatal: option `-- 	 '\'' repeats in options definition for get_options'
+__test_section__ 'With duplicated long option containing whitespace'
+assert_exit_code 2 run_get_options '' 'thingy,some - other:,something:,some - other:,object::'
+assert_outputs '' 'fatal: option `--some - other'\'' repeats in options definition for get_options'
 
-__test_section__ 'With duplicated new-line-only long option'
-assert_exit_code 2 run_get_options '' 'thingy,
+if ! IS_WHITESPACE_STRIPPING_ON
+then
+	
+	__test_section__ 'With duplicated whitespace-only long option'
+	assert_exit_code 2 run_get_options '' 'thingy, 	 :,something:, 	 :,object::'
+	assert_outputs '' 'fatal: option `-- 	 '\'' repeats in options definition for get_options'
+	
+	__test_section__ 'With duplicated new-line-only long option'
+	assert_exit_code 2 run_get_options '' 'thingy,
 
 :,something:,
 
 :,object::'
-assert_outputs '' 'fatal: option `--\n\n'\'' repeats in options definition for get_options'
+	assert_outputs '' 'fatal: option `--\n\n'\'' repeats in options definition for get_options'
+	
+fi
 
 __test_section__ 'With unnamed long option (at the beginning)'
 assert_exit_code 2 run_get_options '' ',other:,something:,object::'
@@ -149,12 +164,17 @@ __test_section__ 'With "=" in a name of long option'
 assert_exit_code 2 run_get_options '' 'thingy,other:,somet=hing:,object'
 assert_outputs '' 'fatal: `='\'' in a name of a long option in definition for get_options'
 
-__test_section__ 'Unknown option to get_options (at beginning)'
+__test_section__ 'Unknown option to get_options (at the beginning)'
 #shellcheck disable=SC2086
-assert_exit_code 2 "$GET_OPTIONS_COMMAND" -x $MODE_FLAGS '' 'thingy,other:,something:,object::'
+assert_exit_code 2 "$GET_OPTIONS_COMMAND" -x $WHITESPACE_FLAG $MODE_FLAGS '' 'thingy,other:,something:,object::'
+assert_outputs '' 'fatal: unknown option `-x'\'' for get_options'
+
+__test_section__ 'Unknown option to get_options (in the middle)'
+#shellcheck disable=SC2086
+assert_exit_code 2 "$GET_OPTIONS_COMMAND" $WHITESPACE_FLAG -x $MODE_FLAGS '' 'thingy,other:,something:,object::'
 assert_outputs '' 'fatal: unknown option `-x'\'' for get_options'
 
 __test_section__ 'Unknown option to get_options (at the end)'
 #shellcheck disable=SC2086
-assert_exit_code 2 "$GET_OPTIONS_COMMAND" $MODE_FLAGS -x '' 'thingy,other:,something:,object::'
+assert_exit_code 2 "$GET_OPTIONS_COMMAND" $WHITESPACE_FLAG $MODE_FLAGS -x '' 'thingy,other:,something:,object::'
 assert_outputs '' 'fatal: unknown option `-x'\'' for get_options'
