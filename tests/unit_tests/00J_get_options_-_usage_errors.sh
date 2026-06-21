@@ -36,9 +36,7 @@ then
 	assert_outputs '' 'fatal: option `- '\'' repeats in options definition for get_options'
 	
 	__test_section__ 'With duplicated new-line short option'
-	assert_exit_code 2 run_get_options 'ab:c
-d:e::
-f::' ''
+	assert_exit_code 2 run_get_options "ab:c${nl}d:e::${nl}f::" ''
 	assert_outputs '' 'fatal: option `-\n'\'' repeats in options definition for get_options'
 	
 fi
@@ -63,15 +61,11 @@ if ! IS_WHITESPACE_STRIPPING_ON
 then
 	
 	__test_section__ 'With duplicated whitespace-only long option'
-	assert_exit_code 2 run_get_options '' 'thingy, 	 :,something:, 	 :,object::'
-	assert_outputs '' 'fatal: option `-- 	 '\'' repeats in options definition for get_options'
+	assert_exit_code 2 run_get_options '' "thingy, $tab :,something:, $tab :,object::"
+	assert_outputs '' 'fatal: option `-- \t '\'' repeats in options definition for get_options'
 	
 	__test_section__ 'With duplicated new-line-only long option'
-	assert_exit_code 2 run_get_options '' 'thingy,
-
-:,something:,
-
-:,object::'
+	assert_exit_code 2 run_get_options '' "thingy,$nl$nl:,something:,$nl$nl:,object::"
 	assert_outputs '' 'fatal: option `--\n\n'\'' repeats in options definition for get_options'
 	
 fi

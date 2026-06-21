@@ -15,63 +15,50 @@ then
 	
 	__test_section__ 'White short options'
 	test_get_options_success \
-		'ab:	:
-::f:: ' \
+		"ab:$tab:$nl::f:: " \
 		'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
-		" -\\\\  --depravity 'xyz' -'\\n' '' --evilness '' --anger -\\\\	 'x'" \
-		" -\\\\  --depravity 'xyz' -'\\n' '' --evilness '' --anger -\\\\	 'x' --" \
-		" -\\\\  --depravity 'xyz' -'\\n' '' --evilness '' --anger -\\\\	 'x' --" \
-		" -\\\\  --depravity 'xyz' -'\\n' '' --evilness '' --anger -\\\\	 'x' --" \
-		-\  --depr=xyz -'
-' --evil --anger -\	x
+		" -\\\\  --depravity 'xyz' -'\\n' '' --evilness '' --anger -\\\\\\t 'x'" \
+		" -\\\\  --depravity 'xyz' -'\\n' '' --evilness '' --anger -\\\\\\t 'x' --" \
+		" -\\\\  --depravity 'xyz' -'\\n' '' --evilness '' --anger -\\\\\\t 'x' --" \
+		" -\\\\  --depravity 'xyz' -'\\n' '' --evilness '' --anger -\\\\\\t 'x' --" \
+		-\  --depr=xyz -"$nl" --evil --anger -"$tab"x
 	
 	__test_section__ 'Whitespace in middle of long options'
 	test_get_options_success \
 		'ab:cd:e::f::' \
-		'ange
-r,bloodlust:,cruelty,d epravity:,evi	lness::,fury::' \
-		" -c --d\\\\ epravity 'xyz' -e '' --evi\\\\	lness '' --ange'\\n'r -d 'x'" \
-		" -c --d\\\\ epravity 'xyz' -e '' --evi\\\\	lness '' --ange'\\n'r -d 'x' --" \
-		" -c --d\\\\ epravity 'xyz' -e '' --evi\\\\	lness '' --ange'\\n'r -d 'x' --" \
-		" -c --d\\\\ epravity 'xyz' -e '' --evi\\\\	lness '' --ange'\\n'r -d 'x' --" \
-		-c --d\ epr=xyz -e --evi\	l '--ange
-r' -dx
+		"ange${nl}r,bloodlust:,cruelty,d epravity:,evi${tab}lness::,fury::" \
+		" -c --d\\\\ epravity 'xyz' -e '' --evi\\\\\\tlness '' --ange'\\n'r -d 'x'" \
+		" -c --d\\\\ epravity 'xyz' -e '' --evi\\\\\\tlness '' --ange'\\n'r -d 'x' --" \
+		" -c --d\\\\ epravity 'xyz' -e '' --evi\\\\\\tlness '' --ange'\\n'r -d 'x' --" \
+		" -c --d\\\\ epravity 'xyz' -e '' --evi\\\\\\tlness '' --ange'\\n'r -d 'x' --" \
+		-c --d\ epr=xyz -e --evi"$tab"l --ange"$nl"r -dx
 	
 	__test_section__ 'Whitespace at edges of long options'
 	test_get_options_success \
 		'ab:cd:e::f::' \
-		'       anger,bloodlust:,cruelty,depravity	:,fury::,
-evilness
-::' \
-		" -c --depravity\\\\	 'xyz' -e '' --'\\n'evilness'\\n' '' --\\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ anger -d 'x'" \
-		" -c --depravity\\\\	 'xyz' -e '' --'\\n'evilness'\\n' '' --\\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ anger -d 'x' --" \
-		" -c --depravity\\\\	 'xyz' -e '' --'\\n'evilness'\\n' '' --\\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ anger -d 'x' --" \
-		" -c --depravity\\\\	 'xyz' -e '' --'\\n'evilness'\\n' '' --\\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ anger -d 'x' --" \
-		-c --depr=xyz -e '--
-evil' --\ \ \ \ \ \ \ anger -dx
+		"       anger,bloodlust:,cruelty,depravity$tab:,fury::,${nl}evilness$nl::" \
+		" -c --depravity\\\\\\t 'xyz' -e '' --'\\n'evilness'\\n' '' --\\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ anger -d 'x'" \
+		" -c --depravity\\\\\\t 'xyz' -e '' --'\\n'evilness'\\n' '' --\\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ anger -d 'x' --" \
+		" -c --depravity\\\\\\t 'xyz' -e '' --'\\n'evilness'\\n' '' --\\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ anger -d 'x' --" \
+		" -c --depravity\\\\\\t 'xyz' -e '' --'\\n'evilness'\\n' '' --\\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ anger -d 'x' --" \
+		-c --depr=xyz -e --"${nl}"evil --\ \ \ \ \ \ \ anger -dx
 	
 	__test_section__ 'Whitespace-only long options'
 	test_get_options_success \
 		'ab:cd:e::f::' \
-		'bloodlust:,cruelty,   :,
-
-
-::,fury::,			' \
-		" -c --\\\\ \\\\ \\\\  'xyz' -e '' --'\\n''\\n''\\n' '' --\\\\	\\\\	\\\\	 -d 'x'" \
-		" -c --\\\\ \\\\ \\\\  'xyz' -e '' --'\\n''\\n''\\n' '' --\\\\	\\\\	\\\\	 -d 'x' --" \
-		" -c --\\\\ \\\\ \\\\  'xyz' -e '' --'\\n''\\n''\\n' '' --\\\\	\\\\	\\\\	 -d 'x' --" \
-		" -c --\\\\ \\\\ \\\\  'xyz' -e '' --'\\n''\\n''\\n' '' --\\\\	\\\\	\\\\	 -d 'x' --" \
-		-c --\ \ =xyz -e --'
-
-
-' --\	 -dx
+		"bloodlust:,cruelty,   :,$nl$nl$nl::,fury::,$tab$tab$tab" \
+		" -c --\\\\ \\\\ \\\\  'xyz' -e '' --'\\n''\\n''\\n' '' --\\\\\\t\\\\\\t\\\\\\t -d 'x'" \
+		" -c --\\\\ \\\\ \\\\  'xyz' -e '' --'\\n''\\n''\\n' '' --\\\\\\t\\\\\\t\\\\\\t -d 'x' --" \
+		" -c --\\\\ \\\\ \\\\  'xyz' -e '' --'\\n''\\n''\\n' '' --\\\\\\t\\\\\\t\\\\\\t -d 'x' --" \
+		" -c --\\\\ \\\\ \\\\  'xyz' -e '' --'\\n''\\n''\\n' '' --\\\\\\t\\\\\\t\\\\\\t -d 'x' --" \
+		-c --\ \ =xyz -e --"$nl$nl$nl" --"$tab" -dx
 	
 else
 	
 	__test_section__ 'White short options'
 	test_get_options_success \
 		' a	b:
-		f:: ' \
+			f:: ' \
 		'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
 		" -a --depravity 'xyz' -f '' --evilness '' --anger -b 'x'" \
 		" -a --depravity 'xyz' -f '' --evilness '' --anger -b 'x' --" \
@@ -82,42 +69,38 @@ else
 	then
 		assert_exit_code 1 run_get_options \
 			' a	b:
-			f:: ' \
+				f:: ' \
 			'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
-			-\  --depr=xyz -'
-' --evil --anger -\	x
+			-\  --depr=xyz -"$nl" --evil --anger -"$tab"x
 		assert_outputs '.*' 'error: unknown switch ` '\'
 	else
 		test_get_options_success \
 			' a	b:
-			f:: ' \
+				f:: ' \
 			'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
 			"N/A" \
 			"N/A" \
 			"N/A" \
 			" -- '- ' '--depr=xyz' '-\n' '--evil' '--anger' '-\tx'" \
-			-\  --depr=xyz -'
-' --evil --anger -\	x
+			-\  --depr=xyz -"$nl" --evil --anger -"$tab"x
 	fi
 	
 	__test_section__ 'Whitespace in middle of long options'
 	test_get_options_success \
 		'ab:cd:e::f::' \
-		'ange
-r,bloodlust:,cruelty,d epravity:,evi	lness::,fury::' \
-		" -c --d\\\\ epravity 'xyz' -e '' --evi\\\\	lness '' --ange'\\n'r -d 'x'" \
-		" -c --d\\\\ epravity 'xyz' -e '' --evi\\\\	lness '' --ange'\\n'r -d 'x' --" \
-		" -c --d\\\\ epravity 'xyz' -e '' --evi\\\\	lness '' --ange'\\n'r -d 'x' --" \
-		" -c --d\\\\ epravity 'xyz' -e '' --evi\\\\	lness '' --ange'\\n'r -d 'x' --" \
-		-c --d\ epr=xyz -e --evi\	l '--ange
-r' -dx
+		"ange${nl}r,bloodlust:,cruelty,d epravity:,evi${tab}lness::,fury::" \
+		" -c --d\\\\ epravity 'xyz' -e '' --evi\\\\\\tlness '' --ange'\\n'r -d 'x'" \
+		" -c --d\\\\ epravity 'xyz' -e '' --evi\\\\\\tlness '' --ange'\\n'r -d 'x' --" \
+		" -c --d\\\\ epravity 'xyz' -e '' --evi\\\\\\tlness '' --ange'\\n'r -d 'x' --" \
+		" -c --d\\\\ epravity 'xyz' -e '' --evi\\\\\\tlness '' --ange'\\n'r -d 'x' --" \
+		-c --d\ epr=xyz -e --evi"$tab"l --ange"$nl"r -dx
 	
 	__test_section__ 'Whitespace at edges of long options'
 	test_get_options_success \
 		'ab:cd:e::f::' \
 		'       anger,bloodlust:,cruelty,depravity	:,fury::,
-evilness
-::' \
+			evilness
+			::' \
 		" -c --depravity 'xyz' -e '' --evilness '' --anger -d 'x'" \
 		" -c --depravity 'xyz' -e '' --evilness '' --anger -d 'x' --" \
 		" -c --depravity 'xyz' -e '' --evilness '' --anger -d 'x' --" \
@@ -128,36 +111,28 @@ evilness
 		assert_exit_code 1 run_get_options \
 			'ab:cd:e::f::' \
 			'       anger,bloodlust:,cruelty,depravity	:,fury::,
-evilness
-::' \
-			-c --depr=xyz -e '--
-evil' --\ \ \ \ \ \ \ anger -dx
+				evilness
+				::' \
+			-c --depr=xyz -e --"${nl}evil" --\ \ \ \ \ \ \ anger -dx
 		assert_outputs '.*' 'error: unknown option `\nevil'\'
 	else
 		test_get_options_success \
 			'ab:cd:e::f::' \
 			'       anger,bloodlust:,cruelty,depravity	:,fury::,
-evilness
-::' \
+				evilness
+				::' \
 			"N/A" \
 			"N/A" \
 			"N/A" \
 			" -c --depravity 'xyz' -e '' -- '--\nevil' '--       anger' '-dx'" \
-			-c --depr=xyz -e '--
-evil' --\ \ \ \ \ \ \ anger -dx
+			-c --depr=xyz -e --"${nl}evil" --\ \ \ \ \ \ \ anger -dx
 	fi
 	
 	__test_section__ 'Whitespace-only long options'
 	assert_exit_code 2 run_get_options \
 		'ab:cd:e::f::' \
-		'bloodlust:,cruelty,   :,
-
-
-::,fury::,			' \
-		-c --\ \ =xyz -e --'
-
-
-' --\	 -dx
+		"bloodlust:,cruelty,   :,$nl$nl$nl::,fury::,${tab}${tab}${tab}" \
+		-c --\ \ =xyz -e --"$nl$nl$nl" --"$tab" -dx
 	assert_outputs '' 'fatal: empty entry in long options definition for get_options'
 	
 fi

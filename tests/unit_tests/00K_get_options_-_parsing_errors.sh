@@ -36,8 +36,8 @@ dy'
 	assert_outputs '.*' 'error: unknown option `xyz'\'
 	
 	__test_section__ 'Unknown whitespace-only long option'
-	assert_exit_code 1 run_get_options 'ab:cd:' 'veni,vidi:,vici::' -c --\	\	 --vidi=qwerty --veni -ady
-	assert_outputs '.*' 'error: unknown option `		'\'
+	assert_exit_code 1 run_get_options 'ab:cd:' 'veni,vidi:,vici::' -c --"$tab$tab" --vidi=qwerty --veni -ady
+	assert_outputs '.*' 'error: unknown option `\t\t'\'
 	
 	__test_section__ 'Unknown new-line-only long option'
 	assert_exit_code 1 run_get_options 'ab:cd:' 'veni,vidi:,vici::' -c --'
@@ -92,8 +92,8 @@ assert_exit_code 1 run_get_options 'ab:cd:' 'veni,vidi:,vici::' -c --vidi=qwerty
 assert_outputs '.*' 'error: option `veni'\'' takes no value'
 
 __test_section__ 'Long option containing whitespaces, with an unexpected argument'
-assert_exit_code 1 run_get_options 'ab:cd:' 've	ni,vi	di:,vi	ci::' -c --vi\	di=qwerty --ve\	ni=inev -ady
-assert_outputs '.*' 'error: option `ve	ni'\'' takes no value'
+assert_exit_code 1 run_get_options 'ab:cd:' "ve${tab}ni,vi${tab}di:,vi${tab}ci::" -c --vi"$tab"di=qwerty --ve"$tab"ni=inev -ady
+assert_outputs '.*' 'error: option `ve\tni'\'' takes no value'
 
 if ! IS_WHITESPACE_STRIPPING_ON
 then
@@ -117,17 +117,11 @@ assert_outputs '.*' 'error: ambiguous option abbreviation `vi '\'
 if ! IS_WHITESPACE_STRIPPING_ON
 then
 	__test_section__ 'Ambiguous whitespace-only option abbreviation'
-	assert_exit_code 1 run_get_options 'ab:cd:' 'veni,vidi:,vici::,  	,   ' --ve -c --vic --\ \ =qwerty -ady
+	assert_exit_code 1 run_get_options 'ab:cd:' "veni,vidi:,vici::,  $tab,   " --ve -c --vic --\ \ =qwerty -ady
 	assert_outputs '.*' 'error: ambiguous option abbreviation `  '\'
 	
 	__test_section__ 'Ambiguous new-line option abbreviation'
-	assert_exit_code 1 run_get_options 'ab:cd:' 'veni,vidi:,vici::,
-
- ,
-
-	' --ve -c --vic --'
-
-'=qwerty -ady
+	assert_exit_code 1 run_get_options 'ab:cd:' "veni,vidi:,vici::,$nl$nl ,$nl$nl$tab" --ve -c --vic --"$nl$nl"=qwerty -ady
 	assert_outputs '.*' 'error: ambiguous option abbreviation `\n\n'\'
 fi
 
