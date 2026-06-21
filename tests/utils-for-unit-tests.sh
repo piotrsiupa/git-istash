@@ -73,6 +73,11 @@ IS_GET_OPTIONS_STANDALONE() {
 	test "$CALL_STYLE" = 'STANDALONE'
 }
 
+run_get_options() { # option_definitions_and_free_args...
+	#shellcheck disable=SC2086
+	"$GET_OPTIONS_COMMAND" $MODE_FLAGS "$@"
+}
+
 test_get_options_success() { # short_options long_options no_reorder_stdout reorder_stdout posixly_stdout partial_parse_stdout [argument_to_parse...]
 	short_options="$1"
 	long_options="$2"
@@ -81,8 +86,7 @@ test_get_options_success() { # short_options long_options no_reorder_stdout reor
 	posixly_stdout="$5"
 	partial_parse_stdout="$6"
 	shift 6
-	#shellcheck disable=SC2086
-	assert_exit_code 0 "$GET_OPTIONS_COMMAND" $MODE_FLAGS "$short_options" "$long_options" "$@"
+	assert_exit_code 0 run_get_options "$short_options" "$long_options" "$@"
 	if IS_POSIXLY_ON
 	then
 		expected_stdout="$posixly_stdout"
