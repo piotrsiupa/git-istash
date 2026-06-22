@@ -25,6 +25,9 @@ soft_escape_for_shell() {
 
 get_options() ( # See "print_help" for usage.
 	set -eu
+	LC_ALL=C
+	export LC_ALL
+	
 	nl='
 '
 	
@@ -63,18 +66,38 @@ get_options() ( # See "print_help" for usage.
 	printf '%s' "${1-}" | grep -E -q '^-' &&
 		fatal 'unknown option `%s'\'' for get_options' "$1"
 	
+	strip_short_options_whitespace() {
+		tr -d ' \t\n'
+	}
+	strip_long_options_whitespace() {
+		#shellcheck disable=SC2016
+		sed -E -n -e '1h' -e '1!H' -e '$g' \
+			-e '${' \
+				-e 's/^([[:blank:]]|\n)+//' \
+				-e 's/([[:blank:]]|\n)+:/:/g' \
+				-e 's/([[:blank:]]|\n)+,/,/g' \
+				-e 's/,([[:blank:]]|\n)+/,/g' \
+				-e 's/([[:blank:]]|\n)+$//' \
+				-e 'p' \
+			-e '}'
+	}
+	
 	test $# -ge 2 ||
 		fatal 'not enough arguments for get_options'
+	
 	if [ "$strip_whitespace" = y ]
 	then
-		short_options_description="$(printf '%s' "$1" | tr -d ' \t\n')"
+		short_options_description="$(printf '%s' "$1" | strip_short_options_whitespace)"
 	else
 		short_options_description="$1"
 	fi
+	shift
 	test "${short_options_description#:}" = "$short_options_description" ||
 		fatal 'empty entry in short options definition for get_options'
 	test "${short_options_description#*:::}" = "$short_options_description" ||
 		fatal 'triple `:'\'' in short options definition for get_options'
+	test "${short_options_description#*-}" = "$short_options_description" ||
+		fatal '`-'\'' in short options definition for get_options'
 	short_options="$(
 		#shellcheck disable=SC1003
 		printf '%s' "$short_options_description" \
@@ -99,35 +122,22 @@ get_options() ( # See "print_help" for usage.
 	
 	if [ "$strip_whitespace" = y ]
 	then
-		long_options_description="$(
-			#shellcheck disable=SC2016
-			printf '%s' "$2" \
-			| sed -E -n -e '1h' -e '1!H' -e '$g' \
-				-e '${' \
-					-e 's/^([[:blank:]]|\n)+//' \
-					-e 's/([[:blank:]]|\n)+:/:/g' \
-					-e 's/([[:blank:]]|\n)+,/,/g' \
-					-e 's/,([[:blank:]]|\n)+/,/g' \
-					-e 's/([[:blank:]]|\n)+$//' \
-					-e 'p' \
-				-e '}'
-		)"
+		long_options_description="$(printf '%s' "$1" | strip_long_options_whitespace)"
 	else
-		long_options_description="$2"
+		long_options_description="$1"
 	fi
+	shift
 	printf '%s' "$long_options_description" | tr '\n' 'X' | grep -E -q '(^|,):*,|,:*$' &&
 		fatal 'empty entry in long options definition for get_options'
-	test "${long_options_description#*:::}" = "$long_options_description" ||
-		fatal 'triple `:'\'' in long options definition for get_options'
 	long_options="$(
 		printf '%s' "$long_options_description" \
 		| tr ',\n' '\n,' \
-		| sed -E 's/:+$//'
+		| sed -E 's/:{1,2}$//'
 		printf '|'
 	)"
 	long_options="${long_options%|}"
-	test "${long_options#*:}" = "$long_options" ||
-		fatal '`:'\'' in a name of a long option in definition for get_options'
+	! printf '%s' "$long_options" | grep -qE ':$' ||
+		fatal 'triple `:'\'' in long options definition for get_options'
 	test "${long_options#*=}" = "$long_options" ||
 		fatal '`='\'' in a name of a long option in definition for get_options'
 	repeated_option="$(printf '%s' "$long_options" | sort | uniq -c | sed -E -n '/^[[:blank:]]*1[[:blank:]]/!s/^[[:blank:]]*[0-9]+[[:blank:]]//p' | head -n 1 | sed -E 's/$/|/' | tr ',' '\n')"
@@ -140,7 +150,6 @@ get_options() ( # See "print_help" for usage.
 		| sed -E -e 's/^.*[^:]$/n/' -e 's/^.*[^:]:$/y/' -e 's/^.*[^:]::$/o/' \
 		| tr -d '\n'
 	)"
-	shift 2
 	
 	error() { # printf_arg...
 		printf 'error: '
@@ -360,7 +369,7 @@ then
 		printf 'Long options are a list of option names separated with ",". '
 		printf 'A special character\n":" may be placed at the end of an option name to symbolize that the option has\nan argument. '
 		printf 'Using double ":" instead of a single one means that the argument is\nnot mandatory. '
-		printf 'Characters ":" and "," may not be used in long option names.\n'
+		printf 'Characters "=" and "," may not be used in long option names,\nand ":" cannot end them because that would be interpreted as an argument marker.\n'
 		printf 'E.g. "foo,bar:,baz" defines options "--foo", "--bar" and "--baz", where "--bar"\ntakes an argument and the other options don'\''t.\n'
 		printf '(An empty string means that long options are not allowed.)\n'
 		printf '\n'

@@ -215,3 +215,33 @@ test_get_options_success \
 	" --cruelty --bloodlust 'a' --evilness '' -- 'abcd' '--' '--f=xyz' '--d=a' '--' '--ang' 'a b'\\\\''c d' '--depravity' 'asdfg' '--'" \
 	" --cruelty --bloodlust 'a' --evilness '' -- 'abcd' '--' '--f=xyz' '--d=a' '--' '--ang' 'a b'\\\\''c d' '--depravity' 'asdfg' '--'" \
 	--cruelty --blood=a --evil abcd -- --f=xyz --d=a -- --ang 'a b'\''c d' --depravity asdfg --
+
+__test_section__ 'With an option that starts with "-"'
+test_get_options_success \
+	'' \
+	'anger,-bloodlust:,cruelty,depravity:,evilness::,fury::' \
+	" --cruelty ---bloodlust 'a' --evilness '' 'abcd' --fury 'xyz' --depravity 'a' 'a b'\\\\''c d' --anger" \
+	" --cruelty ---bloodlust 'a' --evilness '' --fury 'xyz' --depravity 'a' --anger -- 'abcd' 'a b'\\\\''c d'" \
+	" --cruelty ---bloodlust 'a' --evilness '' -- 'abcd' '--f=xyz' '--deprav' 'a' 'a b'\\\\''c d' '--anger'" \
+	" --cruelty ---bloodlust 'a' --evilness '' --fury 'xyz' --depravity 'a' --anger -- 'abcd' 'a b'\\\\''c d'" \
+	--cruelty ---bl=a --ev abcd --f=xyz --deprav a 'a b'\''c d' --anger
+
+__test_section__ 'With an option that starts with ":"'
+test_get_options_success \
+	'' \
+	'anger,:bloodlust:,cruelty,depravity:,evilness::,fury::' \
+	" --cruelty --':'bloodlust 'a' --evilness '' 'abcd' --fury 'xyz' --depravity 'a' 'a b'\\\\''c d' --anger" \
+	" --cruelty --':'bloodlust 'a' --evilness '' --fury 'xyz' --depravity 'a' --anger -- 'abcd' 'a b'\\\\''c d'" \
+	" --cruelty --':'bloodlust 'a' --evilness '' -- 'abcd' '--f=xyz' '--deprav' 'a' 'a b'\\\\''c d' '--anger'" \
+	" --cruelty --':'bloodlust 'a' --evilness '' --fury 'xyz' --depravity 'a' --anger -- 'abcd' 'a b'\\\\''c d'" \
+	--cruelty --:bl=a --ev abcd --f=xyz --deprav a 'a b'\''c d' --anger
+
+__test_section__ 'With an option that starts with tripple ":"'
+test_get_options_success \
+	'' \
+	'anger,:::bloodlust:,cruelty,depravity:,evilness::,fury::' \
+	" --cruelty --':'':'':'bloodlust 'a' --evilness '' 'abcd' --fury 'xyz' --depravity 'a' 'a b'\\\\''c d' --anger" \
+	" --cruelty --':'':'':'bloodlust 'a' --evilness '' --fury 'xyz' --depravity 'a' --anger -- 'abcd' 'a b'\\\\''c d'" \
+	" --cruelty --':'':'':'bloodlust 'a' --evilness '' -- 'abcd' '--f=xyz' '--deprav' 'a' 'a b'\\\\''c d' '--anger'" \
+	" --cruelty --':'':'':'bloodlust 'a' --evilness '' --fury 'xyz' --depravity 'a' --anger -- 'abcd' 'a b'\\\\''c d'" \
+	--cruelty --:::bl=a --ev abcd --f=xyz --deprav a 'a b'\''c d' --anger

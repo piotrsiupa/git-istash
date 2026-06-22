@@ -114,45 +114,25 @@ __test_section__ 'With unnamed long option ("::" at the end)'
 assert_exit_code 2 run_get_options '' 'thingy,other:,something:,::'
 assert_outputs '' 'fatal: empty entry in long options definition for get_options'
 
+__test_section__ 'With "-" as a short option'
+assert_exit_code 2 run_get_options 'ab:c-d:e::f::' ''
+assert_outputs '' 'fatal: `-'\'' in short options definition for get_options'
+
 __test_section__ 'With triplicated ":" in short options'
 assert_exit_code 2 run_get_options 'ab:::cd:e::f::' ''
 assert_outputs '' 'fatal: triple `:'\'' in short options definition for get_options'
 
-__test_section__ 'With more than ":" next to each other in short options'
+__test_section__ 'With more than three ":" next to each other in short options'
 assert_exit_code 2 run_get_options 'ab:::::cd:e::f::' ''
 assert_outputs '' 'fatal: triple `:'\'' in short options definition for get_options'
 
-__test_section__ 'With triplicated ":" in long options'
+__test_section__ 'With triplicated ":" at the end of a long option'
 assert_exit_code 2 run_get_options '' 'thingy,other:::,something:,object::'
 assert_outputs '' 'fatal: triple `:'\'' in long options definition for get_options'
 
-__test_section__ 'With more than three ":" next to each other in long options'
+__test_section__ 'With more than three ":" next to each other at the end of long option'
 assert_exit_code 2 run_get_options '' 'thingy,other:::::,something:,object::'
 assert_outputs '' 'fatal: triple `:'\'' in long options definition for get_options'
-
-__test_section__ 'With ":" in a middle of long option (without parameter)'
-assert_exit_code 2 run_get_options '' 'thingy,other:,somet:hing,object::'
-assert_outputs '' 'fatal: `:'\'' in a name of a long option in definition for get_options'
-
-__test_section__ 'With double ":" in a middle of long option (without parameter)'
-assert_exit_code 2 run_get_options '' 'thingy,other:,somet::hing,object::'
-assert_outputs '' 'fatal: `:'\'' in a name of a long option in definition for get_options'
-
-__test_section__ 'With ":" in a middle of long option (with parameter)'
-assert_exit_code 2 run_get_options '' 'thingy,other:,somet:hing:,object::'
-assert_outputs '' 'fatal: `:'\'' in a name of a long option in definition for get_options'
-
-__test_section__ 'With double ":" in a middle of long option (with parameter)'
-assert_exit_code 2 run_get_options '' 'thingy,other:,somet::hing:,object::'
-assert_outputs '' 'fatal: `:'\'' in a name of a long option in definition for get_options'
-
-__test_section__ 'With ":" in a middle of long option (with optional parameter)'
-assert_exit_code 2 run_get_options '' 'thingy,other:,somet:hing::,object::'
-assert_outputs '' 'fatal: `:'\'' in a name of a long option in definition for get_options'
-
-__test_section__ 'With double ":" in a middle of long option (with optional parameter)'
-assert_exit_code 2 run_get_options '' 'thingy,other:,somet::hing::,object::'
-assert_outputs '' 'fatal: `:'\'' in a name of a long option in definition for get_options'
 
 __test_section__ 'With "=" in a name of long option'
 assert_exit_code 2 run_get_options '' 'thingy,other:,somet=hing:,object'

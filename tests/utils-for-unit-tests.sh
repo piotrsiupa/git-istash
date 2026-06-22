@@ -78,7 +78,7 @@ IS_GET_OPTIONS_STANDALONE() {
 }
 
 #shellcheck disable=SC2120
-PARAMETRIZE_GET_OPTIONS_REMOVE_WHITESPACE() { # remove_whitespace
+PARAMETRIZE_GET_OPTIONS_REMOVE_WHITESPACE() { # [setting...]
 	if [ $# -eq 0 ]
 	then
 		PARAMETRIZE 'WHITESPACE' 'options' 'KEEP-WS' 'STRIP-WS'
