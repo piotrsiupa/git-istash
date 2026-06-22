@@ -98,20 +98,54 @@ IS_WHITESPACE_STRIPPING_ON() {
 	test "$WHITESPACE" = 'STRIP-WS'
 }
 
-run_get_options() { # option_definitions_and_free_args...
-	#shellcheck disable=SC2086
-	"$GET_OPTIONS_COMMAND" $WHITESPACE_FLAG $MODE_FLAGS "$@"
+#shellcheck disable=SC2120
+PARAMETRIZE_GET_OPTIONS_SINGLE_DEFINITION() { # [setting...]
+	if [ $# -eq 0 ]
+	then
+		PARAMETRIZE 'DEFINITIONS' 'options' 'MULTI-DEF' 'SINGLE-DEF'
+	else
+		PARAMETRIZE 'DEFINITIONS' 'options' "$@"
+	fi
+	case "$DEFINITIONS" in
+		MULTI-DEF)
+			DEFINITION_FLAG=''
+			;;
+		SINGLE-DEF)
+			DEFINITION_FLAG='-s'
+			;;
+	esac
+}
+IS_DEFINITION_SINGLE() {
+	test "$DEFINITIONS" = 'SINGLE-DEF'
 }
 
-test_get_options_success() { # short_options long_options no_reorder_stdout reorder_stdout posixly_stdout partial_parse_stdout [argument_to_parse...]
-	short_options="$1"
-	long_options="$2"
-	no_reorder_stdout="$3"
-	reorder_stdout="$4"
-	posixly_stdout="$5"
-	partial_parse_stdout="$6"
-	shift 6
-	assert_exit_code 0 run_get_options "$short_options" "$long_options" "$@"
+run_get_options() { # option_definitions_and_free_args...
+	#shellcheck disable=SC2086
+	"$GET_OPTIONS_COMMAND" $WHITESPACE_FLAG $DEFINITION_FLAG $MODE_FLAGS "$@"
+}
+
+test_get_options_success() ( # short_options long_options no_reorder_stdout reorder_stdout posixly_stdout partial_parse_stdout [argument_to_parse...]
+	set -eu
+	if IS_DEFINITION_SINGLE
+	then
+		all_options="$1"
+		shift 1
+	else
+		short_options="$1"
+		long_options="$2"
+		shift 2
+	fi
+	no_reorder_stdout="$1"
+	reorder_stdout="$2"
+	posixly_stdout="$3"
+	partial_parse_stdout="$4"
+	shift 4
+	if IS_DEFINITION_SINGLE
+	then
+		assert_exit_code 0 run_get_options "$all_options" "$@"
+	else
+		assert_exit_code 0 run_get_options "$short_options" "$long_options" "$@"
+	fi
 	if IS_POSIXLY_ON
 	then
 		expected_stdout="$posixly_stdout"
@@ -127,4 +161,4 @@ test_get_options_success() { # short_options long_options no_reorder_stdout reor
 	assert_outputs "$expected_stdout" ''
 	#shellcheck disable=SC2154
 	eval set -- "$stdout"
-}
+)

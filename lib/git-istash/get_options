@@ -46,6 +46,13 @@ get_options() ( # See "print_help" for usage.
 		shift
 	fi
 	
+	single_definition=n
+	if [ "${1-}" = '-s' ]
+	then
+		single_definition=y
+		shift
+	fi
+	
 	posixly=n
 	reorder=y
 	partial=n
@@ -82,74 +89,127 @@ get_options() ( # See "print_help" for usage.
 			-e '}'
 	}
 	
-	test $# -ge 2 ||
-		fatal 'not enough arguments for get_options'
-	
-	if [ "$strip_whitespace" = y ]
+	if [ "$single_definition" = n ]
 	then
-		short_options_description="$(printf '%s' "$1" | strip_short_options_whitespace)"
+		
+		test $# -ge 2 ||
+			fatal 'not enough arguments for get_options'
+		
+		if [ "$strip_whitespace" = y ]
+		then
+			short_options_description="$(printf '%s' "$1" | strip_short_options_whitespace)"
+		else
+			short_options_description="$1"
+		fi
+		shift
+		test "${short_options_description#:}" = "$short_options_description" ||
+			fatal 'empty entry in short options definition for get_options'
+		test "${short_options_description#*:::}" = "$short_options_description" ||
+			fatal 'triple `:'\'' in short options definition for get_options'
+		test "${short_options_description#*-}" = "$short_options_description" ||
+			fatal '`-'\'' in short options definition for get_options'
+		short_options="$(
+			#shellcheck disable=SC1003
+			printf '%s' "$short_options_description" \
+			| tr -d ':' \
+			| tr '\n' ':' \
+			| sed -E 's/./&\n/g'
+			printf '|'
+		)"
+		short_options="${short_options%|}"
+		repeated_option="$(printf '%s' "$short_options" | sort | uniq -c | sed -E -n '/^[[:blank:]]*1[[:blank:]]/!s/^[[:blank:]]*[0-9]+[[:blank:]]//p' | head -n 1 | sed -E 's/$/|/' | tr ':' '\n')"
+		repeated_option="${repeated_option%|}"
+		test -z "$repeated_option" ||
+			fatal 'option `-%s'\'' repeats in options definition for get_options' "$repeated_option"
+		short_options_args="$(
+			#shellcheck disable=SC1003
+			printf '%s' "$short_options_description" \
+			| tr '\n' 'X' \
+			| sed -E 's/[^:]:*/&\'"$nl"'/g' \
+			| sed -E -e 's/^.$/n/' -e 's/^.:$/y/' -e 's/^.::$/o/' \
+			| tr -d '\n'
+		)"
+		
+		if [ "$strip_whitespace" = y ]
+		then
+			long_options_description="$(printf '%s' "$1" | strip_long_options_whitespace)"
+		else
+			long_options_description="$1"
+		fi
+		shift
+		printf '%s' "$long_options_description" | tr '\n' 'X' | grep -E -q '(^|,):*,|,:*$' &&
+			fatal 'empty entry in long options definition for get_options'
+		long_options="$(
+			printf '%s' "$long_options_description" \
+			| tr ',\n' '\n,' \
+			| sed -E 's/:{1,2}$//'
+			printf '|'
+		)"
+		long_options="${long_options%|}"
+		! printf '%s' "$long_options" | grep -qE ':$' ||
+			fatal 'triple `:'\'' in long options definition for get_options'
+		test "${long_options#*=}" = "$long_options" ||
+			fatal '`='\'' in a name of a long option in definition for get_options'
+		repeated_option="$(printf '%s' "$long_options" | sort | uniq -c | sed -E -n '/^[[:blank:]]*1[[:blank:]]/!s/^[[:blank:]]*[0-9]+[[:blank:]]//p' | head -n 1 | sed -E 's/$/|/' | tr ',' '\n')"
+		repeated_option="${repeated_option%|}"
+		test -z "$repeated_option" ||
+			fatal 'option `--%s'\'' repeats in options definition for get_options' "$repeated_option"
+		long_options_args="$(
+			printf '%s' "$long_options_description" \
+			| tr ',\n' '\n,' \
+			| sed -E -e 's/^.*[^:]$/n/' -e 's/^.*[^:]:$/y/' -e 's/^.*[^:]::$/o/' \
+			| tr -d '\n'
+		)"
+		
 	else
-		short_options_description="$1"
+		
+		test $# -ge 1 ||
+			fatal 'not enough arguments for get_options'
+		
+		if [ "$strip_whitespace" = y ]
+		then
+			all_options_description="$(printf '%s' "$1" | strip_long_options_whitespace)"
+		else
+			all_options_description="$1"
+		fi
+		shift
+		printf '%s' "$all_options_description" | tr '\n' 'X' | grep -E -q '(^|,):*,|,:*$' &&
+			fatal 'empty entry in options definition for get_options'
+		all_options="$(
+			printf '%s' "$all_options_description" \
+			| tr ',\n' '\n,' \
+			| sed -E 's/:{1,2}$//'
+			printf '|'
+		)"
+		all_options="${all_options%|}"
+		repeated_option="$(printf '%s' "$all_options" | sort | uniq -c | sed -E -n '/^[[:blank:]]*1[[:blank:]]/!s/^[[:blank:]]*[0-9]+[[:blank:]]//p' | head -n 1 | sed -E 's/$/|/' | tr ',' '\n')"
+		repeated_option="${repeated_option%|}"
+		test -z "$repeated_option" ||
+			fatal 'option `%s%s'\'' repeats in options definition for get_options' "$(printf '%s' "$repeated_option" | tr '\n' 'X' | sed -E -e 's/^.$/-/' -e 's/^.{2,}$/--/')" "$repeated_option"
+		short_options="$(printf '%s' "$all_options" | sed -E '/^.$/!d' | tr ',' ':' ; printf '|')"
+		short_options="${short_options%|}"
+		! printf '%s' "$short_options" | grep -F -q -x '-' ||
+			fatal '`-'\'' in short options definition for get_options'
+		long_options="$(printf '%s' "$all_options" | sed -E '/^.$/d' ; printf '|')"
+		long_options="${long_options%|}"
+		! printf '%s' "$long_options" | grep -qE ':$' ||
+			fatal 'triple `:'\'' in options definition for get_options'
+		test "${long_options#*=}" = "$long_options" ||
+			fatal '`='\'' in a name of a long option in definition for get_options'
+		short_options_args="$(
+			printf '%s' "$all_options_description" \
+			| tr ',\n' '\n,' \
+			| sed -E -e '/^.:*$/!d' -e 's/^.*[^:]$/n/' -e 's/^.*[^:]:$/y/' -e 's/^.*[^:]::$/o/' \
+			| tr -d '\n'
+		)"
+		long_options_args="$(
+			printf '%s' "$all_options_description" \
+			| tr ',\n' '\n,' \
+			| sed -E -e '/^.:*$/d' -e 's/^.*[^:]$/n/' -e 's/^.*[^:]:$/y/' -e 's/^.*[^:]::$/o/' \
+			| tr -d '\n'
+		)"
+		
 	fi
-	shift
-	test "${short_options_description#:}" = "$short_options_description" ||
-		fatal 'empty entry in short options definition for get_options'
-	test "${short_options_description#*:::}" = "$short_options_description" ||
-		fatal 'triple `:'\'' in short options definition for get_options'
-	test "${short_options_description#*-}" = "$short_options_description" ||
-		fatal '`-'\'' in short options definition for get_options'
-	short_options="$(
-		#shellcheck disable=SC1003
-		printf '%s' "$short_options_description" \
-		| tr -d ':' \
-		| tr '\n' ':' \
-		| sed -E 's/./&\n/g'
-		printf '|'
-	)"
-	short_options="${short_options%|}"
-	repeated_option="$(printf '%s' "$short_options" | sort | uniq -c | sed -E -n '/^[[:blank:]]*1[[:blank:]]/!s/^[[:blank:]]*[0-9]+[[:blank:]]//p' | head -n 1 | sed -E 's/$/|/' | tr ':' '\n')"
-	repeated_option="${repeated_option%|}"
-	test -z "$repeated_option" ||
-		fatal 'option `-%s'\'' repeats in options definition for get_options' "$repeated_option"
-	short_options_args="$(
-		#shellcheck disable=SC1003
-		printf '%s' "$short_options_description" \
-		| tr '\n' 'X' \
-		| sed -E 's/[^:]:*/&\'"$nl"'/g' \
-		| sed -E -e 's/^.$/n/' -e 's/^.:$/y/' -e 's/^.::$/o/' \
-		| tr -d '\n'
-	)"
-	
-	if [ "$strip_whitespace" = y ]
-	then
-		long_options_description="$(printf '%s' "$1" | strip_long_options_whitespace)"
-	else
-		long_options_description="$1"
-	fi
-	shift
-	printf '%s' "$long_options_description" | tr '\n' 'X' | grep -E -q '(^|,):*,|,:*$' &&
-		fatal 'empty entry in long options definition for get_options'
-	long_options="$(
-		printf '%s' "$long_options_description" \
-		| tr ',\n' '\n,' \
-		| sed -E 's/:{1,2}$//'
-		printf '|'
-	)"
-	long_options="${long_options%|}"
-	! printf '%s' "$long_options" | grep -qE ':$' ||
-		fatal 'triple `:'\'' in long options definition for get_options'
-	test "${long_options#*=}" = "$long_options" ||
-		fatal '`='\'' in a name of a long option in definition for get_options'
-	repeated_option="$(printf '%s' "$long_options" | sort | uniq -c | sed -E -n '/^[[:blank:]]*1[[:blank:]]/!s/^[[:blank:]]*[0-9]+[[:blank:]]//p' | head -n 1 | sed -E 's/$/|/' | tr ',' '\n')"
-	repeated_option="${repeated_option%|}"
-	test -z "$repeated_option" ||
-		fatal 'option `--%s'\'' repeats in options definition for get_options' "$repeated_option"
-	long_options_args="$(
-		printf '%s' "$long_options_description" \
-		| tr ',\n' '\n,' \
-		| sed -E -e 's/^.*[^:]$/n/' -e 's/^.*[^:]:$/y/' -e 's/^.*[^:]::$/o/' \
-		| tr -d '\n'
-	)"
 	
 	error() { # printf_arg...
 		printf 'error: '
@@ -346,10 +406,12 @@ then
 		printf 'The script can be run as a standalone or it can be sourced in another script.\n'
 		printf '\n'
 		printf 'Usage:\t%s [-w] [-P | -R | -U] <short_opt_dsc> <long_opt_dsc> [arg...]\n' "${0##*/}"
+		printf '   or:\t%s [-w] -s [-P | -R | -U] <options_description> [arg...]\n' "${0##*/}"
 		printf '   or:\t%s [-h | --help | -V | --version]    (Only in standalone mode.)\n' "${0##*/}"
 		printf '(Ironically, the order of arguments has to be exactly as described and the short\noptions cannot be bundled.)\n'
 		printf 'Options:\n'
 		printf '    -w\t- Strip whitespaces from option names - remove every space, tab and\n\t  new-line that is NOT in a middle of an option name.\n\t  (This allows formatting descriptions as multiline with indentation.)\n'
+		printf '    -s\t- Single options description string.\n'
 		printf '    -P\t- Posixly correct mode - after the first encountered non-option, treat\n\t  everything else as non-options. Preserve the first "--" if it'\''s after\n\t  a non-option.\n'
 		printf '    -R\t- Don'\''t reorder entries by placing all non-option arguments after "--"\n\t  (normalize only) and don'\''t generate an additional "--" if not present.\n'
 		printf '    -U\t- When you encounter an unrecognized option don'\''t show error but instead\n\t  treat everything from this point onward as non-options.\n\t  Preserve all "--" as non-options.\n\t  (Good for pre-parsing when not all options are known yet.)\n\t  WARNING: it assumes that there is no ambiguous abbreviations between\n\t  known and unknown option names!\n'
@@ -372,6 +434,15 @@ then
 		printf 'Characters "=" and "," may not be used in long option names,\nand ":" cannot end them because that would be interpreted as an argument marker.\n'
 		printf 'E.g. "foo,bar:,baz" defines options "--foo", "--bar" and "--baz", where "--bar"\ntakes an argument and the other options don'\''t.\n'
 		printf '(An empty string means that long options are not allowed.)\n'
+		printf '\n'
+		printf '<options_description> - a string describing all allowed options.\n'
+		printf 'This is an alternative for <short_opt_dsc> & <long_opt_dsc> that joins them into\na single string. '
+		printf 'The format is the same as for <long_opt_dsc>, except that\nsingle letter options are interpreted as short options.\n'
+		printf '(The drawback is that it'\'' not possible to define a single letter long option,\nalthough single letter abbreviations still do work. '
+		printf 'Also, you can'\''t have a short\noption "," in this mode, since that'\''s a delimiter character.)\n'
+		printf 'The goal of this is to allow for neat grouping of different spellings of\nthe same option together, for readability (especially with "-w").\n'
+		printf 'E.g. "f,foo,b:,bar:" defines options "-f", "--foo", "-b" and "--bar",\nwhere "-b" and "--bar" take an argument and the other two options don'\''t.\n'
+		printf '(An empty string means that no options are allowed.)\n'
 		printf '\n'
 		printf 'Exit values:\n'
 		printf ' - 0 - Success.\n'

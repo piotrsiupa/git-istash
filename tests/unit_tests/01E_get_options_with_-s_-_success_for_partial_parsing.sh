@@ -3,14 +3,13 @@
 PARAMETRIZE_GET_OPTIONS_MODE 'PARTIAL_PARSE'
 PARAMETRIZE_GET_OPTIONS_CALL_STYLE
 PARAMETRIZE_GET_OPTIONS_REMOVE_WHITESPACE
-PARAMETRIZE_GET_OPTIONS_SINGLE_DEFINITION 'MULTI-DEF'
+PARAMETRIZE_GET_OPTIONS_SINGLE_DEFINITION 'SINGLE-DEF'
 
 __end_of_initialization__
 
 __test_section__ 'With unknown short option'
 test_get_options_success \
-	'ab:cd:e::f::' \
-	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
+	'a,anger,b:,bloodlust:,c,cruelty,d:,depravity:,e::,evilness::,f::,fury::' \
 	"N/A" \
 	"N/A" \
 	"N/A" \
@@ -19,8 +18,7 @@ test_get_options_success \
 
 __test_section__ 'With unknown short option followed by known short option'
 test_get_options_success \
-	'ab:cd:e::f::' \
-	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
+	'a,anger,b:,bloodlust:,c,cruelty,d:,depravity:,e::,evilness::,f::,fury::' \
 	"N/A" \
 	"N/A" \
 	"N/A" \
@@ -29,8 +27,7 @@ test_get_options_success \
 
 __test_section__ 'With unknown short option preceeded by known short option'
 test_get_options_success \
-	'ab:cd:e::f::' \
-	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
+	'a,anger,b:,bloodlust:,c,cruelty,d:,depravity:,e::,evilness::,f::,fury::' \
 	"N/A" \
 	"N/A" \
 	"N/A" \
@@ -39,8 +36,7 @@ test_get_options_success \
 
 __test_section__ 'With unknown long option'
 test_get_options_success \
-	'ab:cd:e::f::' \
-	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
+	'a,anger,b:,bloodlust:,c,cruelty,d:,depravity:,e::,evilness::,f::,fury::' \
 	"N/A" \
 	"N/A" \
 	"N/A" \
@@ -49,8 +45,7 @@ test_get_options_success \
 
 __test_section__ 'With unknown long option with argument'
 test_get_options_success \
-	'ab:cd:e::f::' \
-	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
+	'a,anger,b:,bloodlust:,c,cruelty,d:,depravity:,e::,evilness::,f::,fury::' \
 	"N/A" \
 	"N/A" \
 	"N/A" \

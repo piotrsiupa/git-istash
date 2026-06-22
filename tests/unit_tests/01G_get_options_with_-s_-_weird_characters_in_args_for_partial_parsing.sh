@@ -8,7 +8,7 @@ non_essential_test
 PARAMETRIZE_GET_OPTIONS_MODE 'PARTIAL_PARSE'
 PARAMETRIZE_GET_OPTIONS_CALL_STYLE
 PARAMETRIZE_GET_OPTIONS_REMOVE_WHITESPACE
-PARAMETRIZE_GET_OPTIONS_SINGLE_DEFINITION 'MULTI-DEF'
+PARAMETRIZE_GET_OPTIONS_SINGLE_DEFINITION 'SINGLE-DEF'
 
 __end_of_initialization__
 
@@ -16,8 +16,7 @@ __end_of_initialization__
 
 __test_section__ 'With whitespaces'
 test_get_options_success \
-	'ab:cd:e::f::' \
-	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
+	'a,anger,b:,bloodlust:,c,cruelty,d:,depravity:,e::,evilness::,f::,fury::' \
 	"N/A" \
 	"N/A" \
 	"N/A" \
@@ -26,8 +25,7 @@ test_get_options_success \
 
 __test_section__ 'With whitespaces and even more line breaks'
 test_get_options_success \
-	'ab:cd:e::f::' \
-	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
+	'a,anger,b:,bloodlust:,c,cruelty,d:,depravity:,e::,evilness::,f::,fury::' \
 	"N/A" \
 	"N/A" \
 	"N/A" \
@@ -38,8 +36,7 @@ __test_section__ 'With WTF arguments'
 wtf_string='bo	=ÿþ€{b}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'
 escaped_wtf_string='bo	=ÿþ€\{b\}\\\*\?#@!\[1;35;4;5m\|:<>\(\)\^&\[0mðŸ’©th'
 test_get_options_success \
-	'ab:cd:e::f::' \
-	'anger,bloodlust:,cruelty,depravity:,evilness::,fury::' \
+	'a,anger,b:,bloodlust:,c,cruelty,d:,depravity:,e::,evilness::,f::,fury::' \
 	"N/A" \
 	"N/A" \
 	"N/A" \
