@@ -229,10 +229,13 @@ parse_git_bool() { # boolean_to_parse
      test "$(git -c 'istash.bool-parsing-tmp-value'="$1" config --get --type=bool 'istash.bool-parsing-tmp-value' 2>/dev/null)" = 'true'
 }
 
-set_getopt_options_from_command() { # full_command_name
-	getopt_short_options="$(sed -E -n 's/^[[:blank:]]*getopt_short_options='\''([^'\'']+)'\''[[:blank:]]*$/\1/p' "$(dirname "$0")/$1")"
-	getopt_long_options="$(sed -E -n 's/^[[:blank:]]*getopt_long_options='\''([^'\'']+)'\''[[:blank:]]*$/\1/p' "$(dirname "$0")/$1")"
-	if [ "$(printf '%s\n' "$getopt_short_options" | wc -l)" -ne 1 ] || [ "$(printf '%s\n' "$getopt_long_options" | wc -l)" -ne 1 ]
+set_get_options_options_from_command() { # full_command_name
+	get_options_options="$(
+			sed -E -n '/^[[:blank:]]*get_options_options='\''/,/'\''[[:blank:]]*$/p' "$(dirname "$0")/$1" \
+			| sed -E -e '1s/^[[:blank:]]*get_options_options='\''//' -e '$s/'\''[[:blank:]]*$//'
+		)"
+	#shellcheck disable=SC2016
+	if [ -z "$get_options_options" ] || printf '%s\n' "$get_options_options" | grep -E -q '['\''"$()={}]'
 	then
 		# Not tested because it cannot be triggered. It's here in a case something gets broken by a future change.
 		fatal 'cannot determine if there is option '\''-h'\'' in the arguments\n'
@@ -241,12 +244,12 @@ set_getopt_options_from_command() { # full_command_name
 
 check_for_option_h_in_command() ( # full_command_name option...
 	set -e
-	if ! set_getopt_options_from_command "$1"
+	if ! set_get_options_options_from_command "$1"
 	then
 		return 0  # Fall back to showing help, to not accidentaly break the repository.
 	fi
 	shift
-	normalized_options="$(get_options_color "$getopt_short_options" "$getopt_long_options" "$@" 2>/dev/null)"
+	normalized_options="$(get_options_color -w -s "$get_options_options" "$@" 2>/dev/null)"
 	eval set -- "$normalized_options"
 	while [ $# -ne 0 ]
 	do

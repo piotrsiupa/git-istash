@@ -92,9 +92,18 @@ show_manual() {
 	fatal '\n'
 }
 
-getopt_short_options='chqV'
-getopt_long_options='_skip-version-check_,abort,color::,no-color,continue,help,man,quiet,quit,version'
-normalized_options="$(get_options_color -U "$getopt_short_options" "$getopt_long_options" "$@")"
+get_options_options='
+	_skip-version-check_,
+	abort,
+	color::,no-color,
+	c,continue,
+	h,help,
+	man,
+	q,quiet,
+	quit,
+	V,version
+'
+normalized_options="$(get_options_color -w -s -U "$get_options_options" "$@")"
 eval set -- "$normalized_options"
 skip_version_check=n
 is_quiet=n

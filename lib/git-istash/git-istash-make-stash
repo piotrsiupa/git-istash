@@ -516,9 +516,25 @@ make_stash() { # pathspecs...
 	print_summary
 }
 
-getopt_short_options='ahklIm:qSTu'
-getopt_long_options='all,allow-empty,color::,no-color,keep-index,no-keep-index,skip-index,leave-index,no-include-index,skip-staged,leave-staged,no-include-staged,message:,patch,pathspec-file-null,pathspec-from-file:,quiet,remove-stashed,skip-tracked,leave-tracked,no-include-tracked,skip-unstaged,leave-unstaged,no-include-unstaged,staged,no-store,untracked,include-untracked,skip-untracked,leave-untracked,no-include-untracked'
-normalized_options="$(get_options_color "$getopt_short_options" "$getopt_long_options" "$@")"
+get_options_options='
+	a,all,
+	allow-empty,
+	color::,no-color,
+	h,
+	k,keep-index,no-keep-index,
+	l,I,skip-index,leave-index,no-include-index,skip-staged,leave-staged,no-include-staged,
+	m:,message:,
+	patch,
+	pathspec-file-null,
+	pathspec-from-file:,
+	q,quiet,
+	remove-stashed,
+	S,T,skip-tracked,leave-tracked,no-include-tracked,skip-unstaged,leave-unstaged,no-include-unstaged,staged,
+	no-store,
+	u,untracked,include-untracked,
+	skip-untracked,leave-untracked,no-include-untracked
+'
+normalized_options="$(get_options_color -w -s "$get_options_options" "$@")"
 eval set -- "$normalized_options"
 include_ignored=n
 allow_empty=n
