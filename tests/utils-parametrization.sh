@@ -146,7 +146,7 @@ PARAMETRIZE_OPTION() { # condition name override_facet map [values...]
 	NAME="$2"
 	FACET="${3:-options}"
 	#shellcheck disable=SC2020
-	MAP="$(printf '%s' "$4" | tr -d ' \t' | tr '|' '\n' | sed -E 's/^(.+:)(.*&&)(.*&&)(.*)$/\1\3\2\4/')"
+	MAP="$(printf '%s' "$4" | tr -d ' \t\n' | tr '|' '\n' | sed -E 's/^(.+:)(.*&&)(.*&&)(.*)$/\1\3\2\4/')"
 	shift 4
 	PREVIOUS_VALUE="$(awk -v key="$NAME" '$1 == key { print $2 }' "$PARAMETERS_FILE")"
 	ALTERNATIVE_SPELLINGS="$(printf '%s\n' "$MAP" | sed -E 's/^.+:.*&&(.*&&)(.*)$/\1\2/' | tr '&' '\n' | grep -Ev '^$' || true)"
@@ -252,7 +252,16 @@ get_head_sha_HT() {
 #shellcheck disable=SC2120
 PARAMETRIZE_COLOR() { # keys
 	# "auto" is not tested here, because it's not really viable to capture program output while doing that.
-	PARAMETRIZE_OPTION true 'COLOR' 'color' 'YES: COLOR-LONG && COLOR-YES-LONG && COLOR-YES-LONGISH0 & COLOR-YES-LONGISH1 | NO: COLOR-NO-LONG & NO-COLOR-LONG && COLOR-DEFAULT && COLOR-NO-LONGISH0 & COLOR-NO-LONGISH1 & NO-COLOR-LONGISH0 & NO-COLOR-LONGISH1' "$@"
+	PARAMETRIZE_OPTION true 'COLOR' 'color' '
+			YES:
+				COLOR-LONG
+				&& COLOR-YES-LONG
+				&& COLOR-YES-LONGISH0 & COLOR-YES-LONGISH1
+			| NO:
+				COLOR-NO-LONG & NO-COLOR-LONG
+				&& COLOR-DEFAULT
+				&& COLOR-NO-LONGISH0 & COLOR-NO-LONGISH1 & NO-COLOR-LONGISH0 & NO-COLOR-LONGISH1
+		' "$@"
 	#shellcheck disable=SC2034
 	case "$COLOR" in
 		COLOR-LONG) COLOR_FLAGS='--color' ;;
@@ -277,7 +286,16 @@ IS_COLOR_ON() {
 
 #shellcheck disable=SC2120
 PARAMETRIZE_QUIET() { # keys
-	PARAMETRIZE_OPTION true 'QUIET' '' 'NO: && QUIET-DEFAULT && | YES: QUIET-SHORT && QUIET-LONG && QUIET-LONGISH0' "$@"
+	PARAMETRIZE_OPTION true 'QUIET' '' '
+			NO:
+				
+				&& QUIET-DEFAULT
+				&&
+			| YES:
+				QUIET-SHORT
+				&& QUIET-LONG
+				&& QUIET-LONGISH0
+		' "$@"
 	#shellcheck disable=SC2034
 	case "$QUIET" in
 		QUIET-SHORT) QUIET_FLAGS='-q' ;;
@@ -295,9 +313,27 @@ PARAMETRIZE_HINT() { # advice_name...
 	#shellcheck disable=SC2154
 	if [ "$git_supports_no_advice" = y ]
 	then
-		PARAMETRIZE_OPTION true 'HINT' 'hint' 'YES: ENBL-HINT-SHORT && ALL-HINTS & ENBL-HINT && ENBL-HINT-ALT | NO: DSBL-HINT-SHORT && DSBL-HINT & NO-HINTS & NO-ADVICE && DSBL-HINT-ALT'
+		PARAMETRIZE_OPTION true 'HINT' 'hint' '
+				YES:
+					ENBL-HINT-SHORT
+					&& ALL-HINTS & ENBL-HINT
+					&& ENBL-HINT-ALT
+				| NO:
+					DSBL-HINT-SHORT
+					&& DSBL-HINT & NO-HINTS & NO-ADVICE
+					&& DSBL-HINT-ALT
+			'
 	else
-		PARAMETRIZE_OPTION true 'HINT' 'hint' 'YES: ENBL-HINT-SHORT && ALL-HINTS & ENBL-HINT && ENBL-HINT-ALT | NO: DSBL-HINT-SHORT && DSBL-HINT & NO-HINTS && DSBL-HINT-ALT'
+		PARAMETRIZE_OPTION true 'HINT' 'hint' '
+				YES:
+					ENBL-HINT-SHORT
+					&& ALL-HINTS & ENBL-HINT
+					&& ENBL-HINT-ALT
+				| NO:
+					DSBL-HINT-SHORT
+					&& DSBL-HINT & NO-HINTS
+					&& DSBL-HINT-ALT
+			'
 	fi
 	#shellcheck disable=SC2034
 	ADVICE_NAMES="$(printf '%s\n' "$@")"

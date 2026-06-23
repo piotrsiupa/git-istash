@@ -9,8 +9,8 @@ else
 fi
 
 # Wrapper for "get_options" that adds color to error messages.
-# "get_options" is written to be usable in different project. (So it can't refer to Git config.)
-get_options_color() { # [-P | -R | -U] short_options_string long_options_string [argument...]
+# "get_options" is written to be usable in different projects too. (So it can't refer to Git config.)
+get_options_color() { # <same arguments as for "get_options">
 	exec 3>&1
 	set +e
 	error_message="$(set -e ; get_options "$@" 2>&1 1>&3)"

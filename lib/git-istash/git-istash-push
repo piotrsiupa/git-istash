@@ -33,7 +33,7 @@ print_help() {
 }
 
 check_pathspec_for_implicit_push() ( # args...
-	normalized_options="$(get_options_color -R "$getopt_short_options" "$getopt_long_options" "$@")"
+	normalized_options="$(get_options_color -w -s -R "$get_options_options" "$@")"
 	eval set -- "$normalized_options"
 	is_quiet=n
 	problem_found=n
@@ -53,7 +53,7 @@ check_pathspec_for_implicit_push() ( # args...
 			elif [ "$option_name" = 'quiet' ]
 			then
 				is_quiet=y
-			elif printf '%s' "$getopt_long_options" | grep -Eq "(^|,)$option_name:(,|\$)"
+			elif printf '%s' "$get_options_options" | tr -d ' \t\n' | grep -Eq "(^|,)$option_name:(,|\$)"
 			then
 				shift
 			fi
@@ -64,7 +64,7 @@ check_pathspec_for_implicit_push() ( # args...
 			if [ "$option_letter" = 'q' ]
 			then
 				is_quiet=y
-			elif printf '%s' "$getopt_short_options" | grep -Eq "$option_letter:"
+			elif printf '%s' "$get_options_options" | tr -d ' \t\n' | grep -Eq "(^|,)$option_letter:(,|\$)"
 			then
 				shift
 			fi
@@ -87,7 +87,7 @@ check_pathspec_for_implicit_push() ( # args...
 	fi
 )
 
-set_getopt_options_from_command 'git-istash-make-stash'
+set_get_options_options_from_command 'git-istash-make-stash'
 if [ "${1-}" = '--_implicit-push_' ]
 then
 	shift

@@ -721,9 +721,17 @@ do_apply() { # args...
 	fi
 }
 
-getopt_short_options='chq'
-getopt_long_options='abort,_called-from-pop,_called-from-pop_,color::,no-color,continue,quiet,quit,summary:'
-normalized_options="$(get_options_color "$getopt_short_options" "$getopt_long_options" "$@")"
+get_options_options='
+	_called-from-pop,_called-from-pop_,
+	abort,
+	color::,no-color,
+	c,continue,
+	h,
+	q,quiet,
+	quit,
+	summary:
+'
+normalized_options="$(get_options_color -w -s "$get_options_options" "$@")"
 eval set -- "$normalized_options"
 abort_set=n
 sub_command_name='apply'

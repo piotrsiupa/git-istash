@@ -7,6 +7,8 @@ non_essential_test
 
 PARAMETRIZE_GET_OPTIONS_MODE 'PARTIAL_PARSE'
 PARAMETRIZE_GET_OPTIONS_CALL_STYLE
+PARAMETRIZE_GET_OPTIONS_REMOVE_WHITESPACE
+PARAMETRIZE_GET_OPTIONS_SINGLE_DEFINITION 'MULTI-DEF'
 
 __end_of_initialization__
 
@@ -19,9 +21,8 @@ test_get_options_success \
 	"N/A" \
 	"N/A" \
 	"N/A" \
-	" -c -- '-q  dd	d\\n'" \
-	-cq'  dd	d
-'
+	" -c -- '-q  dd\\td\\n'" \
+	-cq"  dd${tab}d$nl"
 
 __test_section__ 'With whitespaces and even more line breaks'
 test_get_options_success \
@@ -30,10 +31,8 @@ test_get_options_success \
 	"N/A" \
 	"N/A" \
 	"N/A" \
-	" -c -- '-q  d\\nd	d\\n'" \
-	-cq'  d
-d	d
-'
+	" -c -- '-q  d\\nd\\td\\n'" \
+	-cq"  d${nl}d${tab}d$nl"
 
 __test_section__ 'With WTF arguments'
 wtf_string='bo	=ÿþ€{b}\*?#@![1;35;4;5m|:<>()^&[0mðŸ’©th'
